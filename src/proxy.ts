@@ -17,8 +17,11 @@ export default auth((req) => {
     loginUrl.searchParams.set("callbackUrl", req.nextUrl.pathname);
     return NextResponse.redirect(loginUrl);
   }
+
+  return NextResponse.next();
 });
 
 export const config = {
   matcher: ["/konto/:path*", "/admin/:path*"],
 };
+
