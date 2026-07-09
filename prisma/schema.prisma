@@ -231,6 +231,11 @@ model ProductVariant {
   // BaseLinker variant sync
   baselinkerVariantId String? @unique
 
+  // Shoper product sync — Shoper's numeric product_id, used to refresh
+  // price/stock via GET /products/{id} without relying on Shoper's
+  // ?filters= query param (silently ignored on some shop installs).
+  shoperProductId Int? @unique
+
   isDefault Boolean @default(false)
   isActive  Boolean @default(true)
 
@@ -552,4 +557,15 @@ model ContactMessage {
   createdAt DateTime @default(now())
 
   @@index([createdAt])
+}
+
+// Cursor/bookkeeping for scheduled Shoper API sync jobs (see /api/cron/shoper-sync).
+// One row per job kind — lets a stateless serverless cron resume a paginated crawl.
+model ShoperSyncState {
+  id            String    @id @default(cuid())
+  kind          String    @unique // "incremental" | "discover"
+  cursorPage    Int       @default(0)
+  lastRunAt     DateTime?
+  lastSuccessAt DateTime?
+  lastError     String?   @db.Text
 }
