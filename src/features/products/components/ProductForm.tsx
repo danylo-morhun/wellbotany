@@ -25,8 +25,8 @@ interface Props {
 export function ProductForm({ product, categories, brands, tags }: Props) {
   const router = useRouter();
   const { execute, isPending } = useAction(saveProduct, {
-    onSuccess: () => {
-      if (!product) router.push("/admin/produkty");
+    onSuccess: ({ data }) => {
+      if (!product && data?.id) router.push(`/admin/produkty/${data.id}`);
     },
   });
 

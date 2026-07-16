@@ -158,7 +158,7 @@ export const saveProduct = adminActionClient
     revalidatePath("/katalog", "layout");
     revalidateTag("products");
     if (savedId) void syncProductToBaselinker(savedId).catch(console.error);
-    return { success: true };
+    return { success: true, id: savedId };
   });
 
 export const deleteProduct = adminActionClient
