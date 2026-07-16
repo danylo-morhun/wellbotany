@@ -59,12 +59,20 @@ export default async function AdminProductsPage({
     <div>
       <div className="mb-6 flex items-center justify-between">
         <h1 className="text-2xl font-bold">Produkty</h1>
-        <Link
-          href="/admin/produkty/nowy"
-          className="rounded-lg bg-primary px-3 py-1.5 text-sm font-medium text-primary-foreground transition-colors duration-200 hover:bg-primary-deep motion-reduce:transition-none"
-        >
-          + Dodaj produkt
-        </Link>
+        <div className="flex gap-2">
+          <Link
+            href="/admin/produkty/import"
+            className="rounded-lg border border-border px-3 py-1.5 text-sm font-medium transition-colors hover:bg-muted"
+          >
+            Import z cenników
+          </Link>
+          <Link
+            href="/admin/produkty/nowy"
+            className="rounded-lg bg-primary px-3 py-1.5 text-sm font-medium text-primary-foreground transition-colors duration-200 hover:bg-primary-deep motion-reduce:transition-none"
+          >
+            + Dodaj produkt
+          </Link>
+        </div>
       </div>
 
       <div className="mb-4">
