@@ -4,6 +4,7 @@ import type { Brand, Category, Product, ProductStatus, ProductTag, Tag } from "@
 import { useRouter } from "next/navigation";
 import { useAction } from "next-safe-action/hooks";
 import { useState } from "react";
+import { slugify } from "@/lib/slugify";
 import { saveBrand, saveCategory, saveProduct } from "../actions";
 
 const STATUS_LABELS: Record<ProductStatus, string> = {
@@ -11,16 +12,6 @@ const STATUS_LABELS: Record<ProductStatus, string> = {
   ACTIVE: "Aktywny",
   ARCHIVED: "Zarchiwizowany",
 };
-
-function slugify(str: string): string {
-  return str
-    .toLowerCase()
-    .replace(/ł/g, "l")
-    .normalize("NFD")
-    .replace(/[̀-ͯ]/g, "")
-    .replace(/[^a-z0-9]+/g, "-")
-    .replace(/^-|-$/g, "");
-}
 
 type ProductWithTags = Product & { tags: ProductTag[] };
 

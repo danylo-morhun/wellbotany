@@ -3,6 +3,7 @@
 import type { Tag, TagType } from "@prisma/client";
 import { useAction } from "next-safe-action/hooks";
 import { useState } from "react";
+import { slugify } from "@/lib/slugify";
 import { deleteTag, saveTag } from "../actions";
 
 const TAG_TYPE_LABELS: Record<TagType, string> = {
@@ -19,6 +20,9 @@ interface Props {
 export function TagForm({ tags }: Props) {
   const [editing, setEditing] = useState<Tag | null>(null);
   const [showNew, setShowNew] = useState(false);
+  const [formName, setFormName] = useState("");
+  const [formSlug, setFormSlug] = useState("");
+  const [formSlugManual, setFormSlugManual] = useState(false);
 
   const { execute: execSave, isPending: saving } = useAction(saveTag, {
     onSuccess: () => {
@@ -28,13 +32,44 @@ export function TagForm({ tags }: Props) {
   });
   const { execute: execDelete, isPending: deleting } = useAction(deleteTag);
 
+  function startNew() {
+    setEditing(null);
+    setFormName("");
+    setFormSlug("");
+    setFormSlugManual(false);
+    setShowNew(true);
+  }
+
+  function startEditing(item: Tag) {
+    setShowNew(false);
+    setFormName(item.namePl);
+    setFormSlug(item.slug);
+    setFormSlugManual(true);
+    setEditing(item);
+  }
+
+  function cancelForm() {
+    setEditing(null);
+    setShowNew(false);
+  }
+
+  function handleNameChange(value: string) {
+    setFormName(value);
+    if (!formSlugManual) setFormSlug(slugify(value));
+  }
+
+  function handleSlugChange(value: string) {
+    setFormSlug(value);
+    setFormSlugManual(true);
+  }
+
   function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
     const fd = new FormData(e.currentTarget);
     execSave({
       id: (fd.get("id") as string) || undefined,
-      slug: fd.get("slug") as string,
-      namePl: fd.get("namePl") as string,
+      slug: formSlug,
+      namePl: formName,
       nameEn: (fd.get("nameEn") as string) || undefined,
       type: fd.get("type") as TagType,
       sortOrder: Number(fd.get("sortOrder") || 0),
@@ -42,23 +77,35 @@ export function TagForm({ tags }: Props) {
   }
 
   const form = (item?: Tag) => (
-    <form onSubmit={handleSubmit} className="mt-2 mb-4 grid gap-2 rounded-2xl bg-card p-4 shadow-card">
+    <form
+      onSubmit={handleSubmit}
+      className="mt-2 mb-4 grid gap-2 rounded-2xl bg-card p-4 shadow-card"
+    >
       {item && <input type="hidden" name="id" value={item.id} />}
       <div className="grid grid-cols-2 gap-2">
         <input
           name="namePl"
-          defaultValue={item?.namePl}
+          value={formName}
+          onChange={(e) => handleNameChange(e.target.value)}
           placeholder="Nazwa (PL) *"
           required
           className="rounded-lg border border-border px-2 py-1 text-sm"
         />
-        <input
-          name="slug"
-          defaultValue={item?.slug}
-          placeholder="Slug *"
-          required
-          className="rounded-lg border border-border px-2 py-1 text-sm"
-        />
+        <div className="relative">
+          <input
+            name="slug"
+            value={formSlug}
+            onChange={(e) => handleSlugChange(e.target.value)}
+            placeholder="Slug *"
+            required
+            className="w-full rounded-lg border border-border px-2 py-1 font-mono text-sm"
+          />
+          {!formSlugManual && (
+            <span className="pointer-events-none absolute right-1.5 top-1/2 -translate-y-1/2 rounded bg-muted px-1 py-0.5 text-xs text-muted-foreground">
+              auto
+            </span>
+          )}
+        </div>
         <input
           name="nameEn"
           defaultValue={item?.nameEn ?? ""}
@@ -95,10 +142,7 @@ export function TagForm({ tags }: Props) {
         </button>
         <button
           type="button"
-          onClick={() => {
-            setEditing(null);
-            setShowNew(false);
-          }}
+          onClick={cancelForm}
           className="rounded-lg border border-border px-3 py-1 text-xs"
         >
           Anuluj
@@ -113,7 +157,7 @@ export function TagForm({ tags }: Props) {
         <h1 className="text-2xl font-bold">Tagi</h1>
         <button
           type="button"
-          onClick={() => setShowNew(true)}
+          onClick={startNew}
           className="rounded-lg bg-primary px-3 py-1.5 text-sm font-medium text-primary-foreground transition-colors duration-200 hover:bg-primary-deep motion-reduce:transition-none"
         >
           + Dodaj
@@ -133,7 +177,7 @@ export function TagForm({ tags }: Props) {
               <div className="flex gap-2">
                 <button
                   type="button"
-                  onClick={() => setEditing(tag)}
+                  onClick={() => startEditing(tag)}
                   className="rounded-lg border border-border px-2 py-1 text-xs"
                 >
                   Edytuj
