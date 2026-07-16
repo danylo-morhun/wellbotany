@@ -102,16 +102,28 @@ export const bulkUpdateStockSchema = z.object({
 
 // ─── Product bulk operations ───────────────────────────────────────────────────
 
+// Nested under `filters` (not flattened) so bulkAssignBrand/bulkAssignCategory's own
+// `brandId`/`categoryId` target field never collides with the filter of the same name.
+export const productFiltersSchema = z.object({
+  search: z.string().optional(),
+  status: z.nativeEnum(ProductStatus).optional(),
+  brandId: z.string().optional(),
+  categoryId: z.string().optional(),
+  noBrand: z.boolean().optional(),
+  noCategory: z.boolean().optional(),
+  noImage: z.boolean().optional(),
+});
+
 /**
  * "ids" = explicit selection (current page checkboxes).
- * "all" = every product matching `search` (cross-page "select all"), minus excludedIds
+ * "all" = every product matching `filters` (cross-page "select all"), minus excludedIds
  * for rows the admin unchecked after selecting all.
  */
 export const productSelectionSchema = z.object({
   mode: z.enum(["ids", "all"]),
   ids: z.array(z.string().min(1)).default([]),
   excludedIds: z.array(z.string().min(1)).default([]),
-  search: z.string().optional(),
+  filters: productFiltersSchema.default({}),
 });
 
 export const bulkUpdateProductStatusSchema = productSelectionSchema.extend({
@@ -151,4 +163,5 @@ export type TagInput = z.input<typeof tagSchema>;
 export type ProductInput = z.input<typeof productSchema>;
 export type VariantInput = z.input<typeof variantSchema>;
 export type BulkUpdateStockInput = z.input<typeof bulkUpdateStockSchema>;
+export type ProductFiltersInput = z.input<typeof productFiltersSchema>;
 export type ProductSelectionInput = z.input<typeof productSelectionSchema>;

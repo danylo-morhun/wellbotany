@@ -23,11 +23,11 @@ import {
   variantSchema,
 } from "./schema";
 
-/** Resolves a selection ("ids" or "all matching search") to a concrete list of product ids. */
+/** Resolves a selection ("ids" or "all matching filters") to a concrete list of product ids. */
 async function resolveProductIds(selection: ProductSelectionInput): Promise<string[]> {
   if (selection.mode === "ids") return selection.ids ?? [];
   const matching = await prisma.product.findMany({
-    where: buildProductWhere(selection.search),
+    where: buildProductWhere(selection.filters ?? {}),
     select: { id: true },
   });
   const excluded = new Set(selection.excludedIds ?? []);

@@ -1,14 +1,41 @@
+import type { ProductStatus } from "@prisma/client";
 import Link from "next/link";
 import { Suspense } from "react";
 import { AdminPagination } from "@/app/admin/components/AdminPagination";
+import { AdminProductFilters } from "@/app/admin/components/AdminProductFilters";
 import { AdminSearch } from "@/app/admin/components/AdminSearch";
 import { ProductsTable } from "@/features/products/components/ProductsTable";
-import { buildProductWhere } from "@/features/products/lib/where";
+import { buildProductWhere, type ProductFilters } from "@/features/products/lib/where";
 import { prisma } from "@/lib/prisma";
 
 const PAGE_SIZE = 25;
+const NONE_VALUE = "__brak__";
+const STATUS_VALUES: ProductStatus[] = ["DRAFT", "ACTIVE", "ARCHIVED"];
 
-type SearchParams = { szukaj?: string; strona?: string };
+type SearchParams = {
+  szukaj?: string;
+  strona?: string;
+  status?: string;
+  marka?: string;
+  kategoria?: string;
+  zdjecie?: string;
+};
+
+function parseFilters(params: SearchParams): ProductFilters {
+  const status = STATUS_VALUES.includes(params.status as ProductStatus)
+    ? (params.status as ProductStatus)
+    : undefined;
+
+  return {
+    search: params.szukaj || undefined,
+    status,
+    noBrand: params.marka === NONE_VALUE,
+    brandId: params.marka && params.marka !== NONE_VALUE ? params.marka : undefined,
+    noCategory: params.kategoria === NONE_VALUE,
+    categoryId: params.kategoria && params.kategoria !== NONE_VALUE ? params.kategoria : undefined,
+    noImage: params.zdjecie === NONE_VALUE,
+  };
+}
 
 export default async function AdminProductsPage({
   searchParams,
@@ -17,8 +44,8 @@ export default async function AdminProductsPage({
 }) {
   const params = await searchParams;
   const page = Math.max(1, parseInt(params.strona ?? "1", 10));
-  const search = params.szukaj ?? "";
-  const where = buildProductWhere(search);
+  const filters = parseFilters(params);
+  const where = buildProductWhere(filters);
 
   const [products, total, brands, categories] = await Promise.all([
     prisma.product.findMany({
@@ -34,6 +61,7 @@ export default async function AdminProductsPage({
         category: { select: { namePl: true } },
         brand: { select: { name: true } },
         _count: { select: { variants: true } },
+        images: { orderBy: { sortOrder: "asc" }, take: 1, select: { url: true } },
       },
     }),
     prisma.product.count({ where }),
@@ -63,16 +91,19 @@ export default async function AdminProductsPage({
         </div>
       </div>
 
-      <div className="mb-4">
+      <div className="mb-4 flex flex-wrap items-center gap-3">
         <Suspense>
           <AdminSearch placeholder="Szukaj produktów…" />
+        </Suspense>
+        <Suspense>
+          <AdminProductFilters brands={brands} categories={categories} />
         </Suspense>
       </div>
 
       <ProductsTable
         products={products}
         total={total}
-        search={search}
+        filters={filters}
         brands={brands}
         categories={categories}
       />

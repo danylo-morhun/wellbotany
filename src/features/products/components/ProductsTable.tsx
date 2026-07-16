@@ -1,9 +1,12 @@
 "use client";
 
 import type { ProductStatus } from "@prisma/client";
+import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { useMemo } from "react";
 import { useProductSelection } from "../lib/useProductSelection";
+import type { ProductFilters } from "../lib/where";
 import { BulkActionsToolbar } from "./BulkActionsToolbar";
 import { DeleteProductButton } from "./DeleteProductButton";
 
@@ -21,20 +24,22 @@ type ProductRow = {
   category: { namePl: string } | null;
   brand: { name: string } | null;
   _count: { variants: number };
+  images: { url: string }[];
 };
 
 type Props = {
   products: ProductRow[];
   total: number;
-  search: string;
+  filters: ProductFilters;
   brands: { id: string; name: string }[];
   categories: { id: string; namePl: string }[];
 };
 
-export function ProductsTable({ products, total, search, brands, categories }: Props) {
+export function ProductsTable({ products, total, filters, brands, categories }: Props) {
   const router = useRouter();
   const pageIds = products.map((p) => p.id);
-  const selection = useProductSelection(search, pageIds, total);
+  const filterKey = useMemo(() => JSON.stringify(filters), [filters]);
+  const selection = useProductSelection(filterKey, pageIds, total);
 
   const showSelectAllBanner =
     selection.mode === "ids" && selection.isPageFullySelected && total > pageIds.length;
@@ -44,7 +49,7 @@ export function ProductsTable({ products, total, search, brands, categories }: P
       <BulkActionsToolbar
         count={selection.count}
         selection={{ mode: selection.mode, ids: selection.ids, excludedIds: selection.excludedIds }}
-        search={search}
+        filters={filters}
         brands={brands}
         categories={categories}
         onClear={selection.clear}
@@ -82,6 +87,7 @@ export function ProductsTable({ products, total, search, brands, categories }: P
                   aria-label="Zaznacz wszystkie na stronie"
                 />
               </th>
+              <th className="w-14 px-4 py-3" />
               <th className="px-4 py-3 font-medium">Nazwa</th>
               <th className="px-4 py-3 font-medium">Status</th>
               <th className="px-4 py-3 font-medium">Kategoria</th>
@@ -104,6 +110,19 @@ export function ProductsTable({ products, total, search, brands, categories }: P
                     onChange={() => selection.toggleRow(product.id)}
                     aria-label={`Zaznacz ${product.namePl}`}
                   />
+                </td>
+                <td className="px-4 py-3">
+                  <div className="relative size-10 overflow-hidden rounded-md border bg-muted">
+                    {product.images[0] && (
+                      <Image
+                        src={product.images[0].url}
+                        alt=""
+                        fill
+                        className="object-cover"
+                        sizes="40px"
+                      />
+                    )}
+                  </div>
                 </td>
                 <td className="px-4 py-3">
                   <Link
@@ -139,7 +158,7 @@ export function ProductsTable({ products, total, search, brands, categories }: P
             ))}
             {products.length === 0 && (
               <tr>
-                <td colSpan={7} className="px-4 py-8 text-center text-muted-foreground">
+                <td colSpan={8} className="px-4 py-8 text-center text-muted-foreground">
                   Brak produktów
                 </td>
               </tr>

@@ -20,6 +20,7 @@ import {
   bulkDeleteProducts,
   bulkUpdateProductStatus,
 } from "../actions";
+import type { ProductFilters } from "../lib/where";
 
 const STATUS_OPTIONS: { value: ProductStatus; label: string }[] = [
   { value: "DRAFT", label: "Szkic" },
@@ -39,7 +40,7 @@ type PendingAction =
 type Props = {
   count: number;
   selection: Selection;
-  search: string;
+  filters: ProductFilters;
   brands: { id: string; name: string }[];
   categories: { id: string; namePl: string }[];
   onClear: () => void;
@@ -49,7 +50,7 @@ type Props = {
 export function BulkActionsToolbar({
   count,
   selection,
-  search,
+  filters,
   brands,
   categories,
   onClear,
@@ -57,7 +58,7 @@ export function BulkActionsToolbar({
 }: Props) {
   const [pending, setPending] = useState<PendingAction | null>(null);
 
-  const selectionPayload = { ...selection, search: search || undefined };
+  const selectionPayload = { ...selection, filters };
 
   const statusAction = useAction(bulkUpdateProductStatus, {
     onSuccess: ({ data }) => {
