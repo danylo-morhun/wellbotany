@@ -101,6 +101,8 @@ async function listAllPages<T>(
   const maxPages = opts.maxPages;
 
   for (let page = 1; page <= maxPages; page++) {
+    console.log(`[shoper] GET ${path} page ${page}/${maxPages}…`);
+    const started = Date.now();
     const res = await shoperRequest<ShoperPagedResponse<T>>(path, {
       method: "GET",
       query: { ...(opts.query ?? {}), limit, page },
@@ -108,6 +110,9 @@ async function listAllPages<T>(
 
     const list = Array.isArray(res) ? res : res.list;
     out.push(...list);
+    console.log(
+      `[shoper] page ${page} → ${list.length} rows in ${Date.now() - started}ms (total ${out.length})`,
+    );
 
     if (Array.isArray(res)) {
       if (list.length < limit) break;
@@ -148,11 +153,20 @@ async function mapWithConcurrency<T, R>(
 export async function fetchProductsByIds(ids: number[]): Promise<Map<number, ShoperProduct>> {
   const concurrency = envInt("SHOPER_PRODUCT_FETCH_CONCURRENCY", 10);
   const map = new Map<number, ShoperProduct>();
+  let done = 0;
 
+  console.log(`[shoper] fetching ${ids.length} products, concurrency ${concurrency}…`);
   const products = await mapWithConcurrency(ids, concurrency, async (id) => {
     try {
-      return await shoperRequest<ShoperProduct>(`/products/${id}`, { method: "GET" });
-    } catch {
+      const p = await shoperRequest<ShoperProduct>(`/products/${id}`, { method: "GET" });
+      done += 1;
+      if (done % 50 === 0 || done === ids.length) {
+        console.log(`[shoper] fetched product ${done}/${ids.length}`);
+      }
+      return p;
+    } catch (e) {
+      done += 1;
+      console.log(`[shoper] product ${id} failed:`, e instanceof Error ? e.message : e);
       return null;
     }
   });
@@ -249,8 +263,10 @@ export async function parseShoperApi(
   const maxPages = envInt("SHOPER_STOCKS_MAX_PAGES", 200);
   const includeInactive = envStr("SHOPER_INCLUDE_INACTIVE", "false") === "true";
 
+  console.log(`[shoper] parseShoperApi start: limit=${limit} maxPages=${maxPages}`);
   const stocks = await listAllPages<ShoperProductStock>("/product-stocks", { limit, maxPages });
   const filteredStocks = filterActiveStocks(stocks, includeInactive);
+  console.log(`[shoper] ${stocks.length} stocks, ${filteredStocks.length} after active filter`);
 
   const productIds = [
     ...new Set(
@@ -260,7 +276,9 @@ export async function parseShoperApi(
 
   const productsById = await fetchProductsByIds(productIds);
 
-  return buildDraftsFromStocks(filteredStocks, productsById, source);
+  const drafts = await buildDraftsFromStocks(filteredStocks, productsById, source);
+  console.log(`[shoper] parseShoperApi done: ${drafts.length} drafts`);
+  return drafts;
 }
 
 /**
