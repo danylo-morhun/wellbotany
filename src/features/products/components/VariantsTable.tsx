@@ -12,6 +12,23 @@ interface Props {
   variants: SerializedVariant[];
 }
 
+const UNITS = ["kaps.", "tabl.", "g", "ml", "szt.", "saszetka", "ampułka"] as const;
+type Unit = (typeof UNITS)[number];
+
+function unitToLabel(unit: Unit | string): string {
+  return unit === "g" || unit === "ml" ? "Gramatura" : "Pojemność";
+}
+
+function parseOptionValue(optionValue: string | null | undefined): { qty: string; unit: Unit } {
+  if (!optionValue) return { qty: "", unit: "kaps." };
+  const match = optionValue.trim().match(/^(\d+(?:[.,]\d+)?)\s*(.+)$/);
+  if (match) {
+    const unit = match[2] as Unit;
+    return { qty: match[1], unit: UNITS.includes(unit) ? unit : "kaps." };
+  }
+  return { qty: "", unit: "kaps." };
+}
+
 function plnToGrosze(value: string): number {
   return Math.round(parseFloat(value || "0") * 100);
 }
@@ -42,13 +59,18 @@ export function VariantsTable({ productId, variants }: Props) {
     const weightRaw = fd.get("weightGrams") as string;
     const lowStockRaw = fd.get("lowStockThreshold") as string;
 
+    const qty = (fd.get("qty") as string).trim();
+    const unit = fd.get("unit") as Unit;
+    const optionValue = qty ? `${qty} ${unit}` : undefined;
+    const optionLabel = optionValue ? unitToLabel(unit) : undefined;
+
     execSave({
       id: (fd.get("id") as string) || undefined,
       productId,
       sku: fd.get("sku") as string,
       ean: (fd.get("ean") as string) || undefined,
-      optionLabel: (fd.get("optionLabel") as string) || undefined,
-      optionValue: (fd.get("optionValue") as string) || undefined,
+      optionLabel,
+      optionValue,
       pricePln: plnToGrosze(fd.get("pricePln") as string),
       comparePricePln: compareRaw ? plnToGrosze(compareRaw) : undefined,
       costPricePln: costRaw ? plnToGrosze(costRaw) : undefined,
@@ -62,192 +84,206 @@ export function VariantsTable({ productId, variants }: Props) {
     });
   }
 
-  const variantForm = (item?: SerializedVariant) => (
-    <form onSubmit={handleSubmit} className="mt-2 space-y-2 rounded-xl bg-muted p-3">
-      {item && <input type="hidden" name="id" value={item.id} />}
+  const variantForm = (item?: SerializedVariant) => {
+    const parsed = parseOptionValue(item?.optionValue);
+    return (
+      <form onSubmit={handleSubmit} className="mt-2 space-y-2 rounded-xl bg-muted p-3">
+        {item && <input type="hidden" name="id" value={item.id} />}
 
-      {/* Row 1: SKU, option, EAN */}
-      <div className="grid grid-cols-3 gap-2">
-        <input
-          name="sku"
-          defaultValue={item?.sku ?? ""}
-          placeholder="SKU *"
-          required
-          className="rounded-lg border border-border px-2 py-1 text-sm"
-        />
-        <input
-          name="optionLabel"
-          defaultValue={item?.optionLabel ?? ""}
-          placeholder="Etykieta (np. Pojemność)"
-          className="rounded-lg border border-border px-2 py-1 text-sm"
-        />
-        <input
-          name="optionValue"
-          defaultValue={item?.optionValue ?? ""}
-          placeholder="Wartość (np. 60 kaps.)"
-          className="rounded-lg border border-border px-2 py-1 text-sm"
-        />
-      </div>
-
-      {/* Row 2: price, compare price, stock, VAT */}
-      <div className="grid grid-cols-4 gap-2">
-        <div>
-          <label className="mb-0.5 block text-xs text-muted-foreground">
-            Cena (zł) *
-            <input
-              name="pricePln"
-              type="number"
-              step="0.01"
-              min="0.01"
-              defaultValue={item ? groszeToPln(item.pricePln) : ""}
-              placeholder="49.90"
-              required
-              className="mt-0.5 w-full rounded-lg border border-border px-2 py-1 text-sm font-normal"
-            />
-          </label>
+        {/* Row 1: SKU, qty, unit */}
+        <div className="grid grid-cols-3 gap-2">
+          <input
+            name="sku"
+            defaultValue={item?.sku ?? ""}
+            placeholder="SKU *"
+            required
+            className="rounded-lg border border-border px-2 py-1 text-sm"
+          />
+          <input
+            name="qty"
+            type="number"
+            min={1}
+            defaultValue={parsed.qty}
+            placeholder="Ilość (np. 60)"
+            className="rounded-lg border border-border px-2 py-1 text-sm"
+          />
+          <select
+            name="unit"
+            defaultValue={parsed.unit}
+            className="rounded-lg border border-border px-2 py-1 text-sm"
+          >
+            {UNITS.map((u) => (
+              <option key={u} value={u}>
+                {u}
+              </option>
+            ))}
+          </select>
         </div>
-        <div>
-          <label className="mb-0.5 block text-xs text-muted-foreground">
-            Cena przed (zł)
-            <input
-              name="comparePricePln"
-              type="number"
-              step="0.01"
-              min="0.01"
-              defaultValue={item?.comparePricePln ? groszeToPln(item.comparePricePln) : ""}
-              placeholder="59.90"
-              className="mt-0.5 w-full rounded-lg border border-border px-2 py-1 text-sm font-normal"
-            />
-          </label>
-        </div>
-        <div>
-          <label className="mb-0.5 block text-xs text-muted-foreground">
-            Stan magazynowy
-            <input
-              name="stock"
-              type="number"
-              min={0}
-              defaultValue={item?.stock ?? 0}
-              className="mt-0.5 w-full rounded-lg border border-border px-2 py-1 text-sm font-normal"
-            />
-          </label>
-        </div>
-        <div>
-          <label className="mb-0.5 block text-xs text-muted-foreground">
-            VAT (%)
-            <input
-              name="vatRate"
-              type="number"
-              step="0.01"
-              defaultValue={Number(item?.vatRate ?? 5)}
-              className="mt-0.5 w-full rounded-lg border border-border px-2 py-1 text-sm font-normal"
-            />
-          </label>
-        </div>
-      </div>
 
-      {/* Row 3: EAN, weight */}
-      <div className="grid grid-cols-2 gap-2">
-        <input
-          name="ean"
-          defaultValue={item?.ean ?? ""}
-          placeholder="EAN / kod kreskowy"
-          className="rounded-lg border border-border px-2 py-1 text-sm"
-        />
-        <div>
-          <label className="mb-0.5 block text-xs text-muted-foreground">
-            Waga [g]
-            <input
-              name="weightGrams"
-              type="number"
-              min={1}
-              defaultValue={item?.weightGrams ?? ""}
-              placeholder="150"
-              className="mt-0.5 w-full rounded-lg border border-border px-2 py-1 text-sm font-normal"
-            />
-          </label>
-        </div>
-      </div>
-
-      {/* Flags */}
-      <div className="flex items-center gap-4">
-        <label className="flex items-center gap-1.5 text-sm">
-          <input type="checkbox" name="isDefault" defaultChecked={item?.isDefault} />
-          Domyślny
-        </label>
-        <label className="flex items-center gap-1.5 text-sm">
-          <input type="checkbox" name="isActive" defaultChecked={item?.isActive ?? true} />
-          Aktywny
-        </label>
-      </div>
-
-      {/* Advanced toggle */}
-      <button
-        type="button"
-        onClick={() => setShowAdvanced((v) => !v)}
-        className="text-xs text-muted-foreground hover:text-foreground"
-      >
-        {showAdvanced ? "▲ Ukryj zaawansowane" : "▾ Zaawansowane"}
-      </button>
-
-      {showAdvanced && (
-        <div className="grid grid-cols-3 gap-2 border-t border-border pt-2">
+        {/* Row 2: price, compare price, stock, VAT */}
+        <div className="grid grid-cols-4 gap-2">
           <div>
             <label className="mb-0.5 block text-xs text-muted-foreground">
-              Cena zakupu (zł)
+              Cena (zł) *
               <input
-                name="costPricePln"
+                name="pricePln"
                 type="number"
                 step="0.01"
                 min="0.01"
-                defaultValue={item?.costPricePln ? groszeToPln(item.costPricePln) : ""}
-                placeholder="25.00"
+                defaultValue={item ? groszeToPln(item.pricePln) : ""}
+                placeholder="49.90"
+                required
                 className="mt-0.5 w-full rounded-lg border border-border px-2 py-1 text-sm font-normal"
               />
             </label>
           </div>
           <div>
             <label className="mb-0.5 block text-xs text-muted-foreground">
-              Alert stanu (szt.)
+              Cena przed (zł)
               <input
-                name="lowStockThreshold"
+                name="comparePricePln"
                 type="number"
-                min={0}
-                defaultValue={item?.lowStockThreshold ?? 5}
+                step="0.01"
+                min="0.01"
+                defaultValue={item?.comparePricePln ? groszeToPln(item.comparePricePln) : ""}
+                placeholder="59.90"
                 className="mt-0.5 w-full rounded-lg border border-border px-2 py-1 text-sm font-normal"
               />
             </label>
           </div>
-          <div className="flex items-end pb-1">
-            <label className="flex items-center gap-1.5 text-sm">
-              <input type="checkbox" name="trackStock" defaultChecked={item?.trackStock ?? true} />
-              Śledź stan
+          <div>
+            <label className="mb-0.5 block text-xs text-muted-foreground">
+              Stan magazynowy
+              <input
+                name="stock"
+                type="number"
+                min={0}
+                defaultValue={item?.stock ?? 0}
+                className="mt-0.5 w-full rounded-lg border border-border px-2 py-1 text-sm font-normal"
+              />
+            </label>
+          </div>
+          <div>
+            <label className="mb-0.5 block text-xs text-muted-foreground">
+              VAT (%)
+              <input
+                name="vatRate"
+                type="number"
+                step="0.01"
+                defaultValue={Number(item?.vatRate ?? 5)}
+                className="mt-0.5 w-full rounded-lg border border-border px-2 py-1 text-sm font-normal"
+              />
             </label>
           </div>
         </div>
-      )}
 
-      <div className="flex gap-2">
-        <button
-          type="submit"
-          disabled={saving}
-          className="rounded-lg bg-primary px-3 py-1 text-xs font-medium text-primary-foreground transition-colors duration-200 hover:bg-primary-deep motion-reduce:transition-none disabled:opacity-50"
-        >
-          {saving ? "…" : "Zapisz"}
-        </button>
+        {/* Row 3: EAN, weight */}
+        <div className="grid grid-cols-2 gap-2">
+          <input
+            name="ean"
+            defaultValue={item?.ean ?? ""}
+            placeholder="EAN / kod kreskowy"
+            className="rounded-lg border border-border px-2 py-1 text-sm"
+          />
+          <div>
+            <label className="mb-0.5 block text-xs text-muted-foreground">
+              Waga [g]
+              <input
+                name="weightGrams"
+                type="number"
+                min={1}
+                defaultValue={item?.weightGrams ?? ""}
+                placeholder="150"
+                className="mt-0.5 w-full rounded-lg border border-border px-2 py-1 text-sm font-normal"
+              />
+            </label>
+          </div>
+        </div>
+
+        {/* Flags */}
+        <div className="flex items-center gap-4">
+          <label className="flex items-center gap-1.5 text-sm">
+            <input type="checkbox" name="isDefault" defaultChecked={item?.isDefault} />
+            Domyślny
+          </label>
+          <label className="flex items-center gap-1.5 text-sm">
+            <input type="checkbox" name="isActive" defaultChecked={item?.isActive ?? true} />
+            Aktywny
+          </label>
+        </div>
+
+        {/* Advanced toggle */}
         <button
           type="button"
-          onClick={() => {
-            setEditing(null);
-            setShowNew(false);
-          }}
-          className="rounded-lg border border-border px-3 py-1 text-xs"
+          onClick={() => setShowAdvanced((v) => !v)}
+          className="text-xs text-muted-foreground hover:text-foreground"
         >
-          Anuluj
+          {showAdvanced ? "▲ Ukryj zaawansowane" : "▾ Zaawansowane"}
         </button>
-      </div>
-    </form>
-  );
+
+        {showAdvanced && (
+          <div className="grid grid-cols-3 gap-2 border-t border-border pt-2">
+            <div>
+              <label className="mb-0.5 block text-xs text-muted-foreground">
+                Cena zakupu (zł)
+                <input
+                  name="costPricePln"
+                  type="number"
+                  step="0.01"
+                  min="0.01"
+                  defaultValue={item?.costPricePln ? groszeToPln(item.costPricePln) : ""}
+                  placeholder="25.00"
+                  className="mt-0.5 w-full rounded-lg border border-border px-2 py-1 text-sm font-normal"
+                />
+              </label>
+            </div>
+            <div>
+              <label className="mb-0.5 block text-xs text-muted-foreground">
+                Alert stanu (szt.)
+                <input
+                  name="lowStockThreshold"
+                  type="number"
+                  min={0}
+                  defaultValue={item?.lowStockThreshold ?? 5}
+                  className="mt-0.5 w-full rounded-lg border border-border px-2 py-1 text-sm font-normal"
+                />
+              </label>
+            </div>
+            <div className="flex items-end pb-1">
+              <label className="flex items-center gap-1.5 text-sm">
+                <input
+                  type="checkbox"
+                  name="trackStock"
+                  defaultChecked={item?.trackStock ?? true}
+                />
+                Śledź stan
+              </label>
+            </div>
+          </div>
+        )}
+
+        <div className="flex gap-2">
+          <button
+            type="submit"
+            disabled={saving}
+            className="rounded-lg bg-primary px-3 py-1 text-xs font-medium text-primary-foreground transition-colors duration-200 hover:bg-primary-deep motion-reduce:transition-none disabled:opacity-50"
+          >
+            {saving ? "…" : "Zapisz"}
+          </button>
+          <button
+            type="button"
+            onClick={() => {
+              setEditing(null);
+              setShowNew(false);
+            }}
+            className="rounded-lg border border-border px-3 py-1 text-xs"
+          >
+            Anuluj
+          </button>
+        </div>
+      </form>
+    );
+  };
 
   return (
     <section className="rounded-2xl bg-card p-5 shadow-card">
