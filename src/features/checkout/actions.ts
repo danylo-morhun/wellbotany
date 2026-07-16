@@ -5,6 +5,7 @@ import { z } from "zod";
 import { CART_COOKIE_NAME } from "@/features/cart/lib/session";
 import { paymentUrl, registerTransaction } from "@/features/przelewy24/lib/client";
 import { ActionError } from "@/lib/action-error";
+import { sendOrderConfirmationEmail } from "@/lib/email/order-emails";
 import { formatPrice } from "@/lib/format";
 import { prisma } from "@/lib/prisma";
 import { actionClient } from "@/lib/safe-action";
@@ -214,6 +215,10 @@ export const placeOrder = actionClient
 
     const cookieStore = await cookies();
     cookieStore.delete(CART_COOKIE_NAME);
+
+    sendOrderConfirmationEmail(order.orderNumber).catch((err) => {
+      console.error(`[email] confirmation failed for ${order.orderNumber}:`, err);
+    });
 
     if (process.env.P24_SANDBOX_BYPASS === "true") {
       return { orderNumber: order.orderNumber, redirectUrl: null };

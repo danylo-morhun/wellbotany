@@ -6,6 +6,7 @@
 import type { OrderStatus, ShippingMethod } from "@prisma/client";
 import { type NextRequest, NextResponse } from "next/server";
 import { blCall } from "@/lib/baselinker/client";
+import { sendTrackingEmail } from "@/lib/email/order-emails";
 import { prisma } from "@/lib/prisma";
 
 type BlOrderProduct = {
@@ -240,7 +241,7 @@ export async function POST(req: NextRequest) {
   // New Allegro order — ingest into local DB
   const localOrder = await prisma.order.findUnique({
     where: { baselinkerOrderId: String(blOrderId) },
-    select: { id: true, shippedAt: true },
+    select: { id: true, shippedAt: true, trackingNumber: true },
   });
 
   if (!localOrder) {
@@ -269,6 +270,12 @@ export async function POST(req: NextRequest) {
       ...(newStatus === "DELIVERED" && { deliveredAt: new Date() }),
     },
   });
+
+  if (tracking && !localOrder.trackingNumber) {
+    sendTrackingEmail(localOrder.id).catch((err) => {
+      console.error(`[email] tracking notification failed for order ${localOrder.id}:`, err);
+    });
+  }
 
   return NextResponse.json({ ok: true });
 }
