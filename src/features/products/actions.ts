@@ -324,7 +324,9 @@ export const bulkDeleteProducts = adminActionClient
       select: { variant: { select: { productId: true } } },
       distinct: ["variantId"],
     });
-    const conflictIds = new Set(withOrders.map((o) => o.variant.productId));
+    const conflictIds = new Set(
+      withOrders.flatMap((o) => (o.variant ? [o.variant.productId] : [])),
+    );
     const deletableIds = ids.filter((id) => !conflictIds.has(id));
 
     if (conflictIds.size > 0 && !skipConflicts) {
