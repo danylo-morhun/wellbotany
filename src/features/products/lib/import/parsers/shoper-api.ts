@@ -33,7 +33,7 @@ export type ShoperProduct = {
   producer_id?: number | string;
   name?: string;
   translations?: Record<string, { name?: string }>;
-  main_image?: { url?: string } | string;
+  main_image?: { url?: string; gfx_id?: string | number; name?: string } | string;
   category_id?: number | string;
   // GET /products/{id} nests the stock row inline — lets us refresh a
   // known product's price/stock with a single request.
@@ -191,11 +191,31 @@ function brandFromProduct(
   return { name: raw };
 }
 
+function shopPublicBaseUrl(): string | undefined {
+  const apiBase = envStr("SHOPER_API_BASE_URL", "");
+  const base = apiBase.replace(/\/webapi\/rest\/?$/, "").replace(/\/+$/, "");
+  return base || undefined;
+}
+
+/**
+ * Shoper's product API returns main_image as `{ gfx_id, name, ... }` with no
+ * direct URL — the storefront resolves it through an on-demand image cache
+ * at `/environment/cache/images/productGfx_{gfx_id}_{w}_{h}/{name}`, which
+ * generates the requested size on first hit (verified against the live shop).
+ */
 function imageUrlFromProduct(p: ShoperProduct): string | undefined {
   const img = p.main_image;
   if (!img) return undefined;
   if (typeof img === "string") return img;
-  return img.url ?? undefined;
+  if (img.url) return img.url;
+  if (img.gfx_id) {
+    const base = shopPublicBaseUrl();
+    if (!base) return undefined;
+    const size = envStr("SHOPER_IMAGE_SIZE", "1000_1000");
+    const name = img.name ?? `${img.gfx_id}.jpg`;
+    return `${base}/environment/cache/images/productGfx_${img.gfx_id}_${size}/${encodeURIComponent(name)}`;
+  }
+  return undefined;
 }
 
 function filterActiveStocks(
