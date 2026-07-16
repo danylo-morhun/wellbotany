@@ -19,6 +19,7 @@ import {
   type ProductSelectionInput,
   productImageSchema,
   productSchema,
+  quickUpdateVariantSchema,
   tagSchema,
   variantSchema,
 } from "./schema";
@@ -240,6 +241,21 @@ export const deleteVariant = adminActionClient
     await prisma.productVariant.delete({ where: { id } });
     revalidatePath("/admin/produkty");
     revalidateTag("products");
+    return { success: true };
+  });
+
+/** Inline price/stock edit from the admin products list, without opening the full form. */
+export const quickUpdateVariant = adminActionClient
+  .schema(quickUpdateVariantSchema)
+  .action(async ({ parsedInput: { variantId, pricePln, stock } }) => {
+    const variant = await prisma.productVariant.update({
+      where: { id: variantId },
+      data: { pricePln, stock },
+      select: { productId: true },
+    });
+    revalidatePath("/admin/produkty");
+    revalidateTag("products");
+    void syncProductToBaselinker(variant.productId).catch(console.error);
     return { success: true };
   });
 

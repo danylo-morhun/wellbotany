@@ -62,6 +62,11 @@ export default async function AdminProductsPage({
         brand: { select: { name: true } },
         _count: { select: { variants: true } },
         images: { orderBy: { sortOrder: "asc" }, take: 1, select: { url: true } },
+        variants: {
+          where: { isDefault: true },
+          take: 1,
+          select: { id: true, pricePln: true, stock: true },
+        },
       },
     }),
     prisma.product.count({ where }),

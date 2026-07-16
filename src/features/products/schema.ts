@@ -100,6 +100,14 @@ export const bulkUpdateStockSchema = z.object({
   ),
 });
 
+// ─── Quick inline variant edit ─────────────────────────────────────────────────
+
+export const quickUpdateVariantSchema = z.object({
+  variantId: z.string().min(1),
+  pricePln: z.coerce.number().int().positive(),
+  stock: z.coerce.number().int().min(0),
+});
+
 // ─── Product bulk operations ───────────────────────────────────────────────────
 
 // Nested under `filters` (not flattened) so bulkAssignBrand/bulkAssignCategory's own

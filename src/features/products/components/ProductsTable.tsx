@@ -9,6 +9,7 @@ import { useProductSelection } from "../lib/useProductSelection";
 import type { ProductFilters } from "../lib/where";
 import { BulkActionsToolbar } from "./BulkActionsToolbar";
 import { DeleteProductButton } from "./DeleteProductButton";
+import { InlineVariantEditor } from "./InlineVariantEditor";
 
 const STATUS_LABELS: Record<ProductStatus, string> = {
   DRAFT: "Szkic",
@@ -25,6 +26,7 @@ type ProductRow = {
   brand: { name: string } | null;
   _count: { variants: number };
   images: { url: string }[];
+  variants: { id: string; pricePln: number; stock: number }[];
 };
 
 type Props = {
@@ -72,10 +74,10 @@ export function ProductsTable({ products, total, filters, brands, categories }: 
         </div>
       )}
 
-      <div className="overflow-x-auto rounded-2xl bg-card shadow-card">
+      <div className="max-h-[70vh] overflow-auto rounded-2xl bg-card shadow-card">
         <table className="w-full text-sm">
-          <thead>
-            <tr className="border-b bg-muted/50 text-left">
+          <thead className="sticky top-0 z-10 bg-muted/80 backdrop-blur-sm">
+            <tr className="border-b text-left">
               <th className="w-10 px-4 py-3">
                 <input
                   type="checkbox"
@@ -92,6 +94,7 @@ export function ProductsTable({ products, total, filters, brands, categories }: 
               <th className="px-4 py-3 font-medium">Status</th>
               <th className="px-4 py-3 font-medium">Kategoria</th>
               <th className="px-4 py-3 font-medium">Marka</th>
+              <th className="px-4 py-3 font-medium">Cena / Stan</th>
               <th className="px-4 py-3 font-medium">Warianty</th>
               <th className="px-4 py-3 font-medium">Akcje</th>
             </tr>
@@ -142,6 +145,17 @@ export function ProductsTable({ products, total, filters, brands, categories }: 
                   {product.category?.namePl ?? "—"}
                 </td>
                 <td className="px-4 py-3 text-muted-foreground">{product.brand?.name ?? "—"}</td>
+                <td className="px-4 py-3">
+                  {product.variants[0] ? (
+                    <InlineVariantEditor
+                      variantId={product.variants[0].id}
+                      pricePln={product.variants[0].pricePln}
+                      stock={product.variants[0].stock}
+                    />
+                  ) : (
+                    <span className="text-muted-foreground">—</span>
+                  )}
+                </td>
                 <td className="px-4 py-3 text-muted-foreground">{product._count.variants}</td>
                 <td className="px-4 py-3">
                   <div className="flex gap-2">
@@ -158,7 +172,7 @@ export function ProductsTable({ products, total, filters, brands, categories }: 
             ))}
             {products.length === 0 && (
               <tr>
-                <td colSpan={8} className="px-4 py-8 text-center text-muted-foreground">
+                <td colSpan={9} className="px-4 py-8 text-center text-muted-foreground">
                   Brak produktów
                 </td>
               </tr>
