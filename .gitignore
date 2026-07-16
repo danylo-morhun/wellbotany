@@ -46,3 +46,10 @@ yarn-error.log*
 # Misc
 .vercel
 .turbo
+public/supplier-images/
+
+# Supplier data drops — keep heavy files out of dev watcher
+/*.zip
+/*.xlsx
+/*.csv
+/*.pdf

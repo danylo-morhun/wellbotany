@@ -7,6 +7,8 @@ const nextConfig: NextConfig = {
       { protocol: "https", hostname: "images.unsplash.com" },
       { protocol: "https", hostname: "cdn.baselinker.com" },
       { protocol: "https", hostname: "zielarniakaliska.com.pl" },
+      { protocol: "https", hostname: "yango.pl" },
+      { protocol: "https", hostname: "kenay.com.pl" },
     ],
   },
 };
