@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { cookies } from "next/headers";
 import { notFound } from "next/navigation";
+import { AdminEditBar } from "@/features/catalog/components/AdminEditBar";
 import { Breadcrumbs } from "@/features/catalog/components/Breadcrumbs";
 import { ProductActionsClient } from "@/features/catalog/components/ProductActionsClient";
 import { ProductCard } from "@/features/catalog/components/ProductCard";
@@ -128,6 +129,8 @@ export default async function ProduktPage({ params }: Props) {
 
   return (
     <>
+      <AdminEditBar productId={product.id} />
+
       {jsonLd && (
         <script
           type="application/ld+json"
