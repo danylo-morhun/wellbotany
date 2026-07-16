@@ -32,7 +32,7 @@ export type ShoperProduct = {
   producer?: string;
   producer_id?: number | string;
   name?: string;
-  translations?: Record<string, { name?: string }>;
+  translations?: Record<string, { name?: string; permalink?: string }>;
   main_image?: { url?: string; gfx_id?: string | number; name?: string } | string;
   category_id?: number | string;
   // GET /products/{id} nests the stock row inline — lets us refresh a
@@ -74,6 +74,53 @@ function toBoolean(value: unknown): boolean | null {
 function pickPlName(p: ShoperProduct): string | undefined {
   const t = p.translations ?? {};
   return p.name ?? t.pl_PL?.name ?? t.pl?.name ?? Object.values(t)[0]?.name;
+}
+
+function pickPermalink(p: ShoperProduct): string | undefined {
+  const t = p.translations ?? {};
+  return t.pl_PL?.permalink ?? t.pl?.permalink ?? Object.values(t)[0]?.permalink;
+}
+
+/**
+ * The Shoper REST API never exposes a producer *name* — only `producer_id`
+ * — and `/producers` needs a broader API scope than this integration token
+ * has (403 insufficient_scope). The storefront product page does render the
+ * name (`<meta itemprop="brand">`), so as a fallback we scrape one
+ * product's page per unique producer_id and cache the result for the run.
+ */
+const producerNameCache = new Map<number, string | null>();
+
+// Throws on network/timeout failure so the caller can distinguish "checked
+// the page, no brand tag there" (safe to cache) from "couldn't check"
+// (must retry later, not get permanently stuck as unknown).
+async function scrapeProducerNameFromStorefront(permalink: string): Promise<string | undefined> {
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), 8000);
+  try {
+    const res = await fetch(permalink, { signal: controller.signal });
+    if (!res.ok) throw new Error(`storefront fetch failed: ${res.status}`);
+    const html = await res.text();
+    const match = html.match(/<meta\s+itemprop="brand"\s+content="([^"]*)"/i);
+    return match?.[1]?.trim() || undefined;
+  } finally {
+    clearTimeout(timeout);
+  }
+}
+
+async function resolveProducerName(
+  producerId: number | null,
+  permalink: string | undefined,
+): Promise<string | undefined> {
+  if (producerId === null) return undefined;
+  if (producerNameCache.has(producerId)) return producerNameCache.get(producerId) ?? undefined;
+  if (!permalink) return undefined;
+  try {
+    const name = await scrapeProducerNameFromStorefront(permalink);
+    producerNameCache.set(producerId, name ?? null);
+    return name;
+  } catch {
+    return undefined;
+  }
 }
 
 function productId(p: ShoperProduct): number | null {
@@ -179,16 +226,21 @@ export async function fetchProductsByIds(ids: number[]): Promise<Map<number, Sho
   return map;
 }
 
-function brandFromProduct(
+async function brandFromProduct(
   p: ShoperProduct,
   fallback: { name: string; slug: string },
-): {
+): Promise<{
   name: string;
   slug?: string;
-} {
+}> {
   const raw = (p.producer ?? "").trim();
-  if (!raw) return { name: fallback.name, slug: fallback.slug };
-  return { name: raw };
+  if (raw) return { name: raw };
+
+  const producerId = toInt(p.producer_id);
+  const scraped = await resolveProducerName(producerId, pickPermalink(p));
+  if (scraped) return { name: scraped };
+
+  return { name: fallback.name, slug: fallback.slug };
 }
 
 function shopPublicBaseUrl(): string | undefined {
@@ -254,7 +306,7 @@ export async function buildDraftsFromStocks(
     const stock = Math.max(0, Math.round(Number(s.stock ?? 0)));
 
     const brand = p
-      ? brandFromProduct(p, { name: source.brandName, slug: source.brandSlug })
+      ? await brandFromProduct(p, { name: source.brandName, slug: source.brandSlug })
       : { name: source.brandName, slug: source.brandSlug };
 
     drafts.push({
