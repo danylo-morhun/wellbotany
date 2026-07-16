@@ -100,6 +100,36 @@ export const bulkUpdateStockSchema = z.object({
   ),
 });
 
+// ─── Product bulk operations ───────────────────────────────────────────────────
+
+/**
+ * "ids" = explicit selection (current page checkboxes).
+ * "all" = every product matching `search` (cross-page "select all"), minus excludedIds
+ * for rows the admin unchecked after selecting all.
+ */
+export const productSelectionSchema = z.object({
+  mode: z.enum(["ids", "all"]),
+  ids: z.array(z.string().min(1)).default([]),
+  excludedIds: z.array(z.string().min(1)).default([]),
+  search: z.string().optional(),
+});
+
+export const bulkUpdateProductStatusSchema = productSelectionSchema.extend({
+  status: z.nativeEnum(ProductStatus),
+});
+
+export const bulkAssignBrandSchema = productSelectionSchema.extend({
+  brandId: z.string().min(1).nullable(),
+});
+
+export const bulkAssignCategorySchema = productSelectionSchema.extend({
+  categoryId: z.string().min(1).nullable(),
+});
+
+export const bulkDeleteProductsSchema = productSelectionSchema.extend({
+  skipConflicts: z.boolean().default(false),
+});
+
 // ─── Product image ─────────────────────────────────────────────────────────────
 
 export const productImageSchema = z.object({
@@ -121,3 +151,4 @@ export type TagInput = z.input<typeof tagSchema>;
 export type ProductInput = z.input<typeof productSchema>;
 export type VariantInput = z.input<typeof variantSchema>;
 export type BulkUpdateStockInput = z.input<typeof bulkUpdateStockSchema>;
+export type ProductSelectionInput = z.input<typeof productSelectionSchema>;

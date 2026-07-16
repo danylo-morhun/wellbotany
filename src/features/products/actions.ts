@@ -5,17 +5,34 @@ import { ActionError } from "@/lib/action-error";
 import { syncProductToBaselinker, syncStockToBaselinker } from "@/lib/baselinker/inventory";
 import { prisma } from "@/lib/prisma";
 import { adminActionClient } from "@/lib/safe-action";
+import { buildProductWhere } from "./lib/where";
 import {
   brandSchema,
+  bulkAssignBrandSchema,
+  bulkAssignCategorySchema,
+  bulkDeleteProductsSchema,
+  bulkUpdateProductStatusSchema,
   bulkUpdateStockSchema,
   categorySchema,
   deleteByIdSchema,
   deleteImageSchema,
+  type ProductSelectionInput,
   productImageSchema,
   productSchema,
   tagSchema,
   variantSchema,
 } from "./schema";
+
+/** Resolves a selection ("ids" or "all matching search") to a concrete list of product ids. */
+async function resolveProductIds(selection: ProductSelectionInput): Promise<string[]> {
+  if (selection.mode === "ids") return selection.ids ?? [];
+  const matching = await prisma.product.findMany({
+    where: buildProductWhere(selection.search),
+    select: { id: true },
+  });
+  const excluded = new Set(selection.excludedIds ?? []);
+  return matching.map((p) => p.id).filter((id) => !excluded.has(id));
+}
 
 // ─── Categories ───────────────────────────────────────────────────────────────
 
@@ -251,6 +268,84 @@ export const bulkUpdateStock = adminActionClient
 
     revalidatePath("/admin/magazyn");
     return { success: true };
+  });
+
+// ─── Product bulk operations ───────────────────────────────────────────────────
+
+export const bulkUpdateProductStatus = adminActionClient
+  .schema(bulkUpdateProductStatusSchema)
+  .action(async ({ parsedInput: { status, ...selection } }) => {
+    const ids = await resolveProductIds(selection);
+    const { count } = await prisma.product.updateMany({
+      where: { id: { in: ids } },
+      data: { status },
+    });
+    revalidatePath("/admin/produkty");
+    revalidatePath("/katalog", "layout");
+    revalidateTag("products");
+    return { success: true, count };
+  });
+
+export const bulkAssignBrand = adminActionClient
+  .schema(bulkAssignBrandSchema)
+  .action(async ({ parsedInput: { brandId, ...selection } }) => {
+    const ids = await resolveProductIds(selection);
+    const { count } = await prisma.product.updateMany({
+      where: { id: { in: ids } },
+      data: { brandId },
+    });
+    revalidatePath("/admin/produkty");
+    revalidatePath("/katalog", "layout");
+    revalidateTag("products");
+    return { success: true, count };
+  });
+
+export const bulkAssignCategory = adminActionClient
+  .schema(bulkAssignCategorySchema)
+  .action(async ({ parsedInput: { categoryId, ...selection } }) => {
+    const ids = await resolveProductIds(selection);
+    const { count } = await prisma.product.updateMany({
+      where: { id: { in: ids } },
+      data: { categoryId },
+    });
+    revalidatePath("/admin/produkty");
+    revalidatePath("/katalog", "layout");
+    revalidateTag("products");
+    return { success: true, count };
+  });
+
+export const bulkDeleteProducts = adminActionClient
+  .schema(bulkDeleteProductsSchema)
+  .action(async ({ parsedInput: { skipConflicts, ...selection } }) => {
+    const ids = await resolveProductIds(selection);
+
+    const withOrders = await prisma.orderItem.findMany({
+      where: { variant: { productId: { in: ids } } },
+      select: { variant: { select: { productId: true } } },
+      distinct: ["variantId"],
+    });
+    const conflictIds = new Set(withOrders.map((o) => o.variant.productId));
+    const deletableIds = ids.filter((id) => !conflictIds.has(id));
+
+    if (conflictIds.size > 0 && !skipConflicts) {
+      return {
+        success: true,
+        requiresConfirmation: true,
+        conflictCount: conflictIds.size,
+        deletableCount: deletableIds.length,
+      };
+    }
+
+    await prisma.product.deleteMany({ where: { id: { in: deletableIds } } });
+    revalidatePath("/admin/produkty");
+    revalidatePath("/katalog", "layout");
+    revalidateTag("products");
+    return {
+      success: true,
+      requiresConfirmation: false,
+      deletedCount: deletableIds.length,
+      skippedCount: conflictIds.size,
+    };
   });
 
 // ─── Product images ───────────────────────────────────────────────────────────
