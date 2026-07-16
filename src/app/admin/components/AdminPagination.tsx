@@ -57,7 +57,10 @@ export function AdminPagination({ currentPage, totalPages }: Props) {
       >
         <ChevronLeft className="size-4" />
       </button>
-      <form onSubmit={handleJumpSubmit} className="flex items-center gap-1.5 text-sm text-muted-foreground">
+      <form
+        onSubmit={handleJumpSubmit}
+        className="flex items-center gap-1.5 text-sm text-muted-foreground"
+      >
         <input
           type="number"
           min={1}
