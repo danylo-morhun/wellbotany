@@ -30,6 +30,7 @@ export type CheckoutFormData = {
   billPostalCode: string;
   paymentMethod: "BLIK" | "PRZELEWY24" | "APPLE_PAY" | "GOOGLE_PAY";
   couponCode: string;
+  acceptedTerms: boolean;
 };
 
 const INITIAL_DATA: CheckoutFormData = {
@@ -52,6 +53,7 @@ const INITIAL_DATA: CheckoutFormData = {
   billPostalCode: "",
   paymentMethod: "BLIK",
   couponCode: "",
+  acceptedTerms: false,
 };
 
 const STEP_LABELS = ["Kontakt", "Dostawa", "Płatność"];
@@ -114,6 +116,7 @@ export function CheckoutForm({ cartId, items, subtotal }: Props) {
       billPostalCode: formData.billPostalCode || undefined,
       paymentMethod: formData.paymentMethod,
       couponCode: formData.couponCode || undefined,
+      acceptedTerms: formData.acceptedTerms,
     });
   }
 

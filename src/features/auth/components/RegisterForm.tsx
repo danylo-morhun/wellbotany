@@ -11,6 +11,7 @@ export function RegisterForm() {
     email: "",
     password: "",
     confirmPassword: "",
+    acceptedTerms: false,
   });
 
   const { execute, isPending, hasErrored, result } = useAction(registerCustomer);
@@ -124,9 +125,33 @@ export function RegisterForm() {
         )}
       </div>
 
+      <div>
+        <label className="flex items-start gap-2 text-sm">
+          <input
+            type="checkbox"
+            checked={form.acceptedTerms}
+            onChange={(e) => setForm((prev) => ({ ...prev, acceptedTerms: e.target.checked }))}
+            className="mt-0.5"
+          />
+          <span>
+            Akceptuję{" "}
+            <a href="/regulamin" className="underline hover:text-foreground">
+              regulamin
+            </a>{" "}
+            i{" "}
+            <a href="/polityka-prywatnosci" className="underline hover:text-foreground">
+              politykę prywatności
+            </a>
+          </span>
+        </label>
+        {fieldErrors?.acceptedTerms?._errors?.[0] && (
+          <p className="mt-1 text-xs text-destructive">{fieldErrors.acceptedTerms._errors[0]}</p>
+        )}
+      </div>
+
       <button
         type="submit"
-        disabled={isPending}
+        disabled={isPending || !form.acceptedTerms}
         className="w-full rounded-lg bg-primary px-4 py-3 text-sm font-medium text-primary-foreground transition-[transform,background-color,color,border-color] duration-[160ms] ease-[cubic-bezier(0.23,1,0.32,1)] hover:bg-primary-deep active:scale-[0.97] disabled:opacity-50 motion-reduce:transition-none motion-reduce:active:scale-100"
       >
         {isPending ? "Rejestracja..." : "Zarejestruj się"}

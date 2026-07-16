@@ -13,6 +13,9 @@ export const registerSchema = z
     email: z.string().email("Nieprawidłowy adres e-mail"),
     password: z.string().min(8, "Hasło musi mieć co najmniej 8 znaków"),
     confirmPassword: z.string(),
+    acceptedTerms: z
+      .boolean()
+      .refine((v) => v, { message: "Wymagana akceptacja regulaminu i polityki prywatności" }),
   })
   .refine((data) => data.password === data.confirmPassword, {
     message: "Hasła nie są zgodne",

@@ -22,6 +22,9 @@ export const checkoutSchema = z
     billPostalCode: z.string().optional(),
     paymentMethod: z.enum(["BLIK", "PRZELEWY24", "APPLE_PAY", "GOOGLE_PAY"]),
     couponCode: z.string().optional(),
+    acceptedTerms: z
+      .boolean()
+      .refine((v) => v, { message: "Wymagana akceptacja regulaminu i polityki prywatności" }),
   })
   .superRefine((data, ctx) => {
     if (data.shippingMethod === "INPOST_PACZKOMAT" && !data.inpostMachineId?.trim()) {

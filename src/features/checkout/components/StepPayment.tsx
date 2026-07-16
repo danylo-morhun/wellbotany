@@ -173,6 +173,25 @@ export function StepPayment({
         </p>
       )}
 
+      <label className="flex items-start gap-2 text-sm">
+        <input
+          type="checkbox"
+          checked={data.acceptedTerms}
+          onChange={(e) => onChange({ acceptedTerms: e.target.checked })}
+          className="mt-0.5"
+        />
+        <span>
+          Akceptuję{" "}
+          <a href="/regulamin" className="underline hover:text-foreground">
+            regulamin sklepu
+          </a>{" "}
+          i{" "}
+          <a href="/polityka-prywatnosci" className="underline hover:text-foreground">
+            politykę prywatności
+          </a>
+        </span>
+      </label>
+
       <div className="flex gap-3">
         <button
           type="button"
@@ -185,16 +204,12 @@ export function StepPayment({
         <button
           type="button"
           onClick={onSubmit}
-          disabled={pending}
+          disabled={pending || !data.acceptedTerms}
           className="flex-1 rounded-lg bg-primary px-4 py-3 text-sm font-medium text-primary-foreground transition-[transform,background-color,color,border-color] duration-[160ms] ease-[cubic-bezier(0.23,1,0.32,1)] hover:bg-primary-deep active:scale-[0.97] disabled:opacity-50 motion-reduce:transition-none motion-reduce:active:scale-100"
         >
           {pending ? "Składam zamówienie…" : `Złóż zamówienie — ${formatPrice(total)}`}
         </button>
       </div>
-
-      <p className="text-center text-xs text-muted-foreground">
-        Składając zamówienie akceptujesz regulamin sklepu i politykę prywatności.
-      </p>
     </div>
   );
 }
