@@ -28,6 +28,48 @@ function unauthorized() {
   return NextResponse.json({ ok: false, error: "Unauthorized" }, { status: 401 });
 }
 
+/**
+ * Walks error.cause chains (fetch's TypeError wraps the real cause, e.g.
+ * ECONNRESET, a few levels deep) collecting messages/codes to test against.
+ */
+function isTransientError(error: unknown): boolean {
+  const parts: string[] = [];
+  let current: unknown = error;
+  for (let i = 0; i < 5 && current; i++) {
+    if (!(current instanceof Error)) {
+      parts.push(String(current));
+      break;
+    }
+    parts.push(current.message);
+    const code = (current as NodeJS.ErrnoException).code;
+    if (code) parts.push(code);
+    current = current.cause;
+  }
+  return /closed the connection|Closed, cause: None|connection.*(reset|terminated)|fetch failed|ECONNRESET|ECONNREFUSED|ETIMEDOUT|EAI_AGAIN|socket disconnected|unable to start a transaction/i.test(
+    parts.join(" | "),
+  );
+}
+
+const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
+
+/**
+ * Both the Neon pooled DB connection and the Shoper API connection
+ * occasionally drop mid-run when there's a gap between calls (waiting on
+ * the other side between requests) — retrying a fresh operation gets a new
+ * connection rather than reusing the dead one.
+ */
+async function withRetry<T>(fn: () => Promise<T>, attempts = 4): Promise<T> {
+  for (let attempt = 1; attempt <= attempts; attempt++) {
+    try {
+      return await fn();
+    } catch (error) {
+      if (attempt === attempts || !isTransientError(error)) throw error;
+      await sleep(attempt * 500);
+    }
+  }
+  throw new Error("unreachable");
+}
+
 function isAuthorized(req: Request): boolean {
   const secret = process.env.CRON_SECRET;
   if (!secret) return false;
@@ -57,12 +99,14 @@ async function importDraftsIsolated(
   // must not abort the whole Postgres transaction and take out every
   // sibling row queued alongside it.
   for (const draft of drafts) {
-    const rowSummary = await prisma.$transaction((tx) =>
-      importSupplierProducts(tx, [draft], {
-        brandName: SHOPER_SOURCE.brandName,
-        brandSlug: SHOPER_SOURCE.brandSlug,
-        updateExisting: true,
-      }),
+    const rowSummary = await withRetry(() =>
+      prisma.$transaction((tx) =>
+        importSupplierProducts(tx, [draft], {
+          brandName: SHOPER_SOURCE.brandName,
+          brandSlug: SHOPER_SOURCE.brandSlug,
+          updateExisting: true,
+        }),
+      ),
     );
     summary.created += rowSummary.created;
     summary.updated += rowSummary.updated;
@@ -113,7 +157,7 @@ async function runDiscover() {
 
   try {
     for (let i = 0; i < pagesPerRun; i++) {
-      const { stocks, totalPages: pages } = await fetchStocksPage(page, pageSize);
+      const { stocks, totalPages: pages } = await withRetry(() => fetchStocksPage(page, pageSize));
       totalPages = pages;
       pagesProcessed++;
 
@@ -128,7 +172,7 @@ async function runDiscover() {
         const productsById = await fetchProductsByIds(productIds);
         const drafts = await buildDraftsFromStocks(stocks, productsById, SHOPER_SOURCE);
 
-        const summary = await importDraftsIsolated(drafts);
+        const summary = await withRetry(() => importDraftsIsolated(drafts));
         combinedSummary.created += summary.created;
         combinedSummary.updated += summary.updated;
         combinedSummary.skipped += summary.skipped;
@@ -137,21 +181,33 @@ async function runDiscover() {
       }
 
       page = page >= totalPages ? 1 : page + 1;
+
+      // Persist progress after every page — a later page failing shouldn't
+      // discard work already committed, or force a full re-scan from page 1.
+      await withRetry(() =>
+        prisma.shoperSyncState.update({
+          where: { kind: "discover" },
+          data: { cursorPage: page, lastRunAt: new Date() },
+        }),
+      );
+
       if (totalPages <= 1) break;
     }
 
     await prisma.shoperSyncState.update({
       where: { kind: "discover" },
-      data: { cursorPage: page, lastRunAt: new Date(), lastSuccessAt: new Date(), lastError: null },
+      data: { lastSuccessAt: new Date(), lastError: null },
     });
   } catch (error) {
-    await prisma.shoperSyncState.update({
-      where: { kind: "discover" },
-      data: {
-        lastRunAt: new Date(),
-        lastError: error instanceof Error ? error.message : "Unknown error",
-      },
-    });
+    await prisma.shoperSyncState
+      .update({
+        where: { kind: "discover" },
+        data: {
+          lastRunAt: new Date(),
+          lastError: error instanceof Error ? error.message : "Unknown error",
+        },
+      })
+      .catch(() => {});
     throw error;
   }
 
