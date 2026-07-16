@@ -104,7 +104,7 @@ function brandSlugFallback(name: string): string {
 export async function importSupplierProducts(
   tx: Tx,
   drafts: SupplierProductDraft[],
-  options: { brandName: string; brandSlug: string; updateExisting?: boolean },
+  options: { brandName?: string; brandSlug?: string; updateExisting?: boolean },
 ): Promise<ImportSummary> {
   const rows: ImportRowResult[] = [];
   let created = 0;
@@ -113,9 +113,13 @@ export async function importSupplierProducts(
   let errors = 0;
 
   const brandCache = new Map<string, string>();
-  const brandIdFor = async (draft: SupplierProductDraft): Promise<string> => {
-    const name = (draft.brandName || options.brandName).trim();
-    const slug = (draft.brandSlug || brandSlugFallback(name) || options.brandSlug).trim();
+  // No brand on the draft and no source-level fallback (e.g. Shoper, where
+  // most producers are genuinely unset) means the product really has no
+  // brand — leave brandId null rather than inventing a placeholder.
+  const brandIdFor = async (draft: SupplierProductDraft): Promise<string | null> => {
+    const name = (draft.brandName || options.brandName || "").trim();
+    if (!name) return null;
+    const slug = (draft.brandSlug || brandSlugFallback(name) || options.brandSlug || "").trim();
     const key = `${slug}:${name}`;
     const cached = brandCache.get(key);
     if (cached) return cached;

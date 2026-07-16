@@ -2,7 +2,7 @@ export type SupplierProductDraft = {
   sourceId: string;
   externalKey: string;
   name: string;
-  brandName: string;
+  brandName?: string;
   brandSlug?: string;
   categoryName?: string;
   packaging?: string;

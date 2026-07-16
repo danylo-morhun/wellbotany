@@ -99,14 +99,12 @@ async function importDraftsIsolated(
   // must not abort the whole Postgres transaction and take out every
   // sibling row queued alongside it.
   for (const draft of drafts) {
+    // No brandName/brandSlug fallback here — unlike file-based suppliers,
+    // Shoper aggregates many real brands, and most products genuinely have
+    // no producer set. Falling back to "Shoper" would fabricate a brand;
+    // importSupplierProducts leaves brandId null when the draft has none.
     const rowSummary = await withRetry(() =>
-      prisma.$transaction((tx) =>
-        importSupplierProducts(tx, [draft], {
-          brandName: SHOPER_SOURCE.brandName,
-          brandSlug: SHOPER_SOURCE.brandSlug,
-          updateExisting: true,
-        }),
-      ),
+      prisma.$transaction((tx) => importSupplierProducts(tx, [draft], { updateExisting: true })),
     );
     summary.created += rowSummary.created;
     summary.updated += rowSummary.updated;

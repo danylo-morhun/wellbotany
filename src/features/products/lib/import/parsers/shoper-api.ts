@@ -226,13 +226,10 @@ export async function fetchProductsByIds(ids: number[]): Promise<Map<number, Sho
   return map;
 }
 
-async function brandFromProduct(
-  p: ShoperProduct,
-  fallback: { name: string; slug: string },
-): Promise<{
-  name: string;
-  slug?: string;
-}> {
+// Returns undefined when Shoper genuinely has no producer for this product
+// (common — many products have no producer_id at all) — the caller leaves
+// the draft's brand unset rather than falling back to a placeholder.
+async function brandFromProduct(p: ShoperProduct): Promise<{ name: string; slug?: string } | undefined> {
   const raw = (p.producer ?? "").trim();
   if (raw) return { name: raw };
 
@@ -240,7 +237,7 @@ async function brandFromProduct(
   const scraped = await resolveProducerName(producerId, pickPermalink(p));
   if (scraped) return { name: scraped };
 
-  return { name: fallback.name, slug: fallback.slug };
+  return undefined;
 }
 
 function shopPublicBaseUrl(): string | undefined {
@@ -305,16 +302,14 @@ export async function buildDraftsFromStocks(
 
     const stock = Math.max(0, Math.round(Number(s.stock ?? 0)));
 
-    const brand = p
-      ? await brandFromProduct(p, { name: source.brandName, slug: source.brandSlug })
-      : { name: source.brandName, slug: source.brandSlug };
+    const brand = p ? await brandFromProduct(p) : undefined;
 
     drafts.push({
       sourceId: source.id,
       externalKey: stockExternalKey(s),
       name,
-      brandName: brand.name,
-      brandSlug: brand.slug,
+      brandName: brand?.name,
+      brandSlug: brand?.slug,
       sku: s.code ?? p?.code ?? undefined,
       ean: s.ean || undefined, // Shoper returns "" (not null) for products with no EAN
       externalProductId: pid ?? undefined,
