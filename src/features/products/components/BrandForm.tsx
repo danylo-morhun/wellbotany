@@ -1,10 +1,15 @@
 "use client";
 
 import type { Brand } from "@prisma/client";
+import Image from "next/image";
+import { CldUploadWidget } from "next-cloudinary";
 import { useAction } from "next-safe-action/hooks";
 import { useState } from "react";
 import { slugify } from "@/lib/slugify";
 import { deleteBrand, saveBrand } from "../actions";
+
+const CLOUD_NAME = process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME;
+const UPLOAD_PRESET = process.env.NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET;
 
 interface Props {
   brands: Brand[];
@@ -16,6 +21,7 @@ export function BrandForm({ brands }: Props) {
   const [formName, setFormName] = useState("");
   const [formSlug, setFormSlug] = useState("");
   const [formSlugManual, setFormSlugManual] = useState(false);
+  const [formLogo, setFormLogo] = useState("");
 
   const { execute: execSave, isPending: saving } = useAction(saveBrand, {
     onSuccess: () => {
@@ -30,6 +36,7 @@ export function BrandForm({ brands }: Props) {
     setFormName("");
     setFormSlug("");
     setFormSlugManual(false);
+    setFormLogo("");
     setShowNew(true);
   }
 
@@ -38,6 +45,7 @@ export function BrandForm({ brands }: Props) {
     setFormName(item.name);
     setFormSlug(item.slug);
     setFormSlugManual(true);
+    setFormLogo(item.logo ?? "");
     setEditing(item);
   }
 
@@ -63,6 +71,7 @@ export function BrandForm({ brands }: Props) {
       id: (fd.get("id") as string) || undefined,
       slug: formSlug,
       name: formName,
+      logo: formLogo || undefined,
       description: (fd.get("description") as string) || undefined,
       website: (fd.get("website") as string) || undefined,
       countryCode: (fd.get("countryCode") as string) || undefined,
@@ -120,6 +129,60 @@ export function BrandForm({ brands }: Props) {
         />
       </div>
 
+      <div className="rounded-lg border border-border p-3">
+        <p className="mb-2 text-xs font-medium text-muted-foreground">Logo marki</p>
+        <div className="flex items-center gap-3">
+          {formLogo ? (
+            <div className="relative size-14 shrink-0 overflow-hidden rounded-md border border-border bg-muted">
+              <Image src={formLogo} alt="Logo" fill className="object-contain p-1" sizes="56px" />
+            </div>
+          ) : (
+            <div className="flex size-14 shrink-0 items-center justify-center rounded-md border border-dashed border-border bg-muted text-xs text-muted-foreground">
+              brak
+            </div>
+          )}
+          <div className="flex flex-1 flex-col gap-2">
+            {CLOUD_NAME && UPLOAD_PRESET ? (
+              <CldUploadWidget
+                uploadPreset={UPLOAD_PRESET}
+                onSuccess={(result) => {
+                  const info = result.info as { secure_url: string } | undefined;
+                  if (info?.secure_url) setFormLogo(info.secure_url);
+                }}
+              >
+                {({ open }) => (
+                  <button
+                    type="button"
+                    onClick={() => open()}
+                    className="self-start rounded-lg bg-primary px-3 py-1 text-xs font-medium text-primary-foreground transition-colors duration-200 hover:bg-primary-deep motion-reduce:transition-none"
+                  >
+                    Prześlij logo
+                  </button>
+                )}
+              </CldUploadWidget>
+            ) : null}
+            <div className="flex gap-2">
+              <input
+                type="url"
+                value={formLogo}
+                onChange={(e) => setFormLogo(e.target.value)}
+                placeholder="lub wklej URL logo…"
+                className="flex-1 rounded-lg border border-border px-2 py-1 text-xs"
+              />
+              {formLogo && (
+                <button
+                  type="button"
+                  onClick={() => setFormLogo("")}
+                  className="rounded-lg border border-border px-2 py-1 text-xs text-destructive"
+                >
+                  Usuń
+                </button>
+              )}
+            </div>
+          </div>
+        </div>
+      </div>
+
       <div className="flex gap-2">
         <button
           type="submit"
@@ -156,12 +219,29 @@ export function BrandForm({ brands }: Props) {
         {brands.map((brand) => (
           <div key={brand.id}>
             <div className="flex items-center justify-between px-4 py-3">
-              <div>
-                <p className="font-medium">{brand.name}</p>
-                <p className="text-xs text-muted-foreground">
-                  {brand.slug}
-                  {brand.countryCode && ` · ${brand.countryCode}`}
-                </p>
+              <div className="flex items-center gap-3">
+                {brand.logo ? (
+                  <div className="relative size-10 shrink-0 overflow-hidden rounded-md border border-border bg-muted">
+                    <Image
+                      src={brand.logo}
+                      alt={brand.name}
+                      fill
+                      className="object-contain p-1"
+                      sizes="40px"
+                    />
+                  </div>
+                ) : (
+                  <div className="flex size-10 shrink-0 items-center justify-center rounded-md bg-muted text-sm font-bold text-muted-foreground">
+                    {brand.name.charAt(0)}
+                  </div>
+                )}
+                <div>
+                  <p className="font-medium">{brand.name}</p>
+                  <p className="text-xs text-muted-foreground">
+                    {brand.slug}
+                    {brand.countryCode && ` · ${brand.countryCode}`}
+                  </p>
+                </div>
               </div>
               <div className="flex gap-2">
                 <button
