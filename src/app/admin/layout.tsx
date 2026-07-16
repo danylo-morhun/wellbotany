@@ -18,7 +18,7 @@ export default async function AdminLayout({ children }: { children: React.ReactN
   ];
 
   return (
-    <div className="mx-auto w-full max-w-7xl px-4 py-10 sm:px-6 lg:px-8">
+    <div className="w-full px-4 py-10 sm:px-6 lg:px-8">
       <div className="flex flex-col gap-8 md:flex-row">
         <aside className="w-full shrink-0 md:w-56">
           <div className="rounded-2xl bg-card p-3 shadow-card">
@@ -36,9 +36,7 @@ export default async function AdminLayout({ children }: { children: React.ReactN
             </nav>
           </div>
         </aside>
-        <main className="min-w-0 flex-1">
-          <div className="max-w-4xl">{children}</div>
-        </main>
+        <main className="min-w-0 flex-1">{children}</main>
       </div>
     </div>
   );
