@@ -13,8 +13,10 @@ import {
   SheetTitle,
 } from "@/components/ui/sheet";
 import { formatPrice } from "@/lib/format";
-import type { CartWithItems } from "../lib/session";
+import { groupCartItems } from "../lib/grouping";
+import { type CartWithItems, effectiveUnitPricePln } from "../lib/session";
 import { CartItemRow } from "./CartItemRow";
+import { GiftSetCartRow } from "./GiftSetCartRow";
 
 type Props = {
   itemCount: number;
@@ -33,7 +35,11 @@ export function CartIconClient({ itemCount, items }: Props) {
     return () => window.removeEventListener("cart:open", handleOpen);
   }, []);
 
-  const subtotal = items.reduce((sum, item) => sum + item.variant.pricePln * item.quantity, 0);
+  const subtotal = items.reduce(
+    (sum, item) => sum + effectiveUnitPricePln(item) * item.quantity,
+    0,
+  );
+  const rows = groupCartItems(items);
 
   return (
     <>
@@ -80,9 +86,19 @@ export function CartIconClient({ itemCount, items }: Props) {
               </div>
             ) : (
               <div className="divide-y divide-border">
-                {items.map((item) => (
-                  <CartItemRow key={item.id} item={item} />
-                ))}
+                {rows.map((row) =>
+                  row.kind === "single" ? (
+                    <CartItemRow key={row.item.id} item={row.item} />
+                  ) : (
+                    <GiftSetCartRow
+                      key={row.groupId}
+                      groupId={row.groupId}
+                      label={row.label}
+                      items={row.items}
+                      totalPln={row.totalPln}
+                    />
+                  ),
+                )}
               </div>
             )}
           </div>

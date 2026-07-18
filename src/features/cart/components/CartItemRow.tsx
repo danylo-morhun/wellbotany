@@ -7,7 +7,7 @@ import { useAction } from "next-safe-action/hooks";
 import { toast } from "sonner";
 import { formatPrice } from "@/lib/format";
 import { removeFromCart, updateQuantity } from "../actions";
-import type { CartItem } from "../lib/session";
+import { type CartItem, effectiveUnitPricePln } from "../lib/session";
 
 type Props = {
   item: CartItem;
@@ -65,11 +65,11 @@ export function CartItemRow({ item, onRemove }: Props) {
               <p className="mt-0.5 text-xs text-muted-foreground">{item.variant.optionValue}</p>
             )}
             <p className="mt-1 text-xs text-muted-foreground">
-              {formatPrice(item.variant.pricePln)} / szt.
+              {formatPrice(effectiveUnitPricePln(item))} / szt.
             </p>
           </div>
           <p className="shrink-0 text-sm font-bold text-foreground">
-            {formatPrice(item.variant.pricePln * item.quantity)}
+            {formatPrice(effectiveUnitPricePln(item) * item.quantity)}
           </p>
         </div>
 

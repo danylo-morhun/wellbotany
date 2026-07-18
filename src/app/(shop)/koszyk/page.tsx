@@ -5,7 +5,12 @@ import Link from "next/link";
 import { CartList } from "@/features/cart/components/CartList";
 import { CartSummary } from "@/features/cart/components/CartSummary";
 import { ShippingProgress } from "@/features/cart/components/ShippingProgress";
-import { CART_COOKIE_NAME, getCart, getCartByCustomerId } from "@/features/cart/lib/session";
+import {
+  CART_COOKIE_NAME,
+  effectiveUnitPricePln,
+  getCart,
+  getCartByCustomerId,
+} from "@/features/cart/lib/session";
 import { auth } from "@/lib/auth";
 
 export const metadata: Metadata = {
@@ -48,7 +53,10 @@ export default async function KoszykPage() {
     );
   }
 
-  const subtotal = items.reduce((sum, item) => sum + item.variant.pricePln * item.quantity, 0);
+  const subtotal = items.reduce(
+    (sum, item) => sum + effectiveUnitPricePln(item) * item.quantity,
+    0,
+  );
 
   return (
     <div className="mx-auto max-w-7xl px-4 py-10 sm:px-6 lg:px-8">

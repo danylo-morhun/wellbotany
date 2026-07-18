@@ -5,7 +5,12 @@ import { cookies } from "next/headers";
 import { prisma } from "@/lib/prisma";
 import { actionClient } from "@/lib/safe-action";
 import { CART_COOKIE_NAME, ensureCartId } from "./lib/session";
-import { addToCartSchema, removeFromCartSchema, updateQuantitySchema } from "./schema";
+import {
+  addToCartSchema,
+  removeFromCartSchema,
+  removeGiftSetFromCartSchema,
+  updateQuantitySchema,
+} from "./schema";
 
 export const addToCart = actionClient
   .schema(addToCartSchema)
@@ -26,6 +31,14 @@ export const removeFromCart = actionClient
   .schema(removeFromCartSchema)
   .action(async ({ parsedInput: { cartItemId } }) => {
     await prisma.cartItem.delete({ where: { id: cartItemId } });
+    revalidatePath("/", "layout");
+    return { success: true };
+  });
+
+export const removeGiftSetFromCart = actionClient
+  .schema(removeGiftSetFromCartSchema)
+  .action(async ({ parsedInput: { giftSetGroupId } }) => {
+    await prisma.cartItem.deleteMany({ where: { giftSetGroupId } });
     revalidatePath("/", "layout");
     return { success: true };
   });
