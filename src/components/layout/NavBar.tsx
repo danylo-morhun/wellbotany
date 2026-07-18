@@ -12,7 +12,7 @@ const navLinks = [
   { label: "Kategorie", href: "/kategorie" },
   { label: "Marki", href: "/marki" },
   { label: "Nowości", href: "/katalog?nowosci=1" },
-  { label: "Zestawy prezentowe", href: "/naborys" },
+  { label: "Zestawy prezentowe", href: "/zestawy-prezentowe" },
 ];
 
 const utilityLinks = [

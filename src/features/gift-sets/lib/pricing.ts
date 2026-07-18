@@ -8,6 +8,21 @@ export type GiftBuilderPolicy = {
   maxItems: number;
 };
 
+/**
+ * Used when no admin has saved GiftBuilderSettings yet (id=1 row missing) —
+ * the builder should work out of the box (sum of chosen items, no fee)
+ * rather than appear unavailable until someone visits the settings page.
+ */
+export const DEFAULT_GIFT_BUILDER_POLICY = {
+  isActive: true,
+  namePl: "Zestaw prezentowy",
+  pricingMode: "SUM_PLUS_FEE" as GiftBuilderPricingMode,
+  boxPricePln: null,
+  packagingFeePln: 0,
+  minItems: 3,
+  maxItems: 8,
+};
+
 export type GiftBuilderComponent = {
   variantId: string;
   quantity: number;

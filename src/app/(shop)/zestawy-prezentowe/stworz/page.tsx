@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { GiftBuilder } from "@/features/gift-sets/components/GiftBuilder";
+import { DEFAULT_GIFT_BUILDER_POLICY } from "@/features/gift-sets/lib/pricing";
 import { prisma } from "@/lib/prisma";
 
 export const metadata: Metadata = {
@@ -7,9 +8,10 @@ export const metadata: Metadata = {
 };
 
 export default async function GiftBuilderPage() {
-  const settings = await prisma.giftBuilderSettings.findUnique({ where: { id: 1 } });
+  const savedSettings = await prisma.giftBuilderSettings.findUnique({ where: { id: 1 } });
+  const settings = savedSettings ?? DEFAULT_GIFT_BUILDER_POLICY;
 
-  if (!settings || !settings.isActive) {
+  if (!settings.isActive) {
     return (
       <div className="mx-auto max-w-3xl px-4 py-24 text-center sm:px-6 lg:px-8">
         <h1 className="text-2xl font-bold">Kreator zestawów jest chwilowo niedostępny</h1>

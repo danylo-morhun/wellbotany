@@ -7,7 +7,10 @@ export default async function AdminGiftBuilderSettingsPage() {
 
   return (
     <div className="space-y-4">
-      <Link href="/admin/naborys" className="text-sm font-medium text-primary hover:underline">
+      <Link
+        href="/admin/zestawy-prezentowe"
+        className="text-sm font-medium text-primary hover:underline"
+      >
         ← Zestawy prezentowe
       </Link>
       <h1 className="text-2xl font-bold">Kreator własnego zestawu</h1>
