@@ -25,6 +25,10 @@ export const giftSetSchema = z.object({
 
 export const deleteGiftSetSchema = z.object({ id: z.string().min(1) });
 
+export const searchVariantsSchema = z.object({
+  query: z.string().min(1).max(200),
+});
+
 // ─── Admin: custom builder policy ──────────────────────────────────────────────
 
 export const giftBuilderSettingsSchema = z

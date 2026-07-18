@@ -5,16 +5,52 @@ import { ensureCartId } from "@/features/cart/lib/session";
 import { ActionError } from "@/lib/action-error";
 import { prisma } from "@/lib/prisma";
 import { actionClient, adminActionClient } from "@/lib/safe-action";
-import { allocateGiftBoxPrice, giftBuilderTargetTotalPln } from "./lib/pricing";
+import {
+  allocateGiftBoxPrice,
+  DEFAULT_GIFT_BUILDER_POLICY,
+  giftBuilderTargetTotalPln,
+} from "./lib/pricing";
 import {
   addCuratedGiftSetToCartSchema,
   addCustomGiftSetToCartSchema,
   deleteGiftSetSchema,
   giftBuilderSettingsSchema,
   giftSetSchema,
+  searchVariantsSchema,
 } from "./schema";
 
 // ─── Admin: curated gift sets ──────────────────────────────────────────────────
+
+export const searchVariantsForGiftSet = adminActionClient
+  .schema(searchVariantsSchema)
+  .action(async ({ parsedInput: { query } }) => {
+    const variants = await prisma.productVariant.findMany({
+      where: {
+        isActive: true,
+        product: { status: "ACTIVE" },
+        OR: [
+          { sku: { contains: query, mode: "insensitive" } },
+          { product: { namePl: { contains: query, mode: "insensitive" } } },
+        ],
+      },
+      select: {
+        id: true,
+        sku: true,
+        pricePln: true,
+        optionValue: true,
+        product: { select: { namePl: true } },
+      },
+      orderBy: { product: { namePl: "asc" } },
+      take: 20,
+    });
+    return variants.map((v) => ({
+      id: v.id,
+      sku: v.sku,
+      pricePln: v.pricePln,
+      optionValue: v.optionValue,
+      productName: v.product.namePl,
+    }));
+  });
 
 export const saveGiftSet = adminActionClient
   .schema(giftSetSchema)
@@ -55,8 +91,8 @@ export const saveGiftSet = adminActionClient
       return created.id;
     });
 
-    revalidatePath("/admin/naborys");
-    revalidatePath("/naborys", "layout");
+    revalidatePath("/admin/zestawy-prezentowe");
+    revalidatePath("/zestawy-prezentowe", "layout");
     return { success: true, id: savedId };
   });
 
@@ -64,8 +100,8 @@ export const deleteGiftSet = adminActionClient
   .schema(deleteGiftSetSchema)
   .action(async ({ parsedInput: { id } }) => {
     await prisma.giftSet.delete({ where: { id } });
-    revalidatePath("/admin/naborys");
-    revalidatePath("/naborys", "layout");
+    revalidatePath("/admin/zestawy-prezentowe");
+    revalidatePath("/zestawy-prezentowe", "layout");
     return { success: true };
   });
 
@@ -79,8 +115,8 @@ export const saveGiftBuilderSettings = adminActionClient
       update: { ...input, boxPricePln: input.boxPricePln ?? null },
       create: { id: 1, ...input, boxPricePln: input.boxPricePln ?? null },
     });
-    revalidatePath("/admin/naborys/ustawienia");
-    revalidatePath("/naborys/stworz");
+    revalidatePath("/admin/zestawy-prezentowe/ustawienia");
+    revalidatePath("/zestawy-prezentowe/stworz");
     return { success: true };
   });
 
@@ -132,8 +168,9 @@ export const addCuratedGiftSetToCart = actionClient
 export const addCustomGiftSetToCart = actionClient
   .schema(addCustomGiftSetToCartSchema)
   .action(async ({ parsedInput: { items } }) => {
-    const settings = await prisma.giftBuilderSettings.findUnique({ where: { id: 1 } });
-    if (!settings?.isActive) {
+    const savedSettings = await prisma.giftBuilderSettings.findUnique({ where: { id: 1 } });
+    const settings = savedSettings ?? DEFAULT_GIFT_BUILDER_POLICY;
+    if (!settings.isActive) {
       throw new ActionError("Kreator zestawów jest obecnie niedostępny");
     }
 

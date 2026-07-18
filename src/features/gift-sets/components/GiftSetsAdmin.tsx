@@ -8,6 +8,7 @@ import { useState } from "react";
 import { formatPrice } from "@/lib/format";
 import { slugify } from "@/lib/slugify";
 import { deleteGiftSet, saveGiftSet } from "../actions";
+import { VariantSearchPicker } from "./VariantSearchPicker";
 
 const CLOUD_NAME = process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME;
 const UPLOAD_PRESET = process.env.NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET;
@@ -26,26 +27,32 @@ function groszeToPln(grosze: number): string {
   return (grosze / 100).toFixed(2);
 }
 
-export type GiftSetWithItems = GiftSet & {
-  items: { id: string; variantId: string; quantity: number }[];
-};
-
-export type VariantOption = {
+export type GiftSetItemWithLabel = {
   id: string;
-  sku: string;
-  pricePln: number;
-  optionValue: string | null;
+  variantId: string;
+  quantity: number;
   productName: string;
+  optionValue: string | null;
+  pricePln: number;
 };
 
-type FormItem = { variantId: string; quantity: number };
+export type GiftSetWithItems = GiftSet & {
+  items: GiftSetItemWithLabel[];
+};
+
+type FormItem = {
+  variantId: string;
+  quantity: number;
+  productName: string;
+  optionValue: string | null;
+  pricePln: number;
+};
 
 type Props = {
   giftSets: GiftSetWithItems[];
-  variants: VariantOption[];
 };
 
-export function GiftSetsAdmin({ giftSets, variants }: Props) {
+export function GiftSetsAdmin({ giftSets }: Props) {
   const [editing, setEditing] = useState<GiftSetWithItems | null>(null);
   const [showNew, setShowNew] = useState(false);
 
@@ -56,7 +63,6 @@ export function GiftSetsAdmin({ giftSets, variants }: Props) {
   const [imageUrl, setImageUrl] = useState("");
   const [isFeatured, setIsFeatured] = useState(false);
   const [items, setItems] = useState<FormItem[]>([]);
-  const [pickerVariantId, setPickerVariantId] = useState("");
 
   const { execute: execSave, isPending: saving } = useAction(saveGiftSet, {
     onSuccess: () => {
@@ -74,7 +80,6 @@ export function GiftSetsAdmin({ giftSets, variants }: Props) {
     setImageUrl("");
     setIsFeatured(false);
     setItems([]);
-    setPickerVariantId("");
   }
 
   function startNew() {
@@ -91,8 +96,15 @@ export function GiftSetsAdmin({ giftSets, variants }: Props) {
     setStatus(gs.status);
     setImageUrl(gs.imageUrl ?? "");
     setIsFeatured(gs.isFeatured);
-    setItems(gs.items.map((i) => ({ variantId: i.variantId, quantity: i.quantity })));
-    setPickerVariantId("");
+    setItems(
+      gs.items.map((i) => ({
+        variantId: i.variantId,
+        quantity: i.quantity,
+        productName: i.productName,
+        optionValue: i.optionValue,
+        pricePln: i.pricePln,
+      })),
+    );
     setEditing(gs);
   }
 
@@ -106,11 +118,23 @@ export function GiftSetsAdmin({ giftSets, variants }: Props) {
     if (!slugManual) setSlug(slugify(value));
   }
 
-  function addPickedVariant() {
-    if (!pickerVariantId) return;
-    if (items.some((i) => i.variantId === pickerVariantId)) return;
-    setItems((prev) => [...prev, { variantId: pickerVariantId, quantity: 1 }]);
-    setPickerVariantId("");
+  function addVariant(picked: {
+    id: string;
+    productName: string;
+    optionValue: string | null;
+    pricePln: number;
+  }) {
+    if (items.some((i) => i.variantId === picked.id)) return;
+    setItems((prev) => [
+      ...prev,
+      {
+        variantId: picked.id,
+        quantity: 1,
+        productName: picked.productName,
+        optionValue: picked.optionValue,
+        pricePln: picked.pricePln,
+      },
+    ]);
   }
 
   function updateItemQuantity(variantId: string, quantity: number) {
@@ -121,10 +145,7 @@ export function GiftSetsAdmin({ giftSets, variants }: Props) {
     setItems((prev) => prev.filter((i) => i.variantId !== variantId));
   }
 
-  const componentsSumPln = items.reduce((sum, i) => {
-    const v = variants.find((v) => v.id === i.variantId);
-    return sum + (v?.pricePln ?? 0) * i.quantity;
-  }, 0);
+  const componentsSumPln = items.reduce((sum, i) => sum + i.pricePln * i.quantity, 0);
 
   function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -142,7 +163,7 @@ export function GiftSetsAdmin({ giftSets, variants }: Props) {
         return raw ? plnToGrosze(raw) : undefined;
       })(),
       isFeatured,
-      items,
+      items: items.map((i) => ({ variantId: i.variantId, quantity: i.quantity })),
     });
   }
 
@@ -262,65 +283,37 @@ export function GiftSetsAdmin({ giftSets, variants }: Props) {
 
       <div className="rounded-lg border border-border p-3">
         <p className="mb-2 text-xs font-medium text-muted-foreground">Produkty w zestawie</p>
-        <div className="flex gap-2">
-          <select
-            value={pickerVariantId}
-            onChange={(e) => setPickerVariantId(e.target.value)}
-            className="flex-1 rounded-lg border border-border px-2 py-1 text-sm"
-          >
-            <option value="">Wybierz produkt…</option>
-            {variants
-              .filter((v) => !items.some((i) => i.variantId === v.id))
-              .map((v) => (
-                <option key={v.id} value={v.id}>
-                  {v.productName}
-                  {v.optionValue ? ` — ${v.optionValue}` : ""} ({v.sku}) — {formatPrice(v.pricePln)}
-                </option>
-              ))}
-          </select>
-          <button
-            type="button"
-            onClick={addPickedVariant}
-            disabled={!pickerVariantId}
-            className="rounded-lg border border-border px-3 py-1 text-xs font-medium disabled:opacity-50"
-          >
-            Dodaj
-          </button>
-        </div>
+        <VariantSearchPicker excludeIds={items.map((i) => i.variantId)} onPick={addVariant} />
 
         {items.length > 0 && (
           <ul className="mt-3 space-y-1.5">
-            {items.map((i) => {
-              const v = variants.find((v) => v.id === i.variantId);
-              return (
-                <li key={i.variantId} className="flex items-center justify-between gap-2 text-xs">
-                  <span className="min-w-0 truncate text-muted-foreground">
-                    {v
-                      ? `${v.productName}${v.optionValue ? ` — ${v.optionValue}` : ""}`
-                      : i.variantId}
-                  </span>
-                  <div className="flex shrink-0 items-center gap-2">
-                    <input
-                      type="number"
-                      min={1}
-                      max={99}
-                      value={i.quantity}
-                      onChange={(e) =>
-                        updateItemQuantity(i.variantId, Math.max(1, Number(e.target.value) || 1))
-                      }
-                      className="w-14 rounded-lg border border-border px-1.5 py-0.5 text-xs"
-                    />
-                    <button
-                      type="button"
-                      onClick={() => removeItem(i.variantId)}
-                      className="text-destructive"
-                    >
-                      Usuń
-                    </button>
-                  </div>
-                </li>
-              );
-            })}
+            {items.map((i) => (
+              <li key={i.variantId} className="flex items-center justify-between gap-2 text-xs">
+                <span className="min-w-0 truncate text-muted-foreground">
+                  {i.productName}
+                  {i.optionValue ? ` — ${i.optionValue}` : ""}
+                </span>
+                <div className="flex shrink-0 items-center gap-2">
+                  <input
+                    type="number"
+                    min={1}
+                    max={99}
+                    value={i.quantity}
+                    onChange={(e) =>
+                      updateItemQuantity(i.variantId, Math.max(1, Number(e.target.value) || 1))
+                    }
+                    className="w-14 rounded-lg border border-border px-1.5 py-0.5 text-xs"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => removeItem(i.variantId)}
+                    className="text-destructive"
+                  >
+                    Usuń
+                  </button>
+                </div>
+              </li>
+            ))}
           </ul>
         )}
         {items.length > 0 && (
