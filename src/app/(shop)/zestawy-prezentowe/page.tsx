@@ -33,7 +33,7 @@ export default async function GiftSetsPage() {
 
       <Link
         href="/zestawy-prezentowe/stworz"
-        className="group mb-10 flex flex-col items-start justify-between gap-5 rounded-2xl bg-primary p-6 text-primary-foreground shadow-card transition-[transform,box-shadow] duration-200 ease-out hover:-translate-y-0.5 hover:shadow-card-hover motion-reduce:transition-none motion-reduce:hover:translate-y-0 sm:flex-row sm:items-center sm:p-8"
+        className="mb-10 flex flex-col items-start justify-between gap-5 rounded-2xl bg-primary p-6 text-primary-foreground shadow-card sm:flex-row sm:items-center sm:p-8"
       >
         <div className="flex items-center gap-4">
           <div className="flex size-14 shrink-0 items-center justify-center rounded-full bg-primary-foreground/15">
@@ -46,7 +46,7 @@ export default async function GiftSetsPage() {
             </p>
           </div>
         </div>
-        <span className="flex shrink-0 items-center gap-2 rounded-full bg-primary-foreground px-5 py-3 text-sm font-semibold text-primary transition-transform duration-200 ease-out group-hover:translate-x-1 motion-reduce:transition-none motion-reduce:group-hover:translate-x-0">
+        <span className="flex shrink-0 items-center gap-2 rounded-full bg-primary-foreground px-5 py-3 text-sm font-semibold text-primary">
           Stwórz zestaw
           <ArrowRight className="size-4" />
         </span>
