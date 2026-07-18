@@ -20,27 +20,34 @@ export default async function GiftBuilderPage() {
     );
   }
 
-  const variants = await prisma.productVariant.findMany({
-    where: { isActive: true, product: { isGiftEligible: true, status: "ACTIVE" } },
-    select: {
-      id: true,
-      pricePln: true,
-      stock: true,
-      optionValue: true,
-      product: {
-        select: {
-          namePl: true,
-          images: {
-            where: { isMain: true },
-            select: { url: true },
-            take: 1,
-            orderBy: { sortOrder: "asc" },
+  const [variants, packagings] = await Promise.all([
+    prisma.productVariant.findMany({
+      where: { isActive: true, product: { isGiftEligible: true, status: "ACTIVE" } },
+      select: {
+        id: true,
+        pricePln: true,
+        stock: true,
+        optionValue: true,
+        product: {
+          select: {
+            namePl: true,
+            images: {
+              where: { isMain: true },
+              select: { url: true },
+              take: 1,
+              orderBy: { sortOrder: "asc" },
+            },
           },
         },
       },
-    },
-    orderBy: { product: { namePl: "asc" } },
-  });
+      orderBy: { product: { namePl: "asc" } },
+    }),
+    prisma.giftPackaging.findMany({
+      where: { isActive: true },
+      select: { id: true, namePl: true, extraPricePln: true, imageUrl: true },
+      orderBy: { sortOrder: "asc" },
+    }),
+  ]);
 
   const pool = variants.map((v) => ({
     variantId: v.id,
@@ -61,7 +68,7 @@ export default async function GiftBuilderPage() {
         </p>
       </div>
 
-      <GiftBuilder settings={settings} pool={pool} />
+      <GiftBuilder settings={settings} pool={pool} packagings={packagings} />
     </div>
   );
 }
