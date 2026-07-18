@@ -9,7 +9,7 @@ import { sendOrderConfirmationEmail } from "@/lib/email/order-emails";
 import { formatPrice } from "@/lib/format";
 import { prisma } from "@/lib/prisma";
 import { actionClient } from "@/lib/safe-action";
-import { getCartForCheckout } from "./lib/cart";
+import { checkoutItemUnitPricePln, getCartForCheckout } from "./lib/cart";
 import { SHIPPING_COSTS } from "./lib/shipping";
 import { checkoutSchema } from "./schema";
 
@@ -67,12 +67,12 @@ export const placeOrder = actionClient
 
     const shippingPln = SHIPPING_COSTS[input.shippingMethod as keyof typeof SHIPPING_COSTS] ?? 1999;
     const subtotalPln = cart.items.reduce(
-      (sum, item) => sum + item.variant.pricePln * item.quantity,
+      (sum, item) => sum + checkoutItemUnitPricePln(item) * item.quantity,
       0,
     );
 
     const taxPln = cart.items.reduce((sum, item) => {
-      const itemTotal = item.variant.pricePln * item.quantity;
+      const itemTotal = checkoutItemUnitPricePln(item) * item.quantity;
       const rate = Number(item.variant.vatRate);
       return sum + Math.round((itemTotal * rate) / (100 + rate));
     }, 0);
@@ -193,16 +193,22 @@ export const placeOrder = actionClient
           couponId: couponId ?? null,
           couponCode: couponCode ?? null,
           items: {
-            create: cart.items.map((item) => ({
-              variantId: item.variantId,
-              productName: item.variant.product.namePl,
-              variantOpt: item.variant.optionValue ?? null,
-              sku: item.variant.sku,
-              quantity: item.quantity,
-              unitPricePln: item.variant.pricePln,
-              vatRate: item.variant.vatRate,
-              totalPln: item.variant.pricePln * item.quantity,
-            })),
+            create: cart.items.map((item) => {
+              const unitPricePln = checkoutItemUnitPricePln(item);
+              return {
+                variantId: item.variantId,
+                productName: item.variant.product.namePl,
+                variantOpt: item.variant.optionValue ?? null,
+                sku: item.variant.sku,
+                quantity: item.quantity,
+                unitPricePln,
+                vatRate: item.variant.vatRate,
+                totalPln: unitPricePln * item.quantity,
+                giftSetGroupId: item.giftSetGroupId,
+                giftSetId: item.giftSetId,
+                giftSetLabel: item.giftSetLabel,
+              };
+            }),
           },
         },
         select: { orderNumber: true },

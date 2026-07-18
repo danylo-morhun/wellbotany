@@ -1,7 +1,12 @@
 import type { Metadata } from "next";
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
-import { CART_COOKIE_NAME, getCart, getCartByCustomerId } from "@/features/cart/lib/session";
+import {
+  CART_COOKIE_NAME,
+  effectiveUnitPricePln,
+  getCart,
+  getCartByCustomerId,
+} from "@/features/cart/lib/session";
 import { CheckoutForm } from "@/features/checkout/components/CheckoutForm";
 import { auth } from "@/lib/auth";
 
@@ -29,7 +34,10 @@ export default async function ZamowieniePage() {
     redirect("/koszyk");
   }
 
-  const subtotal = items.reduce((sum, item) => sum + item.variant.pricePln * item.quantity, 0);
+  const subtotal = items.reduce(
+    (sum, item) => sum + effectiveUnitPricePln(item) * item.quantity,
+    0,
+  );
 
   return (
     <div className="mx-auto max-w-2xl px-4 py-8 sm:px-6 lg:px-8">

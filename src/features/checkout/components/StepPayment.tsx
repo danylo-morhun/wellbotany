@@ -2,7 +2,8 @@
 
 import { useAction } from "next-safe-action/hooks";
 import { useState } from "react";
-import type { CartItem } from "@/features/cart/lib/session";
+import { groupCartItems } from "@/features/cart/lib/grouping";
+import { type CartItem, effectiveUnitPricePln } from "@/features/cart/lib/session";
 import { formatPrice } from "@/lib/format";
 import { verifyCoupon } from "../actions";
 import { SHIPPING_COSTS, SHIPPING_LABELS } from "../lib/shipping";
@@ -72,15 +73,28 @@ export function StepPayment({
       <div className="rounded-lg border border-border p-4">
         <h3 className="mb-3 text-sm font-semibold">Produkty</h3>
         <ul className="divide-y divide-border">
-          {items.map((item) => (
-            <li key={item.id} className="flex justify-between py-2 text-sm">
-              <span className="text-muted-foreground">
-                {item.variant.product.namePl}
-                {item.variant.optionValue ? ` (${item.variant.optionValue})` : ""} × {item.quantity}
-              </span>
-              <span>{formatPrice(item.variant.pricePln * item.quantity)}</span>
-            </li>
-          ))}
+          {groupCartItems(items).map((row) =>
+            row.kind === "single" ? (
+              <li key={row.item.id} className="flex justify-between py-2 text-sm">
+                <span className="text-muted-foreground">
+                  {row.item.variant.product.namePl}
+                  {row.item.variant.optionValue ? ` (${row.item.variant.optionValue})` : ""} ×{" "}
+                  {row.item.quantity}
+                </span>
+                <span>{formatPrice(effectiveUnitPricePln(row.item) * row.item.quantity)}</span>
+              </li>
+            ) : (
+              <li key={row.groupId} className="py-2 text-sm">
+                <div className="flex justify-between">
+                  <span className="font-medium text-foreground">{row.label}</span>
+                  <span>{formatPrice(row.totalPln)}</span>
+                </div>
+                <span className="text-xs text-muted-foreground">
+                  {row.items.map((i) => `${i.quantity}× ${i.variant.product.namePl}`).join(", ")}
+                </span>
+              </li>
+            ),
+          )}
         </ul>
 
         <div className="mt-3 space-y-1 border-t border-border pt-3 text-sm">
