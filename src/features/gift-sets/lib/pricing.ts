@@ -3,6 +3,7 @@ import type { GiftBuilderPricingMode } from "@prisma/client";
 export type GiftBuilderPolicy = {
   pricingMode: GiftBuilderPricingMode;
   boxPricePln: number | null;
+  discountPercent: number;
   minItems: number;
   maxItems: number;
 };
@@ -17,6 +18,7 @@ export const DEFAULT_GIFT_BUILDER_POLICY = {
   namePl: "Zestaw prezentowy",
   pricingMode: "SUM_PLUS_FEE" as GiftBuilderPricingMode,
   boxPricePln: null,
+  discountPercent: 0,
   minItems: 3,
   maxItems: 8,
 };
@@ -46,7 +48,9 @@ export function giftBuilderTargetTotalPln(
   if (policy.pricingMode === "FIXED_BOX") {
     return policy.boxPricePln ?? 0;
   }
-  return components.reduce((s, c) => s + c.unitPricePln * c.quantity, 0);
+  const sum = components.reduce((s, c) => s + c.unitPricePln * c.quantity, 0);
+  // discountPercent > 0 discounts the sum, < 0 marks it up
+  return Math.round((sum * (100 - policy.discountPercent)) / 100);
 }
 
 /**

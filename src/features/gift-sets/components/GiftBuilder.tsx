@@ -32,7 +32,7 @@ const MESSAGE_MAX_LENGTH = 200;
 type Props = {
   settings: Pick<
     GiftBuilderSettings,
-    "namePl" | "pricingMode" | "boxPricePln" | "minItems" | "maxItems"
+    "namePl" | "pricingMode" | "boxPricePln" | "discountPercent" | "minItems" | "maxItems"
   >;
   pool: GiftPoolItem[];
   packagings: GiftPackagingOption[];

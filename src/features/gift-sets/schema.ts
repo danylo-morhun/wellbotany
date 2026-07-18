@@ -37,6 +37,7 @@ export const giftBuilderSettingsSchema = z
     namePl: z.string().min(1).max(200).default("Zestaw prezentowy"),
     pricingMode: z.nativeEnum(GiftBuilderPricingMode).default("FIXED_BOX"),
     boxPricePln: z.coerce.number().int().positive().optional(),
+    discountPercent: z.coerce.number().int().min(-50).max(90).default(0),
     minItems: z.coerce.number().int().min(1).max(50).default(3),
     maxItems: z.coerce.number().int().min(1).max(50).default(8),
   })

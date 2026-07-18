@@ -475,6 +475,10 @@ model GiftBuilderSettings {
 
   boxPricePln Int? // required display/checkout price when pricingMode = FIXED_BOX
 
+  // Applied only when pricingMode = SUM_PLUS_FEE: target = sum * (100 - discountPercent) / 100.
+  // Positive = discount off the sum, negative = markup on top.
+  discountPercent Int @default(0)
+
   minItems Int @default(3)
   maxItems Int @default(8)
 

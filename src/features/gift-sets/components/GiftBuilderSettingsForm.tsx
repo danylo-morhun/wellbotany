@@ -42,6 +42,7 @@ export function GiftBuilderSettingsForm({ settings }: Props) {
       namePl: fd.get("namePl") as string,
       pricingMode,
       boxPricePln: boxPriceRaw ? plnToGrosze(boxPriceRaw) : undefined,
+      discountPercent: Number(fd.get("discountPercent") || 0),
       minItems: Number(fd.get("minItems")),
       maxItems: Number(fd.get("maxItems")),
     });
@@ -113,16 +114,35 @@ export function GiftBuilderSettingsForm({ settings }: Props) {
           />
         </div>
       ) : (
-        <p className="text-xs text-muted-foreground">
-          Cena = suma cen wybranych produktów. Cenę opakowania ustala się osobno w sekcji{" "}
-          <Link
-            href="/admin/zestawy-prezentowe/opakowania"
-            className="text-primary hover:underline"
+        <div>
+          <label
+            htmlFor="discountPercent"
+            className="mb-1 block text-xs font-medium text-muted-foreground"
           >
-            Opakowania
-          </Link>
-          .
-        </p>
+            Rabat od sumy produktów (%)
+          </label>
+          <input
+            id="discountPercent"
+            name="discountPercent"
+            type="number"
+            step="1"
+            min={-50}
+            max={90}
+            defaultValue={settings?.discountPercent ?? 0}
+            className="w-full rounded-lg border border-border px-2 py-1.5 text-sm"
+          />
+          <p className="mt-1 text-xs text-muted-foreground">
+            Dodatnia wartość obniża cenę (np. 10 = -10%), ujemna ją podwyższa (np. -10 = +10%). 0 =
+            dokładna suma. Cenę opakowania ustala się osobno w sekcji{" "}
+            <Link
+              href="/admin/zestawy-prezentowe/opakowania"
+              className="text-primary hover:underline"
+            >
+              Opakowania
+            </Link>
+            .
+          </p>
+        </div>
       )}
 
       <div className="grid grid-cols-2 gap-3">
