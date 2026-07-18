@@ -54,7 +54,9 @@ export const addToCart = actionClient
   .action(async ({ parsedInput: { variantId, quantity } }) => {
     const cartId = await ensureCartId();
     await prisma.cartItem.upsert({
-      where: { cartId_variantId: { cartId, variantId } },
+      where: {
+        cartId_variantId_giftSetGroupId: { cartId, variantId, giftSetGroupId: "" },
+      },
       update: { quantity: { increment: quantity } },
       create: { cartId, variantId, quantity },
     });

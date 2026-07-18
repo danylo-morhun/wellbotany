@@ -103,7 +103,19 @@ export async function mergeGuestCart(guestCartId: string, customerId: string): P
   const [guestCart, customerCart] = await Promise.all([
     prisma.cart.findUnique({
       where: { id: guestCartId },
-      select: { id: true, items: { select: { variantId: true, quantity: true } } },
+      select: {
+        id: true,
+        items: {
+          select: {
+            variantId: true,
+            quantity: true,
+            giftSetGroupId: true,
+            giftSetId: true,
+            giftSetLabel: true,
+            unitPriceOverridePln: true,
+          },
+        },
+      },
     }),
     prisma.cart.findUnique({
       where: { customerId },
@@ -123,9 +135,23 @@ export async function mergeGuestCart(guestCartId: string, customerId: string): P
 
   for (const item of guestCart.items) {
     await prisma.cartItem.upsert({
-      where: { cartId_variantId: { cartId: customerCart.id, variantId: item.variantId } },
+      where: {
+        cartId_variantId_giftSetGroupId: {
+          cartId: customerCart.id,
+          variantId: item.variantId,
+          giftSetGroupId: item.giftSetGroupId,
+        },
+      },
       update: { quantity: { increment: item.quantity } },
-      create: { cartId: customerCart.id, variantId: item.variantId, quantity: item.quantity },
+      create: {
+        cartId: customerCart.id,
+        variantId: item.variantId,
+        quantity: item.quantity,
+        giftSetGroupId: item.giftSetGroupId,
+        giftSetId: item.giftSetId,
+        giftSetLabel: item.giftSetLabel,
+        unitPriceOverridePln: item.unitPriceOverridePln,
+      },
     });
   }
 
