@@ -1,4 +1,4 @@
-import { Sparkles } from "lucide-react";
+import { ArrowRight, Sparkles } from "lucide-react";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { GiftSetCard } from "@/features/gift-sets/components/GiftSetCard";
@@ -32,18 +32,24 @@ export default async function GiftSetsPage() {
       </div>
 
       <Link
-        href="/naborys/stworz"
-        className="mb-8 flex items-center gap-4 rounded-2xl bg-primary/5 p-5 transition-colors hover:bg-primary/10"
+        href="/zestawy-prezentowe/stworz"
+        className="group mb-10 flex flex-col items-start justify-between gap-5 rounded-2xl bg-primary p-6 text-primary-foreground shadow-card transition-[transform,box-shadow] duration-200 ease-out hover:-translate-y-0.5 hover:shadow-card-hover motion-reduce:transition-none motion-reduce:hover:translate-y-0 sm:flex-row sm:items-center sm:p-8"
       >
-        <div className="flex size-12 shrink-0 items-center justify-center rounded-full bg-primary text-primary-foreground">
-          <Sparkles className="size-5" />
+        <div className="flex items-center gap-4">
+          <div className="flex size-14 shrink-0 items-center justify-center rounded-full bg-primary-foreground/15">
+            <Sparkles className="size-6" />
+          </div>
+          <div>
+            <p className="text-xl font-extrabold tracking-tight">Złóż własny zestaw</p>
+            <p className="mt-1 text-sm text-primary-foreground/85">
+              Wybierz produkty samodzielnie i stwórz spersonalizowany prezent
+            </p>
+          </div>
         </div>
-        <div>
-          <p className="font-semibold text-foreground">Złóż własny zestaw</p>
-          <p className="text-sm text-muted-foreground">
-            Wybierz produkty samodzielnie i stwórz spersonalizowany prezent
-          </p>
-        </div>
+        <span className="flex shrink-0 items-center gap-2 rounded-full bg-primary-foreground px-5 py-3 text-sm font-semibold text-primary transition-transform duration-200 ease-out group-hover:translate-x-1 motion-reduce:transition-none motion-reduce:group-hover:translate-x-0">
+          Stwórz zestaw
+          <ArrowRight className="size-4" />
+        </span>
       </Link>
 
       {giftSets.length > 0 ? (
