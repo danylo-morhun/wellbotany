@@ -93,6 +93,14 @@ export function StepPayment({
                 <span className="text-xs text-muted-foreground">
                   {row.items.map((i) => `${i.quantity}× ${i.variant.product.namePl}`).join(", ")}
                 </span>
+                {row.packagingLabel && (
+                  <p className="mt-1 text-xs text-muted-foreground">
+                    Opakowanie: {row.packagingLabel}
+                  </p>
+                )}
+                {row.giftMessage && (
+                  <p className="mt-0.5 text-xs italic text-muted-foreground">„{row.giftMessage}”</p>
+                )}
               </li>
             ),
           )}

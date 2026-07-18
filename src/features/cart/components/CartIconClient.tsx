@@ -97,6 +97,8 @@ export function CartIconClient({ itemCount, items }: Props) {
                       label={row.label}
                       items={row.items}
                       totalPln={row.totalPln}
+                      packagingLabel={row.packagingLabel}
+                      giftMessage={row.giftMessage}
                     />
                   ),
                 )}

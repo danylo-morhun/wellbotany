@@ -1,6 +1,6 @@
 "use client";
 
-import { Gift, Trash2 } from "lucide-react";
+import { Gift, MessageSquareText, Package, Trash2 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useAction } from "next-safe-action/hooks";
 import { toast } from "sonner";
@@ -14,9 +14,18 @@ type Props = {
   label: string;
   items: CartItem[];
   totalPln: number;
+  packagingLabel: string | null;
+  giftMessage: string | null;
 };
 
-export function GiftSetCartRow({ groupId, label, items, totalPln }: Props) {
+export function GiftSetCartRow({
+  groupId,
+  label,
+  items,
+  totalPln,
+  packagingLabel,
+  giftMessage,
+}: Props) {
   const router = useRouter();
   const { execute: doRemove, isExecuting: removing } = useAction(removeGiftSetFromCart, {
     onSuccess: () => {
@@ -51,6 +60,19 @@ export function GiftSetCartRow({ groupId, label, items, totalPln }: Props) {
           </li>
         ))}
       </ul>
+
+      {packagingLabel && (
+        <p className="mt-2 flex items-center gap-1.5 text-xs text-muted-foreground">
+          <Package className="size-3.5" />
+          Opakowanie: {packagingLabel}
+        </p>
+      )}
+      {giftMessage && (
+        <p className="mt-1 flex items-start gap-1.5 text-xs text-muted-foreground">
+          <MessageSquareText className="mt-0.5 size-3.5 shrink-0" />
+          <span className="italic">„{giftMessage}”</span>
+        </p>
+      )}
 
       <button
         type="button"

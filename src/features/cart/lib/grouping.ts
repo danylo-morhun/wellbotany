@@ -3,7 +3,15 @@ import type { CartItem } from "./session";
 
 export type CartRow =
   | { kind: "single"; item: CartItem }
-  | { kind: "giftSet"; groupId: string; label: string; items: CartItem[]; totalPln: number };
+  | {
+      kind: "giftSet";
+      groupId: string;
+      label: string;
+      items: CartItem[];
+      totalPln: number;
+      packagingLabel: string | null;
+      giftMessage: string | null;
+    };
 
 /** Groups plain cart lines individually, and gift-set component lines (giftSetGroupId != "") into a single row. */
 export function groupCartItems(items: CartItem[]): CartRow[] {
@@ -27,6 +35,8 @@ export function groupCartItems(items: CartItem[]): CartRow[] {
       label: groupItems[0].giftSetLabel ?? "Zestaw prezentowy",
       items: groupItems,
       totalPln: groupItems.reduce((s, i) => s + effectiveUnitPricePln(i) * i.quantity, 0),
+      packagingLabel: groupItems[0].packagingLabel,
+      giftMessage: groupItems[0].giftMessage,
     });
   }
 

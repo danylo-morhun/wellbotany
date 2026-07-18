@@ -49,6 +49,9 @@ const cartItemSelect = {
   giftSetGroupId: true,
   giftSetId: true,
   giftSetLabel: true,
+  packagingId: true,
+  packagingLabel: true,
+  giftMessage: true,
   unitPriceOverridePln: true,
   variant: {
     select: {
@@ -123,6 +126,9 @@ export async function mergeGuestCart(guestCartId: string, customerId: string): P
             giftSetGroupId: true,
             giftSetId: true,
             giftSetLabel: true,
+            packagingId: true,
+            packagingLabel: true,
+            giftMessage: true,
             unitPriceOverridePln: true,
           },
         },
@@ -161,6 +167,9 @@ export async function mergeGuestCart(guestCartId: string, customerId: string): P
         giftSetGroupId: item.giftSetGroupId,
         giftSetId: item.giftSetId,
         giftSetLabel: item.giftSetLabel,
+        packagingId: item.packagingId,
+        packagingLabel: item.packagingLabel,
+        giftMessage: item.giftMessage,
         unitPriceOverridePln: item.unitPriceOverridePln,
       },
     });

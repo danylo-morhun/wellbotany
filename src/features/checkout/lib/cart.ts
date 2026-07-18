@@ -16,6 +16,9 @@ export async function getCartForCheckout(cartId: string) {
           giftSetGroupId: true,
           giftSetId: true,
           giftSetLabel: true,
+          packagingId: true,
+          packagingLabel: true,
+          giftMessage: true,
           unitPriceOverridePln: true,
           variant: {
             select: {

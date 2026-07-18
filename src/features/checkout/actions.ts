@@ -207,6 +207,9 @@ export const placeOrder = actionClient
                 giftSetGroupId: item.giftSetGroupId,
                 giftSetId: item.giftSetId,
                 giftSetLabel: item.giftSetLabel,
+                packagingId: item.packagingId,
+                packagingLabel: item.packagingLabel,
+                giftMessage: item.giftMessage,
               };
             }),
           },

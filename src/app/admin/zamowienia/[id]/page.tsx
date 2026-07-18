@@ -91,9 +91,19 @@ export default async function AdminOrderDetailPage({
                 <tr key={item.id} className="border-b last:border-0">
                   <td className="py-2">
                     {isFirstInGroup && (
-                      <p className="mb-0.5 text-xs font-semibold text-primary">
-                        🎁 {item.giftSetLabel}
-                      </p>
+                      <div className="mb-0.5">
+                        <p className="text-xs font-semibold text-primary">🎁 {item.giftSetLabel}</p>
+                        {item.packagingLabel && (
+                          <p className="text-xs text-muted-foreground">
+                            Opakowanie: {item.packagingLabel}
+                          </p>
+                        )}
+                        {item.giftMessage && (
+                          <p className="text-xs italic text-muted-foreground">
+                            „{item.giftMessage}”
+                          </p>
+                        )}
+                      </div>
                     )}
                     <span className={item.giftSetGroupId !== "" ? "pl-3" : ""}>
                       {item.productName}
