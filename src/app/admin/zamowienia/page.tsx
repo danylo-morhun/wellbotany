@@ -17,7 +17,6 @@ const STATUS_LABELS: Record<OrderStatus, string> = {
   REFUNDED: "Zwrócone",
 };
 
-
 const PAGE_SIZE = 25;
 
 type SearchParams = { szukaj?: string; status?: string; strona?: string };
