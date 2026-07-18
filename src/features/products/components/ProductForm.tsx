@@ -132,6 +132,7 @@ export function ProductForm({ product, categories, brands, tags }: Props) {
       brandId: brandId || undefined,
       isFeatured: fd.get("isFeatured") === "on",
       isNewArrival: fd.get("isNewArrival") === "on",
+      isGiftEligible: fd.get("isGiftEligible") === "on",
       netWeight: (fd.get("netWeight") as string) || undefined,
       servingSize: (fd.get("servingSize") as string) || undefined,
       servingsPerContainer: fd.get("servingsPerContainer")
@@ -370,6 +371,14 @@ export function ProductForm({ product, categories, brands, tags }: Props) {
             <label className="flex items-center gap-2 text-sm">
               <input type="checkbox" name="isNewArrival" defaultChecked={product?.isNewArrival} />
               Nowość
+            </label>
+            <label className="flex items-center gap-2 text-sm">
+              <input
+                type="checkbox"
+                name="isGiftEligible"
+                defaultChecked={product?.isGiftEligible}
+              />
+              Dostępny w kreatorze zestawów prezentowych
             </label>
           </div>
         </div>
