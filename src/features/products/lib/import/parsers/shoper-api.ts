@@ -82,44 +82,73 @@ function pickPermalink(p: ShoperProduct): string | undefined {
 }
 
 /**
- * The Shoper REST API never exposes a producer *name* — only `producer_id`
- * — and `/producers` needs a broader API scope than this integration token
- * has (403 insufficient_scope). The storefront product page does render the
- * name (`<meta itemprop="brand">`), so as a fallback we scrape one
- * product's page per unique producer_id and cache the result for the run.
+ * The Shoper REST API never exposes a producer *name* (only `producer_id`)
+ * or a category *name* (only `category_id`) — and both `/producers` and
+ * `/categories` need a broader API scope than this integration token has
+ * (403 insufficient_scope on each). The storefront product page renders
+ * both: the brand as `<meta itemprop="brand">`, and the category as the
+ * deepest link in the breadcrumb (`schema.org/BreadcrumbList`) — its trailing
+ * `/pl/c/{slug}/{id}` matches the product's own `category_id` exactly. So as
+ * a fallback we scrape one product page per unique producer/category and
+ * cache the result for the run — one fetch covers both fields at once.
  */
 const producerNameCache = new Map<number, string | null>();
+const categoryNameCache = new Map<number, string | null>();
+
+type StorefrontMeta = {
+  brand?: string;
+  category?: { id: number; name: string };
+};
 
 // Throws on network/timeout failure so the caller can distinguish "checked
-// the page, no brand tag there" (safe to cache) from "couldn't check"
+// the page, tag/breadcrumb not there" (safe to cache) from "couldn't check"
 // (must retry later, not get permanently stuck as unknown).
-async function scrapeProducerNameFromStorefront(permalink: string): Promise<string | undefined> {
+async function scrapeStorefrontMeta(permalink: string): Promise<StorefrontMeta> {
   const controller = new AbortController();
   const timeout = setTimeout(() => controller.abort(), 8000);
   try {
     const res = await fetch(permalink, { signal: controller.signal });
     if (!res.ok) throw new Error(`storefront fetch failed: ${res.status}`);
     const html = await res.text();
-    const match = html.match(/<meta\s+itemprop="brand"\s+content="([^"]*)"/i);
-    return match?.[1]?.trim() || undefined;
+
+    const brandMatch = html.match(/<meta\s+itemprop="brand"\s+content="([^"]*)"/i);
+    const brand = brandMatch?.[1]?.trim() || undefined;
+
+    // Breadcrumb list items are `.../c/{slug}/{id}` anchors; the last one
+    // (deepest) is the product's immediate category.
+    const crumbPattern =
+      /<a href="\/pl\/c\/[^"]*?\/(\d+)"[^>]*itemprop="item">[\s\S]*?<span itemprop="name">([^<]+)<\/span>/g;
+    let category: { id: number; name: string } | undefined;
+    let m: RegExpExecArray | null = crumbPattern.exec(html);
+    while (m) {
+      category = { id: Number(m[1]), name: m[2].trim() };
+      m = crumbPattern.exec(html);
+    }
+
+    return { brand, category };
   } finally {
     clearTimeout(timeout);
   }
 }
 
-async function resolveProducerName(
-  producerId: number | null,
+// Scrapes the storefront page once per product that still has an unresolved
+// producer and/or category, and fills both caches from the single response.
+async function ensureStorefrontMeta(
   permalink: string | undefined,
-): Promise<string | undefined> {
-  if (producerId === null) return undefined;
-  if (producerNameCache.has(producerId)) return producerNameCache.get(producerId) ?? undefined;
-  if (!permalink) return undefined;
+  producerId: number | null,
+  categoryId: number | null,
+): Promise<void> {
+  const needProducer = producerId !== null && !producerNameCache.has(producerId);
+  const needCategory = categoryId !== null && !categoryNameCache.has(categoryId);
+  if (!needProducer && !needCategory) return;
+  if (!permalink) return;
+
   try {
-    const name = await scrapeProducerNameFromStorefront(permalink);
-    producerNameCache.set(producerId, name ?? null);
-    return name;
+    const meta = await scrapeStorefrontMeta(permalink);
+    if (needProducer) producerNameCache.set(producerId as number, meta.brand ?? null);
+    if (needCategory && meta.category) categoryNameCache.set(meta.category.id, meta.category.name);
   } catch {
-    return undefined;
+    // leave unresolved — caller falls back to undefined, retried next run
   }
 }
 
@@ -229,15 +258,22 @@ export async function fetchProductsByIds(ids: number[]): Promise<Map<number, Sho
 // Returns undefined when Shoper genuinely has no producer for this product
 // (common — many products have no producer_id at all) — the caller leaves
 // the draft's brand unset rather than falling back to a placeholder.
-async function brandFromProduct(p: ShoperProduct): Promise<{ name: string; slug?: string } | undefined> {
+// Assumes ensureStorefrontMeta already ran for this product this call.
+function brandFromProduct(p: ShoperProduct): { name: string; slug?: string } | undefined {
   const raw = (p.producer ?? "").trim();
   if (raw) return { name: raw };
 
   const producerId = toInt(p.producer_id);
-  const scraped = await resolveProducerName(producerId, pickPermalink(p));
-  if (scraped) return { name: scraped };
+  if (producerId === null) return undefined;
+  const cached = producerNameCache.get(producerId);
+  return cached ? { name: cached } : undefined;
+}
 
-  return undefined;
+// Assumes ensureStorefrontMeta already ran for this product this call.
+function categoryNameFromProduct(p: ShoperProduct): string | undefined {
+  const categoryId = toInt(p.category_id);
+  if (categoryId === null) return undefined;
+  return categoryNameCache.get(categoryId) ?? undefined;
 }
 
 function shopPublicBaseUrl(): string | undefined {
@@ -302,7 +338,11 @@ export async function buildDraftsFromStocks(
 
     const stock = Math.max(0, Math.round(Number(s.stock ?? 0)));
 
-    const brand = p ? await brandFromProduct(p) : undefined;
+    if (p) {
+      await ensureStorefrontMeta(pickPermalink(p), toInt(p.producer_id), toInt(p.category_id));
+    }
+    const brand = p ? brandFromProduct(p) : undefined;
+    const categoryName = p ? categoryNameFromProduct(p) : undefined;
 
     drafts.push({
       sourceId: source.id,
@@ -310,6 +350,7 @@ export async function buildDraftsFromStocks(
       name,
       brandName: brand?.name,
       brandSlug: brand?.slug,
+      categoryName,
       sku: s.code ?? p?.code ?? undefined,
       ean: s.ean || undefined, // Shoper returns "" (not null) for products with no EAN
       externalProductId: pid ?? undefined,
