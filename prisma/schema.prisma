@@ -79,7 +79,7 @@ enum CouponType {
 // Custom gift-set builder pricing policy — configured in admin, GiftBuilderSettings
 enum GiftBuilderPricingMode {
   FIXED_BOX // customer pays boxPricePln regardless of chosen items' sum
-  SUM_PLUS_FEE // customer pays sum(chosen item prices) + packagingFeePln
+  SUM_PLUS_FEE // customer pays sum(chosen item prices); packaging price is added separately
 }
 
 // ─── TAXONOMY ─────────────────────────────────────────────────────────────────
@@ -375,6 +375,13 @@ model CartItem {
   giftSet        GiftSet? @relation(fields: [giftSetId], references: [id], onDelete: SetNull)
   giftSetLabel   String? // denormalized display name, e.g. "Zestaw: Detox Start" / "Twój zestaw prezentowy"
 
+  // Custom-built sets only — denormalized onto every line of the group, same
+  // pattern as giftSetLabel above.
+  packagingId    String?
+  packaging      GiftPackaging? @relation(fields: [packagingId], references: [id], onDelete: SetNull)
+  packagingLabel String?
+  giftMessage    String?
+
   // Per-unit price override in grosz — used instead of variant.pricePln when
   // this line belongs to a gift set (fixed box price or sum+fee allocation)
   unitPriceOverridePln Int?
@@ -457,7 +464,8 @@ model GiftSetItem {
 }
 
 // Singleton (id=1) — admin-configured pricing policy for the customer
-// "build your own gift set" flow.
+// "build your own gift set" flow. Packaging price comes from the chosen
+// GiftPackaging option, not from a flat fee here.
 model GiftBuilderSettings {
   id       Int     @id @default(1)
   isActive Boolean @default(true)
@@ -465,13 +473,32 @@ model GiftBuilderSettings {
   namePl      String                 @default("Zestaw prezentowy")
   pricingMode GiftBuilderPricingMode @default(FIXED_BOX)
 
-  boxPricePln     Int? // required display/checkout price when pricingMode = FIXED_BOX
-  packagingFeePln Int  @default(0) // added on top of item sum when pricingMode = SUM_PLUS_FEE
+  boxPricePln Int? // required display/checkout price when pricingMode = FIXED_BOX
 
   minItems Int @default(3)
   maxItems Int @default(8)
 
   updatedAt DateTime @updatedAt
+}
+
+// Admin-managed packaging options for the custom gift-set builder — the
+// customer must pick one; its price is added on top of the items total.
+model GiftPackaging {
+  id       String  @id @default(cuid())
+  namePl   String
+  imageUrl String?
+
+  extraPricePln Int     @default(0) // grosz, added on top of the box total
+  isActive      Boolean @default(true)
+  sortOrder     Int     @default(0)
+
+  cartItems  CartItem[]
+  orderItems OrderItem[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([isActive])
 }
 
 // ─── DISCOUNTS ────────────────────────────────────────────────────────────────
@@ -625,6 +652,12 @@ model OrderItem {
   giftSetId      String? // curated GiftSet reference; null for custom-built sets or plain items
   giftSet        GiftSet? @relation(fields: [giftSetId], references: [id], onDelete: SetNull)
   giftSetLabel   String?
+
+  // Custom-built sets only — denormalized onto every line of the group
+  packagingId    String?
+  packaging      GiftPackaging? @relation(fields: [packagingId], references: [id], onDelete: SetNull)
+  packagingLabel String?
+  giftMessage    String?
 
   createdAt DateTime @default(now())
 
