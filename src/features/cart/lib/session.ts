@@ -1,7 +1,45 @@
+import { cookies } from "next/headers";
+import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 
 export const CART_COOKIE_NAME = "cart_id";
 export const CART_TTL_DAYS = 30;
+
+/** Resolves (creating if needed) the cart id for the current session — logged-in customer cart or guest cookie cart. */
+export async function ensureCartId(): Promise<string> {
+  const session = await auth();
+  if (session?.user?.id) {
+    const existing = await prisma.cart.findUnique({
+      where: { customerId: session.user.id },
+      select: { id: true },
+    });
+    if (existing) return existing.id;
+    const created = await prisma.cart.create({
+      data: { customerId: session.user.id },
+      select: { id: true },
+    });
+    return created.id;
+  }
+
+  const cookieStore = await cookies();
+  const cartId = cookieStore.get(CART_COOKIE_NAME)?.value;
+  if (cartId) {
+    const exists = await prisma.cart.findFirst({
+      where: { id: cartId, OR: [{ expiresAt: null }, { expiresAt: { gt: new Date() } }] },
+      select: { id: true },
+    });
+    if (exists) return exists.id;
+  }
+
+  const newId = await createGuestCart();
+  cookieStore.set(CART_COOKIE_NAME, newId, {
+    httpOnly: true,
+    sameSite: "lax",
+    path: "/",
+    maxAge: CART_TTL_DAYS * 24 * 60 * 60,
+  });
+  return newId;
+}
 
 export async function getCart(cartId: string) {
   return prisma.cart.findFirst({
