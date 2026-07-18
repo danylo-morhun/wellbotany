@@ -1,0 +1,424 @@
+"use client";
+
+import type { GiftSet, ProductStatus } from "@prisma/client";
+import Image from "next/image";
+import { CldUploadWidget } from "next-cloudinary";
+import { useAction } from "next-safe-action/hooks";
+import { useState } from "react";
+import { formatPrice } from "@/lib/format";
+import { slugify } from "@/lib/slugify";
+import { deleteGiftSet, saveGiftSet } from "../actions";
+
+const CLOUD_NAME = process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME;
+const UPLOAD_PRESET = process.env.NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET;
+
+const STATUS_LABELS: Record<ProductStatus, string> = {
+  DRAFT: "Szkic",
+  ACTIVE: "Aktywny",
+  ARCHIVED: "Zarchiwizowany",
+};
+
+function plnToGrosze(value: string): number {
+  return Math.round(Number.parseFloat(value || "0") * 100);
+}
+
+function groszeToPln(grosze: number): string {
+  return (grosze / 100).toFixed(2);
+}
+
+export type GiftSetWithItems = GiftSet & {
+  items: { id: string; variantId: string; quantity: number }[];
+};
+
+export type VariantOption = {
+  id: string;
+  sku: string;
+  pricePln: number;
+  optionValue: string | null;
+  productName: string;
+};
+
+type FormItem = { variantId: string; quantity: number };
+
+type Props = {
+  giftSets: GiftSetWithItems[];
+  variants: VariantOption[];
+};
+
+export function GiftSetsAdmin({ giftSets, variants }: Props) {
+  const [editing, setEditing] = useState<GiftSetWithItems | null>(null);
+  const [showNew, setShowNew] = useState(false);
+
+  const [name, setName] = useState("");
+  const [slug, setSlug] = useState("");
+  const [slugManual, setSlugManual] = useState(false);
+  const [status, setStatus] = useState<ProductStatus>("DRAFT");
+  const [imageUrl, setImageUrl] = useState("");
+  const [isFeatured, setIsFeatured] = useState(false);
+  const [items, setItems] = useState<FormItem[]>([]);
+  const [pickerVariantId, setPickerVariantId] = useState("");
+
+  const { execute: execSave, isPending: saving } = useAction(saveGiftSet, {
+    onSuccess: () => {
+      setEditing(null);
+      setShowNew(false);
+    },
+  });
+  const { execute: execDelete, isPending: deleting } = useAction(deleteGiftSet);
+
+  function resetForm() {
+    setName("");
+    setSlug("");
+    setSlugManual(false);
+    setStatus("DRAFT");
+    setImageUrl("");
+    setIsFeatured(false);
+    setItems([]);
+    setPickerVariantId("");
+  }
+
+  function startNew() {
+    setEditing(null);
+    resetForm();
+    setShowNew(true);
+  }
+
+  function startEditing(gs: GiftSetWithItems) {
+    setShowNew(false);
+    setName(gs.namePl);
+    setSlug(gs.slug);
+    setSlugManual(true);
+    setStatus(gs.status);
+    setImageUrl(gs.imageUrl ?? "");
+    setIsFeatured(gs.isFeatured);
+    setItems(gs.items.map((i) => ({ variantId: i.variantId, quantity: i.quantity })));
+    setPickerVariantId("");
+    setEditing(gs);
+  }
+
+  function cancelForm() {
+    setEditing(null);
+    setShowNew(false);
+  }
+
+  function handleNameChange(value: string) {
+    setName(value);
+    if (!slugManual) setSlug(slugify(value));
+  }
+
+  function addPickedVariant() {
+    if (!pickerVariantId) return;
+    if (items.some((i) => i.variantId === pickerVariantId)) return;
+    setItems((prev) => [...prev, { variantId: pickerVariantId, quantity: 1 }]);
+    setPickerVariantId("");
+  }
+
+  function updateItemQuantity(variantId: string, quantity: number) {
+    setItems((prev) => prev.map((i) => (i.variantId === variantId ? { ...i, quantity } : i)));
+  }
+
+  function removeItem(variantId: string) {
+    setItems((prev) => prev.filter((i) => i.variantId !== variantId));
+  }
+
+  const componentsSumPln = items.reduce((sum, i) => {
+    const v = variants.find((v) => v.id === i.variantId);
+    return sum + (v?.pricePln ?? 0) * i.quantity;
+  }, 0);
+
+  function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
+    e.preventDefault();
+    const fd = new FormData(e.currentTarget);
+    execSave({
+      id: (fd.get("id") as string) || undefined,
+      slug,
+      status,
+      namePl: name,
+      descriptionPl: (fd.get("descriptionPl") as string) || undefined,
+      imageUrl: imageUrl || undefined,
+      pricePln: plnToGrosze(fd.get("pricePln") as string),
+      comparePricePln: (() => {
+        const raw = fd.get("comparePricePln") as string;
+        return raw ? plnToGrosze(raw) : undefined;
+      })(),
+      isFeatured,
+      items,
+    });
+  }
+
+  const form = (item?: GiftSetWithItems) => (
+    <form
+      onSubmit={handleSubmit}
+      className="mt-2 mb-4 grid gap-3 rounded-2xl bg-card p-4 shadow-card"
+    >
+      {item && <input type="hidden" name="id" value={item.id} />}
+      <div className="grid grid-cols-2 gap-2">
+        <input
+          value={name}
+          onChange={(e) => handleNameChange(e.target.value)}
+          placeholder="Nazwa zestawu *"
+          required
+          className="rounded-lg border border-border px-2 py-1 text-sm"
+        />
+        <input
+          value={slug}
+          onChange={(e) => {
+            setSlug(e.target.value);
+            setSlugManual(true);
+          }}
+          placeholder="Slug *"
+          required
+          className="rounded-lg border border-border px-2 py-1 font-mono text-sm"
+        />
+        <select
+          value={status}
+          onChange={(e) => setStatus(e.target.value as ProductStatus)}
+          className="rounded-lg border border-border px-2 py-1 text-sm"
+        >
+          {Object.entries(STATUS_LABELS).map(([value, label]) => (
+            <option key={value} value={value}>
+              {label}
+            </option>
+          ))}
+        </select>
+        <label className="flex items-center gap-2 text-sm">
+          <input
+            type="checkbox"
+            checked={isFeatured}
+            onChange={(e) => setIsFeatured(e.target.checked)}
+          />
+          Wyróżniony
+        </label>
+        <input
+          name="pricePln"
+          type="number"
+          step="0.01"
+          min="0"
+          defaultValue={item ? groszeToPln(item.pricePln) : ""}
+          placeholder="Cena zestawu (PLN) *"
+          required
+          className="rounded-lg border border-border px-2 py-1 text-sm"
+        />
+        <input
+          name="comparePricePln"
+          type="number"
+          step="0.01"
+          min="0"
+          defaultValue={item?.comparePricePln ? groszeToPln(item.comparePricePln) : ""}
+          placeholder="Cena porównawcza (PLN)"
+          className="rounded-lg border border-border px-2 py-1 text-sm"
+        />
+        <textarea
+          name="descriptionPl"
+          defaultValue={item?.descriptionPl ?? ""}
+          placeholder="Opis"
+          rows={2}
+          className="col-span-2 rounded-lg border border-border px-2 py-1 text-sm"
+        />
+      </div>
+
+      <div className="rounded-lg border border-border p-3">
+        <p className="mb-2 text-xs font-medium text-muted-foreground">Zdjęcie zestawu</p>
+        <div className="flex items-center gap-3">
+          {imageUrl ? (
+            <div className="relative size-14 shrink-0 overflow-hidden rounded-md border border-border bg-muted">
+              <Image src={imageUrl} alt="" fill className="object-contain p-1" sizes="56px" />
+            </div>
+          ) : (
+            <div className="flex size-14 shrink-0 items-center justify-center rounded-md border border-dashed border-border bg-muted text-xs text-muted-foreground">
+              brak
+            </div>
+          )}
+          <div className="flex flex-1 flex-col gap-2">
+            {CLOUD_NAME && UPLOAD_PRESET ? (
+              <CldUploadWidget
+                uploadPreset={UPLOAD_PRESET}
+                onSuccess={(result) => {
+                  const info = result.info as { secure_url: string } | undefined;
+                  if (info?.secure_url) setImageUrl(info.secure_url);
+                }}
+              >
+                {({ open }) => (
+                  <button
+                    type="button"
+                    onClick={() => open()}
+                    className="self-start rounded-lg bg-primary px-3 py-1 text-xs font-medium text-primary-foreground transition-colors duration-200 hover:bg-primary-deep motion-reduce:transition-none"
+                  >
+                    Prześlij zdjęcie
+                  </button>
+                )}
+              </CldUploadWidget>
+            ) : null}
+            <input
+              type="url"
+              value={imageUrl}
+              onChange={(e) => setImageUrl(e.target.value)}
+              placeholder="lub wklej URL zdjęcia…"
+              className="flex-1 rounded-lg border border-border px-2 py-1 text-xs"
+            />
+          </div>
+        </div>
+      </div>
+
+      <div className="rounded-lg border border-border p-3">
+        <p className="mb-2 text-xs font-medium text-muted-foreground">Produkty w zestawie</p>
+        <div className="flex gap-2">
+          <select
+            value={pickerVariantId}
+            onChange={(e) => setPickerVariantId(e.target.value)}
+            className="flex-1 rounded-lg border border-border px-2 py-1 text-sm"
+          >
+            <option value="">Wybierz produkt…</option>
+            {variants
+              .filter((v) => !items.some((i) => i.variantId === v.id))
+              .map((v) => (
+                <option key={v.id} value={v.id}>
+                  {v.productName}
+                  {v.optionValue ? ` — ${v.optionValue}` : ""} ({v.sku}) — {formatPrice(v.pricePln)}
+                </option>
+              ))}
+          </select>
+          <button
+            type="button"
+            onClick={addPickedVariant}
+            disabled={!pickerVariantId}
+            className="rounded-lg border border-border px-3 py-1 text-xs font-medium disabled:opacity-50"
+          >
+            Dodaj
+          </button>
+        </div>
+
+        {items.length > 0 && (
+          <ul className="mt-3 space-y-1.5">
+            {items.map((i) => {
+              const v = variants.find((v) => v.id === i.variantId);
+              return (
+                <li key={i.variantId} className="flex items-center justify-between gap-2 text-xs">
+                  <span className="min-w-0 truncate text-muted-foreground">
+                    {v
+                      ? `${v.productName}${v.optionValue ? ` — ${v.optionValue}` : ""}`
+                      : i.variantId}
+                  </span>
+                  <div className="flex shrink-0 items-center gap-2">
+                    <input
+                      type="number"
+                      min={1}
+                      max={99}
+                      value={i.quantity}
+                      onChange={(e) =>
+                        updateItemQuantity(i.variantId, Math.max(1, Number(e.target.value) || 1))
+                      }
+                      className="w-14 rounded-lg border border-border px-1.5 py-0.5 text-xs"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => removeItem(i.variantId)}
+                      className="text-destructive"
+                    >
+                      Usuń
+                    </button>
+                  </div>
+                </li>
+              );
+            })}
+          </ul>
+        )}
+        {items.length > 0 && (
+          <p className="mt-2 text-xs text-muted-foreground">
+            Suma cen produktów: {formatPrice(componentsSumPln)}
+          </p>
+        )}
+      </div>
+
+      <div className="flex gap-2">
+        <button
+          type="submit"
+          disabled={saving || items.length === 0}
+          className="rounded-lg bg-primary px-3 py-1 text-xs font-medium text-primary-foreground transition-colors duration-200 hover:bg-primary-deep motion-reduce:transition-none disabled:opacity-50"
+        >
+          {saving ? "…" : "Zapisz"}
+        </button>
+        <button
+          type="button"
+          onClick={cancelForm}
+          className="rounded-lg border border-border px-3 py-1 text-xs"
+        >
+          Anuluj
+        </button>
+      </div>
+    </form>
+  );
+
+  return (
+    <div>
+      <div className="mb-4 flex items-center justify-between">
+        <h1 className="text-2xl font-bold">Zestawy prezentowe</h1>
+        <button
+          type="button"
+          onClick={startNew}
+          className="rounded-lg bg-primary px-3 py-1.5 text-sm font-medium text-primary-foreground transition-colors duration-200 hover:bg-primary-deep motion-reduce:transition-none"
+        >
+          + Dodaj zestaw
+        </button>
+      </div>
+      {showNew && !editing && form()}
+      <div className="divide-y divide-border rounded-2xl bg-card shadow-card">
+        {giftSets.map((gs) => (
+          <div key={gs.id}>
+            <div className="flex items-center justify-between px-4 py-3">
+              <div className="flex items-center gap-3">
+                {gs.imageUrl ? (
+                  <div className="relative size-10 shrink-0 overflow-hidden rounded-md border border-border bg-muted">
+                    <Image
+                      src={gs.imageUrl}
+                      alt={gs.namePl}
+                      fill
+                      className="object-contain p-1"
+                      sizes="40px"
+                    />
+                  </div>
+                ) : (
+                  <div className="flex size-10 shrink-0 items-center justify-center rounded-md bg-muted text-sm font-bold text-muted-foreground">
+                    {gs.namePl.charAt(0)}
+                  </div>
+                )}
+                <div>
+                  <p className="font-medium">{gs.namePl}</p>
+                  <p className="text-xs text-muted-foreground">
+                    {STATUS_LABELS[gs.status]} · {gs.items.length} produktów ·{" "}
+                    {formatPrice(gs.pricePln)}
+                  </p>
+                </div>
+              </div>
+              <div className="flex gap-2">
+                <button
+                  type="button"
+                  onClick={() => startEditing(gs)}
+                  className="rounded-lg border border-border px-2 py-1 text-xs"
+                >
+                  Edytuj
+                </button>
+                <button
+                  type="button"
+                  disabled={deleting}
+                  onClick={() => {
+                    if (confirm(`Usunąć zestaw "${gs.namePl}"?`)) execDelete({ id: gs.id });
+                  }}
+                  className="rounded-lg border border-border border-destructive px-2 py-1 text-xs text-destructive disabled:opacity-50"
+                >
+                  Usuń
+                </button>
+              </div>
+            </div>
+            {editing?.id === gs.id && form(gs)}
+          </div>
+        ))}
+        {giftSets.length === 0 && (
+          <p className="px-4 py-6 text-center text-sm text-muted-foreground">
+            Brak zestawów prezentowych
+          </p>
+        )}
+      </div>
+    </div>
+  );
+}

@@ -1,5 +1,5 @@
-import Link from "next/link";
 import { ArrowLeft } from "lucide-react";
+import Link from "next/link";
 import { SideNav } from "@/components/layout/SideNav";
 import { prisma } from "@/lib/prisma";
 
@@ -11,6 +11,7 @@ export default async function AdminLayout({ children }: { children: React.ReactN
   const navItems = [
     { href: "/admin/zamowienia", label: "Zamówienia", badge: null },
     { href: "/admin/produkty", label: "Produkty", badge: null },
+    { href: "/admin/naborys", label: "Zestawy prezentowe", badge: null },
     { href: "/admin/magazyn", label: "Magazyn", badge: lowStockCount > 0 ? lowStockCount : null },
     { href: "/admin/kategorie", label: "Kategorie", badge: null },
     { href: "/admin/marki", label: "Marki", badge: null },
