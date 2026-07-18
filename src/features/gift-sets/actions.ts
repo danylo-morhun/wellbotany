@@ -13,8 +13,10 @@ import {
 import {
   addCuratedGiftSetToCartSchema,
   addCustomGiftSetToCartSchema,
+  deleteGiftPackagingSchema,
   deleteGiftSetSchema,
   giftBuilderSettingsSchema,
+  giftPackagingSchema,
   giftSetSchema,
   searchVariantsSchema,
 } from "./schema";
@@ -120,6 +122,32 @@ export const saveGiftBuilderSettings = adminActionClient
     return { success: true };
   });
 
+// ─── Admin: packaging options ──────────────────────────────────────────────────
+
+export const saveGiftPackaging = adminActionClient
+  .schema(giftPackagingSchema)
+  .action(async ({ parsedInput: input }) => {
+    const { id, imageUrl, ...data } = input;
+    const payload = { ...data, imageUrl: imageUrl || null };
+    if (id) {
+      await prisma.giftPackaging.update({ where: { id }, data: payload });
+    } else {
+      await prisma.giftPackaging.create({ data: payload });
+    }
+    revalidatePath("/admin/zestawy-prezentowe/opakowania");
+    revalidatePath("/zestawy-prezentowe/stworz");
+    return { success: true };
+  });
+
+export const deleteGiftPackaging = adminActionClient
+  .schema(deleteGiftPackagingSchema)
+  .action(async ({ parsedInput: { id } }) => {
+    await prisma.giftPackaging.delete({ where: { id } });
+    revalidatePath("/admin/zestawy-prezentowe/opakowania");
+    revalidatePath("/zestawy-prezentowe/stworz");
+    return { success: true };
+  });
+
 // ─── Customer: add to cart ──────────────────────────────────────────────────────
 
 export const addCuratedGiftSetToCart = actionClient
@@ -167,7 +195,7 @@ export const addCuratedGiftSetToCart = actionClient
 
 export const addCustomGiftSetToCart = actionClient
   .schema(addCustomGiftSetToCartSchema)
-  .action(async ({ parsedInput: { items } }) => {
+  .action(async ({ parsedInput: { items, packagingId, giftMessage } }) => {
     const savedSettings = await prisma.giftBuilderSettings.findUnique({ where: { id: 1 } });
     const settings = savedSettings ?? DEFAULT_GIFT_BUILDER_POLICY;
     if (!settings.isActive) {
@@ -178,6 +206,11 @@ export const addCustomGiftSetToCart = actionClient
     if (totalQuantity < settings.minItems || totalQuantity > settings.maxItems) {
       throw new ActionError(`Wybierz od ${settings.minItems} do ${settings.maxItems} produktów`);
     }
+
+    const packaging = await prisma.giftPackaging.findUnique({
+      where: { id: packagingId, isActive: true },
+    });
+    if (!packaging) throw new ActionError("Wybrane opakowanie nie jest już dostępne");
 
     const variants = await prisma.productVariant.findMany({
       where: {
@@ -203,7 +236,7 @@ export const addCustomGiftSetToCart = actionClient
       unitPricePln: variantMap.get(i.variantId)!.pricePln,
     }));
 
-    const target = giftBuilderTargetTotalPln(settings, components);
+    const target = giftBuilderTargetTotalPln(settings, components) + packaging.extraPricePln;
     const { lines } = allocateGiftBoxPrice(components, target);
 
     const cartId = await ensureCartId();
@@ -218,6 +251,9 @@ export const addCustomGiftSetToCart = actionClient
         giftSetId: null,
         giftSetLabel: settings.namePl,
         unitPriceOverridePln: l.unitPriceOverridePln,
+        packagingId: packaging.id,
+        packagingLabel: packaging.namePl,
+        giftMessage: giftMessage || null,
       })),
     });
 

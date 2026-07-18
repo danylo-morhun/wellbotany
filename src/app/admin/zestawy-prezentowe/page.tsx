@@ -21,12 +21,20 @@ export default async function AdminGiftSetsPage() {
 
   return (
     <div className="space-y-4">
-      <Link
-        href="/admin/zestawy-prezentowe/ustawienia"
-        className="text-sm font-medium text-primary hover:underline"
-      >
-        Ustawienia kreatora własnego zestawu →
-      </Link>
+      <div className="flex gap-4">
+        <Link
+          href="/admin/zestawy-prezentowe/ustawienia"
+          className="text-sm font-medium text-primary hover:underline"
+        >
+          Ustawienia kreatora własnego zestawu →
+        </Link>
+        <Link
+          href="/admin/zestawy-prezentowe/opakowania"
+          className="text-sm font-medium text-primary hover:underline"
+        >
+          Opakowania →
+        </Link>
+      </div>
       <GiftSetsAdmin
         giftSets={giftSets.map((gs) => ({
           ...gs,

@@ -37,7 +37,6 @@ export const giftBuilderSettingsSchema = z
     namePl: z.string().min(1).max(200).default("Zestaw prezentowy"),
     pricingMode: z.nativeEnum(GiftBuilderPricingMode).default("FIXED_BOX"),
     boxPricePln: z.coerce.number().int().positive().optional(),
-    packagingFeePln: z.coerce.number().int().min(0).default(0),
     minItems: z.coerce.number().int().min(1).max(50).default(3),
     maxItems: z.coerce.number().int().min(1).max(50).default(8),
   })
@@ -50,6 +49,19 @@ export const giftBuilderSettingsSchema = z
     path: ["minItems"],
   });
 
+// ─── Admin: packaging options ──────────────────────────────────────────────────
+
+export const giftPackagingSchema = z.object({
+  id: z.string().optional(),
+  namePl: z.string().min(1).max(200),
+  imageUrl: z.string().url().optional().or(z.literal("")),
+  extraPricePln: z.coerce.number().int().min(0),
+  isActive: z.boolean().default(true),
+  sortOrder: z.coerce.number().int().default(0),
+});
+
+export const deleteGiftPackagingSchema = z.object({ id: z.string().min(1) });
+
 // ─── Customer: add to cart ─────────────────────────────────────────────────────
 
 export const addCuratedGiftSetToCartSchema = z.object({
@@ -61,4 +73,6 @@ export const addCustomGiftSetToCartSchema = z.object({
     .array(z.object({ variantId: z.string().min(1), quantity: z.number().int().min(1).max(99) }))
     .min(1)
     .max(50),
+  packagingId: z.string().min(1, "Wybierz opakowanie"),
+  giftMessage: z.string().max(200).optional(),
 });

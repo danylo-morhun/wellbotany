@@ -3,22 +3,20 @@ import type { GiftBuilderPricingMode } from "@prisma/client";
 export type GiftBuilderPolicy = {
   pricingMode: GiftBuilderPricingMode;
   boxPricePln: number | null;
-  packagingFeePln: number;
   minItems: number;
   maxItems: number;
 };
 
 /**
  * Used when no admin has saved GiftBuilderSettings yet (id=1 row missing) —
- * the builder should work out of the box (sum of chosen items, no fee)
- * rather than appear unavailable until someone visits the settings page.
+ * the builder should work out of the box (sum of chosen items) rather than
+ * appear unavailable until someone visits the settings page.
  */
 export const DEFAULT_GIFT_BUILDER_POLICY = {
   isActive: true,
   namePl: "Zestaw prezentowy",
   pricingMode: "SUM_PLUS_FEE" as GiftBuilderPricingMode,
   boxPricePln: null,
-  packagingFeePln: 0,
   minItems: 3,
   maxItems: 8,
 };
@@ -37,8 +35,9 @@ export type GiftBuilderAllocation = {
 };
 
 /**
- * Target price for the whole box under the current policy, before
- * per-line allocation/rounding.
+ * Target price for the box's items under the current policy (packaging
+ * price is added separately by the caller), before per-line
+ * allocation/rounding.
  */
 export function giftBuilderTargetTotalPln(
   policy: GiftBuilderPolicy,
@@ -47,8 +46,7 @@ export function giftBuilderTargetTotalPln(
   if (policy.pricingMode === "FIXED_BOX") {
     return policy.boxPricePln ?? 0;
   }
-  const sum = components.reduce((s, c) => s + c.unitPricePln * c.quantity, 0);
-  return sum + policy.packagingFeePln;
+  return components.reduce((s, c) => s + c.unitPricePln * c.quantity, 0);
 }
 
 /**

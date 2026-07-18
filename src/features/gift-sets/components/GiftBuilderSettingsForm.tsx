@@ -1,6 +1,7 @@
 "use client";
 
 import type { GiftBuilderPricingMode, GiftBuilderSettings } from "@prisma/client";
+import Link from "next/link";
 import { useAction } from "next-safe-action/hooks";
 import { useState } from "react";
 import { toast } from "sonner";
@@ -16,7 +17,7 @@ function groszeToPln(grosze: number | null): string {
 
 const MODE_LABELS: Record<GiftBuilderPricingMode, string> = {
   FIXED_BOX: "Stała cena pudełka",
-  SUM_PLUS_FEE: "Suma cen produktów + opłata za pakowanie",
+  SUM_PLUS_FEE: "Suma cen wybranych produktów",
 };
 
 type Props = { settings: GiftBuilderSettings | null };
@@ -41,7 +42,6 @@ export function GiftBuilderSettingsForm({ settings }: Props) {
       namePl: fd.get("namePl") as string,
       pricingMode,
       boxPricePln: boxPriceRaw ? plnToGrosze(boxPriceRaw) : undefined,
-      packagingFeePln: plnToGrosze((fd.get("packagingFeePln") as string) || "0"),
       minItems: Number(fd.get("minItems")),
       maxItems: Number(fd.get("maxItems")),
     });
@@ -113,23 +113,16 @@ export function GiftBuilderSettingsForm({ settings }: Props) {
           />
         </div>
       ) : (
-        <div>
-          <label
-            htmlFor="packagingFeePln"
-            className="mb-1 block text-xs font-medium text-muted-foreground"
+        <p className="text-xs text-muted-foreground">
+          Cena = suma cen wybranych produktów. Cenę opakowania ustala się osobno w sekcji{" "}
+          <Link
+            href="/admin/zestawy-prezentowe/opakowania"
+            className="text-primary hover:underline"
           >
-            Opłata za pakowanie (PLN)
-          </label>
-          <input
-            id="packagingFeePln"
-            name="packagingFeePln"
-            type="number"
-            step="0.01"
-            min="0"
-            defaultValue={groszeToPln(settings?.packagingFeePln ?? 0)}
-            className="w-full rounded-lg border border-border px-2 py-1.5 text-sm"
-          />
-        </div>
+            Opakowania
+          </Link>
+          .
+        </p>
       )}
 
       <div className="grid grid-cols-2 gap-3">
