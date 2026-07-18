@@ -1,12 +1,8 @@
 import type { Metadata } from "next";
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
-import {
-  CART_COOKIE_NAME,
-  effectiveUnitPricePln,
-  getCart,
-  getCartByCustomerId,
-} from "@/features/cart/lib/session";
+import { effectiveUnitPricePln } from "@/features/cart/lib/pricing";
+import { CART_COOKIE_NAME, getCart, getCartByCustomerId } from "@/features/cart/lib/session";
 import { CheckoutForm } from "@/features/checkout/components/CheckoutForm";
 import { auth } from "@/lib/auth";
 

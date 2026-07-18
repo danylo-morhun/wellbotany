@@ -3,7 +3,8 @@
 import { useAction } from "next-safe-action/hooks";
 import { useState } from "react";
 import { groupCartItems } from "@/features/cart/lib/grouping";
-import { type CartItem, effectiveUnitPricePln } from "@/features/cart/lib/session";
+import { effectiveUnitPricePln } from "@/features/cart/lib/pricing";
+import type { CartItem } from "@/features/cart/lib/session";
 import { formatPrice } from "@/lib/format";
 import { verifyCoupon } from "../actions";
 import { SHIPPING_COSTS, SHIPPING_LABELS } from "../lib/shipping";

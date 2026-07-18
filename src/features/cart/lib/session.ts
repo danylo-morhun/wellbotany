@@ -90,13 +90,6 @@ export async function getCart(cartId: string) {
 export type CartWithItems = NonNullable<Awaited<ReturnType<typeof getCart>>>;
 export type CartItem = CartWithItems["items"][number];
 
-/** Per-unit price to charge for this line — the gift-set allocation if set, else the variant's own price. */
-export function effectiveUnitPricePln(
-  item: Pick<CartItem, "unitPriceOverridePln" | "variant">,
-): number {
-  return item.unitPriceOverridePln ?? item.variant.pricePln;
-}
-
 export async function getCartByCustomerId(customerId: string) {
   return prisma.cart.findUnique({
     where: { customerId },

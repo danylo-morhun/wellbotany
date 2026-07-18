@@ -14,7 +14,8 @@ import {
 } from "@/components/ui/sheet";
 import { formatPrice } from "@/lib/format";
 import { groupCartItems } from "../lib/grouping";
-import { type CartWithItems, effectiveUnitPricePln } from "../lib/session";
+import { effectiveUnitPricePln } from "../lib/pricing";
+import type { CartWithItems } from "../lib/session";
 import { CartItemRow } from "./CartItemRow";
 import { GiftSetCartRow } from "./GiftSetCartRow";
 

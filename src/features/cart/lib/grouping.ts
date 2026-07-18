@@ -1,4 +1,5 @@
-import { type CartItem, effectiveUnitPricePln } from "./session";
+import { effectiveUnitPricePln } from "./pricing";
+import type { CartItem } from "./session";
 
 export type CartRow =
   | { kind: "single"; item: CartItem }

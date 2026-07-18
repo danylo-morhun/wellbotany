@@ -5,12 +5,8 @@ import Link from "next/link";
 import { CartList } from "@/features/cart/components/CartList";
 import { CartSummary } from "@/features/cart/components/CartSummary";
 import { ShippingProgress } from "@/features/cart/components/ShippingProgress";
-import {
-  CART_COOKIE_NAME,
-  effectiveUnitPricePln,
-  getCart,
-  getCartByCustomerId,
-} from "@/features/cart/lib/session";
+import { effectiveUnitPricePln } from "@/features/cart/lib/pricing";
+import { CART_COOKIE_NAME, getCart, getCartByCustomerId } from "@/features/cart/lib/session";
 import { auth } from "@/lib/auth";
 
 export const metadata: Metadata = {

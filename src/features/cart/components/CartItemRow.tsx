@@ -7,7 +7,8 @@ import { useAction } from "next-safe-action/hooks";
 import { toast } from "sonner";
 import { formatPrice } from "@/lib/format";
 import { removeFromCart, updateQuantity } from "../actions";
-import { type CartItem, effectiveUnitPricePln } from "../lib/session";
+import { effectiveUnitPricePln } from "../lib/pricing";
+import type { CartItem } from "../lib/session";
 
 type Props = {
   item: CartItem;
