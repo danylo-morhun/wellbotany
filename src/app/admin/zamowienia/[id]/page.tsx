@@ -18,6 +18,23 @@ export default async function AdminOrderDetailPage({
 
   if (!order) notFound();
 
+  // Group gift-set component rows under their box label for packing clarity;
+  // plain items ("" groupId) render individually, in original order.
+  const seenGroups = new Set<string>();
+  const orderedGroupIds: string[] = [];
+  for (const item of order.items) {
+    if (item.giftSetGroupId && !seenGroups.has(item.giftSetGroupId)) {
+      seenGroups.add(item.giftSetGroupId);
+      orderedGroupIds.push(item.giftSetGroupId);
+    }
+  }
+  const itemRows = [
+    ...order.items.filter((i) => !i.giftSetGroupId),
+    ...orderedGroupIds.flatMap((groupId) =>
+      order.items.filter((i) => i.giftSetGroupId === groupId),
+    ),
+  ];
+
   return (
     <div className="space-y-8">
       <div>
@@ -66,24 +83,36 @@ export default async function AdminOrderDetailPage({
             </tr>
           </thead>
           <tbody>
-            {order.items.map((item) => (
-              <tr key={item.id} className="border-b last:border-0">
-                <td className="py-2">
-                  {item.productName}
-                  {item.variantOpt && (
-                    <span className="text-muted-foreground"> — {item.variantOpt}</span>
-                  )}
-                </td>
-                <td className="py-2 text-muted-foreground">{item.sku}</td>
-                <td className="py-2">{item.quantity}</td>
-                <td className="py-2 text-right">
-                  {(item.totalPln / 100).toLocaleString("pl-PL", {
-                    style: "currency",
-                    currency: "PLN",
-                  })}
-                </td>
-              </tr>
-            ))}
+            {itemRows.map((item, i) => {
+              const isFirstInGroup =
+                item.giftSetGroupId !== "" &&
+                (i === 0 || itemRows[i - 1].giftSetGroupId !== item.giftSetGroupId);
+              return (
+                <tr key={item.id} className="border-b last:border-0">
+                  <td className="py-2">
+                    {isFirstInGroup && (
+                      <p className="mb-0.5 text-xs font-semibold text-primary">
+                        🎁 {item.giftSetLabel}
+                      </p>
+                    )}
+                    <span className={item.giftSetGroupId !== "" ? "pl-3" : ""}>
+                      {item.productName}
+                      {item.variantOpt && (
+                        <span className="text-muted-foreground"> — {item.variantOpt}</span>
+                      )}
+                    </span>
+                  </td>
+                  <td className="py-2 text-muted-foreground">{item.sku}</td>
+                  <td className="py-2">{item.quantity}</td>
+                  <td className="py-2 text-right">
+                    {(item.totalPln / 100).toLocaleString("pl-PL", {
+                      style: "currency",
+                      currency: "PLN",
+                    })}
+                  </td>
+                </tr>
+              );
+            })}
           </tbody>
         </table>
         <div className="mt-4 space-y-1 border-t pt-4 text-sm">
