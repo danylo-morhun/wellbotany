@@ -82,6 +82,7 @@ export default async function KategoriePage() {
                   strokeWidth="2"
                   strokeLinecap="round"
                   strokeLinejoin="round"
+                  aria-hidden="true"
                   className="shrink-0 text-muted-foreground group-hover:text-primary transition-colors duration-200 motion-reduce:transition-none"
                 >
                   <path d="m9 18 6-6-6-6" />
