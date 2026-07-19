@@ -17,6 +17,7 @@ declare module "next-auth" {
 }
 
 const config: NextAuthConfig = {
+  trustHost: true,
   providers: [
     Credentials({
       credentials: {
