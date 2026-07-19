@@ -1,0 +1,104 @@
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  lint-and-typecheck:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with: { version: "10" }
+      - uses: actions/setup-node@v4
+        with: { node-version: "20", cache: "pnpm" }
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm biome check .
+      - run: pnpm tsc --noEmit
+
+  test:
+    needs: lint-and-typecheck
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with: { version: "10" }
+      - uses: actions/setup-node@v4
+        with: { node-version: "20", cache: "pnpm" }
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm exec prisma generate
+
+      # Fresh Postgres snapshot per run — next build statically prerenders
+      # src/app/sitemap.ts (queries products/categories/brands), and
+      # placeOrder/coupon tests below need a real transactional Postgres.
+      - name: Create ephemeral Neon branch
+        id: neon-branch
+        uses: neondatabase/create-branch-action@v6
+        with:
+          project_id: ${{ vars.NEON_PROJECT_ID }}
+          branch_name: ci-${{ github.run_id }}-${{ github.run_attempt }}
+          parent_branch: production
+          api_key: ${{ secrets.NEON_API_KEY }}
+
+      - name: Apply migrations to the ephemeral branch
+        run: pnpm exec prisma migrate deploy
+        env:
+          DATABASE_URL: ${{ steps.neon-branch.outputs.db_url_pooled }}
+          DIRECT_URL: ${{ steps.neon-branch.outputs.db_url }}
+
+      - name: Generate a CI-only auth secret
+        id: auth-secret
+        run: echo "value=$(openssl rand -base64 32)" >> "$GITHUB_OUTPUT"
+
+      - name: Unit + integration tests (Vitest)
+        run: pnpm exec vitest run
+        env:
+          DATABASE_URL: ${{ steps.neon-branch.outputs.db_url_pooled }}
+          DIRECT_URL: ${{ steps.neon-branch.outputs.db_url }}
+          AUTH_SECRET: ${{ steps.auth-secret.outputs.value }}
+          P24_SANDBOX_BYPASS: "true"
+
+      - name: Install Playwright browsers
+        run: pnpm exec playwright install --with-deps chromium
+
+      # No separate `next build` step — Playwright's webServer (playwright.config.ts)
+      # runs `pnpm build && pnpm start` itself, so this doubles as the build gate.
+      # UPSTASH_*/SENTRY_DSN are deliberately left unset: rate-limiting and Sentry
+      # both no-op gracefully without them (see src/lib/rate-limit.ts,
+      # src/instrumentation.ts), so CI runs never touch shared prod quotas.
+      - name: E2E tests (Playwright)
+        run: pnpm exec playwright test
+        env:
+          DATABASE_URL: ${{ steps.neon-branch.outputs.db_url_pooled }}
+          DIRECT_URL: ${{ steps.neon-branch.outputs.db_url }}
+          AUTH_SECRET: ${{ steps.auth-secret.outputs.value }}
+          AUTH_URL: "http://localhost:3000"
+          NEXT_PUBLIC_SITE_URL: "http://localhost:3000"
+          P24_SANDBOX_BYPASS: "true"
+          CI: "true"
+
+      - name: Upload Playwright report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-report
+          path: playwright-report/
+          retention-days: 7
+
+      - name: Delete ephemeral Neon branch
+        if: always()
+        uses: neondatabase/delete-branch-action@v3
+        with:
+          project_id: ${{ vars.NEON_PROJECT_ID }}
+          branch: ci-${{ github.run_id }}-${{ github.run_attempt }}
+          api_key: ${{ secrets.NEON_API_KEY }}
