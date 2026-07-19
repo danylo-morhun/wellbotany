@@ -8,6 +8,12 @@ import { ActionError } from "@/lib/action-error";
 import { sendOrderConfirmationEmail } from "@/lib/email/order-emails";
 import { formatPrice } from "@/lib/format";
 import { prisma } from "@/lib/prisma";
+import {
+  assertNotRateLimited,
+  checkoutLimiter,
+  couponLimiter,
+  getClientIp,
+} from "@/lib/rate-limit";
 import { actionClient } from "@/lib/safe-action";
 import { checkoutItemUnitPricePln, getCartForCheckout } from "./lib/cart";
 import { SHIPPING_COSTS } from "./lib/shipping";
@@ -16,6 +22,8 @@ import { checkoutSchema } from "./schema";
 export const verifyCoupon = actionClient
   .schema(z.object({ code: z.string().min(1), subtotal: z.number().int() }))
   .action(async ({ parsedInput: { code, subtotal } }) => {
+    await assertNotRateLimited(couponLimiter, await getClientIp());
+
     const coupon = await prisma.coupon.findFirst({
       where: {
         code: code.toUpperCase().trim(),
@@ -60,6 +68,8 @@ export const verifyCoupon = actionClient
 export const placeOrder = actionClient
   .schema(checkoutSchema)
   .action(async ({ parsedInput: input }) => {
+    await assertNotRateLimited(checkoutLimiter, await getClientIp());
+
     const cart = await getCartForCheckout(input.cartId);
     if (!cart || cart.items.length === 0) {
       throw new ActionError("Koszyk jest pusty");

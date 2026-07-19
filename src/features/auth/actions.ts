@@ -8,12 +8,15 @@ import { mergeGuestWishlist, WISHLIST_COOKIE_NAME } from "@/features/wishlist/li
 import { ActionError } from "@/lib/action-error";
 import { signIn } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
+import { assertNotRateLimited, getClientIp, loginLimiter, registerLimiter } from "@/lib/rate-limit";
 import { actionClient } from "@/lib/safe-action";
 import { loginSchema, registerSchema } from "./schema";
 
 export const loginCustomer = actionClient
   .schema(loginSchema)
   .action(async ({ parsedInput: input }) => {
+    await assertNotRateLimited(loginLimiter, `${await getClientIp()}:${input.email}`);
+
     // Verify credentials before signIn to allow pre-signIn merge
     const customer = await prisma.customer.findUnique({
       where: { email: input.email },
@@ -47,6 +50,8 @@ export const loginCustomer = actionClient
 export const registerCustomer = actionClient
   .schema(registerSchema)
   .action(async ({ parsedInput: input }) => {
+    await assertNotRateLimited(registerLimiter, await getClientIp());
+
     const existing = await prisma.customer.findUnique({
       where: { email: input.email },
       select: { id: true },
