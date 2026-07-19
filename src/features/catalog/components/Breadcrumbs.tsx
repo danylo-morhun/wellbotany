@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { type BreadcrumbItem, buildBreadcrumbJsonLd } from "@/lib/seo";
+import { type BreadcrumbItem, buildBreadcrumbJsonLd, toJsonLdScript } from "@/lib/seo";
 
 type Props = {
   items: BreadcrumbItem[];
@@ -12,7 +12,7 @@ export function Breadcrumbs({ items }: Props) {
     <>
       <script
         type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+        dangerouslySetInnerHTML={{ __html: toJsonLdScript(jsonLd) }}
       />
       <nav aria-label="Breadcrumb">
         <ol className="flex flex-wrap items-center gap-1 text-sm text-muted-foreground">

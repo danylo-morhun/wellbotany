@@ -1,3 +1,12 @@
+/**
+ * JSON.stringify output can contain "</script>" if a field holds that literal
+ * string (e.g. supplier-imported product name/description) — escaping "<"
+ * prevents it from closing the script tag early and injecting markup.
+ */
+export function toJsonLdScript(data: unknown): string {
+  return JSON.stringify(data).replace(/</g, "\\u003c");
+}
+
 export type BreadcrumbItem = {
   name: string;
   href: string;

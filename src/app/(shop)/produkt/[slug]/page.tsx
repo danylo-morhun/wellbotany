@@ -10,7 +10,7 @@ import { WishlistButton } from "@/features/wishlist/components/WishlistButton";
 import { getWishlist, WISHLIST_COOKIE_NAME } from "@/features/wishlist/lib/session";
 import { prisma } from "@/lib/prisma";
 import { sanitizeRichText } from "@/lib/sanitize";
-import { buildProductJsonLd } from "@/lib/seo";
+import { buildProductJsonLd, toJsonLdScript } from "@/lib/seo";
 import { getProduct } from "../../../../features/catalog/actions";
 
 type Props = {
@@ -134,7 +134,7 @@ export default async function ProduktPage({ params }: Props) {
       {jsonLd && (
         <script
           type="application/ld+json"
-          dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+          dangerouslySetInnerHTML={{ __html: toJsonLdScript(jsonLd) }}
         />
       )}
 
