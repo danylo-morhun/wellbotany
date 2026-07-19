@@ -1,7 +1,13 @@
 import { NextResponse } from "next/server";
+import { auth } from "@/lib/auth";
 import { ShoperHttpError, shoperRequest } from "@/lib/shoper/client";
 
 export async function GET(req: Request) {
+  const session = await auth();
+  if (session?.user?.role !== "ADMIN") {
+    return NextResponse.json({ error: "unauthorized" }, { status: 401 });
+  }
+
   const required = ["SHOPER_API_BASE_URL", "SHOPER_API_TOKEN"] as const;
   const missing = required.filter((k) => !process.env[k]);
 
@@ -9,7 +15,11 @@ export async function GET(req: Request) {
     return NextResponse.json({ ok: false, missing }, { status: 400 });
   }
 
-  const productId = new URL(req.url).searchParams.get("productId");
+  const productIdParam = new URL(req.url).searchParams.get("productId");
+  if (productIdParam && !/^\d+$/.test(productIdParam)) {
+    return NextResponse.json({ ok: false, error: "productId must be numeric" }, { status: 400 });
+  }
+  const productId = productIdParam;
 
   try {
     if (productId) {
