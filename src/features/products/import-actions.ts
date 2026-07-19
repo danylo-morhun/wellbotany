@@ -117,9 +117,9 @@ export const runSupplierImport = adminActionClient
     revalidatePath("/admin/produkty");
     revalidatePath("/admin/produkty/import");
     revalidatePath("/katalog", "layout");
-    revalidateTag("products");
-    revalidateTag("categories");
-    revalidateTag("brands");
+    revalidateTag("products", "max");
+    revalidateTag("categories", "max");
+    revalidateTag("brands", "max");
 
     return summary;
   });
