@@ -10,6 +10,7 @@ import { SUPPLIER_SOURCES } from "@/features/products/lib/import/sources";
 import type { ImportSummary } from "@/features/products/lib/import/types";
 import { syncProductToBaselinker } from "@/lib/baselinker/inventory";
 import { prisma } from "@/lib/prisma";
+import { safeCompare } from "@/lib/timing-safe-equal";
 
 export const maxDuration = 60;
 
@@ -74,7 +75,7 @@ function isAuthorized(req: Request): boolean {
   const secret = process.env.CRON_SECRET;
   if (!secret) return false;
   const header = req.headers.get("authorization") ?? "";
-  return header === `Bearer ${secret}`;
+  return safeCompare(header, `Bearer ${secret}`);
 }
 
 async function afterImport(summary: ImportSummary) {

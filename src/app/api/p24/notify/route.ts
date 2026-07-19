@@ -3,6 +3,7 @@ import { CRC, verifyTransaction } from "@/features/przelewy24/lib/client";
 import { p24Sign } from "@/features/przelewy24/lib/sign";
 import { pushOrderToBaselinker } from "@/lib/baselinker/orders";
 import { prisma } from "@/lib/prisma";
+import { safeCompare } from "@/lib/timing-safe-equal";
 
 export async function POST(req: NextRequest) {
   const body = await req.json().catch(() => null);
@@ -35,7 +36,7 @@ export async function POST(req: NextRequest) {
     crc: CRC,
   });
 
-  if (sign !== expected) {
+  if (typeof sign !== "string" || !safeCompare(sign, expected)) {
     return NextResponse.json({ error: "invalid signature" }, { status: 400 });
   }
 

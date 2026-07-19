@@ -8,6 +8,7 @@ import { type NextRequest, NextResponse } from "next/server";
 import { blCall } from "@/lib/baselinker/client";
 import { sendTrackingEmail } from "@/lib/email/order-emails";
 import { prisma } from "@/lib/prisma";
+import { safeCompare } from "@/lib/timing-safe-equal";
 
 type BlOrderProduct = {
   product_id: string;
@@ -208,7 +209,9 @@ async function ingestAllegroOrder(blOrder: BlOrder): Promise<void> {
 }
 
 export async function POST(req: NextRequest) {
-  if (req.nextUrl.searchParams.get("token") !== (process.env.BASELINKER_WEBHOOK_SECRET ?? "")) {
+  const secret = process.env.BASELINKER_WEBHOOK_SECRET;
+  const token = req.nextUrl.searchParams.get("token") ?? "";
+  if (!secret || !safeCompare(token, secret)) {
     return NextResponse.json({ error: "unauthorized" }, { status: 401 });
   }
 
