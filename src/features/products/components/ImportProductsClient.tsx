@@ -9,7 +9,7 @@ type SourceInfo = {
   id: string;
   label: string;
   brandName: string;
-  filePath: string;
+  filePath?: string;
   fileExists: boolean;
 };
 
@@ -113,7 +113,7 @@ export function ImportProductsClient({ sources }: { sources: SourceInfo[] }) {
               <div>
                 <p className="font-medium">{source.label}</p>
                 <p className="text-xs text-muted-foreground">
-                  Marka: {source.brandName} · {source.filePath}
+                  Marka: {source.brandName} · {source.filePath ?? "API"}
                 </p>
                 {!source.fileExists && (
                   <p className="mt-1 text-xs text-destructive">Plik nie znaleziony w projekcie</p>

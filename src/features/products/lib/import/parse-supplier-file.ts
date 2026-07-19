@@ -37,7 +37,8 @@ export function parseSupplierFile(
   if (!fs.existsSync(absolutePath)) throw new Error(`Plik nie istnieje: ${absolutePath}`);
 
   let products: SupplierProductDraft[];
-  switch (source.format) {
+  const format = source.format;
+  switch (format) {
     case "yango-csv":
       products = parseYangoCsv(absolutePath, source);
       break;
@@ -48,7 +49,7 @@ export function parseSupplierFile(
       products = parsePureHydrationXlsx(absolutePath, source);
       break;
     default:
-      throw new Error(`Nieobsługiwany format: ${source.format satisfies never}`);
+      throw new Error(`Nieobsługiwany format: ${format satisfies never}`);
   }
 
   const imagesRoot = resolveProjectPath(SUPPLIER_IMAGES_DIR);
@@ -67,10 +68,11 @@ export async function loadSupplierProducts(
   source: SupplierSource,
 ): Promise<SupplierProductDraft[]> {
   if (source.kind === "api") {
-    if (source.format === "shoper-api") {
+    const format = source.format;
+    if (format === "shoper-api") {
       return parseShoperApi(source);
     }
-    throw new Error(`Nieobsługiwany format API: ${source.format satisfies never}`);
+    throw new Error(`Nieobsługiwany format API: ${format satisfies never}`);
   }
   return parseSupplierFile(source);
 }

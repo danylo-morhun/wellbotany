@@ -31,7 +31,8 @@ async function main() {
     console.log("Dostępne źródła:");
     for (const s of SUPPLIER_SOURCES) {
       const exists = sourceFileExists(s) ? "✓" : "✗";
-      console.log(`  ${exists} ${s.id} — ${s.label} (${s.filePath})`);
+      const location = s.kind === "file" ? s.filePath : "API";
+      console.log(`  ${exists} ${s.id} — ${s.label} (${location})`);
     }
     console.log("\nUżycie: pnpm import:products --source=<id> [--update] [--dry-run]");
     process.exit(1);
@@ -44,7 +45,11 @@ async function main() {
   }
 
   if (!sourceFileExists(source)) {
-    console.error(`Brak pliku: ${source.filePath}`);
+    console.error(
+      source.kind === "file"
+        ? `Brak pliku: ${source.filePath}`
+        : `Brak konfiguracji API dla źródła: ${source.id}`,
+    );
     process.exit(1);
   }
 
