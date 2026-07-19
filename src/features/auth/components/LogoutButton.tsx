@@ -39,9 +39,7 @@ export function LogoutButton({ action }: Props) {
       <AlertDialogContent size="sm">
         <AlertDialogHeader>
           <AlertDialogTitle>Wyloguj się</AlertDialogTitle>
-          <AlertDialogDescription>
-            Czy na pewno chcesz się wylogować?
-          </AlertDialogDescription>
+          <AlertDialogDescription>Czy na pewno chcesz się wylogować?</AlertDialogDescription>
         </AlertDialogHeader>
         <AlertDialogFooter>
           <AlertDialogCancel disabled={pending}>Anuluj</AlertDialogCancel>

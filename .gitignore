@@ -25,6 +25,10 @@ next-env.d.ts
 
 # Testing
 /coverage
+/test-results
+/playwright-report
+/blob-report
+/playwright/.cache
 
 # OS
 .DS_Store
