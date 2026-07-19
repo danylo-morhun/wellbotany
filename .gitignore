@@ -15,6 +15,7 @@ build/
 
 # Environment — NEVER commit
 .env*
+!.env.example
 
 # Prisma
 prisma/migrations/dev/
