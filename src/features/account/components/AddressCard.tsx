@@ -1,6 +1,8 @@
 "use client";
 
 import { useAction } from "next-safe-action/hooks";
+import { useState } from "react";
+import { ConfirmDialog } from "@/components/ConfirmDialog";
 import { deleteAddress } from "../actions";
 
 type Address = {
@@ -19,7 +21,10 @@ type Address = {
 type Props = { address: Address; onEdit: (address: Address) => void };
 
 export function AddressCard({ address, onEdit }: Props) {
-  const { execute, isPending } = useAction(deleteAddress);
+  const [confirmingDelete, setConfirmingDelete] = useState(false);
+  const { execute, isPending } = useAction(deleteAddress, {
+    onSuccess: () => setConfirmingDelete(false),
+  });
 
   return (
     <div className="rounded-lg border border-border p-4 text-sm">
@@ -50,16 +55,21 @@ export function AddressCard({ address, onEdit }: Props) {
         </button>
         <button
           type="button"
-          disabled={isPending}
-          onClick={() => {
-            if (!window.confirm("Usunąć ten adres?")) return;
-            execute({ addressId: address.id });
-          }}
+          onClick={() => setConfirmingDelete(true)}
           className="text-xs font-medium text-destructive hover:underline disabled:opacity-50"
         >
-          {isPending ? "Usuwanie..." : "Usuń"}
+          Usuń
         </button>
       </div>
+
+      <ConfirmDialog
+        open={confirmingDelete}
+        onOpenChange={setConfirmingDelete}
+        title="Usuń adres"
+        description="Czy na pewno chcesz usunąć ten adres? Tej operacji nie można cofnąć."
+        pending={isPending}
+        onConfirm={() => execute({ addressId: address.id })}
+      />
     </div>
   );
 }
