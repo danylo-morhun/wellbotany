@@ -30,7 +30,7 @@ export function AdminProductFilters({ brands, categories }: Props) {
   }
 
   const selectClass =
-    "rounded-lg border border-border bg-card px-2 py-1.5 text-sm focus:border-transparent focus:outline-none focus:ring-2 focus:ring-ring/50";
+    "max-w-[42vw] truncate rounded-lg border border-border bg-card px-2 py-1.5 text-sm focus:border-transparent focus:outline-none focus:ring-2 focus:ring-ring/50 sm:max-w-[220px]";
 
   return (
     <div className="flex flex-wrap items-center gap-2">
