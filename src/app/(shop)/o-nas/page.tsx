@@ -28,7 +28,7 @@ const values = [
 
 export default function ONasPage() {
   return (
-    <main className="container mx-auto max-w-3xl px-4 py-12">
+    <main className="container mx-auto max-w-prose px-4 py-12">
       <h1 className="mb-8 text-3xl">O nas</h1>
 
       <div className="space-y-10 text-sm leading-relaxed">

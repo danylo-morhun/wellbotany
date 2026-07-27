@@ -40,7 +40,7 @@ const faqs = [
 
 export default function FaqPage() {
   return (
-    <main className="container mx-auto max-w-3xl px-4 py-12">
+    <main className="container mx-auto max-w-prose px-4 py-12">
       <h1 className="mb-8 text-3xl">Najczęściej zadawane pytania</h1>
 
       <div className="space-y-4">
