@@ -3,6 +3,7 @@
 import type { Tag, TagType } from "@prisma/client";
 import { useAction } from "next-safe-action/hooks";
 import { useState } from "react";
+import { ConfirmDialog } from "@/components/ConfirmDialog";
 import { slugify } from "@/lib/slugify";
 import { deleteTag, saveTag } from "../actions";
 
@@ -23,6 +24,7 @@ export function TagForm({ tags }: Props) {
   const [formName, setFormName] = useState("");
   const [formSlug, setFormSlug] = useState("");
   const [formSlugManual, setFormSlugManual] = useState(false);
+  const [deletingTag, setDeletingTag] = useState<Tag | null>(null);
 
   const { execute: execSave, isPending: saving } = useAction(saveTag, {
     onSuccess: () => {
@@ -30,7 +32,9 @@ export function TagForm({ tags }: Props) {
       setShowNew(false);
     },
   });
-  const { execute: execDelete, isPending: deleting } = useAction(deleteTag);
+  const { execute: execDelete, isPending: deleting } = useAction(deleteTag, {
+    onSuccess: () => setDeletingTag(null),
+  });
 
   function startNew() {
     setEditing(null);
@@ -184,10 +188,7 @@ export function TagForm({ tags }: Props) {
                 </button>
                 <button
                   type="button"
-                  disabled={deleting}
-                  onClick={() => {
-                    if (confirm(`Usunąć tag "${tag.namePl}"?`)) execDelete({ id: tag.id });
-                  }}
+                  onClick={() => setDeletingTag(tag)}
                   className="rounded-lg border border-border border-destructive px-2 py-1 text-xs text-destructive disabled:opacity-50"
                 >
                   Usuń
@@ -201,6 +202,15 @@ export function TagForm({ tags }: Props) {
           <p className="px-4 py-6 text-center text-sm text-muted-foreground">Brak tagów</p>
         )}
       </div>
+
+      <ConfirmDialog
+        open={deletingTag !== null}
+        onOpenChange={(open) => !open && setDeletingTag(null)}
+        title="Usuń tag"
+        description={`Czy na pewno chcesz usunąć tag „${deletingTag?.namePl}"? Tej operacji nie można cofnąć.`}
+        pending={deleting}
+        onConfirm={() => deletingTag && execDelete({ id: deletingTag.id })}
+      />
     </div>
   );
 }
