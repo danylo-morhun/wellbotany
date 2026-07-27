@@ -3,6 +3,7 @@
 import type { ProductVariant } from "@prisma/client";
 import { useAction } from "next-safe-action/hooks";
 import { useState } from "react";
+import { ConfirmDialog } from "@/components/ConfirmDialog";
 import { deleteVariant, saveVariant } from "../actions";
 
 type SerializedVariant = Omit<ProductVariant, "vatRate"> & { vatRate: number };
@@ -41,6 +42,7 @@ export function VariantsTable({ productId, variants }: Props) {
   const [editing, setEditing] = useState<SerializedVariant | null>(null);
   const [showNew, setShowNew] = useState(false);
   const [showAdvanced, setShowAdvanced] = useState(false);
+  const [deletingVariant, setDeletingVariant] = useState<SerializedVariant | null>(null);
 
   const { execute: execSave, isPending: saving } = useAction(saveVariant, {
     onSuccess: () => {
@@ -48,7 +50,9 @@ export function VariantsTable({ productId, variants }: Props) {
       setShowNew(false);
     },
   });
-  const { execute: execDelete, isPending: deleting } = useAction(deleteVariant);
+  const { execute: execDelete, isPending: deleting } = useAction(deleteVariant, {
+    onSuccess: () => setDeletingVariant(null),
+  });
 
   function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -340,10 +344,7 @@ export function VariantsTable({ productId, variants }: Props) {
                 </button>
                 <button
                   type="button"
-                  disabled={deleting}
-                  onClick={() => {
-                    if (confirm(`Usunąć wariant "${v.sku}"?`)) execDelete({ id: v.id });
-                  }}
+                  onClick={() => setDeletingVariant(v)}
                   className="rounded-lg border border-destructive px-2 py-1 text-xs text-destructive disabled:opacity-50"
                 >
                   Usuń
@@ -357,6 +358,15 @@ export function VariantsTable({ productId, variants }: Props) {
           <p className="py-4 text-center text-sm text-muted-foreground">Brak wariantów</p>
         )}
       </div>
+
+      <ConfirmDialog
+        open={deletingVariant !== null}
+        onOpenChange={(open) => !open && setDeletingVariant(null)}
+        title="Usuń wariant"
+        description={`Czy na pewno chcesz usunąć wariant „${deletingVariant?.sku}"? Tej operacji nie można cofnąć.`}
+        pending={deleting}
+        onConfirm={() => deletingVariant && execDelete({ id: deletingVariant.id })}
+      />
     </section>
   );
 }
