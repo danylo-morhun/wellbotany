@@ -1,8 +1,22 @@
 "use client";
 
+import { Eye, EyeOff } from "lucide-react";
 import { useAction } from "next-safe-action/hooks";
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { registerCustomer } from "../actions";
+
+const STRENGTH_LABELS = ["Bardzo słabe", "Słabe", "Średnie", "Dobre", "Silne"];
+
+function passwordStrength(password: string): number {
+  if (!password) return 0;
+  let score = 0;
+  if (password.length >= 8) score++;
+  if (password.length >= 12) score++;
+  if (/[A-Z]/.test(password) && /[a-z]/.test(password)) score++;
+  if (/\d/.test(password)) score++;
+  if (/[^A-Za-z0-9]/.test(password)) score++;
+  return Math.min(score, STRENGTH_LABELS.length - 1);
+}
 
 export function RegisterForm() {
   const [form, setForm] = useState({
@@ -13,6 +27,10 @@ export function RegisterForm() {
     confirmPassword: "",
     acceptedTerms: false,
   });
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+
+  const strength = useMemo(() => passwordStrength(form.password), [form.password]);
 
   const { execute, isPending, hasErrored, result } = useAction(registerCustomer);
 
@@ -93,15 +111,40 @@ export function RegisterForm() {
         <label className="mb-1 block text-sm font-medium" htmlFor="reg-password">
           Hasło
         </label>
-        <input
-          id="reg-password"
-          type="password"
-          required
-          autoComplete="new-password"
-          value={form.password}
-          onChange={update("password")}
-          className="w-full rounded-lg border border-border px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary"
-        />
+        <div className="relative">
+          <input
+            id="reg-password"
+            type={showPassword ? "text" : "password"}
+            required
+            autoComplete="new-password"
+            value={form.password}
+            onChange={update("password")}
+            className="w-full rounded-lg border border-border px-3 py-2 pr-10 text-sm focus:outline-none focus:ring-2 focus:ring-primary"
+          />
+          <button
+            type="button"
+            onClick={() => setShowPassword((v) => !v)}
+            aria-label={showPassword ? "Ukryj hasło" : "Pokaż hasło"}
+            className="absolute inset-y-0 right-0 flex items-center px-3 text-muted-foreground hover:text-foreground"
+          >
+            {showPassword ? <EyeOff className="size-4" /> : <Eye className="size-4" />}
+          </button>
+        </div>
+        {form.password && (
+          <div className="mt-1.5 flex items-center gap-2">
+            <div className="flex h-1 flex-1 gap-1">
+              {STRENGTH_LABELS.map((label, i) => (
+                <span
+                  key={label}
+                  className={`h-full flex-1 rounded-full ${
+                    i <= strength ? "bg-primary" : "bg-muted"
+                  }`}
+                />
+              ))}
+            </div>
+            <span className="text-xs text-muted-foreground">{STRENGTH_LABELS[strength]}</span>
+          </div>
+        )}
         {fieldErrors?.password?._errors?.[0] && (
           <p className="mt-1 text-xs text-destructive">{fieldErrors.password._errors[0]}</p>
         )}
@@ -111,15 +154,25 @@ export function RegisterForm() {
         <label className="mb-1 block text-sm font-medium" htmlFor="confirmPassword">
           Powtórz hasło
         </label>
-        <input
-          id="confirmPassword"
-          type="password"
-          required
-          autoComplete="new-password"
-          value={form.confirmPassword}
-          onChange={update("confirmPassword")}
-          className="w-full rounded-lg border border-border px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary"
-        />
+        <div className="relative">
+          <input
+            id="confirmPassword"
+            type={showConfirmPassword ? "text" : "password"}
+            required
+            autoComplete="new-password"
+            value={form.confirmPassword}
+            onChange={update("confirmPassword")}
+            className="w-full rounded-lg border border-border px-3 py-2 pr-10 text-sm focus:outline-none focus:ring-2 focus:ring-primary"
+          />
+          <button
+            type="button"
+            onClick={() => setShowConfirmPassword((v) => !v)}
+            aria-label={showConfirmPassword ? "Ukryj hasło" : "Pokaż hasło"}
+            className="absolute inset-y-0 right-0 flex items-center px-3 text-muted-foreground hover:text-foreground"
+          >
+            {showConfirmPassword ? <EyeOff className="size-4" /> : <Eye className="size-4" />}
+          </button>
+        </div>
         {fieldErrors?.confirmPassword?._errors?.[0] && (
           <p className="mt-1 text-xs text-destructive">{fieldErrors.confirmPassword._errors[0]}</p>
         )}
