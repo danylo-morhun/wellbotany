@@ -265,6 +265,13 @@
   }
 }
 
+/* Reserve space so the fixed cookie banner never covers CTAs on short mobile viewports */
+@media (max-width: 640px) {
+  body.has-cookie-banner {
+    padding-bottom: 7rem;
+  }
+}
+
 /* Asymmetric sonner toast timing: enter 300ms, exit 150ms */
 [data-sonner-toast][data-mounted="true"] {
   transition-duration: 300ms !important;
