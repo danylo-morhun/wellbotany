@@ -107,7 +107,7 @@ export function ProfileForm({ firstName, lastName, phone, email }: Props) {
       <button
         type="submit"
         disabled={isPending}
-        className="rounded-lg bg-primary px-6 py-2.5 text-sm font-medium text-primary-foreground transition-colors duration-200 hover:bg-primary-deep motion-reduce:transition-none disabled:opacity-50"
+        className="rounded-full bg-primary px-6 py-2.5 text-sm font-medium text-primary-foreground transition-colors duration-200 hover:bg-primary-deep motion-reduce:transition-none disabled:opacity-50"
       >
         {isPending ? "Zapisywanie..." : "Zapisz zmiany"}
       </button>

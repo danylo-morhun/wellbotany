@@ -184,13 +184,13 @@ export function StepShipping({ data, onChange, onBack, onNext }: Props) {
         <button
           type="button"
           onClick={onBack}
-          className="flex-1 rounded-lg border border-border px-4 py-3 text-sm font-medium hover:bg-muted/50"
+          className="flex-1 rounded-full border border-border px-4 py-3 text-sm font-medium hover:bg-muted/50"
         >
           Wstecz
         </button>
         <button
           type="submit"
-          className="flex-1 rounded-lg bg-primary px-4 py-3 text-sm font-medium text-primary-foreground transition-colors duration-200 hover:bg-primary-deep motion-reduce:transition-none"
+          className="flex-1 rounded-full bg-primary px-4 py-3 text-sm font-medium text-primary-foreground transition-colors duration-200 hover:bg-primary-deep motion-reduce:transition-none"
         >
           Dalej: Płatność
         </button>

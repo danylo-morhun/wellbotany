@@ -181,7 +181,7 @@ export function StepContact({ data, onChange, onNext }: Props) {
 
       <button
         type="submit"
-        className="mt-2 w-full rounded-lg bg-primary px-4 py-3 text-sm font-medium text-primary-foreground transition-colors duration-200 hover:bg-primary-deep motion-reduce:transition-none"
+        className="mt-2 w-full rounded-full bg-primary px-4 py-3 text-sm font-medium text-primary-foreground transition-colors duration-200 hover:bg-primary-deep motion-reduce:transition-none"
       >
         Dalej: Dostawa →
       </button>
