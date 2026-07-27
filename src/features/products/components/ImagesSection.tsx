@@ -4,6 +4,8 @@ import type { ProductImage } from "@prisma/client";
 import Image from "next/image";
 import { CldUploadWidget } from "next-cloudinary";
 import { useAction } from "next-safe-action/hooks";
+import { useState } from "react";
+import { ConfirmDialog } from "@/components/ConfirmDialog";
 import { addProductImage, deleteProductImage } from "../actions";
 
 const CLOUD_NAME = process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME;
@@ -15,8 +17,11 @@ interface Props {
 }
 
 export function ImagesSection({ productId, images }: Props) {
+  const [deletingImage, setDeletingImage] = useState<ProductImage | null>(null);
   const { execute: execAdd } = useAction(addProductImage);
-  const { execute: execDelete, isPending: deleting } = useAction(deleteProductImage);
+  const { execute: execDelete, isPending: deleting } = useAction(deleteProductImage, {
+    onSuccess: () => setDeletingImage(null),
+  });
 
   return (
     <section className="rounded-2xl bg-card p-5 shadow-card">
@@ -71,10 +76,7 @@ export function ImagesSection({ productId, images }: Props) {
             )}
             <button
               type="button"
-              disabled={deleting}
-              onClick={() => {
-                if (confirm("Usunąć to zdjęcie?")) execDelete({ imageId: img.id, productId });
-              }}
+              onClick={() => setDeletingImage(img)}
               className="absolute right-1 top-1 hidden rounded bg-destructive p-0.5 text-[10px] text-destructive-foreground group-hover:block disabled:opacity-50"
             >
               ✕
@@ -113,6 +115,15 @@ export function ImagesSection({ productId, images }: Props) {
           </button>
         </form>
       </details>
+
+      <ConfirmDialog
+        open={deletingImage !== null}
+        onOpenChange={(open) => !open && setDeletingImage(null)}
+        title="Usuń zdjęcie"
+        description="Czy na pewno chcesz usunąć to zdjęcie? Tej operacji nie można cofnąć."
+        pending={deleting}
+        onConfirm={() => deletingImage && execDelete({ imageId: deletingImage.id, productId })}
+      />
     </section>
   );
 }
