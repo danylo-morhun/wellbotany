@@ -569,13 +569,15 @@ export function ProductForm({ product, categories, brands, tags }: Props) {
         </div>
       </section>
 
-      <button
-        type="submit"
-        disabled={isPending}
-        className="rounded-lg bg-primary px-5 py-2 font-medium text-primary-foreground transition-colors duration-200 hover:bg-primary-deep disabled:opacity-50 motion-reduce:transition-none"
-      >
-        {isPending ? "Zapisywanie…" : product ? "Zapisz zmiany" : "Utwórz produkt"}
-      </button>
+      <div className="sticky bottom-0 -mx-4 flex justify-end border-t border-border bg-background/95 px-4 py-3 backdrop-blur-sm sm:-mx-6 sm:px-6">
+        <button
+          type="submit"
+          disabled={isPending}
+          className="rounded-lg bg-primary px-5 py-2 font-medium text-primary-foreground transition-colors duration-200 hover:bg-primary-deep disabled:opacity-50 motion-reduce:transition-none"
+        >
+          {isPending ? "Zapisywanie…" : product ? "Zapisz zmiany" : "Utwórz produkt"}
+        </button>
+      </div>
     </form>
   );
 }
