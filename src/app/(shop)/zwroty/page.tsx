@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { PrintButton } from "@/components/PrintButton";
 
 export const dynamic = "force-static";
 
@@ -105,8 +106,8 @@ export default function ZwrotyPage() {
         <section>
           <h2 className="mb-3 text-xl">Formularz zwrotu</h2>
           <p className="text-muted-foreground">
-            Formularz odstąpienia od umowy możesz pobrać w formacie PDF (wkrótce) lub skorzystać z
-            poniższego wzoru:
+            Możesz <PrintButton label="wydrukować lub zapisać jako PDF" /> poniższy wzór formularza
+            odstąpienia:
           </p>
           <div className="mt-4 rounded-xl bg-muted p-4 text-xs text-muted-foreground">
             <p className="font-semibold text-foreground">WZÓR FORMULARZA ODSTĄPIENIA OD UMOWY</p>
