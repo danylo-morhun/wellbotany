@@ -1,3 +1,4 @@
+import { PackageSearch } from "lucide-react";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { auth } from "@/lib/auth";
@@ -39,7 +40,21 @@ export default async function ZamowieniaPage() {
       <h1 className="text-xl font-semibold">Zamówienia</h1>
 
       {orders.length === 0 && (
-        <p className="text-sm text-muted-foreground">Nie złożyłeś jeszcze żadnego zamówienia.</p>
+        <div className="flex flex-col items-center gap-4 rounded-2xl bg-card p-10 text-center shadow-card">
+          <PackageSearch className="size-12 text-muted-foreground" />
+          <h2 className="text-balance text-lg font-medium">
+            Nie złożyłeś jeszcze żadnego zamówienia
+          </h2>
+          <p className="text-sm text-muted-foreground">
+            Twoje zamówienia pojawią się tutaj, gdy tylko coś kupisz.
+          </p>
+          <Link
+            href="/katalog"
+            className="rounded-lg bg-primary px-6 py-2 text-sm font-medium text-primary-foreground transition-colors duration-150 hover:bg-primary-deep motion-reduce:transition-none"
+          >
+            Przejdź do katalogu
+          </Link>
+        </div>
       )}
 
       <div className="space-y-3">
