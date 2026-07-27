@@ -5,6 +5,7 @@ import Image from "next/image";
 import { CldUploadWidget } from "next-cloudinary";
 import { useAction } from "next-safe-action/hooks";
 import { useState } from "react";
+import { ConfirmDialog } from "@/components/ConfirmDialog";
 import { formatPrice } from "@/lib/format";
 import { slugify } from "@/lib/slugify";
 import { deleteGiftSet, saveGiftSet } from "../actions";
@@ -63,6 +64,7 @@ export function GiftSetsAdmin({ giftSets }: Props) {
   const [imageUrl, setImageUrl] = useState("");
   const [isFeatured, setIsFeatured] = useState(false);
   const [items, setItems] = useState<FormItem[]>([]);
+  const [deletingSet, setDeletingSet] = useState<GiftSetWithItems | null>(null);
 
   const { execute: execSave, isPending: saving } = useAction(saveGiftSet, {
     onSuccess: () => {
@@ -70,7 +72,9 @@ export function GiftSetsAdmin({ giftSets }: Props) {
       setShowNew(false);
     },
   });
-  const { execute: execDelete, isPending: deleting } = useAction(deleteGiftSet);
+  const { execute: execDelete, isPending: deleting } = useAction(deleteGiftSet, {
+    onSuccess: () => setDeletingSet(null),
+  });
 
   function resetForm() {
     setName("");
@@ -393,10 +397,7 @@ export function GiftSetsAdmin({ giftSets }: Props) {
                 </button>
                 <button
                   type="button"
-                  disabled={deleting}
-                  onClick={() => {
-                    if (confirm(`Usunąć zestaw "${gs.namePl}"?`)) execDelete({ id: gs.id });
-                  }}
+                  onClick={() => setDeletingSet(gs)}
                   className="rounded-lg border border-border border-destructive px-2 py-1 text-xs text-destructive disabled:opacity-50"
                 >
                   Usuń
@@ -412,6 +413,15 @@ export function GiftSetsAdmin({ giftSets }: Props) {
           </p>
         )}
       </div>
+
+      <ConfirmDialog
+        open={deletingSet !== null}
+        onOpenChange={(open) => !open && setDeletingSet(null)}
+        title="Usuń zestaw"
+        description={`Czy na pewno chcesz usunąć zestaw „${deletingSet?.namePl}"? Tej operacji nie można cofnąć.`}
+        pending={deleting}
+        onConfirm={() => deletingSet && execDelete({ id: deletingSet.id })}
+      />
     </div>
   );
 }
