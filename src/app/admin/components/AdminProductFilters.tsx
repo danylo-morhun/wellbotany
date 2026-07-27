@@ -35,6 +35,7 @@ export function AdminProductFilters({ brands, categories }: Props) {
   return (
     <div className="flex flex-wrap items-center gap-2">
       <select
+        aria-label="Filtruj po statusie"
         value={searchParams.get("status") ?? ""}
         onChange={(e) => setParam("status", e.target.value)}
         className={selectClass}
@@ -48,6 +49,7 @@ export function AdminProductFilters({ brands, categories }: Props) {
       </select>
 
       <select
+        aria-label="Filtruj po marce"
         value={searchParams.get("marka") ?? ""}
         onChange={(e) => setParam("marka", e.target.value)}
         className={selectClass}
@@ -62,6 +64,7 @@ export function AdminProductFilters({ brands, categories }: Props) {
       </select>
 
       <select
+        aria-label="Filtruj po kategorii"
         value={searchParams.get("kategoria") ?? ""}
         onChange={(e) => setParam("kategoria", e.target.value)}
         className={selectClass}
