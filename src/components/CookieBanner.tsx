@@ -33,7 +33,7 @@ export function CookieBanner() {
       aria-modal="false"
       aria-live="polite"
       aria-label="Zgoda na pliki cookie"
-      className="fixed inset-x-4 bottom-4 z-50 mx-auto flex max-w-2xl flex-col gap-3 rounded-2xl bg-foreground p-4 text-background shadow-float sm:flex-row sm:items-center sm:justify-between"
+      className="fixed inset-x-4 bottom-4 z-50 mx-auto flex max-w-2xl flex-col gap-3 rounded-2xl bg-foreground p-4 text-background shadow-float sm:flex-row sm:items-center sm:justify-between print:hidden"
     >
       <p className="text-sm">
         Używamy plików cookie wyłącznie do działania sklepu — koszyka, sesji logowania i Twoich
