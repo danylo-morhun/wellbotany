@@ -48,13 +48,13 @@ export async function NavBar() {
 
       {/* Main row */}
       <div className="border-b border-border">
-        <div className="mx-auto flex h-16 max-w-7xl items-center gap-4 px-4 sm:px-6 lg:gap-6 lg:px-8">
+        <div className="mx-auto flex h-16 max-w-7xl items-center gap-2 px-4 sm:gap-4 sm:px-6 lg:gap-6 lg:px-8">
           <MobileMenu navLinks={navLinks} utilityLinks={utilityLinks} />
           <Link href="/" className="flex shrink-0 items-center gap-2">
             <span className="flex size-8 items-center justify-center rounded-full bg-primary text-primary-foreground">
               <PillBottle className="size-4" />
             </span>
-            <span className="text-lg font-extrabold tracking-tight text-foreground">
+            <span className="hidden text-lg font-extrabold tracking-tight text-foreground sm:inline">
               Twoje Zdrowie
             </span>
           </Link>
@@ -72,7 +72,7 @@ export async function NavBar() {
             </form>
           </search>
 
-          <div className="ml-auto flex items-center gap-0.5 md:ml-0">
+          <div className="ml-auto flex shrink-0 items-center gap-0.5 md:ml-0">
             <ThemeToggle />
             <Suspense fallback={<WishlistIconFallback />}>
               <WishlistIcon />
