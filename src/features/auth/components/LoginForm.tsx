@@ -1,5 +1,6 @@
 "use client";
 
+import { Eye, EyeOff } from "lucide-react";
 import { useAction } from "next-safe-action/hooks";
 import { useState } from "react";
 import { loginCustomer } from "../actions";
@@ -9,6 +10,7 @@ type Props = { callbackUrl?: string };
 export function LoginForm({ callbackUrl }: Props) {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
 
   const { execute, isPending, hasErrored, result } = useAction(loginCustomer);
 
@@ -41,18 +43,33 @@ export function LoginForm({ callbackUrl }: Props) {
       </div>
 
       <div>
-        <label className="mb-1 block text-sm font-medium" htmlFor="password">
-          Hasło
-        </label>
-        <input
-          id="password"
-          type="password"
-          required
-          autoComplete="current-password"
-          value={password}
-          onChange={(e) => setPassword(e.target.value)}
-          className="w-full rounded-lg border border-border px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary"
-        />
+        <div className="mb-1 flex items-center justify-between">
+          <label className="block text-sm font-medium" htmlFor="password">
+            Hasło
+          </label>
+          <a href="/kontakt" className="text-xs text-primary hover:underline">
+            Nie pamiętasz hasła?
+          </a>
+        </div>
+        <div className="relative">
+          <input
+            id="password"
+            type={showPassword ? "text" : "password"}
+            required
+            autoComplete="current-password"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            className="w-full rounded-lg border border-border px-3 py-2 pr-10 text-sm focus:outline-none focus:ring-2 focus:ring-primary"
+          />
+          <button
+            type="button"
+            onClick={() => setShowPassword((v) => !v)}
+            aria-label={showPassword ? "Ukryj hasło" : "Pokaż hasło"}
+            className="absolute inset-y-0 right-0 flex items-center px-3 text-muted-foreground hover:text-foreground"
+          >
+            {showPassword ? <EyeOff className="size-4" /> : <Eye className="size-4" />}
+          </button>
+        </div>
       </div>
 
       <button
