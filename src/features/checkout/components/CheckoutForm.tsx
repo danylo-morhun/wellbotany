@@ -59,16 +59,25 @@ const INITIAL_DATA: CheckoutFormData = {
 
 const STEP_LABELS = ["Kontakt", "Dostawa", "Płatność"];
 
+type InitialContact = Pick<
+  CheckoutFormData,
+  "email" | "firstName" | "lastName" | "phone" | "street" | "apartment" | "city" | "postalCode"
+>;
+
 type Props = {
   cartId: string;
   items: CartItem[];
   subtotal: number;
+  initialContact?: InitialContact;
 };
 
-export function CheckoutForm({ cartId, items, subtotal }: Props) {
+export function CheckoutForm({ cartId, items, subtotal, initialContact }: Props) {
   const router = useRouter();
   const [step, setStep] = useState(1);
-  const [formData, setFormData] = useState<CheckoutFormData>(INITIAL_DATA);
+  const [formData, setFormData] = useState<CheckoutFormData>({
+    ...INITIAL_DATA,
+    ...initialContact,
+  });
   const [error, setError] = useState<string | null>(null);
   const [redirecting, setRedirecting] = useState(false);
 
