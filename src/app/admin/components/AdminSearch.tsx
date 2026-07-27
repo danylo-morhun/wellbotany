@@ -20,6 +20,7 @@ export function AdminSearch({ placeholder }: { placeholder: string }) {
     <input
       type="search"
       placeholder={placeholder}
+      aria-label={placeholder}
       defaultValue={searchParams.get("szukaj") ?? ""}
       onChange={(e) => handleSearch(e.target.value)}
       className="w-full max-w-sm rounded-lg border border-border bg-card px-3 py-2 text-sm placeholder:text-muted-foreground focus:border-transparent focus:outline-none focus:ring-2 focus:ring-ring/50"
