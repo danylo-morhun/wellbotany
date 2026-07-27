@@ -5,6 +5,7 @@ import Image from "next/image";
 import { CldUploadWidget } from "next-cloudinary";
 import { useAction } from "next-safe-action/hooks";
 import { useState } from "react";
+import { ConfirmDialog } from "@/components/ConfirmDialog";
 import { formatPrice } from "@/lib/format";
 import { deleteGiftPackaging, saveGiftPackaging } from "../actions";
 
@@ -26,6 +27,7 @@ export function GiftPackagingAdmin({ packagings }: Props) {
   const [showNew, setShowNew] = useState(false);
   const [imageUrl, setImageUrl] = useState("");
   const [isActive, setIsActive] = useState(true);
+  const [deletingPackaging, setDeletingPackaging] = useState<GiftPackaging | null>(null);
 
   const { execute: execSave, isPending: saving } = useAction(saveGiftPackaging, {
     onSuccess: () => {
@@ -33,7 +35,9 @@ export function GiftPackagingAdmin({ packagings }: Props) {
       setShowNew(false);
     },
   });
-  const { execute: execDelete, isPending: deleting } = useAction(deleteGiftPackaging);
+  const { execute: execDelete, isPending: deleting } = useAction(deleteGiftPackaging, {
+    onSuccess: () => setDeletingPackaging(null),
+  });
 
   function startNew() {
     setEditing(null);
@@ -220,10 +224,7 @@ export function GiftPackagingAdmin({ packagings }: Props) {
                 </button>
                 <button
                   type="button"
-                  disabled={deleting}
-                  onClick={() => {
-                    if (confirm(`Usunąć opakowanie "${p.namePl}"?`)) execDelete({ id: p.id });
-                  }}
+                  onClick={() => setDeletingPackaging(p)}
                   className="rounded-lg border border-border border-destructive px-2 py-1 text-xs text-destructive disabled:opacity-50"
                 >
                   Usuń
@@ -237,6 +238,15 @@ export function GiftPackagingAdmin({ packagings }: Props) {
           <p className="px-4 py-6 text-center text-sm text-muted-foreground">Brak opakowań</p>
         )}
       </div>
+
+      <ConfirmDialog
+        open={deletingPackaging !== null}
+        onOpenChange={(open) => !open && setDeletingPackaging(null)}
+        title="Usuń opakowanie"
+        description={`Czy na pewno chcesz usunąć opakowanie „${deletingPackaging?.namePl}"? Tej operacji nie można cofnąć.`}
+        pending={deleting}
+        onConfirm={() => deletingPackaging && execDelete({ id: deletingPackaging.id })}
+      />
     </div>
   );
 }
