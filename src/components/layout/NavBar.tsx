@@ -24,7 +24,7 @@ const utilityLinks = [
 export async function NavBar() {
   const session = await auth();
   return (
-    <header className="sticky top-0 z-50 bg-background/95 backdrop-blur-sm">
+    <header className="sticky top-0 z-50 bg-background/95 backdrop-blur-sm print:hidden">
       {/* Utility bar */}
       <div className="bg-band text-band-foreground">
         <div className="mx-auto flex h-9 max-w-7xl items-center justify-between px-4 text-xs font-medium sm:px-6 lg:px-8">
