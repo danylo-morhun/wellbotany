@@ -27,7 +27,7 @@ const deliveryMethods = ["InPost", "DHL", "DPD"];
 
 export function Footer() {
   return (
-    <footer className="mt-16 bg-band text-band-foreground">
+    <footer className="mt-16 bg-band text-band-foreground print:hidden">
       <div className="mx-auto max-w-7xl px-4 py-14 sm:px-6 lg:px-8">
         <div className="grid grid-cols-2 gap-10 md:grid-cols-5">
           <div className="col-span-2">
