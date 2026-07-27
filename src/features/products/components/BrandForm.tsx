@@ -5,6 +5,7 @@ import Image from "next/image";
 import { CldUploadWidget } from "next-cloudinary";
 import { useAction } from "next-safe-action/hooks";
 import { useState } from "react";
+import { ConfirmDialog } from "@/components/ConfirmDialog";
 import { slugify } from "@/lib/slugify";
 import { deleteBrand, saveBrand } from "../actions";
 
@@ -22,6 +23,7 @@ export function BrandForm({ brands }: Props) {
   const [formSlug, setFormSlug] = useState("");
   const [formSlugManual, setFormSlugManual] = useState(false);
   const [formLogo, setFormLogo] = useState("");
+  const [deletingBrand, setDeletingBrand] = useState<Brand | null>(null);
 
   const { execute: execSave, isPending: saving } = useAction(saveBrand, {
     onSuccess: () => {
@@ -29,7 +31,9 @@ export function BrandForm({ brands }: Props) {
       setShowNew(false);
     },
   });
-  const { execute: execDelete, isPending: deleting } = useAction(deleteBrand);
+  const { execute: execDelete, isPending: deleting } = useAction(deleteBrand, {
+    onSuccess: () => setDeletingBrand(null),
+  });
 
   function startNew() {
     setEditing(null);
@@ -253,10 +257,7 @@ export function BrandForm({ brands }: Props) {
                 </button>
                 <button
                   type="button"
-                  disabled={deleting}
-                  onClick={() => {
-                    if (confirm(`Usunąć markę "${brand.name}"?`)) execDelete({ id: brand.id });
-                  }}
+                  onClick={() => setDeletingBrand(brand)}
                   className="rounded-lg border border-border border-destructive px-2 py-1 text-xs text-destructive disabled:opacity-50"
                 >
                   Usuń
@@ -270,6 +271,15 @@ export function BrandForm({ brands }: Props) {
           <p className="px-4 py-6 text-center text-sm text-muted-foreground">Brak marek</p>
         )}
       </div>
+
+      <ConfirmDialog
+        open={deletingBrand !== null}
+        onOpenChange={(open) => !open && setDeletingBrand(null)}
+        title="Usuń markę"
+        description={`Czy na pewno chcesz usunąć markę „${deletingBrand?.name}"? Tej operacji nie można cofnąć.`}
+        pending={deleting}
+        onConfirm={() => deletingBrand && execDelete({ id: deletingBrand.id })}
+      />
     </div>
   );
 }
