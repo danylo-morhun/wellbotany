@@ -3,6 +3,7 @@
 import type { Category } from "@prisma/client";
 import { useAction } from "next-safe-action/hooks";
 import { useState } from "react";
+import { ConfirmDialog } from "@/components/ConfirmDialog";
 import { slugify } from "@/lib/slugify";
 import { deleteCategory, saveCategory } from "../actions";
 
@@ -16,6 +17,7 @@ export function CategoryForm({ categories }: Props) {
   const [formName, setFormName] = useState("");
   const [formSlug, setFormSlug] = useState("");
   const [formSlugManual, setFormSlugManual] = useState(false);
+  const [deletingCategory, setDeletingCategory] = useState<Category | null>(null);
 
   const { execute: execSave, isPending: saving } = useAction(saveCategory, {
     onSuccess: () => {
@@ -23,7 +25,9 @@ export function CategoryForm({ categories }: Props) {
       setShowNew(false);
     },
   });
-  const { execute: execDelete, isPending: deleting } = useAction(deleteCategory);
+  const { execute: execDelete, isPending: deleting } = useAction(deleteCategory, {
+    onSuccess: () => setDeletingCategory(null),
+  });
 
   function startNew() {
     setEditing(null);
@@ -162,10 +166,7 @@ export function CategoryForm({ categories }: Props) {
                 </button>
                 <button
                   type="button"
-                  disabled={deleting}
-                  onClick={() => {
-                    if (confirm(`Usunąć kategorię "${cat.namePl}"?`)) execDelete({ id: cat.id });
-                  }}
+                  onClick={() => setDeletingCategory(cat)}
                   className="rounded-lg border border-border border-destructive px-2 py-1 text-xs text-destructive disabled:opacity-50"
                 >
                   Usuń
@@ -179,6 +180,15 @@ export function CategoryForm({ categories }: Props) {
           <p className="px-4 py-6 text-center text-sm text-muted-foreground">Brak kategorii</p>
         )}
       </div>
+
+      <ConfirmDialog
+        open={deletingCategory !== null}
+        onOpenChange={(open) => !open && setDeletingCategory(null)}
+        title="Usuń kategorię"
+        description={`Czy na pewno chcesz usunąć kategorię „${deletingCategory?.namePl}"? Tej operacji nie można cofnąć.`}
+        pending={deleting}
+        onConfirm={() => deletingCategory && execDelete({ id: deletingCategory.id })}
+      />
     </div>
   );
 }
