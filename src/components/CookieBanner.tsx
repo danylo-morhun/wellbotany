@@ -1,16 +1,19 @@
 "use client";
 
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
 
 const STORAGE_KEY = "cookie-consent";
 
 export function CookieBanner() {
+  const pathname = usePathname();
+  const isAdmin = pathname?.startsWith("/admin") ?? false;
   const [visible, setVisible] = useState(false);
 
   useEffect(() => {
-    if (!localStorage.getItem(STORAGE_KEY)) setVisible(true);
-  }, []);
+    if (!isAdmin && !localStorage.getItem(STORAGE_KEY)) setVisible(true);
+  }, [isAdmin]);
 
   useEffect(() => {
     document.body.classList.toggle("has-cookie-banner", visible);
@@ -22,7 +25,7 @@ export function CookieBanner() {
     setVisible(false);
   }
 
-  if (!visible) return null;
+  if (isAdmin || !visible) return null;
 
   return (
     <div
