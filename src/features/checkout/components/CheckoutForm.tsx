@@ -6,6 +6,7 @@ import { useState } from "react";
 import { toast } from "sonner";
 import type { CartItem } from "@/features/cart/lib/session";
 import { placeOrder } from "../actions";
+import { OrderSummarySidebar } from "./OrderSummarySidebar";
 import { StepContact } from "./StepContact";
 import { StepPayment } from "./StepPayment";
 import { StepShipping } from "./StepShipping";
@@ -150,14 +151,21 @@ export function CheckoutForm({ cartId, items, subtotal }: Props) {
         })}
       </div>
 
-      {step === 1 && <StepContact data={formData} onChange={update} onNext={() => setStep(2)} />}
-      {step === 2 && (
-        <StepShipping
-          data={formData}
-          onChange={update}
-          onBack={() => setStep(1)}
-          onNext={() => setStep(3)}
-        />
+      {(step === 1 || step === 2) && (
+        <div className="grid gap-8 lg:grid-cols-[1fr_320px]">
+          {step === 1 && (
+            <StepContact data={formData} onChange={update} onNext={() => setStep(2)} />
+          )}
+          {step === 2 && (
+            <StepShipping
+              data={formData}
+              onChange={update}
+              onBack={() => setStep(1)}
+              onNext={() => setStep(3)}
+            />
+          )}
+          <OrderSummarySidebar items={items} subtotal={subtotal} />
+        </div>
       )}
       {step === 3 && (
         <StepPayment

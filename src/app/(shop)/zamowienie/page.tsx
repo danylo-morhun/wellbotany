@@ -36,7 +36,7 @@ export default async function ZamowieniePage() {
   );
 
   return (
-    <div className="mx-auto max-w-2xl px-4 py-8 sm:px-6 lg:px-8">
+    <div className="mx-auto max-w-2xl px-4 py-8 sm:px-6 lg:max-w-5xl lg:px-8">
       <h1 className="mb-8 text-balance text-2xl">Zamówienie</h1>
       <CheckoutForm cartId={cartId} items={items} subtotal={subtotal} />
     </div>
