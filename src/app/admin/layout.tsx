@@ -23,7 +23,12 @@ export default async function AdminLayout({ children }: { children: React.ReactN
       <div className="flex flex-col gap-8 md:flex-row">
         <aside className="w-full shrink-0 md:w-56">
           <div className="rounded-2xl bg-card p-3 shadow-card">
-            <p className="mb-2 px-3.5 pt-1 text-sm font-bold text-foreground">Panel admina</p>
+            <Link
+              href="/admin"
+              className="mb-2 block px-3.5 pt-1 text-sm font-bold text-foreground hover:text-primary"
+            >
+              Panel admina
+            </Link>
             <nav className="flex flex-col gap-0.5">
               <Link
                 href="/"
