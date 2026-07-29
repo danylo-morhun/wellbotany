@@ -142,7 +142,7 @@ export async function importSupplierProducts(
             costPricePln: draft.costPriceGrosz ?? null,
             stock: draft.stock,
             vatRate: draft.vatRate,
-            isActive: true,
+            isActive: draft.priceGrosz > 0,
             shoperProductId: draft.externalProductId ?? undefined,
           },
         });
@@ -207,7 +207,7 @@ export async function importSupplierProducts(
           vatRate: draft.vatRate,
           stock: draft.stock,
           isDefault: true,
-          isActive: true,
+          isActive: draft.priceGrosz > 0,
           shoperProductId: draft.externalProductId ?? null,
         },
       });
