@@ -67,12 +67,14 @@ async function main() {
   }
 
   const selected = products;
-  const summary = await prisma.$transaction((tx) =>
-    importSupplierProducts(tx, selected, {
-      brandName: source.brandName,
-      brandSlug: source.brandSlug,
-      updateExisting: update,
-    }),
+  const summary = await prisma.$transaction(
+    (tx) =>
+      importSupplierProducts(tx, selected, {
+        brandName: source.brandName,
+        brandSlug: source.brandSlug,
+        updateExisting: update,
+      }),
+    { timeout: 600_000, maxWait: 10_000 },
   );
 
   console.log(`\nWynik:`);
