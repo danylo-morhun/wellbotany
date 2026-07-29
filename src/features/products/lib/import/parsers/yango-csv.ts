@@ -51,7 +51,13 @@ export function parseYangoCsv(filePath: string, source: SupplierSource): Supplie
 
     const sku = cells[skuIdx]?.replace(/^"|"$/g, "").trim() || undefined;
     const categoryName = cells[categoryIdx]?.replace(/^"|"$/g, "").trim() || undefined;
-    const imageUrl = cells[imageIdx]?.replace(/^"|"$/g, "").trim() || undefined;
+    // Yango's CSV links the "small_default" thumbnail (a couple KB, visibly
+    // blurry) — the same PrestaShop CDN also serves a "large_default" at the
+    // same path, so swap it before it ever reaches the DB.
+    const imageUrl = cells[imageIdx]
+      ?.replace(/^"|"$/g, "")
+      .trim()
+      .replace("-small_default", "-large_default");
     const stock = Number.parseInt(cells[stockIdx] ?? "0", 10) || 0;
 
     const priceGrosz =
