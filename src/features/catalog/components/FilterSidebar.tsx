@@ -1,7 +1,7 @@
 "use client";
 
 import { useRouter, useSearchParams } from "next/navigation";
-import { useCallback } from "react";
+import { useCallback, useState } from "react";
 import type { BrandItem, CategoryItem, TagItem } from "../actions";
 import { SearchInput } from "./SearchInput";
 
@@ -22,6 +22,21 @@ export function FilterSidebar({
 }: Props) {
   const router = useRouter();
   const searchParams = useSearchParams();
+  const [showAllCategories, setShowAllCategories] = useState(false);
+
+  const CATEGORY_PREVIEW_COUNT = 8;
+  const activeCategorySlug = searchParams.get("kategoria");
+  const visibleCategories = showAllCategories
+    ? categories
+    : categories.slice(0, CATEGORY_PREVIEW_COUNT);
+  const activeCategoryHidden =
+    !showAllCategories &&
+    activeCategorySlug != null &&
+    !visibleCategories.some((cat) => cat.slug === activeCategorySlug);
+  const activeCategory = activeCategoryHidden
+    ? categories.find((cat) => cat.slug === activeCategorySlug)
+    : undefined;
+  const hiddenCategoryCount = categories.length - visibleCategories.length;
 
   const active = {
     category: searchParams.get("kategoria"),
@@ -95,7 +110,19 @@ export function FilterSidebar({
         <div>
           <p className="mb-2 text-sm font-semibold text-foreground">Kategoria</p>
           <ul className="space-y-1">
-            {categories.map((cat) => (
+            {activeCategory && (
+              <li key={activeCategory.id}>
+                <button
+                  type="button"
+                  onClick={() => setParam("kategoria", null)}
+                  className="flex w-full items-center justify-between rounded-md bg-primary px-2 py-1.5 text-left text-sm text-primary-foreground"
+                >
+                  <span>{activeCategory.namePl}</span>
+                  <span className="text-xs opacity-70">{activeCategory._count.products}</span>
+                </button>
+              </li>
+            )}
+            {visibleCategories.map((cat) => (
               <li key={cat.id}>
                 <button
                   type="button"
@@ -114,6 +141,16 @@ export function FilterSidebar({
               </li>
             ))}
           </ul>
+          {(hiddenCategoryCount > 0 || showAllCategories) &&
+            categories.length > CATEGORY_PREVIEW_COUNT && (
+              <button
+                type="button"
+                onClick={() => setShowAllCategories((v) => !v)}
+                className="mt-1.5 text-sm font-medium text-primary hover:text-primary-deep"
+              >
+                {showAllCategories ? "Pokaż mniej" : `Pokaż więcej (${hiddenCategoryCount})`}
+              </button>
+            )}
         </div>
       )}
 
