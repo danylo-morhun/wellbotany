@@ -19,6 +19,7 @@ build/
 
 # Prisma
 prisma/migrations/dev/
+prisma/backups/
 
 # TypeScript
 *.tsbuildinfo
