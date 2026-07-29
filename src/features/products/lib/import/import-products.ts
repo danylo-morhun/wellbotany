@@ -135,24 +135,43 @@ export async function importSupplierProducts(
       const brandId = await brandIdFor(draft);
 
       if (existing && options.updateExisting) {
+        // A zero-price draft (Formeds/HealthLabs-style "descriptions only"
+        // source) must never clobber an existing listing's real price, stock,
+        // or brand — the same EAN can legitimately be resold by multiple
+        // suppliers, and only the priced one should own that commercial data.
+        // It can still enrich the empty content fields.
+        const hasRealPrice = draft.priceGrosz > 0;
+
         await tx.productVariant.update({
           where: { id: existing.variantId },
           data: {
-            pricePln: draft.priceGrosz,
-            costPricePln: draft.costPriceGrosz ?? null,
-            stock: draft.stock,
-            vatRate: draft.vatRate,
-            isActive: draft.priceGrosz > 0,
+            ...(hasRealPrice && {
+              pricePln: draft.priceGrosz,
+              costPricePln: draft.costPriceGrosz ?? null,
+              stock: draft.stock,
+              vatRate: draft.vatRate,
+              isActive: true,
+            }),
             shoperProductId: draft.externalProductId ?? undefined,
           },
         });
         await tx.product.update({
           where: { id: existing.productId },
           data: {
-            namePl: draft.name,
-            brandId,
-            categoryId: await resolveCategory(tx, draft.categoryName),
-            netWeight: draft.packaging ?? undefined,
+            ...(hasRealPrice && {
+              namePl: draft.name,
+              brandId,
+              categoryId: await resolveCategory(tx, draft.categoryName),
+              netWeight: draft.packaging ?? undefined,
+            }),
+            shortDescPl: draft.shortDescPl ?? undefined,
+            descriptionPl: draft.descriptionPl ?? undefined,
+            ingredients: draft.ingredientsPl ? { pl: draft.ingredientsPl } : undefined,
+            nutritionFacts: draft.nutritionFactsPl ? { pl: draft.nutritionFactsPl } : undefined,
+            healthWarnings: draft.healthWarningsPl ? [draft.healthWarningsPl] : undefined,
+            servingSize: draft.servingSize ?? undefined,
+            servingsPerContainer: draft.servingsPerContainer ?? undefined,
+            storageInfo: draft.storageInfo ?? undefined,
           },
         });
         if (imageUrl) {
@@ -191,6 +210,14 @@ export async function importSupplierProducts(
           brandId,
           categoryId,
           netWeight: draft.packaging ?? null,
+          shortDescPl: draft.shortDescPl ?? null,
+          descriptionPl: draft.descriptionPl ?? null,
+          ingredients: draft.ingredientsPl ? { pl: draft.ingredientsPl } : undefined,
+          nutritionFacts: draft.nutritionFactsPl ? { pl: draft.nutritionFactsPl } : undefined,
+          healthWarnings: draft.healthWarningsPl ? [draft.healthWarningsPl] : undefined,
+          servingSize: draft.servingSize ?? null,
+          servingsPerContainer: draft.servingsPerContainer ?? null,
+          storageInfo: draft.storageInfo ?? null,
         },
       });
 

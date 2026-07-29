@@ -18,6 +18,17 @@ export type SupplierProductDraft = {
   stock: number;
   imageUrl?: string;
   localImagePath?: string;
+
+  // Optional rich content, verbatim from the supplier's own catalog copy
+  // (never AI-generated — health/dosage claims need to stay attributable).
+  descriptionPl?: string;
+  shortDescPl?: string;
+  ingredientsPl?: string;
+  nutritionFactsPl?: string;
+  healthWarningsPl?: string;
+  servingSize?: string;
+  servingsPerContainer?: number;
+  storageInfo?: string;
 };
 
 export type ImportRowResult = {
