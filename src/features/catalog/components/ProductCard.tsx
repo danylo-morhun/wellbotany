@@ -32,7 +32,9 @@ export function ProductCard({ product, priority = false }: Props) {
               fill
               priority={priority}
               sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
-              className="object-contain p-5 transition-transform duration-300 ease-out group-hover:scale-[1.05] motion-reduce:group-hover:scale-100"
+              className={`object-contain p-5 transition-transform duration-300 ease-out group-hover:scale-[1.05] motion-reduce:group-hover:scale-100 ${
+                isOutOfStock ? "grayscale-[60%] opacity-50" : ""
+              }`}
             />
           ) : (
             <div className="flex h-full items-center justify-center text-muted-foreground">
@@ -41,25 +43,25 @@ export function ProductCard({ product, priority = false }: Props) {
           )}
 
           <div className="absolute left-3 top-3 flex flex-col items-start gap-1.5">
-            {hasDiscount && (
-              <span className="flex size-10 items-center justify-center rounded-full bg-accent text-[11px] font-bold text-accent-foreground animate-pop-in motion-reduce:animate-none">
-                -{discountPct}%
-              </span>
-            )}
-            {product.isNewArrival && (
-              <span className="rounded-full bg-primary px-2.5 py-1 text-xs font-semibold text-primary-foreground">
-                Nowość
-              </span>
-            )}
-          </div>
-
-          {isOutOfStock && (
-            <div className="absolute inset-0 flex items-center justify-center bg-background/60">
-              <span className="rounded-full bg-card px-3.5 py-1.5 text-sm font-medium text-muted-foreground shadow-float">
+            {isOutOfStock ? (
+              <span className="rounded-full bg-muted-foreground/90 px-2.5 py-1 text-xs font-semibold text-background">
                 Niedostępny
               </span>
-            </div>
-          )}
+            ) : (
+              <>
+                {hasDiscount && (
+                  <span className="flex size-10 items-center justify-center rounded-full bg-accent text-[11px] font-bold text-accent-foreground animate-pop-in motion-reduce:animate-none">
+                    -{discountPct}%
+                  </span>
+                )}
+                {product.isNewArrival && (
+                  <span className="rounded-full bg-primary px-2.5 py-1 text-xs font-semibold text-primary-foreground">
+                    Nowość
+                  </span>
+                )}
+              </>
+            )}
+          </div>
         </div>
       </Link>
 
@@ -111,7 +113,13 @@ export function ProductCard({ product, priority = false }: Props) {
 
         {defaultVariant && (
           <div className="mt-3">
-            <QuickAddButton variantId={defaultVariant.id} disabled={isOutOfStock} />
+            {isOutOfStock ? (
+              <span className="flex w-full items-center justify-center rounded-full bg-muted px-3 py-2.5 text-sm font-medium text-muted-foreground">
+                Niedostępny
+              </span>
+            ) : (
+              <QuickAddButton variantId={defaultVariant.id} />
+            )}
           </div>
         )}
       </div>
