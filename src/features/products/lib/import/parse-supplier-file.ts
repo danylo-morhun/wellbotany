@@ -1,7 +1,11 @@
 import fs from "node:fs";
 import path from "node:path";
 import { matchLocalImage } from "./match-local-image";
+import { parseBestlabPdf } from "./parsers/bestlab-pdf";
+import { parseFormedsXlsx } from "./parsers/formeds-xlsx";
+import { parseHealthlabsManifest } from "./parsers/healthlabs-manifest";
 import { parseKenayXlsx } from "./parsers/kenay-xlsx";
+import { parseMitopharmaXlsx } from "./parsers/mitopharma-xlsx";
 import { parsePureHydrationXlsx } from "./parsers/pure-hydration-xlsx";
 import { parseShoperApi } from "./parsers/shoper-api";
 import { parseYangoCsv } from "./parsers/yango-csv";
@@ -26,10 +30,10 @@ function enrichWithLocalImages(
   });
 }
 
-export function parseSupplierFile(
+export async function parseSupplierFile(
   source: SupplierSource,
   filePath?: string,
-): SupplierProductDraft[] {
+): Promise<SupplierProductDraft[]> {
   if (source.kind !== "file") {
     throw new Error("To źródło nie używa pliku");
   }
@@ -47,6 +51,18 @@ export function parseSupplierFile(
       break;
     case "pure-hydration-xlsx":
       products = parsePureHydrationXlsx(absolutePath, source);
+      break;
+    case "mitopharma-xlsx":
+      products = parseMitopharmaXlsx(absolutePath, source);
+      break;
+    case "formeds-xlsx":
+      products = parseFormedsXlsx(absolutePath, source);
+      break;
+    case "healthlabs-manifest-json":
+      products = parseHealthlabsManifest(absolutePath, source);
+      break;
+    case "bestlab-pdf":
+      products = await parseBestlabPdf(absolutePath, source);
       break;
     default:
       throw new Error(`Nieobsługiwany format: ${format satisfies never}`);
@@ -74,5 +90,5 @@ export async function loadSupplierProducts(
     }
     throw new Error(`Nieobsługiwany format API: ${format satisfies never}`);
   }
-  return parseSupplierFile(source);
+  return await parseSupplierFile(source);
 }

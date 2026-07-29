@@ -1,4 +1,11 @@
-export type SupplierFileFormat = "yango-csv" | "kenay-xlsx" | "pure-hydration-xlsx";
+export type SupplierFileFormat =
+  | "yango-csv"
+  | "kenay-xlsx"
+  | "pure-hydration-xlsx"
+  | "bestlab-pdf"
+  | "mitopharma-xlsx"
+  | "formeds-xlsx"
+  | "healthlabs-manifest-json";
 
 export type SupplierSource =
   | {
@@ -60,6 +67,46 @@ export const SUPPLIER_SOURCES: SupplierSource[] = [
     filePath: "2026 FORMATKA z sugerowaną ceną internetową (3).xlsx",
     format: "pure-hydration-xlsx",
     defaultVatRate: 23,
+  },
+  {
+    kind: "file",
+    id: "bestlab",
+    label: "BestLab",
+    brandName: "BestLab",
+    brandSlug: "bestlab",
+    filePath: "Cennik_hurtowyPDF.pdf",
+    format: "bestlab-pdf",
+    defaultVatRate: 8,
+  },
+  {
+    kind: "file",
+    id: "mitopharma",
+    label: "Mitopharma",
+    brandName: "Mitopharma",
+    brandSlug: "mitopharma",
+    filePath: "Mitopharma - cennik hurtowy.xlsx",
+    format: "mitopharma-xlsx",
+    defaultVatRate: 8,
+  },
+  {
+    kind: "file",
+    id: "formeds",
+    label: "Formeds (bez cen — tylko opisy)",
+    brandName: "Formeds",
+    brandSlug: "formeds",
+    filePath: "Formeds - dane produktow.xlsx",
+    format: "formeds-xlsx",
+    defaultVatRate: 8,
+  },
+  {
+    kind: "file",
+    id: "healthlabs",
+    label: "HealthLabs Care (bez cen — tylko nazwy)",
+    brandName: "HealthLabs Care",
+    brandSlug: "healthlabs-care",
+    filePath: "data/suppliers/healthlabs-manifest.json",
+    format: "healthlabs-manifest-json",
+    defaultVatRate: 8,
   },
   {
     kind: "api",

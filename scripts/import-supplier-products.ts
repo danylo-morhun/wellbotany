@@ -53,7 +53,7 @@ async function main() {
     process.exit(1);
   }
 
-  const products = parseSupplierFile(source);
+  const products = await parseSupplierFile(source);
 
   console.log(`Źródło: ${source.label}`);
   console.log(`Produktów w pliku: ${products.length}`);
