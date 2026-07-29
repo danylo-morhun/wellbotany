@@ -106,6 +106,27 @@ export function buildProductOrderBy(sort: SortOption): Prisma.ProductOrderByWith
   }
 }
 
+const IN_STOCK_VARIANT_FILTER = { isActive: true, stock: { gt: 0 } } as const;
+
+/**
+ * Splits a catalog where-clause into "has an orderable variant" and "doesn't"
+ * — Prisma can't order a to-many relation by anything but `_count`, so
+ * in-stock-first is done by querying the two groups separately and
+ * concatenating (see getProducts) instead of via `orderBy`.
+ */
+export function withStockAvailability(
+  where: Prisma.ProductWhereInput,
+  inStock: boolean,
+): Prisma.ProductWhereInput {
+  const existingSome =
+    where.variants && "some" in where.variants ? (where.variants.some ?? {}) : {};
+
+  if (inStock) {
+    return { ...where, variants: { some: { ...existingSome, ...IN_STOCK_VARIANT_FILTER } } };
+  }
+  return { ...where, NOT: { variants: { some: IN_STOCK_VARIANT_FILTER } } };
+}
+
 export function buildCatalogUrl(base: string, overrides: Partial<CatalogFilters>): string {
   const params = new URLSearchParams();
   if (overrides.category) params.set("kategoria", overrides.category);

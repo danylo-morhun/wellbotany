@@ -1,48 +1,90 @@
 import { unstable_cache } from "next/cache";
 import { prisma } from "@/lib/prisma";
-import { buildProductOrderBy, buildProductWhere, type CatalogFilters } from "./lib/filters";
+import {
+  buildProductOrderBy,
+  buildProductWhere,
+  type CatalogFilters,
+  withStockAvailability,
+} from "./lib/filters";
+
+const PRODUCT_LIST_SELECT = {
+  id: true,
+  slug: true,
+  namePl: true,
+  shortDescPl: true,
+  isNewArrival: true,
+  isFeatured: true,
+  brand: { select: { name: true, slug: true } },
+  category: { select: { namePl: true, slug: true } },
+  images: {
+    where: { isMain: true },
+    select: { url: true, altPl: true },
+    orderBy: { sortOrder: "asc" },
+    take: 1,
+  },
+  variants: {
+    where: { isActive: true },
+    select: { id: true, pricePln: true, comparePricePln: true, stock: true, isDefault: true },
+    orderBy: { isDefault: "desc" },
+    take: 1,
+  },
+  tags: {
+    select: {
+      tag: { select: { namePl: true, slug: true, iconUrl: true, type: true } },
+    },
+  },
+} as const;
 
 export async function getProducts(filters: CatalogFilters) {
   const where = buildProductWhere(filters);
   const orderBy = buildProductOrderBy(filters.sort);
   const skip = (filters.page - 1) * filters.perPage;
 
-  const [items, total] = await Promise.all([
-    prisma.product.findMany({
-      where,
-      orderBy,
-      skip,
-      take: filters.perPage,
-      select: {
-        id: true,
-        slug: true,
-        namePl: true,
-        shortDescPl: true,
-        isNewArrival: true,
-        isFeatured: true,
-        brand: { select: { name: true, slug: true } },
-        category: { select: { namePl: true, slug: true } },
-        images: {
-          where: { isMain: true },
-          select: { url: true, altPl: true },
-          orderBy: { sortOrder: "asc" },
-          take: 1,
-        },
-        variants: {
-          where: { isActive: true },
-          select: { id: true, pricePln: true, comparePricePln: true, stock: true, isDefault: true },
-          orderBy: { isDefault: "desc" },
-          take: 1,
-        },
-        tags: {
-          select: {
-            tag: { select: { namePl: true, slug: true, iconUrl: true, type: true } },
-          },
-        },
-      },
-    }),
+  // Prisma can only order a to-many relation by `_count`, not by a threshold
+  // on one of its fields — so "in stock first" is done by querying the two
+  // groups separately (in a stable order) and concatenating them, rather
+  // than via a single orderBy.
+  const inStockWhere = withStockAvailability(where, true);
+  const outOfStockWhere = withStockAvailability(where, false);
+
+  const [inStockCount, total] = await Promise.all([
+    prisma.product.count({ where: inStockWhere }),
     prisma.product.count({ where }),
   ]);
+
+  let items: Awaited<
+    ReturnType<typeof prisma.product.findMany<{ select: typeof PRODUCT_LIST_SELECT }>>
+  >;
+  if (skip < inStockCount) {
+    const take = Math.min(filters.perPage, inStockCount - skip);
+    const inStockItems = await prisma.product.findMany({
+      where: inStockWhere,
+      orderBy,
+      skip,
+      take,
+      select: PRODUCT_LIST_SELECT,
+    });
+    const remaining = filters.perPage - inStockItems.length;
+    const outOfStockItems =
+      remaining > 0
+        ? await prisma.product.findMany({
+            where: outOfStockWhere,
+            orderBy,
+            skip: 0,
+            take: remaining,
+            select: PRODUCT_LIST_SELECT,
+          })
+        : [];
+    items = [...inStockItems, ...outOfStockItems];
+  } else {
+    items = await prisma.product.findMany({
+      where: outOfStockWhere,
+      orderBy,
+      skip: skip - inStockCount,
+      take: filters.perPage,
+      select: PRODUCT_LIST_SELECT,
+    });
+  }
 
   return { items, total };
 }
