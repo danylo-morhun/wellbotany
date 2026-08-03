@@ -4,6 +4,7 @@ import type { Brand, Category, Product, ProductStatus, ProductTag, Tag } from "@
 import { useRouter } from "next/navigation";
 import { useAction } from "next-safe-action/hooks";
 import { useState } from "react";
+import { RichTextEditor } from "@/components/ui/rich-text-editor";
 import { slugify } from "@/lib/slugify";
 import { saveBrand, saveCategory, saveProduct } from "../actions";
 
@@ -35,6 +36,7 @@ export function ProductForm({ product, categories, brands, tags }: Props) {
   const [slug, setSlug] = useState(product?.slug ?? "");
   const [slugManual, setSlugManual] = useState(!!product);
   const [shortDescPl, setShortDescPl] = useState(product?.shortDescPl ?? "");
+  const [descriptionPl, setDescriptionPl] = useState(product?.descriptionPl ?? "");
   const [metaTitlePl, setMetaTitlePl] = useState(product?.metaTitlePl ?? "");
   const [metaDescPl, setMetaDescPl] = useState(product?.metaDescPl ?? "");
   const [tagQuery, setTagQuery] = useState("");
@@ -126,7 +128,7 @@ export function ProductForm({ product, categories, brands, tags }: Props) {
       nameEn: (fd.get("nameEn") as string) || undefined,
       nameUk: (fd.get("nameUk") as string) || undefined,
       shortDescPl: shortDescPl || undefined,
-      descriptionPl: (fd.get("descriptionPl") as string) || undefined,
+      descriptionPl: descriptionPl || undefined,
       status: fd.get("status") as ProductStatus,
       categoryId: categoryId || undefined,
       brandId: brandId || undefined,
@@ -355,13 +357,7 @@ export function ProductForm({ product, categories, brands, tags }: Props) {
             <label htmlFor="descriptionPl" className="mb-1 block text-sm font-medium">
               Pełny opis (PL)
             </label>
-            <textarea
-              id="descriptionPl"
-              name="descriptionPl"
-              defaultValue={product?.descriptionPl ?? ""}
-              rows={6}
-              className="w-full rounded-md border px-3 py-2 text-sm"
-            />
+            <RichTextEditor id="descriptionPl" value={descriptionPl} onChange={setDescriptionPl} />
           </div>
           <div className="flex items-center gap-4 sm:col-span-2">
             <label className="flex items-center gap-2 text-sm">
