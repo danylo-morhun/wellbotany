@@ -59,3 +59,10 @@ public/supplier-images/
 /*.xlsx
 /*.csv
 /*.pdf
+
+# Scratch / local tooling output
+.aider.*
+.playwright-mcp/
+scripts/_tmp-*
+ui-audit/
+MISSING_DESCRIPTIONS.md
