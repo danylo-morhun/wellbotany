@@ -208,7 +208,7 @@ export default async function ProduktPage({ params }: Props) {
             <section>
               <h2 className="text-lg font-semibold text-foreground">Opis</h2>
               <div
-                className="prose prose-sm mt-3 max-w-none text-muted-foreground"
+                className="prose prose-sm mt-3 max-w-none text-muted-foreground prose-headings:font-semibold prose-headings:text-foreground prose-strong:text-foreground prose-ul:my-3 prose-li:my-1 prose-li:marker:text-primary"
                 dangerouslySetInnerHTML={{ __html: sanitizeRichText(product.descriptionPl) }}
               />
             </section>
