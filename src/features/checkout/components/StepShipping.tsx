@@ -4,6 +4,7 @@ import { useState } from "react";
 import { formatPrice } from "@/lib/format";
 import { SHIPPING_COSTS, SHIPPING_LABELS } from "../lib/shipping";
 import type { CheckoutFormData } from "./CheckoutForm";
+import { InPostGeowidget } from "./InPostGeowidget";
 
 type Props = {
   data: CheckoutFormData;
@@ -69,18 +70,45 @@ export function StepShipping({ data, onChange, onBack, onNext }: Props) {
 
       {data.shippingMethod === "INPOST_PACZKOMAT" && (
         <div className="rounded-lg border border-border bg-muted/30 p-4">
-          <p className="mb-3 text-sm font-medium">Identyfikator paczkomatu</p>
-          <p className="mb-3 text-xs text-muted-foreground">
-            Podaj ID paczkomatu (np. WAW123M). Mapa paczkomatów dostępna wkrótce.
-          </p>
-          <input
-            type="text"
-            required
-            placeholder="np. WAW123M"
-            value={data.inpostMachineId}
-            onChange={(e) => onChange({ inpostMachineId: e.target.value.toUpperCase() })}
-            className="w-full rounded-lg border border-border px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary"
-          />
+          {data.inpostMachineId ? (
+            <div className="flex items-center justify-between gap-3">
+              <div>
+                <p className="text-sm font-medium">Wybrany paczkomat</p>
+                <p className="text-sm text-muted-foreground">
+                  {data.inpostMachineName || data.inpostMachineId}
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={() => onChange({ inpostMachineId: "", inpostMachineName: "" })}
+                className="text-sm font-medium text-primary underline underline-offset-2"
+              >
+                Zmień
+              </button>
+            </div>
+          ) : (
+            <>
+              <p className="mb-3 text-sm font-medium">Identyfikator paczkomatu</p>
+              <div className="mb-3">
+                <InPostGeowidget
+                  onSelect={(id, name) =>
+                    onChange({ inpostMachineId: id, inpostMachineName: name })
+                  }
+                />
+              </div>
+              <p className="mb-3 text-xs text-muted-foreground">
+                Lub podaj ID paczkomatu ręcznie (np. WAW123M).
+              </p>
+              <input
+                type="text"
+                required
+                placeholder="np. WAW123M"
+                value={data.inpostMachineId}
+                onChange={(e) => onChange({ inpostMachineId: e.target.value.toUpperCase() })}
+                className="w-full rounded-lg border border-border px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary"
+              />
+            </>
+          )}
         </div>
       )}
 
