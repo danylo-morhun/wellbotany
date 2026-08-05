@@ -1,7 +1,25 @@
 import { NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 
-function buildCsp(nonce: string): string {
+// Routes that are already per-request dynamic (session, cart, checkout) — a
+// per-request nonce costs nothing extra there, so they keep the strictest
+// script-src. Everything else stays static/ISR-eligible, which a per-request
+// nonce would otherwise force into full dynamic rendering (see root layout).
+const STRICT_CSP_PATHS = [
+  "/koszyk",
+  "/konto",
+  "/zamowienie",
+  "/logowanie",
+  "/rejestracja",
+  "/ulubione",
+  "/admin",
+];
+
+function isStrictCspPath(pathname: string): boolean {
+  return STRICT_CSP_PATHS.some((p) => pathname === p || pathname.startsWith(`${p}/`));
+}
+
+function buildStrictCsp(nonce: string): string {
   return [
     "default-src 'self'",
     "img-src 'self' data: blob: https://res.cloudinary.com https://images.unsplash.com https://cdn.baselinker.com https://zielarniakaliska.com.pl https://yango.pl https://kenay.com.pl",
@@ -16,6 +34,27 @@ function buildCsp(nonce: string): string {
     "font-src 'self'",
     "connect-src 'self' https://api.cloudinary.com https://res.cloudinary.com https://*.ingest.de.sentry.io https://*.ingest.sentry.io",
     "frame-src https://upload-widget.cloudinary.com",
+    "object-src 'none'",
+    "base-uri 'self'",
+    "form-action 'self'",
+    "frame-ancestors 'none'",
+  ].join("; ");
+}
+
+// No nonce here on purpose — a per-request nonce is itself a dynamic value,
+// and reading it in the root layout would force every public storefront page
+// into dynamic rendering. 'unsafe-inline' is the deliberate tradeoff that
+// keeps home/katalog/produkt static-/ISR-eligible; next-themes' inline
+// theme-init script runs fine under it (it only sets a class, not a security
+// boundary), same for Next's own hydration bootstrap scripts.
+function buildRelaxedCsp(): string {
+  return [
+    "default-src 'self'",
+    "img-src 'self' data: blob: https://res.cloudinary.com https://images.unsplash.com https://cdn.baselinker.com https://zielarniakaliska.com.pl https://yango.pl https://kenay.com.pl",
+    "script-src 'self' 'unsafe-inline'",
+    "style-src 'self' 'unsafe-inline'",
+    "font-src 'self'",
+    "connect-src 'self' https://*.ingest.de.sentry.io https://*.ingest.sentry.io",
     "object-src 'none'",
     "base-uri 'self'",
     "form-action 'self'",
@@ -43,8 +82,14 @@ export default auth((req) => {
   // Dev's Fast Refresh needs eval() and doesn't need CSP enforced locally.
   if (process.env.NODE_ENV !== "production") return NextResponse.next();
 
+  if (!isStrictCspPath(req.nextUrl.pathname)) {
+    const response = NextResponse.next();
+    response.headers.set("Content-Security-Policy", buildRelaxedCsp());
+    return response;
+  }
+
   const nonce = Buffer.from(crypto.randomUUID()).toString("base64");
-  const csp = buildCsp(nonce);
+  const csp = buildStrictCsp(nonce);
 
   const requestHeaders = new Headers(req.headers);
   requestHeaders.set("x-nonce", nonce);

@@ -1,6 +1,5 @@
 import type { Metadata } from "next";
 import { Geist_Mono, Plus_Jakarta_Sans } from "next/font/google";
-import { headers } from "next/headers";
 import { ThemeProvider } from "next-themes";
 import { CookieBanner } from "@/components/CookieBanner";
 import { Toaster } from "@/components/ui/sonner";
@@ -27,13 +26,11 @@ export const metadata: Metadata = {
   metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL ?? "https://twojezdrowie.pl"),
 };
 
-export default async function RootLayout({
+export default function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-  const nonce = (await headers()).get("x-nonce") ?? undefined;
-
   return (
     <html
       lang="pl"
@@ -41,12 +38,7 @@ export default async function RootLayout({
       suppressHydrationWarning
     >
       <body className="min-h-full flex flex-col">
-        <ThemeProvider
-          attribute="class"
-          defaultTheme="light"
-          disableTransitionOnChange
-          nonce={nonce}
-        >
+        <ThemeProvider attribute="class" defaultTheme="light" disableTransitionOnChange>
           {children}
           <Toaster />
           <CookieBanner />
