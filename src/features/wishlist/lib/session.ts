@@ -1,9 +1,13 @@
+import { cache } from "react";
 import { prisma } from "@/lib/prisma";
 
 export const WISHLIST_COOKIE_NAME = "wishlist_id";
 export const WISHLIST_TTL_DAYS = 30;
 
-export async function getWishlist(wishlistId: string) {
+// NavBar's WishlistIcon and the PDP's ProductWishlistButton both read the
+// same wishlist by the same cookie id in one request — cache() dedupes that
+// to a single query instead of two.
+export const getWishlist = cache(async (wishlistId: string) => {
   return prisma.wishlist.findFirst({
     where: {
       id: wishlistId,
@@ -43,7 +47,7 @@ export async function getWishlist(wishlistId: string) {
       },
     },
   });
-}
+});
 
 export type WishlistWithItems = NonNullable<Awaited<ReturnType<typeof getWishlist>>>;
 export type WishlistItem = WishlistWithItems["items"][number];

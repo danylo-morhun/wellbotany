@@ -1,4 +1,5 @@
 import { cookies } from "next/headers";
+import { cache } from "react";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 
@@ -77,7 +78,9 @@ const cartItemSelect = {
   },
 } as const;
 
-export async function getCart(cartId: string) {
+// NavBar's CartIcon and the page body (koszyk/zamowienie) both read the same
+// cart in one request — cache() dedupes that to a single query instead of two.
+export const getCart = cache(async (cartId: string) => {
   return prisma.cart.findFirst({
     where: {
       id: cartId,
@@ -88,12 +91,12 @@ export async function getCart(cartId: string) {
       items: { select: cartItemSelect, orderBy: { createdAt: "asc" } },
     },
   });
-}
+});
 
 export type CartWithItems = NonNullable<Awaited<ReturnType<typeof getCart>>>;
 export type CartItem = CartWithItems["items"][number];
 
-export async function getCartByCustomerId(customerId: string) {
+export const getCartByCustomerId = cache(async (customerId: string) => {
   return prisma.cart.findUnique({
     where: { customerId },
     select: {
@@ -101,7 +104,7 @@ export async function getCartByCustomerId(customerId: string) {
       items: { select: cartItemSelect, orderBy: { createdAt: "asc" } },
     },
   });
-}
+});
 
 export async function createGuestCart(): Promise<string> {
   const expiresAt = new Date();
