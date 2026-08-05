@@ -146,8 +146,13 @@ model Product {
   nameUk        String?
   shortDescPl   String?
   shortDescEn   String?
+  shortDescUk   String?
   descriptionPl String? @db.Text
   descriptionEn String? @db.Text
+  descriptionUk String? @db.Text
+
+  // USP bullets shown under the title — string[], e.g. ["Wspiera odporność", "Wysoka biodostępność"]
+  benefitsPl Json?
 
   // Taxonomy
   categoryId String?
@@ -168,11 +173,13 @@ model Product {
   servingsPerContainer Int?
   storageInfo          String? // "Przechowywać w suchym miejscu..."
   countryOfOrigin      String? // ISO 3166-1 alpha-2
+  usageInstructionsPl  String? @db.Text // full "sposób użycia" — when/how/what to combine with
 
   // Composition — stored as JSON for flexibility
   // ingredients: { pl: "Witamina C...", en: "Vitamin C..." }
   ingredients    Json?
   // nutritionFacts: structured per EU Regulation 1169/2011 label
+  // [{ name: "Witamina C", amount: "80 mg", rws: "100%" }, ...]
   nutritionFacts Json?
   // allergenInfo: { contains: ["gluten"], mayContain: ["nuts"] }
   allergenInfo   Json?
@@ -180,8 +187,15 @@ model Product {
   // Regulatory (Sanepid / GIS compliance)
   // healthWarnings: string[] — required regulatory disclaimers
   // e.g. ["Suplement diety nie zastępuje zrównoważonej diety"]
-  healthWarnings Json?
-  ageRestriction Int? // minimum age in years; null = no restriction
+  healthWarnings      Json?
+  // contraindicationsPl: product-specific (pregnancy, drug interactions) — distinct
+  // from the fixed healthWarnings disclaimer set above
+  contraindicationsPl String? @db.Text
+  ageRestriction      Int? // minimum age in years; null = no restriction
+  // certifications: string[] badges — e.g. ["GMP", "HACCP", "Wegański"]
+  certifications      Json?
+  // responsibleEntity: manufacturer/EU importer name + address — Reg. 1169/2011 Art. 9(1)(h)
+  responsibleEntity   String?
 
   // SEO
   metaTitlePl String?
