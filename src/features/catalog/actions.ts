@@ -1,3 +1,4 @@
+import type { Prisma } from "@prisma/client";
 import { unstable_cache } from "next/cache";
 import { prisma } from "@/lib/prisma";
 import {
@@ -304,3 +305,66 @@ export const getBrandBySlug = unstable_cache(
   ["brand-by-slug"],
   { tags: ["brands"] },
 );
+
+const RELATED_CANDIDATE_TAKE = 40;
+
+export type RelatedProductSeed = {
+  id: string;
+  categorySlug?: string | null;
+  brandSlug?: string | null;
+  tagSlugs: string[];
+};
+
+/**
+ * Weighted "similar products" pick for the PDP — shared tags count more than
+ * shared category, which counts more than shared brand. Falls back to
+ * featured, then newest, so the section is never empty.
+ */
+export async function getRelatedProducts(seed: RelatedProductSeed, take = 4) {
+  const orConditions: Prisma.ProductWhereInput[] = [];
+  if (seed.categorySlug) orConditions.push({ category: { slug: seed.categorySlug } });
+  if (seed.brandSlug) orConditions.push({ brand: { slug: seed.brandSlug } });
+  if (seed.tagSlugs.length) {
+    orConditions.push({ tags: { some: { tag: { slug: { in: seed.tagSlugs } } } } });
+  }
+
+  const candidates = orConditions.length
+    ? await prisma.product.findMany({
+        where: { status: "ACTIVE", id: { not: seed.id }, OR: orConditions },
+        take: RELATED_CANDIDATE_TAKE,
+        orderBy: { updatedAt: "desc" },
+        select: PRODUCT_LIST_SELECT,
+      })
+    : [];
+
+  const ranked = candidates
+    .map((item) => {
+      const sharedTags = item.tags.filter((t) => seed.tagSlugs.includes(t.tag.slug)).length;
+      const sameCategory = seed.categorySlug != null && item.category?.slug === seed.categorySlug;
+      const sameBrand = seed.brandSlug != null && item.brand?.slug === seed.brandSlug;
+      const inStock = item.variants.some((v) => v.stock > 0);
+      const score =
+        sharedTags * 3 + (sameCategory ? 2 : 0) + (sameBrand ? 1 : 0) + (inStock ? 1 : 0);
+      return { item, score };
+    })
+    .sort((a, b) => b.score - a.score)
+    .map(({ item }) => item)
+    .slice(0, take);
+
+  if (ranked.length > 0) return ranked;
+
+  const featured = await prisma.product.findMany({
+    where: { status: "ACTIVE", id: { not: seed.id }, isFeatured: true },
+    take,
+    orderBy: { updatedAt: "desc" },
+    select: PRODUCT_LIST_SELECT,
+  });
+  if (featured.length > 0) return featured;
+
+  return prisma.product.findMany({
+    where: { status: "ACTIVE", id: { not: seed.id } },
+    take,
+    orderBy: { createdAt: "desc" },
+    select: PRODUCT_LIST_SELECT,
+  });
+}
