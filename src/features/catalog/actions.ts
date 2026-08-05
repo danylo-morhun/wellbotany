@@ -6,6 +6,7 @@ import {
   type CatalogFilters,
   withStockAvailability,
 } from "./lib/filters";
+import { rankBySearchRelevance } from "./lib/search-relevance";
 
 const PRODUCT_LIST_SELECT = {
   id: true,
@@ -35,10 +36,59 @@ const PRODUCT_LIST_SELECT = {
   },
 } as const;
 
+// Bound on how many candidates get pulled in for relevance ranking when a
+// search is combined with another structural filter — generous for this
+// catalog's size while keeping worst-case query cost fixed. A search with no
+// other filter uses `getSearchableProducts` instead (the full active
+// catalog, cached) so recall never depends on this cap.
+const RELEVANCE_CANDIDATE_CAP = 500;
+
+/** Every active product, search-relevant fields only — cached for fast, DB-free fuzzy search on every keystroke. */
+export const getSearchableProducts = unstable_cache(
+  async () =>
+    prisma.product.findMany({
+      where: { status: "ACTIVE" },
+      select: PRODUCT_LIST_SELECT,
+    }),
+  ["searchable-products"],
+  { tags: ["products"] },
+);
+
+function hasStructuralFilter(filters: CatalogFilters): boolean {
+  return Boolean(
+    filters.category ||
+      filters.brand ||
+      filters.tags?.length ||
+      filters.priceMin !== undefined ||
+      filters.priceMax !== undefined ||
+      filters.onlyPromo ||
+      filters.onlyNew ||
+      filters.onlyFeatured,
+  );
+}
+
 export async function getProducts(filters: CatalogFilters) {
   const where = buildProductWhere(filters);
   const orderBy = buildProductOrderBy(filters.sort);
   const skip = (filters.page - 1) * filters.perPage;
+
+  // A search term with the default sort gets relevance-ranked instead of the
+  // usual DB-paginated newest-first order; an explicit sort choice still wins.
+  if (filters.search && filters.sort === "newest") {
+    const matches = hasStructuralFilter(filters)
+      ? await prisma.product.findMany({
+          where,
+          orderBy,
+          take: RELEVANCE_CANDIDATE_CAP,
+          select: PRODUCT_LIST_SELECT,
+        })
+      : await getSearchableProducts();
+    const ranked = rankBySearchRelevance(matches, filters.search);
+    const inStockRanked = ranked.filter((p) => p.variants.some((v) => v.stock > 0));
+    const outOfStockRanked = ranked.filter((p) => !p.variants.some((v) => v.stock > 0));
+    const items = [...inStockRanked, ...outOfStockRanked].slice(skip, skip + filters.perPage);
+    return { items, total: ranked.length };
+  }
 
   // Prisma can only order a to-many relation by `_count`, not by a threshold
   // on one of its fields — so "in stock first" is done by querying the two
