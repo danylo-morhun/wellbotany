@@ -1,12 +1,12 @@
 import { PillBottle, ShoppingBag, Truck, User } from "lucide-react";
 import Link from "next/link";
 import { Suspense } from "react";
+import { AdminLink } from "@/components/layout/AdminLink";
 import { MobileMenu } from "@/components/layout/MobileMenu";
 import { ThemeToggle } from "@/components/layout/ThemeToggle";
 import { CartIcon } from "@/features/cart/components/CartIcon";
 import { HeaderSearch } from "@/features/catalog/components/HeaderSearch";
 import { WishlistIcon, WishlistIconFallback } from "@/features/wishlist/components/WishlistIcon";
-import { auth } from "@/lib/auth";
 
 const navLinks = [
   { label: "Katalog", href: "/katalog" },
@@ -22,8 +22,7 @@ const utilityLinks = [
   { label: "Kontakt", href: "/kontakt" },
 ];
 
-export async function NavBar() {
-  const session = await auth();
+export function NavBar() {
   return (
     <header className="sticky top-0 z-50 bg-background/95 backdrop-blur-sm print:hidden">
       {/* Utility bar */}
@@ -78,14 +77,9 @@ export async function NavBar() {
             >
               <CartIcon />
             </Suspense>
-            {session?.user?.role === "ADMIN" && (
-              <Link
-                href="/admin/zamowienia"
-                className="rounded-full px-2.5 py-1.5 text-xs font-semibold text-muted-foreground transition-colors hover:bg-secondary hover:text-primary"
-              >
-                Admin
-              </Link>
-            )}
+            <Suspense fallback={null}>
+              <AdminLink />
+            </Suspense>
             <Link
               href="/konto"
               aria-label="Moje konto"
