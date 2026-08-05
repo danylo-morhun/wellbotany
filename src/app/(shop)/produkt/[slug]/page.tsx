@@ -8,10 +8,9 @@ import { ProductCard } from "@/features/catalog/components/ProductCard";
 import { ProductGallery } from "@/features/catalog/components/ProductGallery";
 import { WishlistButton } from "@/features/wishlist/components/WishlistButton";
 import { getWishlist, WISHLIST_COOKIE_NAME } from "@/features/wishlist/lib/session";
-import { prisma } from "@/lib/prisma";
 import { sanitizeRichText } from "@/lib/sanitize";
 import { buildProductJsonLd, toJsonLdScript } from "@/lib/seo";
-import { getProduct } from "../../../../features/catalog/actions";
+import { getProduct, getRelatedProducts } from "../../../../features/catalog/actions";
 
 type Props = {
   params: Promise<{ slug: string }>;
@@ -44,46 +43,12 @@ export default async function ProduktPage({ params }: Props) {
 
   const [cookieStore, related] = await Promise.all([
     cookies(),
-    product.category?.id
-      ? prisma.product.findMany({
-          where: { status: "ACTIVE", categoryId: product.category.id, id: { not: product.id } },
-          take: 4,
-          orderBy: { updatedAt: "desc" },
-          select: {
-            id: true,
-            slug: true,
-            namePl: true,
-            shortDescPl: true,
-            isNewArrival: true,
-            isFeatured: true,
-            brand: { select: { name: true, slug: true } },
-            category: { select: { namePl: true, slug: true } },
-            images: {
-              where: { isMain: true },
-              select: { url: true, altPl: true },
-              orderBy: { sortOrder: "asc" },
-              take: 1,
-            },
-            variants: {
-              where: { isActive: true },
-              select: {
-                id: true,
-                pricePln: true,
-                comparePricePln: true,
-                stock: true,
-                isDefault: true,
-              },
-              orderBy: { isDefault: "desc" },
-              take: 1,
-            },
-            tags: {
-              select: {
-                tag: { select: { namePl: true, slug: true, iconUrl: true, type: true } },
-              },
-            },
-          },
-        })
-      : Promise.resolve([]),
+    getRelatedProducts({
+      id: product.id,
+      categorySlug: product.category?.slug ?? null,
+      brandSlug: product.brand?.slug ?? null,
+      tagSlugs: product.tags.map((t) => t.tag.slug),
+    }),
   ]);
 
   const wishlistId = cookieStore.get(WISHLIST_COOKIE_NAME)?.value;
