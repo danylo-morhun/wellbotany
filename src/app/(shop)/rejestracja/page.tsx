@@ -2,7 +2,7 @@ import Link from "next/link";
 import { RegisterForm } from "@/features/auth/components/RegisterForm";
 
 export const metadata = {
-  title: "Rejestracja — Twoje Zdrowie",
+  title: "Rejestracja — Well Botany",
 };
 
 export default function RegisterPage() {

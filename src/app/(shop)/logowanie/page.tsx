@@ -2,7 +2,7 @@ import Link from "next/link";
 import { LoginForm } from "@/features/auth/components/LoginForm";
 
 export const metadata = {
-  title: "Logowanie — Twoje Zdrowie",
+  title: "Logowanie — Well Botany",
 };
 
 export default async function LoginPage({
