@@ -9,7 +9,7 @@ type Props = { params: Promise<{ orderNumber: string }> };
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { orderNumber } = await params;
-  return { title: `Zamówienie ${orderNumber} — Twoje Zdrowie` };
+  return { title: `Zamówienie ${orderNumber} — Well Botany` };
 }
 
 export default async function PotwierdzeniePage({ params }: Props) {
