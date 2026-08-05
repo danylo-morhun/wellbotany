@@ -1,6 +1,5 @@
 "use server";
 
-import { revalidatePath } from "next/cache";
 import { cookies } from "next/headers";
 import { prisma } from "@/lib/prisma";
 import { actionClient } from "@/lib/safe-action";
@@ -23,7 +22,6 @@ export const addToCart = actionClient
       update: { quantity: { increment: quantity } },
       create: { cartId, variantId, quantity },
     });
-    revalidatePath("/", "layout");
     return { success: true };
   });
 
@@ -31,7 +29,6 @@ export const removeFromCart = actionClient
   .schema(removeFromCartSchema)
   .action(async ({ parsedInput: { cartItemId } }) => {
     await prisma.cartItem.delete({ where: { id: cartItemId } });
-    revalidatePath("/", "layout");
     return { success: true };
   });
 
@@ -39,7 +36,6 @@ export const removeGiftSetFromCart = actionClient
   .schema(removeGiftSetFromCartSchema)
   .action(async ({ parsedInput: { giftSetGroupId } }) => {
     await prisma.cartItem.deleteMany({ where: { giftSetGroupId } });
-    revalidatePath("/", "layout");
     return { success: true };
   });
 
@@ -50,7 +46,6 @@ export const updateQuantity = actionClient
       where: { id: cartItemId },
       data: { quantity },
     });
-    revalidatePath("/", "layout");
     return { success: true };
   });
 
@@ -59,7 +54,6 @@ export const clearCart = actionClient.action(async () => {
   const cartId = cookieStore.get(CART_COOKIE_NAME)?.value;
   if (cartId) {
     await prisma.cartItem.deleteMany({ where: { cartId } });
-    revalidatePath("/", "layout");
   }
   return { success: true };
 });
