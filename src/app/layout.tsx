@@ -18,12 +18,12 @@ const geistMono = Geist_Mono({
 
 export const metadata: Metadata = {
   title: {
-    default: "Twoje Zdrowie — Suplementy i produkty bio",
-    template: "%s | Twoje Zdrowie",
+    default: "Well Botany — Suplementy i produkty bio",
+    template: "%s | Well Botany",
   },
   description:
     "Sklep z suplementami diety, witaminami i produktami bio. Szeroki wybór, szybka dostawa InPost i DHL.",
-  metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL ?? "https://twojezdrowie.pl"),
+  metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL ?? "https://wellbotany.pl"),
 };
 
 export default function RootLayout({

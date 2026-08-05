@@ -55,7 +55,7 @@ export function NavBar() {
               <PillBottle className="size-4" />
             </span>
             <span className="hidden text-lg font-extrabold tracking-tight text-foreground sm:inline">
-              Twoje Zdrowie
+              Well Botany
             </span>
           </Link>
 

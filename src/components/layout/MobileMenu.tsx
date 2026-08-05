@@ -37,7 +37,7 @@ export function MobileMenu({ navLinks, utilityLinks }: Props) {
             <span className="flex size-7 items-center justify-center rounded-full bg-primary text-primary-foreground">
               <PillBottle className="size-3.5" />
             </span>
-            Twoje Zdrowie
+            Well Botany
           </SheetTitle>
         </SheetHeader>
 

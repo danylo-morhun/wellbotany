@@ -35,7 +35,7 @@ export function Footer() {
               <span className="flex size-8 items-center justify-center rounded-full bg-card text-base font-extrabold text-primary">
                 +
               </span>
-              <span className="text-lg font-extrabold tracking-tight">Twoje Zdrowie</span>
+              <span className="text-lg font-extrabold tracking-tight">Well Botany</span>
             </Link>
             <p className="mt-4 max-w-xs text-sm leading-relaxed text-band-foreground/75">
               Certyfikowane suplementy diety, witaminy i produkty bio najwyższej jakości.
@@ -43,7 +43,7 @@ export function Footer() {
             <ul className="mt-6 space-y-2.5 text-sm text-band-foreground/75">
               <li className="flex items-center gap-2.5">
                 <Mail className="size-4 shrink-0" strokeWidth={1.75} />
-                kontakt@twojezdrowie.pl
+                kontakt@wellbotany.pl
               </li>
               <li className="flex items-center gap-2.5">
                 <Clock className="size-4 shrink-0" strokeWidth={1.75} />
@@ -105,7 +105,7 @@ export function Footer() {
             ))}
           </div>
           <div className="text-xs text-band-foreground/60">
-            <p>&copy; {new Date().getFullYear()} Twoje Zdrowie. Wszelkie prawa zastrzeżone.</p>
+            <p>&copy; {new Date().getFullYear()} Well Botany. Wszelkie prawa zastrzeżone.</p>
             <p className="mt-1">
               Suplement diety nie zastępuje zrównoważonej diety i zdrowego trybu życia.
             </p>
