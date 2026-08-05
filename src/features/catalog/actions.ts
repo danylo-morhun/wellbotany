@@ -348,7 +348,13 @@ export type RelatedProductSeed = {
  * shared category, which counts more than shared brand. Falls back to
  * featured, then newest, so the section is never empty.
  */
-export async function getRelatedProducts(seed: RelatedProductSeed, take = 4) {
+export const getRelatedProducts = unstable_cache(
+  async (seed: RelatedProductSeed, take = 4) => getRelatedProductsUncached(seed, take),
+  ["related-products"],
+  { tags: ["products"] },
+);
+
+async function getRelatedProductsUncached(seed: RelatedProductSeed, take = 4) {
   const orConditions: Prisma.ProductWhereInput[] = [];
   if (seed.categorySlug) orConditions.push({ category: { slug: seed.categorySlug } });
   if (seed.brandSlug) orConditions.push({ brand: { slug: seed.brandSlug } });
