@@ -1,10 +1,11 @@
 "use client";
 
-import { Menu, PillBottle, Search } from "lucide-react";
+import { Menu, PillBottle } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
+import { HeaderSearch } from "@/features/catalog/components/HeaderSearch";
 
 type MenuLink = { label: string; href: string };
 
@@ -40,16 +41,9 @@ export function MobileMenu({ navLinks, utilityLinks }: Props) {
           </SheetTitle>
         </SheetHeader>
 
-        <form action="/katalog" className="relative px-5 pt-4">
-          <Search className="pointer-events-none absolute left-8 top-1/2 mt-2 size-4 -translate-y-1/2 text-muted-foreground" />
-          <input
-            type="search"
-            name="szukaj"
-            placeholder="Szukaj produktów…"
-            aria-label="Szukaj produktów"
-            className="w-full rounded-full border border-border bg-muted/60 py-2.5 pl-10 pr-4 text-sm text-foreground placeholder:text-muted-foreground focus:border-transparent focus:outline-none focus:ring-2 focus:ring-ring/50"
-          />
-        </form>
+        <div className="px-5 pt-4">
+          <HeaderSearch />
+        </div>
 
         <nav className="flex flex-col gap-0.5 p-3">
           {navLinks.map((link) => (
