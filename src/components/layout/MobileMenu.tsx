@@ -1,6 +1,6 @@
 "use client";
 
-import { Menu, PillBottle } from "lucide-react";
+import { Menu } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
@@ -33,10 +33,7 @@ export function MobileMenu({ navLinks, utilityLinks }: Props) {
       </SheetTrigger>
       <SheetContent side="left" className="w-[300px] overflow-y-auto p-0">
         <SheetHeader className="border-b border-border px-5 py-4">
-          <SheetTitle className="flex items-center gap-2 text-base">
-            <span className="flex size-7 items-center justify-center rounded-full bg-primary text-primary-foreground">
-              <PillBottle className="size-3.5" />
-            </span>
+          <SheetTitle className="font-heading text-base font-bold tracking-tight">
             Well Botany
           </SheetTitle>
         </SheetHeader>

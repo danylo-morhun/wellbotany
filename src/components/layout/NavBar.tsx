@@ -1,4 +1,4 @@
-import { PillBottle, ShoppingBag, Truck, User } from "lucide-react";
+import { ShoppingBag, Truck, User } from "lucide-react";
 import Link from "next/link";
 import { Suspense } from "react";
 import { AdminLink } from "@/components/layout/AdminLink";
@@ -50,11 +50,8 @@ export function NavBar() {
       <div className="border-b border-border">
         <div className="mx-auto flex h-16 max-w-7xl items-center gap-2 px-4 sm:gap-4 sm:px-6 lg:gap-6 lg:px-8">
           <MobileMenu navLinks={navLinks} utilityLinks={utilityLinks} />
-          <Link href="/" className="flex shrink-0 items-center gap-2">
-            <span className="flex size-8 items-center justify-center rounded-full bg-primary text-primary-foreground">
-              <PillBottle className="size-4" />
-            </span>
-            <span className="hidden text-lg font-extrabold tracking-tight text-foreground sm:inline">
+          <Link href="/" className="flex shrink-0 items-center">
+            <span className="font-heading text-xl font-bold tracking-tight text-foreground">
               Well Botany
             </span>
           </Link>
