@@ -33,7 +33,7 @@ export function MobileMenu({ navLinks, utilityLinks }: Props) {
       </SheetTrigger>
       <SheetContent side="left" className="w-[300px] overflow-y-auto p-0">
         <SheetHeader className="border-b border-border px-5 py-4">
-          <SheetTitle className="font-heading text-base font-bold tracking-tight">
+          <SheetTitle className="font-heading text-lg font-bold tracking-tight">
             Well Botany
           </SheetTitle>
         </SheetHeader>

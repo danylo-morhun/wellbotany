@@ -51,7 +51,7 @@ export function NavBar() {
         <div className="mx-auto flex h-16 max-w-7xl items-center gap-2 px-4 sm:gap-4 sm:px-6 lg:gap-6 lg:px-8">
           <MobileMenu navLinks={navLinks} utilityLinks={utilityLinks} />
           <Link href="/" className="flex shrink-0 items-center">
-            <span className="font-heading text-xl font-bold tracking-tight text-foreground">
+            <span className="font-heading text-2xl font-bold tracking-tight text-foreground">
               Well Botany
             </span>
           </Link>
