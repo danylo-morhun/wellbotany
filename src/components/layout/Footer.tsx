@@ -1,4 +1,4 @@
-import { Clock, Mail, MapPin } from "lucide-react";
+import { Clock, Mail } from "lucide-react";
 import Link from "next/link";
 
 const footerLinks = {
@@ -22,20 +22,14 @@ const footerLinks = {
   ],
 };
 
-const paymentMethods = ["BLIK", "Przelewy24", "Apple Pay", "Google Pay"];
-const deliveryMethods = ["InPost", "DHL", "DPD"];
-
 export function Footer() {
   return (
     <footer className="mt-16 bg-band text-band-foreground print:hidden">
       <div className="mx-auto max-w-7xl px-4 py-14 sm:px-6 lg:px-8">
         <div className="grid grid-cols-2 gap-10 md:grid-cols-5">
           <div className="col-span-2">
-            <Link href="/" className="flex items-center gap-2">
-              <span className="flex size-8 items-center justify-center rounded-full bg-card text-base font-extrabold text-primary">
-                +
-              </span>
-              <span className="text-lg font-extrabold tracking-tight">Well Botany</span>
+            <Link href="/" className="flex items-center">
+              <span className="font-heading text-lg font-bold tracking-tight">Well Botany</span>
             </Link>
             <p className="mt-4 max-w-xs text-sm leading-relaxed text-band-foreground/75">
               Certyfikowane suplementy diety, witaminy i produkty bio najwyższej jakości.
@@ -48,10 +42,6 @@ export function Footer() {
               <li className="flex items-center gap-2.5">
                 <Clock className="size-4 shrink-0" strokeWidth={1.75} />
                 pon–pt 9:00–17:00
-              </li>
-              <li className="flex items-center gap-2.5">
-                <MapPin className="size-4 shrink-0" strokeWidth={1.75} />
-                Kalisz, Polska
               </li>
             </ul>
           </div>
@@ -81,35 +71,11 @@ export function Footer() {
           ))}
         </div>
 
-        <div className="mt-12 flex flex-col gap-4 border-t border-band-foreground/15 pt-8 md:flex-row md:items-center md:justify-between">
-          <div className="flex flex-wrap items-center gap-2">
-            {paymentMethods.map((method) => (
-              <span
-                key={method}
-                className="rounded-md bg-band-foreground/10 px-2.5 py-1 text-xs font-semibold text-band-foreground/90"
-              >
-                {method}
-              </span>
-            ))}
-            <span
-              className="mx-1 hidden h-4 w-px bg-band-foreground/20 sm:block"
-              aria-hidden="true"
-            />
-            {deliveryMethods.map((method) => (
-              <span
-                key={method}
-                className="rounded-md bg-band-foreground/10 px-2.5 py-1 text-xs font-semibold text-band-foreground/90"
-              >
-                {method}
-              </span>
-            ))}
-          </div>
-          <div className="text-xs text-band-foreground/60">
-            <p>&copy; {new Date().getFullYear()} Well Botany. Wszelkie prawa zastrzeżone.</p>
-            <p className="mt-1">
-              Suplement diety nie zastępuje zrównoważonej diety i zdrowego trybu życia.
-            </p>
-          </div>
+        <div className="mt-12 border-t border-band-foreground/15 pt-8 text-xs text-band-foreground/60">
+          <p>&copy; {new Date().getFullYear()} Well Botany. Wszelkie prawa zastrzeżone.</p>
+          <p className="mt-1">
+            Suplement diety nie zastępuje zrównoważonej diety i zdrowego trybu życia.
+          </p>
         </div>
       </div>
     </footer>
