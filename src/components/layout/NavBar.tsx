@@ -1,9 +1,10 @@
-import { PillBottle, Search, ShoppingBag, Truck, User } from "lucide-react";
+import { PillBottle, ShoppingBag, Truck, User } from "lucide-react";
 import Link from "next/link";
 import { Suspense } from "react";
 import { MobileMenu } from "@/components/layout/MobileMenu";
 import { ThemeToggle } from "@/components/layout/ThemeToggle";
 import { CartIcon } from "@/features/cart/components/CartIcon";
+import { HeaderSearch } from "@/features/catalog/components/HeaderSearch";
 import { WishlistIcon, WishlistIconFallback } from "@/features/wishlist/components/WishlistIcon";
 import { auth } from "@/lib/auth";
 
@@ -60,16 +61,7 @@ export async function NavBar() {
           </Link>
 
           <search className="hidden flex-1 justify-center md:flex">
-            <form action="/katalog" className="relative w-full max-w-lg">
-              <Search className="pointer-events-none absolute left-4 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
-              <input
-                type="search"
-                name="szukaj"
-                placeholder="Szukaj witamin, suplementów…"
-                aria-label="Szukaj produktów"
-                className="w-full rounded-full border border-border bg-muted/60 py-2.5 pl-11 pr-4 text-sm text-foreground transition-shadow duration-200 placeholder:text-muted-foreground focus:border-transparent focus:bg-card focus:shadow-card focus:outline-none focus:ring-2 focus:ring-ring/50 motion-reduce:transition-none"
-              />
-            </form>
+            <HeaderSearch className="w-full max-w-lg" />
           </search>
 
           <div className="ml-auto flex shrink-0 items-center gap-0.5 md:ml-0">
