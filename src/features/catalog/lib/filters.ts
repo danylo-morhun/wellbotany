@@ -84,13 +84,12 @@ export function buildProductWhere(filters: CatalogFilters): Prisma.ProductWhereI
   if (filters.onlyFeatured) {
     where.isFeatured = true;
   }
-  if (filters.search) {
-    where.OR = [
-      { namePl: { contains: filters.search, mode: "insensitive" } },
-      { shortDescPl: { contains: filters.search, mode: "insensitive" } },
-      { brand: { name: { contains: filters.search, mode: "insensitive" } } },
-    ];
-  }
+  // `filters.search` is intentionally not applied here as a DB `contains` —
+  // Postgres/Prisma text matching is exact-substring only and can't tolerate
+  // typos or "omega 3" vs "omega-3". Text relevance is handled downstream by
+  // fuse.js (see search-relevance.ts) over the products this structural
+  // where already narrowed down; this function only ever expresses
+  // structural filters (category/brand/tags/price/flags).
 
   return where;
 }
