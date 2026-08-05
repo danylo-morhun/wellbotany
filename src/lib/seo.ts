@@ -38,7 +38,7 @@ export function buildProductJsonLd(product: {
   if (prices.length === 0) return null;
   const lowPrice = Math.min(...prices) / 100;
   const highPrice = Math.max(...prices) / 100;
-  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "https://twojezdrowie.pl";
+  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "https://wellbotany.pl";
 
   return {
     "@context": "https://schema.org",
