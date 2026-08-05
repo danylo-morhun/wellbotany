@@ -3,7 +3,7 @@ import { auth } from "@/lib/auth";
 import { formatPrice } from "@/lib/format";
 import { prisma } from "@/lib/prisma";
 
-export const metadata = { title: "Szczegóły zamówienia — Twoje Zdrowie" };
+export const metadata = { title: "Szczegóły zamówienia — Well Botany" };
 
 const STATUS_LABELS: Record<string, string> = {
   PENDING: "Oczekujące",
