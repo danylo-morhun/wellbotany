@@ -1,13 +1,16 @@
 import type { Metadata } from "next";
-import { cookies } from "next/headers";
 import { notFound } from "next/navigation";
+import { Suspense } from "react";
 import { AdminEditBar } from "@/features/catalog/components/AdminEditBar";
 import { Breadcrumbs } from "@/features/catalog/components/Breadcrumbs";
 import { ProductActionsClient } from "@/features/catalog/components/ProductActionsClient";
 import { ProductCard } from "@/features/catalog/components/ProductCard";
 import { ProductGallery } from "@/features/catalog/components/ProductGallery";
-import { WishlistButton } from "@/features/wishlist/components/WishlistButton";
-import { getWishlist, WISHLIST_COOKIE_NAME } from "@/features/wishlist/lib/session";
+import {
+  ProductWishlistButton,
+  ProductWishlistButtonFallback,
+} from "@/features/wishlist/components/ProductWishlistButton";
+import { prisma } from "@/lib/prisma";
 import { sanitizeRichText } from "@/lib/sanitize";
 import { buildProductJsonLd, toJsonLdScript } from "@/lib/seo";
 import { getProduct, getRelatedProducts } from "../../../../features/catalog/actions";
@@ -15,6 +18,19 @@ import { getProduct, getRelatedProducts } from "../../../../features/catalog/act
 type Props = {
   params: Promise<{ slug: string }>;
 };
+
+// Prebuilds the most relevant slugs so most visitors hit an already-static
+// page; anything outside this set still renders on first visit and is then
+// cached like the rest (default dynamicParams behavior).
+export async function generateStaticParams() {
+  const products = await prisma.product.findMany({
+    where: { status: "ACTIVE" },
+    select: { slug: true },
+    orderBy: { updatedAt: "desc" },
+    take: 500,
+  });
+  return products.map((p) => ({ slug: p.slug }));
+}
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { slug } = await params;
@@ -41,19 +57,12 @@ export default async function ProduktPage({ params }: Props) {
   const product = await getProduct(slug);
   if (!product) notFound();
 
-  const [cookieStore, related] = await Promise.all([
-    cookies(),
-    getRelatedProducts({
-      id: product.id,
-      categorySlug: product.category?.slug ?? null,
-      brandSlug: product.brand?.slug ?? null,
-      tagSlugs: product.tags.map((t) => t.tag.slug),
-    }),
-  ]);
-
-  const wishlistId = cookieStore.get(WISHLIST_COOKIE_NAME)?.value;
-  const wishlist = wishlistId ? await getWishlist(wishlistId) : null;
-  const initialInWishlist = wishlist?.items.some((item) => item.productId === product.id) ?? false;
+  const related = await getRelatedProducts({
+    id: product.id,
+    categorySlug: product.category?.slug ?? null,
+    brandSlug: product.brand?.slug ?? null,
+    tagSlugs: product.tags.map((t) => t.tag.slug),
+  });
 
   const jsonLd = buildProductJsonLd({
     name: product.namePl,
@@ -94,7 +103,9 @@ export default async function ProduktPage({ params }: Props) {
 
   return (
     <>
-      <AdminEditBar productId={product.id} />
+      <Suspense fallback={null}>
+        <AdminEditBar productId={product.id} />
+      </Suspense>
 
       {jsonLd && (
         <script
@@ -143,7 +154,9 @@ export default async function ProduktPage({ params }: Props) {
                 <ProductActionsClient variants={product.variants} productName={product.namePl} />
               </div>
               <div className="flex items-end pb-0.5">
-                <WishlistButton productId={product.id} initialInWishlist={initialInWishlist} />
+                <Suspense fallback={<ProductWishlistButtonFallback />}>
+                  <ProductWishlistButton productId={product.id} />
+                </Suspense>
               </div>
             </div>
 
