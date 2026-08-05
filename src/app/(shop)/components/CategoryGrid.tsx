@@ -17,7 +17,7 @@ export function CategoryGrid({ categories }: Props) {
 
   return (
     <section className="space-y-4">
-      <h2 className="text-balance text-2xl font-bold tracking-tight">Kategorie</h2>
+      <h2 className="text-balance font-heading text-2xl font-bold tracking-tight">Kategorie</h2>
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4">
         {topLevel.map((cat) => (
           <Link

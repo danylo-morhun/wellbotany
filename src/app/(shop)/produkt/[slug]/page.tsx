@@ -222,7 +222,7 @@ export default async function ProduktPage({ params }: Props) {
 
         {related.length > 0 && (
           <section className="mt-16">
-            <h2 className="mb-6 text-2xl">Podobne produkty</h2>
+            <h2 className="mb-6 font-heading text-2xl">Podobne produkty</h2>
             <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
               {related.map((p) => (
                 <ProductCard key={p.id} product={p} />

@@ -17,7 +17,7 @@ export function NewsletterSection() {
         <span className="mx-auto mb-4 flex size-12 items-center justify-center rounded-full bg-band-foreground/10">
           <Bell className="size-6" strokeWidth={1.75} />
         </span>
-        <h2 className="mb-2 text-2xl font-bold tracking-tight">Bądź na bieżąco</h2>
+        <h2 className="mb-2 font-heading text-2xl font-bold tracking-tight">Bądź na bieżąco</h2>
         <p className="mx-auto max-w-md text-band-foreground/75">
           Zapisz się do newslettera i otrzymuj informacje o nowościach i promocjach.
         </p>
