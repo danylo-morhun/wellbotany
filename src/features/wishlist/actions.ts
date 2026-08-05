@@ -1,6 +1,5 @@
 "use server";
 
-import { revalidatePath } from "next/cache";
 import { cookies } from "next/headers";
 import { prisma } from "@/lib/prisma";
 import { actionClient } from "@/lib/safe-action";
@@ -44,12 +43,10 @@ export const toggleWishlist = actionClient
 
     if (existing) {
       await prisma.wishlistItem.delete({ where: { id: existing.id } });
-      revalidatePath("/", "layout");
       return { added: false };
     }
 
     await prisma.wishlistItem.create({ data: { wishlistId, productId } });
-    revalidatePath("/", "layout");
     return { added: true };
   });
 
@@ -57,7 +54,6 @@ export const removeFromWishlist = actionClient
   .schema(removeFromWishlistSchema)
   .action(async ({ parsedInput: { wishlistItemId } }) => {
     await prisma.wishlistItem.delete({ where: { id: wishlistItemId } });
-    revalidatePath("/", "layout");
     return { success: true };
   });
 
@@ -66,7 +62,6 @@ export const clearWishlist = actionClient.action(async () => {
   const wishlistId = cookieStore.get(WISHLIST_COOKIE_NAME)?.value;
   if (wishlistId) {
     await prisma.wishlistItem.deleteMany({ where: { wishlistId } });
-    revalidatePath("/", "layout");
   }
   return { success: true };
 });
