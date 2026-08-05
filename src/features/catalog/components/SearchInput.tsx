@@ -3,6 +3,7 @@
 import { Search } from "lucide-react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
+import { useDebouncedCallback } from "use-debounce";
 
 export function SearchInput() {
   const router = useRouter();
@@ -36,6 +37,8 @@ export function SearchInput() {
     router.push(`/katalog?${params.toString()}`);
   }
 
+  const debouncedCommit = useDebouncedCallback(commit, 400);
+
   return (
     <div className="relative">
       <Search className="pointer-events-none absolute left-2.5 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
@@ -43,9 +46,9 @@ export function SearchInput() {
         ref={inputRef}
         type="search"
         value={value}
-        onChange={(e) => setValue(e.target.value)}
-        onKeyDown={(e) => {
-          if (e.key === "Enter") commit(value);
+        onChange={(e) => {
+          setValue(e.target.value);
+          debouncedCommit(e.target.value);
         }}
         placeholder="Szukaj produktów…"
         className="w-full rounded-lg border border-border bg-card py-2 pl-8 pr-3 text-sm text-foreground placeholder:text-muted-foreground focus:border-transparent focus:outline-none focus:ring-2 focus:ring-ring/50"
