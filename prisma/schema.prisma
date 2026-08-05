@@ -1,4 +1,4 @@
-// Twoje Zdrowie — E-commerce
+// Well Botany — E-commerce
 // Prices stored as Int PLN grosz (4990 = 49.90 PLN) — never Float for money
 // Multi-language: Polish primary (Pl), English (En), Ukrainian (Uk)
 // BaseLinker is the integration hub for Allegro + InPost + DHL/DPD
