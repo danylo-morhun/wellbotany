@@ -2,6 +2,7 @@ import Fuse, { type IFuseOptions } from "fuse.js";
 
 export type ScorableProduct = {
   namePl: string;
+  slug?: string;
   shortDescPl?: string | null;
   brand?: { name: string } | null;
   category?: { namePl: string } | null;
@@ -18,6 +19,11 @@ const FUSE_OPTIONS: IFuseOptions<ScorableProduct> = {
   threshold: 0.4,
   keys: [
     { name: "namePl", weight: 1 },
+    {
+      name: "slug",
+      weight: 0.4,
+      getFn: (p) => p.slug ?? "",
+    },
     {
       name: "brandName",
       weight: 0.6,
