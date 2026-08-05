@@ -1,4 +1,4 @@
-# Twoje Zdrowie — E-Commerce Platform
+# Well Botany — E-Commerce Platform
 
 [![CI Pipeline](https://github.com/danylo-morhun/zielarnia/actions/workflows/ci.yml/badge.svg)](https://github.com/danylo-morhun/zielarnia/actions/workflows/ci.yml)
 [![Next.js 16](https://img.shields.io/badge/Next.js-16_App_Router-black?logo=next.js)](https://nextjs.org/)
