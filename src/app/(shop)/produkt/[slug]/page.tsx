@@ -1,3 +1,4 @@
+import { AlertTriangle, Check, ShieldCheck } from "lucide-react";
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { Suspense } from "react";
@@ -100,6 +101,17 @@ export default async function ProduktPage({ params }: Props) {
     pl?: string;
     en?: string;
   } | null;
+  const nutritionFacts = product.nutritionFacts as Array<{
+    name: string;
+    amount: string;
+    rws?: string;
+  }> | null;
+  const allergenInfo = product.allergenInfo as {
+    contains?: string[];
+    mayContain?: string[];
+  } | null;
+  const benefitsPl = product.benefitsPl as string[] | null;
+  const certifications = product.certifications as string[] | null;
 
   return (
     <>
@@ -136,6 +148,17 @@ export default async function ProduktPage({ params }: Props) {
 
             {product.shortDescPl && <p className="text-muted-foreground">{product.shortDescPl}</p>}
 
+            {benefitsPl && benefitsPl.length > 0 && (
+              <ul className="grid gap-2 sm:grid-cols-2">
+                {benefitsPl.map((benefit) => (
+                  <li key={benefit} className="flex items-start gap-2 text-sm text-foreground">
+                    <Check className="mt-0.5 size-4 shrink-0 text-primary" aria-hidden />
+                    {benefit}
+                  </li>
+                ))}
+              </ul>
+            )}
+
             {product.tags.length > 0 && (
               <div className="flex flex-wrap gap-2">
                 {product.tags.map(({ tag }) => (
@@ -147,6 +170,13 @@ export default async function ProduktPage({ params }: Props) {
                   </span>
                 ))}
               </div>
+            )}
+
+            {product.ageRestriction && (
+              <p className="flex items-center gap-2 text-sm font-medium text-destructive">
+                <AlertTriangle className="size-4 shrink-0" aria-hidden />
+                Produkt przeznaczony dla osób powyżej {product.ageRestriction} lat
+              </p>
             )}
 
             <div className="flex gap-3">
@@ -176,7 +206,27 @@ export default async function ProduktPage({ params }: Props) {
                     <dd className="font-medium">{product.servingsPerContainer}</dd>
                   </>
                 )}
+                {product.countryOfOrigin && (
+                  <>
+                    <dt className="text-muted-foreground">Kraj pochodzenia</dt>
+                    <dd className="font-medium">{product.countryOfOrigin}</dd>
+                  </>
+                )}
               </dl>
+            )}
+
+            {certifications && certifications.length > 0 && (
+              <div className="flex flex-wrap gap-2">
+                {certifications.map((cert) => (
+                  <span
+                    key={cert}
+                    className="flex items-center gap-1 rounded-full bg-secondary/60 px-3 py-1 text-xs font-medium text-secondary-foreground"
+                  >
+                    <ShieldCheck className="size-3.5" aria-hidden />
+                    {cert}
+                  </span>
+                ))}
+              </div>
             )}
           </div>
         </div>
@@ -192,10 +242,61 @@ export default async function ProduktPage({ params }: Props) {
             </section>
           )}
 
-          {ingredients?.pl && (
+          {product.usageInstructionsPl && (
+            <section>
+              <h2 className="text-lg font-semibold text-foreground">Sposób użycia</h2>
+              <p className="mt-3 text-sm text-muted-foreground">{product.usageInstructionsPl}</p>
+            </section>
+          )}
+
+          {(ingredients?.pl || (nutritionFacts && nutritionFacts.length > 0) || allergenInfo) && (
             <section>
               <h2 className="text-lg font-semibold text-foreground">Skład</h2>
-              <p className="mt-3 text-sm text-muted-foreground">{ingredients.pl}</p>
+              {ingredients?.pl && (
+                <p className="mt-3 text-sm text-muted-foreground">{ingredients.pl}</p>
+              )}
+
+              {nutritionFacts && nutritionFacts.length > 0 && (
+                <div className="mt-4 overflow-x-auto">
+                  <table className="w-full text-left text-sm">
+                    <thead>
+                      <tr className="border-b border-border text-xs text-muted-foreground">
+                        <th className="py-2 font-medium">Składnik</th>
+                        <th className="py-2 font-medium">Dawka na porcję</th>
+                        <th className="py-2 font-medium">%RWS</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {nutritionFacts.map((row) => (
+                        <tr key={row.name} className="border-b border-border/60 last:border-0">
+                          <td className="py-2 text-foreground">{row.name}</td>
+                          <td className="py-2 text-muted-foreground">{row.amount}</td>
+                          <td className="py-2 text-muted-foreground">{row.rws ?? "—"}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              )}
+
+              {allergenInfo && (
+                <div className="mt-4 space-y-1 text-sm text-muted-foreground">
+                  {allergenInfo.contains && allergenInfo.contains.length > 0 && (
+                    <p>
+                      <span className="font-medium text-foreground">Zawiera:</span>{" "}
+                      {allergenInfo.contains.join(", ")}
+                    </p>
+                  )}
+                  {allergenInfo.mayContain && allergenInfo.mayContain.length > 0 && (
+                    <p>
+                      <span className="font-medium text-foreground">
+                        Może zawierać śladowe ilości:
+                      </span>{" "}
+                      {allergenInfo.mayContain.join(", ")}
+                    </p>
+                  )}
+                </div>
+              )}
             </section>
           )}
 
@@ -206,17 +307,31 @@ export default async function ProduktPage({ params }: Props) {
             </section>
           )}
 
-          {healthWarnings && healthWarnings.length > 0 && (
+          {((healthWarnings && healthWarnings.length > 0) || product.contraindicationsPl) && (
             <section className="rounded-2xl bg-secondary/60 p-5">
-              <h2 className="text-sm font-semibold text-foreground">Informacje regulacyjne</h2>
-              <ul className="mt-2 space-y-1">
-                {healthWarnings.map((warning) => (
-                  <li key={warning} className="text-xs text-muted-foreground">
-                    {warning}
-                  </li>
-                ))}
-              </ul>
+              <h2 className="text-sm font-semibold text-foreground">Ważne informacje</h2>
+              {healthWarnings && healthWarnings.length > 0 && (
+                <ul className="mt-2 space-y-1">
+                  {healthWarnings.map((warning) => (
+                    <li key={warning} className="text-xs text-muted-foreground">
+                      {warning}
+                    </li>
+                  ))}
+                </ul>
+              )}
+              {product.contraindicationsPl && (
+                <p className="mt-3 text-xs text-muted-foreground">
+                  <span className="font-medium text-foreground">Przeciwwskazania:</span>{" "}
+                  {product.contraindicationsPl}
+                </p>
+              )}
             </section>
+          )}
+
+          {product.responsibleEntity && (
+            <p className="text-xs text-muted-foreground">
+              Podmiot odpowiedzialny: {product.responsibleEntity}
+            </p>
           )}
         </div>
 
