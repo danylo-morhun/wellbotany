@@ -1,6 +1,7 @@
 "use server";
 
 import { revalidatePath, revalidateTag } from "next/cache";
+import { rankBySearchRelevance } from "@/features/catalog/lib/search-relevance";
 import { ActionError } from "@/lib/action-error";
 import { syncProductToBaselinker, syncStockToBaselinker } from "@/lib/baselinker/inventory";
 import { prisma } from "@/lib/prisma";
@@ -27,11 +28,26 @@ import {
 /** Resolves a selection ("ids" or "all matching filters") to a concrete list of product ids. */
 async function resolveProductIds(selection: ProductSelectionInput): Promise<string[]> {
   if (selection.mode === "ids") return selection.ids ?? [];
-  const matching = await prisma.product.findMany({
-    where: buildProductWhere(selection.filters ?? {}),
-    select: { id: true },
-  });
+  const filters = selection.filters ?? {};
+  const where = buildProductWhere(filters);
   const excluded = new Set(selection.excludedIds ?? []);
+
+  if (filters.search) {
+    const candidates = await prisma.product.findMany({
+      where,
+      select: {
+        id: true,
+        namePl: true,
+        slug: true,
+        brand: { select: { name: true } },
+        category: { select: { namePl: true } },
+      },
+    });
+    const ranked = rankBySearchRelevance(candidates, filters.search);
+    return ranked.map((p) => p.id).filter((id) => !excluded.has(id));
+  }
+
+  const matching = await prisma.product.findMany({ where, select: { id: true } });
   return matching.map((p) => p.id).filter((id) => !excluded.has(id));
 }
 
