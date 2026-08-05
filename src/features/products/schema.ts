@@ -48,8 +48,11 @@ export const productSchema = z.object({
   nameUk: z.string().max(300).optional(),
   shortDescPl: z.string().max(500).optional(),
   shortDescEn: z.string().max(500).optional(),
+  shortDescUk: z.string().max(500).optional(),
   descriptionPl: z.string().optional(),
   descriptionEn: z.string().optional(),
+  descriptionUk: z.string().optional(),
+  benefitsPl: z.array(z.string().max(200)).max(6).default([]),
   categoryId: z.string().optional(),
   brandId: z.string().optional(),
   isFeatured: z.boolean().default(false),
@@ -60,8 +63,30 @@ export const productSchema = z.object({
   servingsPerContainer: z.coerce.number().int().positive().optional(),
   storageInfo: z.string().max(500).optional(),
   countryOfOrigin: z.string().length(2).optional().or(z.literal("")),
+  usageInstructionsPl: z.string().max(2000).optional(),
+  ingredients: z
+    .object({ pl: z.string().max(4000).optional(), en: z.string().max(4000).optional() })
+    .optional(),
+  nutritionFacts: z
+    .array(
+      z.object({
+        name: z.string().max(200),
+        amount: z.string().max(100),
+        rws: z.string().max(20).optional(),
+      }),
+    )
+    .default([]),
+  allergenInfo: z
+    .object({
+      contains: z.array(z.string().max(100)).default([]),
+      mayContain: z.array(z.string().max(100)).default([]),
+    })
+    .optional(),
   healthWarnings: z.array(z.string()).default([]),
+  contraindicationsPl: z.string().max(2000).optional(),
   ageRestriction: z.coerce.number().int().positive().optional(),
+  certifications: z.array(z.string().max(60)).max(10).default([]),
+  responsibleEntity: z.string().max(300).optional(),
   metaTitlePl: z.string().max(120).optional(),
   metaTitleEn: z.string().max(120).optional(),
   metaDescPl: z.string().max(320).optional(),
