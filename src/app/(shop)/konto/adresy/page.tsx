@@ -3,7 +3,7 @@ import { AddressesClient } from "@/features/account/components/AddressesClient";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 
-export const metadata = { title: "Adresy — Twoje Zdrowie" };
+export const metadata = { title: "Adresy — Well Botany" };
 
 export default async function AdresyPage() {
   const session = await auth();

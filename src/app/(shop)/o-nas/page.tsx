@@ -3,9 +3,9 @@ import type { Metadata } from "next";
 import Link from "next/link";
 
 export const metadata: Metadata = {
-  title: "O nas — Twoje Zdrowie",
+  title: "O nas — Well Botany",
   description:
-    "Poznaj Twoje Zdrowie — polski sklep z certyfikowanymi suplementami diety, witaminami i produktami bio.",
+    "Poznaj Well Botany — polski sklep z certyfikowanymi suplementami diety, witaminami i produktami bio.",
 };
 
 const values = [
@@ -34,9 +34,9 @@ export default function ONasPage() {
       <div className="space-y-10 text-sm leading-relaxed">
         <section className="space-y-3 text-muted-foreground">
           <p>
-            Twoje Zdrowie to polski sklep internetowy z certyfikowanymi suplementami diety,
-            witaminami i produktami bio. Powstał z prostego przekonania: dbanie o zdrowie nie
-            powinno wymagać przedzierania się przez marketingowe obietnice.
+            Well Botany to polski sklep internetowy z certyfikowanymi suplementami diety, witaminami
+            i produktami bio. Powstał z prostego przekonania: dbanie o zdrowie nie powinno wymagać
+            przedzierania się przez marketingowe obietnice.
           </p>
           <p>
             Zamiast tego stawiamy na sprawdzony skład, uczciwe ceny i rzetelne informacje o każdym

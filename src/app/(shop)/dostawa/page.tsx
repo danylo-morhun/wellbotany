@@ -3,7 +3,7 @@ import type { Metadata } from "next";
 export const dynamic = "force-static";
 
 export const metadata: Metadata = {
-  title: "Dostawa i płatność — Twoje Zdrowie",
+  title: "Dostawa i płatność — Well Botany",
   description: "Informacje o metodach dostawy, kosztach i czasie realizacji zamówień.",
 };
 

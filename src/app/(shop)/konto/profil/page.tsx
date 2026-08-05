@@ -3,7 +3,7 @@ import { ProfileForm } from "@/features/account/components/ProfileForm";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 
-export const metadata = { title: "Profil — Twoje Zdrowie" };
+export const metadata = { title: "Profil — Well Botany" };
 
 export default async function ProfilPage() {
   const session = await auth();

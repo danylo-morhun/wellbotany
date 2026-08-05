@@ -4,7 +4,7 @@ import { PrintButton } from "@/components/PrintButton";
 export const dynamic = "force-static";
 
 export const metadata: Metadata = {
-  title: "Zwroty i reklamacje — Twoje Zdrowie",
+  title: "Zwroty i reklamacje — Well Botany",
   description: "Informacje o prawie odstąpienia od umowy, zwrotach i reklamacjach.",
 };
 
@@ -25,10 +25,10 @@ export default function ZwrotyPage() {
             Aby skorzystać z prawa odstąpienia, poinformuj nas o swojej decyzji drogą e-mailową na
             adres{" "}
             <a
-              href="mailto:kontakt@twojezdrowie.pl"
+              href="mailto:kontakt@wellbotany.pl"
               className="text-primary underline-offset-4 hover:underline"
             >
-              kontakt@twojezdrowie.pl
+              kontakt@wellbotany.pl
             </a>{" "}
             przed upływem terminu. Wzór formularza odstąpienia dostępny jest poniżej.
           </p>
@@ -40,10 +40,10 @@ export default function ZwrotyPage() {
             <li>
               Wyślij e-mail na{" "}
               <a
-                href="mailto:kontakt@twojezdrowie.pl"
+                href="mailto:kontakt@wellbotany.pl"
                 className="text-primary underline-offset-4 hover:underline"
               >
-                kontakt@twojezdrowie.pl
+                kontakt@wellbotany.pl
               </a>{" "}
               z numerem zamówienia i informacją, które produkty zwracasz.
             </li>
@@ -71,10 +71,10 @@ export default function ZwrotyPage() {
             <li>
               E-mailem:{" "}
               <a
-                href="mailto:kontakt@twojezdrowie.pl"
+                href="mailto:kontakt@wellbotany.pl"
                 className="text-primary underline-offset-4 hover:underline"
               >
-                kontakt@twojezdrowie.pl
+                kontakt@wellbotany.pl
               </a>
             </li>
             <li>Podaj numer zamówienia, opis wady i zdjęcia (jeśli dotyczy).</li>
@@ -111,7 +111,7 @@ export default function ZwrotyPage() {
           </p>
           <div className="mt-4 rounded-xl bg-muted p-4 text-xs text-muted-foreground">
             <p className="font-semibold text-foreground">WZÓR FORMULARZA ODSTĄPIENIA OD UMOWY</p>
-            <p className="mt-2">Adresat: Twoje Zdrowie, kontakt@twojezdrowie.pl</p>
+            <p className="mt-2">Adresat: Well Botany, kontakt@wellbotany.pl</p>
             <p className="mt-2">
               Niniejszym informuję o moim odstąpieniu od umowy sprzedaży następujących towarów:
               [nazwa towaru]

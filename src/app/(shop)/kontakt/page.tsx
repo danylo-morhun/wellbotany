@@ -3,7 +3,7 @@ import type { Metadata } from "next";
 import { ContactForm } from "@/features/contact/components/ContactForm";
 
 export const metadata: Metadata = {
-  title: "Kontakt — Twoje Zdrowie",
+  title: "Kontakt — Well Botany",
   description: "Skontaktuj się z nami — e-mail, telefon, godziny obsługi.",
 };
 
@@ -23,10 +23,10 @@ export default function KontaktPage() {
             <div>
               <p className="text-sm font-semibold">E-mail</p>
               <a
-                href="mailto:kontakt@twojezdrowie.pl"
+                href="mailto:kontakt@wellbotany.pl"
                 className="mt-1 block text-sm text-muted-foreground hover:text-primary"
               >
-                kontakt@twojezdrowie.pl
+                kontakt@wellbotany.pl
               </a>
               <p className="mt-1 text-xs text-muted-foreground">
                 Odpowiedź w ciągu 24 h (dni robocze)
@@ -62,7 +62,7 @@ export default function KontaktPage() {
             <div>
               <p className="text-sm font-semibold">Adres</p>
               <p className="mt-1 text-sm text-muted-foreground">
-                Twoje Zdrowie sp. z o.o.
+                Well Botany sp. z o.o.
                 <br />
                 ul. Przykładowa 1
                 <br />

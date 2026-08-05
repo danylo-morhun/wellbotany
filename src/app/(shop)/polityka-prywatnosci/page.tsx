@@ -4,14 +4,14 @@ import Link from "next/link";
 export const dynamic = "force-static";
 
 export const metadata: Metadata = {
-  title: "Polityka prywatności — Twoje Zdrowie",
-  description: "Zasady przetwarzania danych osobowych w sklepie Twoje Zdrowie.",
+  title: "Polityka prywatności — Well Botany",
+  description: "Zasady przetwarzania danych osobowych w sklepie Well Botany.",
 };
 
 const sections = [
   {
     title: "Administrator danych",
-    body: "Administratorem Twoich danych osobowych jest Twoje Zdrowie z siedzibą w Kaliszu. W sprawach dotyczących danych osobowych możesz skontaktować się z nami pod adresem kontakt@twojezdrowie.pl.",
+    body: "Administratorem Twoich danych osobowych jest Well Botany z siedzibą w Kaliszu. W sprawach dotyczących danych osobowych możesz skontaktować się z nami pod adresem kontakt@wellbotany.pl.",
   },
   {
     title: "Jakie dane przetwarzamy",

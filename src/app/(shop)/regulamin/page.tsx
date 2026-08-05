@@ -4,15 +4,15 @@ import Link from "next/link";
 export const dynamic = "force-static";
 
 export const metadata: Metadata = {
-  title: "Regulamin — Twoje Zdrowie",
-  description: "Regulamin sklepu internetowego Twoje Zdrowie.",
+  title: "Regulamin — Well Botany",
+  description: "Regulamin sklepu internetowego Well Botany.",
 };
 
 const sections = [
   {
     title: "§1 Postanowienia ogólne",
     items: [
-      "Sklep internetowy Twoje Zdrowie prowadzi sprzedaż detaliczną suplementów diety, witamin i produktów bio za pośrednictwem sieci Internet.",
+      "Sklep internetowy Well Botany prowadzi sprzedaż detaliczną suplementów diety, witamin i produktów bio za pośrednictwem sieci Internet.",
       "Niniejszy regulamin określa zasady korzystania ze sklepu, składania zamówień, dostarczania towarów, uprawnienia kupującego oraz zasady reklamacji.",
       "Złożenie zamówienia oznacza akceptację niniejszego regulaminu.",
     ],

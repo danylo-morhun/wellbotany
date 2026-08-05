@@ -3,7 +3,7 @@ import type { Metadata } from "next";
 export const dynamic = "force-static";
 
 export const metadata: Metadata = {
-  title: "FAQ — Twoje Zdrowie",
+  title: "FAQ — Well Botany",
   description: "Najczęściej zadawane pytania dotyczące zamówień, płatności i produktów.",
 };
 
