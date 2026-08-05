@@ -9,5 +9,4 @@ export function resendClient(): Resend | null {
   return client;
 }
 
-export const EMAIL_FROM =
-  process.env.RESEND_FROM_EMAIL ?? "Twoje Zdrowie <zamowienia@twojezdrowie.pl>";
+export const EMAIL_FROM = process.env.RESEND_FROM_EMAIL ?? "Well Botany <zamowienia@wellbotany.pl>";
