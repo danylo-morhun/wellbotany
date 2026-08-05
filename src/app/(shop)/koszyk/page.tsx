@@ -10,7 +10,7 @@ import { CART_COOKIE_NAME, getCart, getCartByCustomerId } from "@/features/cart/
 import { auth } from "@/lib/auth";
 
 export const metadata: Metadata = {
-  title: "Koszyk — Twoje Zdrowie",
+  title: "Koszyk — Well Botany",
 };
 
 export default async function KoszykPage() {
