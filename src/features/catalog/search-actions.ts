@@ -1,7 +1,7 @@
 "use server";
 
 import { actionClient } from "@/lib/safe-action";
-import { getSearchableProducts } from "./actions";
+import { fetchProductsByIds, getSearchableProducts } from "./actions";
 import { rankBySearchRelevance } from "./lib/search-relevance";
 import { searchSuggestionsSchema } from "./schema";
 
@@ -11,9 +11,12 @@ export const searchProductSuggestions = actionClient
   .schema(searchSuggestionsSchema)
   .action(async ({ parsedInput: { query } }) => {
     const candidates = await getSearchableProducts();
-    const ranked = rankBySearchRelevance(candidates, query).slice(0, SUGGESTION_RESULT_TAKE);
+    const rankedIds = rankBySearchRelevance(candidates, query)
+      .slice(0, SUGGESTION_RESULT_TAKE)
+      .map((p) => p.id);
+    const products = await fetchProductsByIds(rankedIds);
 
-    return ranked.map((p) => ({
+    return products.map((p) => ({
       slug: p.slug,
       namePl: p.namePl,
       brandName: p.brand?.name ?? null,

@@ -44,16 +44,42 @@ const PRODUCT_LIST_SELECT = {
 // catalog, cached) so recall never depends on this cap.
 const RELEVANCE_CANDIDATE_CAP = 500;
 
+// Only what fuzzy-ranking + the in-stock/out-of-stock split need — the
+// candidate set is the full active catalog (or up to RELEVANCE_CANDIDATE_CAP
+// rows), so keeping this lean matters; images/pricing are fetched afterward,
+// only for the handful of rows that actually end up on the page.
+const PRODUCT_SEARCH_SELECT = {
+  id: true,
+  slug: true,
+  namePl: true,
+  shortDescPl: true,
+  brand: { select: { name: true } },
+  category: { select: { namePl: true } },
+  tags: { select: { tag: { select: { namePl: true } } } },
+  variants: { where: { isActive: true }, select: { stock: true } },
+} as const;
+
 /** Every active product, search-relevant fields only — cached for fast, DB-free fuzzy search on every keystroke. */
 export const getSearchableProducts = unstable_cache(
   async () =>
     prisma.product.findMany({
       where: { status: "ACTIVE" },
-      select: PRODUCT_LIST_SELECT,
+      select: PRODUCT_SEARCH_SELECT,
     }),
   ["searchable-products"],
   { tags: ["products"] },
 );
+
+/** Resolves ranked candidate ids to full display data, in the same order. */
+export async function fetchProductsByIds(ids: string[]) {
+  if (ids.length === 0) return [];
+  const rows = await prisma.product.findMany({
+    where: { id: { in: ids } },
+    select: PRODUCT_LIST_SELECT,
+  });
+  const byId = new Map(rows.map((row) => [row.id, row]));
+  return ids.map((id) => byId.get(id)).filter((row): row is NonNullable<typeof row> => row != null);
+}
 
 function hasStructuralFilter(filters: CatalogFilters): boolean {
   return Boolean(
@@ -76,19 +102,21 @@ export async function getProducts(filters: CatalogFilters) {
   // A search term with the default sort gets relevance-ranked instead of the
   // usual DB-paginated newest-first order; an explicit sort choice still wins.
   if (filters.search && filters.sort === "newest") {
-    const matches = hasStructuralFilter(filters)
+    const candidates = hasStructuralFilter(filters)
       ? await prisma.product.findMany({
           where,
           orderBy,
           take: RELEVANCE_CANDIDATE_CAP,
-          select: PRODUCT_LIST_SELECT,
+          select: PRODUCT_SEARCH_SELECT,
         })
       : await getSearchableProducts();
-    const ranked = rankBySearchRelevance(matches, filters.search);
+    const ranked = rankBySearchRelevance(candidates, filters.search);
     const inStockRanked = ranked.filter((p) => p.variants.some((v) => v.stock > 0));
     const outOfStockRanked = ranked.filter((p) => !p.variants.some((v) => v.stock > 0));
-    const items = [...inStockRanked, ...outOfStockRanked].slice(skip, skip + filters.perPage);
-    return { items, total: ranked.length };
+    const orderedIds = [...inStockRanked, ...outOfStockRanked].map((p) => p.id);
+    const pageIds = orderedIds.slice(skip, skip + filters.perPage);
+    const items = await fetchProductsByIds(pageIds);
+    return { items, total: orderedIds.length };
   }
 
   // Prisma can only order a to-many relation by `_count`, not by a threshold
