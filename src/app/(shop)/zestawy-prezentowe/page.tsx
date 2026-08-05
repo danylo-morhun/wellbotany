@@ -5,7 +5,7 @@ import { GiftSetCard } from "@/features/gift-sets/components/GiftSetCard";
 import { prisma } from "@/lib/prisma";
 
 export const metadata: Metadata = {
-  title: "Zestawy prezentowe — Twoje Zdrowie",
+  title: "Zestawy prezentowe — Well Botany",
 };
 
 export default async function GiftSetsPage() {

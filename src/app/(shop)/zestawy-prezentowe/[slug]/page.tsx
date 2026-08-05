@@ -31,7 +31,7 @@ async function getGiftSet(slug: string) {
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { slug } = await params;
   const giftSet = await getGiftSet(slug);
-  return { title: giftSet ? `${giftSet.namePl} — Twoje Zdrowie` : "Zestaw prezentowy" };
+  return { title: giftSet ? `${giftSet.namePl} — Well Botany` : "Zestaw prezentowy" };
 }
 
 export default async function GiftSetDetailPage({ params }: Props) {
