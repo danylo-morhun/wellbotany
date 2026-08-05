@@ -1,16 +1,22 @@
 import type { Metadata } from "next";
 import Image from "next/image";
 import { notFound } from "next/navigation";
+import { Suspense } from "react";
 import { Breadcrumbs } from "@/features/catalog/components/Breadcrumbs";
-import { Pagination } from "@/features/catalog/components/Pagination";
-import { ProductGrid } from "@/features/catalog/components/ProductGrid";
-import { parseCatalogFilters } from "@/features/catalog/lib/filters";
-import { getBrandBySlug, getProducts } from "../../../../features/catalog/actions";
+import { CategoryProductResults } from "@/features/catalog/components/CategoryProductResults";
+import { ProductGridSkeleton } from "@/features/catalog/components/ProductGridSkeleton";
+import { prisma } from "@/lib/prisma";
+import { getBrandBySlug } from "../../../../features/catalog/actions";
 
 type Props = {
   params: Promise<{ slug: string }>;
   searchParams: Promise<Record<string, string | string[] | undefined>>;
 };
+
+export async function generateStaticParams() {
+  const brands = await prisma.brand.findMany({ select: { slug: true } });
+  return brands.map((b) => ({ slug: b.slug }));
+}
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { slug } = await params;
@@ -25,13 +31,9 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 
 export default async function MarkiSlugPage({ params, searchParams }: Props) {
   const { slug } = await params;
-  const rawParams = await searchParams;
 
   const brand = await getBrandBySlug(slug);
   if (!brand) notFound();
-
-  const filters = parseCatalogFilters({ ...rawParams, marka: slug });
-  const { items, total } = await getProducts(filters);
 
   const breadcrumbs = [
     { name: "Strona główna", href: "/" },
@@ -69,13 +71,14 @@ export default async function MarkiSlugPage({ params, searchParams }: Props) {
         </div>
       </div>
 
-      <p className="mt-4 text-sm text-muted-foreground">
-        {total} {total === 1 ? "produkt" : total < 5 ? "produkty" : "produktów"}
-      </p>
-
       <div className="mt-6 space-y-6">
-        <ProductGrid products={items} />
-        <Pagination filters={filters} total={total} basePath={`/marki/${slug}`} />
+        <Suspense fallback={<ProductGridSkeleton count={8} />}>
+          <CategoryProductResults
+            searchParams={searchParams}
+            extraFilters={{ marka: slug }}
+            basePath={`/marki/${slug}`}
+          />
+        </Suspense>
       </div>
     </div>
   );

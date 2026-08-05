@@ -2,12 +2,11 @@ import type { Metadata } from "next";
 import { Suspense } from "react";
 import { ActiveFilterChips } from "@/features/catalog/components/ActiveFilterChips";
 import { Breadcrumbs } from "@/features/catalog/components/Breadcrumbs";
+import { CategoryProductResults } from "@/features/catalog/components/CategoryProductResults";
 import { FilterDrawerButton } from "@/features/catalog/components/FilterDrawerButton";
 import { FilterSidebar } from "@/features/catalog/components/FilterSidebar";
-import { ProductGridServer } from "@/features/catalog/components/ProductGridServer";
 import { ProductGridSkeleton } from "@/features/catalog/components/ProductGridSkeleton";
 import { SearchInput } from "@/features/catalog/components/SearchInput";
-import { parseCatalogFilters } from "@/features/catalog/lib/filters";
 import { getBrands, getCategories, getTags } from "../../../features/catalog/actions";
 
 export const metadata: Metadata = {
@@ -21,9 +20,6 @@ type Props = {
 };
 
 export default async function KatalogPage({ searchParams }: Props) {
-  const params = await searchParams;
-  const filters = parseCatalogFilters(params);
-
   const [categories, brands, tags] = await Promise.all([getCategories(), getBrands(), getTags()]);
 
   const breadcrumbs = [
@@ -60,7 +56,11 @@ export default async function KatalogPage({ searchParams }: Props) {
           </div>
 
           <Suspense fallback={<ProductGridSkeleton count={8} />}>
-            <ProductGridServer filters={filters} />
+            <CategoryProductResults
+              searchParams={searchParams}
+              extraFilters={{}}
+              basePath="/katalog"
+            />
           </Suspense>
         </div>
       </div>
