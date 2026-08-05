@@ -246,10 +246,12 @@
   html {
     @apply font-sans;
   }
-  h1,
+  h1 {
+    @apply font-heading font-bold tracking-tight;
+  }
   h2,
   h3 {
-    @apply font-heading font-bold tracking-tight;
+    @apply font-bold tracking-tight;
   }
 }
 
