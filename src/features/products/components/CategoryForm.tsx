@@ -4,8 +4,10 @@ import type { Category } from "@prisma/client";
 import { useAction } from "next-safe-action/hooks";
 import { useState } from "react";
 import { ConfirmDialog } from "@/components/ConfirmDialog";
+import { getCategoryIcon } from "@/lib/category-icons";
 import { slugify } from "@/lib/slugify";
 import { deleteCategory, saveCategory } from "../actions";
+import { CategoryIconPicker } from "./CategoryIconPicker";
 
 interface Props {
   categories: Category[];
@@ -17,6 +19,7 @@ export function CategoryForm({ categories }: Props) {
   const [formName, setFormName] = useState("");
   const [formSlug, setFormSlug] = useState("");
   const [formSlugManual, setFormSlugManual] = useState(false);
+  const [formIcon, setFormIcon] = useState("");
   const [deletingCategory, setDeletingCategory] = useState<Category | null>(null);
   const [search, setSearch] = useState("");
 
@@ -35,6 +38,7 @@ export function CategoryForm({ categories }: Props) {
     setFormName("");
     setFormSlug("");
     setFormSlugManual(false);
+    setFormIcon("");
     setShowNew(true);
   }
 
@@ -43,6 +47,7 @@ export function CategoryForm({ categories }: Props) {
     setFormName(item.namePl);
     setFormSlug(item.slug);
     setFormSlugManual(true);
+    setFormIcon(item.icon ?? "");
     setEditing(item);
   }
 
@@ -69,6 +74,7 @@ export function CategoryForm({ categories }: Props) {
       slug: formSlug,
       namePl: formName,
       nameEn: (fd.get("nameEn") as string) || undefined,
+      icon: formIcon || undefined,
       sortOrder: Number(fd.get("sortOrder") || 0),
     });
   }
@@ -116,6 +122,7 @@ export function CategoryForm({ categories }: Props) {
           placeholder="Kolejność"
           className="rounded-lg border border-border px-2 py-1 text-sm"
         />
+        <CategoryIconPicker value={formIcon} onChange={setFormIcon} />
       </div>
       <div className="flex gap-2">
         <button
@@ -183,9 +190,21 @@ export function CategoryForm({ categories }: Props) {
             {(grouped.get(letter) ?? []).map((cat) => (
               <div key={cat.id}>
                 <div className="flex items-center justify-between px-4 py-3">
-                  <div>
-                    <p className="font-medium">{cat.namePl}</p>
-                    <p className="text-xs text-muted-foreground">{cat.slug}</p>
+                  <div className="flex items-center gap-3">
+                    <div className="flex size-8 shrink-0 items-center justify-center rounded-lg bg-secondary text-primary">
+                      {(() => {
+                        const Icon = getCategoryIcon(cat.icon);
+                        return Icon ? (
+                          <Icon className="size-4" />
+                        ) : (
+                          <span className="text-xs font-bold">{cat.namePl.charAt(0)}</span>
+                        );
+                      })()}
+                    </div>
+                    <div>
+                      <p className="font-medium">{cat.namePl}</p>
+                      <p className="text-xs text-muted-foreground">{cat.slug}</p>
+                    </div>
                   </div>
                   <div className="flex gap-2">
                     <button
