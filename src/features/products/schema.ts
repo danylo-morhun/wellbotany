@@ -11,6 +11,7 @@ export const categorySchema = z.object({
   nameUk: z.string().max(200).optional(),
   descriptionPl: z.string().max(2000).optional(),
   image: z.string().url().optional().or(z.literal("")),
+  icon: z.string().max(50).optional(),
   sortOrder: z.coerce.number().int().default(0),
   parentId: z.string().optional(),
 });
