@@ -260,6 +260,7 @@ export const getCategories = unstable_cache(
         slug: true,
         namePl: true,
         image: true,
+        icon: true,
         sortOrder: true,
         parentId: true,
         _count: { select: { products: { where: { status: "ACTIVE" } } } },
