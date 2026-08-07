@@ -56,10 +56,11 @@ async function resolveProductIds(selection: ProductSelectionInput): Promise<stri
 export const saveCategory = adminActionClient
   .schema(categorySchema)
   .action(async ({ parsedInput: input }) => {
-    const { id, image, nameEn, nameUk, descriptionPl, parentId, ...data } = input;
+    const { id, image, icon, nameEn, nameUk, descriptionPl, parentId, ...data } = input;
     const payload = {
       ...data,
       image: image || null,
+      icon: icon || null,
       nameEn: nameEn || null,
       nameUk: nameUk || null,
       descriptionPl: descriptionPl || null,
