@@ -92,6 +92,7 @@ model Category {
   nameUk        String?
   descriptionPl String?
   image         String?
+  icon          String?
   sortOrder     Int        @default(0)
   parentId      String?
   parent        Category?  @relation("CategoryTree", fields: [parentId], references: [id])
