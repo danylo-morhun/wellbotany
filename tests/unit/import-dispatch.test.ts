@@ -80,7 +80,7 @@ describe("parseSupplierFile — dispatch by source.format", () => {
     expect(parseKenayXlsx).not.toHaveBeenCalled();
   });
 
-  it("rejects an api-kind source — file parsing requires a file source", () => {
+  it("rejects an api-kind source — file parsing requires a file source", async () => {
     const apiSource: SupplierSource = {
       kind: "api",
       id: "shoper",
@@ -90,7 +90,7 @@ describe("parseSupplierFile — dispatch by source.format", () => {
       format: "shoper-api",
       defaultVatRate: 23,
     };
-    expect(() => parseSupplierFile(apiSource)).toThrow(/nie używa pliku/i);
+    await expect(parseSupplierFile(apiSource)).rejects.toThrow(/nie używa pliku/i);
   });
 });
 
