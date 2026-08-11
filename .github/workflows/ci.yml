@@ -13,7 +13,6 @@ permissions:
   contents: read
 
 env:
-  DATABASE_URL: "postgresql://postgres:postgres@localhost:5432/zielarnia_test"
   AUTH_SECRET: "ci-test-auth-secret-32-chars-long-zielarnia"
   NEXT_PUBLIC_SITE_URL: "http://localhost:3000"
 
@@ -32,10 +31,44 @@ jobs:
       - run: pnpm biome check .
       - run: pnpm tsc --noEmit
 
-  unit-test:
-    name: Unit Tests (Vitest)
+  # next build statically prerenders pages that query Postgres directly
+  # (e.g. src/app/sitemap.ts, /kategoria/[slug]), so both the build and the
+  # test suite need a reachable database. Each CI run gets its own ephemeral
+  # Neon branch (created from production) so tests never touch shared data.
+  provision-db:
+    name: Provision Ephemeral Database
     needs: lint-and-typecheck
     runs-on: ubuntu-latest
+    outputs:
+      database_url: ${{ steps.create-branch.outputs.db_url_pooled }}
+      direct_url: ${{ steps.create-branch.outputs.db_url }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with: { version: "10" }
+      - uses: actions/setup-node@v4
+        with: { node-version: "22", cache: "pnpm" }
+      - name: Create Neon branch
+        id: create-branch
+        uses: neondatabase/create-branch-action@v6
+        with:
+          project_id: ${{ vars.NEON_PROJECT_ID }}
+          branch_name: ci-${{ github.run_id }}
+          api_key: ${{ secrets.NEON_API_KEY }}
+      - run: pnpm install
+      - run: pnpm exec prisma generate
+      - run: pnpm exec prisma migrate deploy
+        env:
+          DATABASE_URL: ${{ steps.create-branch.outputs.db_url_pooled }}
+          DIRECT_URL: ${{ steps.create-branch.outputs.db_url }}
+
+  unit-test:
+    name: Unit Tests (Vitest)
+    needs: provision-db
+    runs-on: ubuntu-latest
+    env:
+      DATABASE_URL: ${{ needs.provision-db.outputs.database_url }}
+      DIRECT_URL: ${{ needs.provision-db.outputs.direct_url }}
     steps:
       - uses: actions/checkout@v4
       - uses: pnpm/action-setup@v4
@@ -48,8 +81,11 @@ jobs:
 
   build:
     name: Production Build Verification
-    needs: lint-and-typecheck
+    needs: provision-db
     runs-on: ubuntu-latest
+    env:
+      DATABASE_URL: ${{ needs.provision-db.outputs.database_url }}
+      DIRECT_URL: ${{ needs.provision-db.outputs.direct_url }}
     steps:
       - uses: actions/checkout@v4
       - uses: pnpm/action-setup@v4
@@ -59,3 +95,15 @@ jobs:
       - run: pnpm install
       - run: pnpm exec prisma generate
       - run: pnpm build
+
+  cleanup-db:
+    name: Delete Ephemeral Database
+    needs: [provision-db, unit-test, build]
+    if: always()
+    runs-on: ubuntu-latest
+    steps:
+      - uses: neondatabase/delete-branch-action@v3
+        with:
+          project_id: ${{ vars.NEON_PROJECT_ID }}
+          branch: ci-${{ github.run_id }}
+          api_key: ${{ secrets.NEON_API_KEY }}
