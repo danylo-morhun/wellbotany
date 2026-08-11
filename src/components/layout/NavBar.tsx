@@ -1,4 +1,5 @@
-import { ShoppingBag, Truck, User } from "lucide-react";
+import { ShoppingCart, Truck, User } from "lucide-react";
+import Image from "next/image";
 import Link from "next/link";
 import { Suspense } from "react";
 import { AdminLink } from "@/components/layout/AdminLink";
@@ -51,9 +52,14 @@ export function NavBar() {
         <div className="mx-auto flex h-16 max-w-7xl items-center gap-2 px-4 sm:gap-4 sm:px-6 lg:gap-6 lg:px-8">
           <MobileMenu navLinks={navLinks} utilityLinks={utilityLinks} />
           <Link href="/" className="flex shrink-0 items-center">
-            <span className="font-heading text-2xl font-bold tracking-tight text-foreground">
-              Well Botany
-            </span>
+            <Image
+              src="/branding/logo-horizontal.svg"
+              alt="Well Botany"
+              width={177}
+              height={31}
+              priority
+              className="h-8 w-auto"
+            />
           </Link>
 
           <search className="hidden flex-1 justify-center md:flex">
@@ -68,7 +74,7 @@ export function NavBar() {
             <Suspense
               fallback={
                 <span className="rounded-full p-2.5 text-muted-foreground">
-                  <ShoppingBag className="size-5" />
+                  <ShoppingCart className="size-5" />
                 </span>
               }
             >
