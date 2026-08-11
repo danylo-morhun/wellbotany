@@ -34,20 +34,21 @@ jobs:
   # next build statically prerenders pages that query Postgres directly
   # (e.g. src/app/sitemap.ts, /kategoria/[slug]), so both the build and the
   # test suite need a reachable database. Each CI run gets its own ephemeral
-  # Neon branch (created from production) so tests never touch shared data.
+  # Neon branch (created from production).
+  #
+  # The branch's connection string can't be passed as a *job* output — GitHub
+  # Actions silently drops job outputs that look like they contain a secret
+  # ("Skip output ... since it may contain secret"), which is exactly what a
+  # Postgres URL with an embedded password is. So this job only creates the
+  # branch and runs migrations; unit-test and build each re-run
+  # create-branch-action for the same branch_name afterwards (it returns the
+  # existing branch instead of creating a new one) and keep the connection
+  # string as a step output local to their own job.
   provision-db:
     name: Provision Ephemeral Database
     needs: lint-and-typecheck
     runs-on: ubuntu-latest
-    outputs:
-      database_url: ${{ steps.create-branch.outputs.db_url_pooled }}
-      direct_url: ${{ steps.create-branch.outputs.db_url }}
     steps:
-      - uses: actions/checkout@v4
-      - uses: pnpm/action-setup@v4
-        with: { version: "10" }
-      - uses: actions/setup-node@v4
-        with: { node-version: "22", cache: "pnpm" }
       - name: Create Neon branch
         id: create-branch
         uses: neondatabase/create-branch-action@v6
@@ -55,6 +56,11 @@ jobs:
           project_id: ${{ vars.NEON_PROJECT_ID }}
           branch_name: ci-${{ github.run_id }}
           api_key: ${{ secrets.NEON_API_KEY }}
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with: { version: "10" }
+      - uses: actions/setup-node@v4
+        with: { node-version: "22", cache: "pnpm" }
       - run: pnpm install
       - run: pnpm exec prisma generate
       - run: pnpm exec prisma migrate deploy
@@ -66,10 +72,14 @@ jobs:
     name: Unit Tests (Vitest)
     needs: provision-db
     runs-on: ubuntu-latest
-    env:
-      DATABASE_URL: ${{ needs.provision-db.outputs.database_url }}
-      DIRECT_URL: ${{ needs.provision-db.outputs.direct_url }}
     steps:
+      - name: Get Neon branch connection
+        id: create-branch
+        uses: neondatabase/create-branch-action@v6
+        with:
+          project_id: ${{ vars.NEON_PROJECT_ID }}
+          branch_name: ci-${{ github.run_id }}
+          api_key: ${{ secrets.NEON_API_KEY }}
       - uses: actions/checkout@v4
       - uses: pnpm/action-setup@v4
         with: { version: "10" }
@@ -78,15 +88,22 @@ jobs:
       - run: pnpm install
       - run: pnpm exec prisma generate
       - run: pnpm exec vitest run tests/unit
+        env:
+          DATABASE_URL: ${{ steps.create-branch.outputs.db_url_pooled }}
+          DIRECT_URL: ${{ steps.create-branch.outputs.db_url }}
 
   build:
     name: Production Build Verification
     needs: provision-db
     runs-on: ubuntu-latest
-    env:
-      DATABASE_URL: ${{ needs.provision-db.outputs.database_url }}
-      DIRECT_URL: ${{ needs.provision-db.outputs.direct_url }}
     steps:
+      - name: Get Neon branch connection
+        id: create-branch
+        uses: neondatabase/create-branch-action@v6
+        with:
+          project_id: ${{ vars.NEON_PROJECT_ID }}
+          branch_name: ci-${{ github.run_id }}
+          api_key: ${{ secrets.NEON_API_KEY }}
       - uses: actions/checkout@v4
       - uses: pnpm/action-setup@v4
         with: { version: "10" }
@@ -95,6 +112,9 @@ jobs:
       - run: pnpm install
       - run: pnpm exec prisma generate
       - run: pnpm build
+        env:
+          DATABASE_URL: ${{ steps.create-branch.outputs.db_url_pooled }}
+          DIRECT_URL: ${{ steps.create-branch.outputs.db_url }}
 
   cleanup-db:
     name: Delete Ephemeral Database
