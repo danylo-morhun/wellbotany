@@ -1,6 +1,7 @@
 "use client";
 
 import { Menu } from "lucide-react";
+import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
@@ -33,9 +34,17 @@ export function MobileMenu({ navLinks, utilityLinks }: Props) {
       </SheetTrigger>
       <SheetContent side="left" className="w-[300px] overflow-y-auto p-0">
         <SheetHeader className="border-b border-border px-5 py-4">
-          <SheetTitle className="font-heading text-lg font-bold tracking-tight">
-            Well Botany
-          </SheetTitle>
+          <SheetTitle
+            render={
+              <Image
+                src="/branding/logo-horizontal.svg"
+                alt="Well Botany"
+                width={177}
+                height={31}
+                className="h-6 w-auto"
+              />
+            }
+          />
         </SheetHeader>
 
         <div className="px-5 pt-4">
