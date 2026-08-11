@@ -12,6 +12,32 @@ export type BreadcrumbItem = {
   href: string;
 };
 
+export function buildOrganizationJsonLd() {
+  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "https://wellbotany.pl";
+  return {
+    "@context": "https://schema.org",
+    "@type": "Organization",
+    name: "Well Botany",
+    url: siteUrl,
+    logo: `${siteUrl}/branding/logo-horizontal.svg`,
+  };
+}
+
+export function buildWebsiteJsonLd() {
+  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "https://wellbotany.pl";
+  return {
+    "@context": "https://schema.org",
+    "@type": "WebSite",
+    name: "Well Botany",
+    url: siteUrl,
+    potentialAction: {
+      "@type": "SearchAction",
+      target: `${siteUrl}/katalog?szukaj={search_term_string}`,
+      "query-input": "required name=search_term_string",
+    },
+  };
+}
+
 export function buildBreadcrumbJsonLd(items: BreadcrumbItem[]) {
   return {
     "@context": "https://schema.org",
