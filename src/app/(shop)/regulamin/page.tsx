@@ -12,6 +12,7 @@ const sections = [
   {
     title: "§1 Postanowienia ogólne",
     items: [
+      "Sklep internetowy Well Botany prowadzony jest przez Zielarnia Kaliska II Sp. z o.o., ul. Polna 102, 62-800 Kalisz, NIP: 6182203142, REGON: 528620490, e-mail: kontakt@wellbotany.pl, tel. +48 797 771 703.",
       "Sklep internetowy Well Botany prowadzi sprzedaż detaliczną suplementów diety, witamin i produktów bio za pośrednictwem sieci Internet.",
       "Niniejszy regulamin określa zasady korzystania ze sklepu, składania zamówień, dostarczania towarów, uprawnienia kupującego oraz zasady reklamacji.",
       "Złożenie zamówienia oznacza akceptację niniejszego regulaminu.",

@@ -39,10 +39,10 @@ export default function KontaktPage() {
             <div>
               <p className="text-sm font-semibold">Telefon</p>
               <a
-                href="tel:+48000000000"
+                href="tel:+48797771703"
                 className="mt-1 block text-sm text-muted-foreground hover:text-primary"
               >
-                +48 000 000 000
+                +48 797 771 703
               </a>
               <p className="mt-1 text-xs text-muted-foreground">Pon–Pt, 9:00–17:00</p>
             </div>
@@ -62,11 +62,13 @@ export default function KontaktPage() {
             <div>
               <p className="text-sm font-semibold">Adres</p>
               <p className="mt-1 text-sm text-muted-foreground">
-                Well Botany sp. z o.o.
+                Zielarnia Kaliska II Sp. z o.o.
                 <br />
-                ul. Przykładowa 1
+                ul. Polna 102
                 <br />
                 62-800 Kalisz
+                <br />
+                NIP: 6182203142
               </p>
             </div>
           </div>

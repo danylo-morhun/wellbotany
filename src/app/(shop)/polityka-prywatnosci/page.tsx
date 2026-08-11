@@ -11,7 +11,7 @@ export const metadata: Metadata = {
 const sections = [
   {
     title: "Administrator danych",
-    body: "Administratorem Twoich danych osobowych jest Well Botany z siedzibą w Kaliszu. W sprawach dotyczących danych osobowych możesz skontaktować się z nami pod adresem kontakt@wellbotany.pl.",
+    body: "Administratorem Twoich danych osobowych jest Zielarnia Kaliska II Sp. z o.o., ul. Polna 102, 62-800 Kalisz, NIP: 6182203142, REGON: 528620490. W sprawach dotyczących danych osobowych możesz skontaktować się z nami pod adresem kontakt@wellbotany.pl.",
   },
   {
     title: "Jakie dane przetwarzamy",
