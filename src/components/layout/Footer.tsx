@@ -1,4 +1,5 @@
 import { Clock, Mail } from "lucide-react";
+import Image from "next/image";
 import Link from "next/link";
 
 const footerLinks = {
@@ -29,7 +30,13 @@ export function Footer() {
         <div className="grid grid-cols-2 gap-10 md:grid-cols-5">
           <div className="col-span-2">
             <Link href="/" className="flex items-center">
-              <span className="font-heading text-xl font-bold tracking-tight">Well Botany</span>
+              <Image
+                src="/branding/logo-horizontal-white.svg"
+                alt="Well Botany"
+                width={177}
+                height={31}
+                className="h-7 w-auto"
+              />
             </Link>
             <p className="mt-4 max-w-xs text-sm leading-relaxed text-band-foreground/75">
               Certyfikowane suplementy diety, witaminy i produkty bio najwyższej jakości.
