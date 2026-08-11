@@ -1,6 +1,6 @@
 "use client";
 
-import { Minus, Plus, ShoppingCart } from "lucide-react";
+import { Minus, Plus, ShoppingCart, Truck } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useAction } from "next-safe-action/hooks";
 import { useEffect, useState } from "react";
@@ -106,13 +106,21 @@ export function AddToCartSection({ variants }: Props) {
         )}
       </div>
 
-      <p className={`text-sm ${selected.stock > 0 ? "text-success" : "text-muted-foreground"}`}>
-        {selected.stock > 0
-          ? selected.stock <= 5
-            ? `Ostatnie ${selected.stock} szt.`
-            : "Dostępny"
-          : "Niedostępny"}
-      </p>
+      <div className="space-y-1">
+        <p className={`text-sm ${selected.stock > 0 ? "text-success" : "text-muted-foreground"}`}>
+          {selected.stock > 0
+            ? selected.stock <= 5
+              ? `Ostatnie ${selected.stock} szt.`
+              : "Dostępny"
+            : "Niedostępny"}
+        </p>
+        {selected.stock > 0 && (
+          <p className="flex items-center gap-1.5 text-xs text-muted-foreground">
+            <Truck className="size-3.5 shrink-0" aria-hidden />
+            Wysyłka w 24h · InPost, DHL, DPD
+          </p>
+        )}
+      </div>
 
       <div className="flex items-center gap-3">
         <span className="text-sm font-medium">Ilość:</span>
