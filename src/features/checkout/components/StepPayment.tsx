@@ -1,5 +1,6 @@
 "use client";
 
+import { ShieldCheck } from "lucide-react";
 import { useAction } from "next-safe-action/hooks";
 import { useState } from "react";
 import { groupCartItems } from "@/features/cart/lib/grouping";
@@ -233,6 +234,10 @@ export function StepPayment({
           {pending ? "Składam zamówienie…" : `Złóż zamówienie — ${formatPrice(total)}`}
         </button>
       </div>
+      <p className="flex items-center justify-center gap-1.5 text-xs text-muted-foreground">
+        <ShieldCheck className="size-3.5 shrink-0" aria-hidden />
+        Płatność zabezpieczona przez Przelewy24
+      </p>
     </div>
   );
 }
