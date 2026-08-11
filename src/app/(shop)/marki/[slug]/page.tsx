@@ -26,6 +26,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   return {
     title: brand.name,
     description: brand.description ?? `Produkty marki ${brand.name}`,
+    alternates: { canonical: `/marki/${brand.slug}` },
   };
 }
 

@@ -13,6 +13,7 @@ export const metadata: Metadata = {
   title: "Katalog produktów",
   description:
     "Przeglądaj nasz szeroki wybór suplementów diety, witamin i produktów bio. Filtruj według kategorii, marki i cech.",
+  alternates: { canonical: "/katalog" },
 };
 
 type Props = {
