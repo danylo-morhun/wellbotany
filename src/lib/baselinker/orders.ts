@@ -16,6 +16,8 @@ function deliveryMethodName(method: string): string {
 }
 
 export async function pushOrderToBaselinker(orderId: string): Promise<string> {
+  if (!process.env.BASELINKER_API_KEY) return "";
+
   const order = await prisma.order.findUnique({
     where: { id: orderId },
     include: {
