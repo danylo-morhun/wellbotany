@@ -4,6 +4,8 @@ import { EMAIL_FROM, resendClient } from "./client";
 
 const SHIPPING_LABELS: Record<string, string> = {
   INPOST_PACZKOMAT: "InPost Paczkomat",
+  INPOST_KURIER: "InPost Kurier",
+  ORLEN_PACZKA: "Orlen Paczka",
   DHL: "DHL Kurier",
   DPD: "DPD Kurier",
   COURIER: "Kurier",

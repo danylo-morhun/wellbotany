@@ -18,6 +18,8 @@ const STATUS_LABELS: Record<string, string> = {
 
 const SHIPPING_LABELS: Record<string, string> = {
   INPOST_PACZKOMAT: "InPost Paczkomat",
+  INPOST_KURIER: "InPost Kurier",
+  ORLEN_PACZKA: "Orlen Paczka",
   DHL: "DHL",
   DPD: "DPD",
   COURIER: "Kurier",
