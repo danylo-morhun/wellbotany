@@ -9,41 +9,63 @@ type Props = {
   basePath?: string;
 };
 
+function formatPln(value: string): string {
+  const n = Number(value);
+  return Number.isFinite(n)
+    ? `${n.toLocaleString("pl-PL", { minimumFractionDigits: 2, maximumFractionDigits: 2 })} zł`
+    : value;
+}
+
 export function ActiveFilterChips({ categories, brands, tags, basePath = "/katalog" }: Props) {
   const searchParams = useSearchParams();
   const router = useRouter();
 
-  const activeCategory = searchParams.get("kategoria");
-  const activeBrand = searchParams.get("marka");
+  const activeCategories = searchParams.get("kategoria")?.split(",").filter(Boolean) ?? [];
+  const activeBrands = searchParams.get("marka")?.split(",").filter(Boolean) ?? [];
   const activeTags = searchParams.get("tagi")?.split(",").filter(Boolean) ?? [];
+  const cenaMin = searchParams.get("cenaMin");
+  const cenaMax = searchParams.get("cenaMax");
 
   const chips: { label: string; onRemove: () => void }[] = [];
 
-  if (activeCategory) {
-    const cat = categories.find((c) => c.slug === activeCategory);
+  const removeFromList = (param: string, current: string[], value: string) => {
+    const p = new URLSearchParams(searchParams.toString());
+    const remaining = current.filter((s) => s !== value).join(",");
+    if (remaining) p.set(param, remaining);
+    else p.delete(param);
+    router.push(`${basePath}?${p.toString()}`, { scroll: false });
+  };
+
+  for (const slug of activeCategories) {
+    const cat = categories.find((c) => c.slug === slug);
     chips.push({
-      label: cat?.namePl ?? activeCategory,
-      onRemove: () => {
-        const p = new URLSearchParams(searchParams.toString());
-        p.delete("kategoria");
-        router.push(`${basePath}?${p.toString()}`);
-      },
+      label: cat?.namePl ?? slug,
+      onRemove: () => removeFromList("kategoria", activeCategories, slug),
     });
   }
 
-  if (activeBrand) {
-    const brand = brands.find((b) => b.slug === activeBrand);
+  for (const slug of activeBrands) {
+    const brand = brands.find((b) => b.slug === slug);
     chips.push({
-      label: brand?.name ?? activeBrand,
+      label: brand?.name ?? slug,
+      onRemove: () => removeFromList("marka", activeBrands, slug),
+    });
+  }
+
+  if (cenaMin || cenaMax) {
+    chips.push({
+      label: `Cena: ${cenaMin ? formatPln(cenaMin) : "0 zł"} – ${cenaMax ? formatPln(cenaMax) : "∞"}`,
       onRemove: () => {
         const p = new URLSearchParams(searchParams.toString());
-        p.delete("marka");
-        router.push(`${basePath}?${p.toString()}`);
+        p.delete("cenaMin");
+        p.delete("cenaMax");
+        router.push(`${basePath}?${p.toString()}`, { scroll: false });
       },
     });
   }
 
   const flagChips: { param: string; label: string }[] = [
+    { param: "dostepne", label: "Tylko dostępne" },
     { param: "promocje", label: "Promocje" },
     { param: "nowosci", label: "Nowości" },
     { param: "polecane", label: "Polecane" },
@@ -55,23 +77,17 @@ export function ActiveFilterChips({ categories, brands, tags, basePath = "/katal
         onRemove: () => {
           const p = new URLSearchParams(searchParams.toString());
           p.delete(param);
-          router.push(`${basePath}?${p.toString()}`);
+          router.push(`${basePath}?${p.toString()}`, { scroll: false });
         },
       });
     }
   }
 
-  for (const tagSlug of activeTags) {
-    const tag = tags.find((t) => t.slug === tagSlug);
+  for (const slug of activeTags) {
+    const tag = tags.find((t) => t.slug === slug);
     chips.push({
-      label: tag?.namePl ?? tagSlug,
-      onRemove: () => {
-        const p = new URLSearchParams(searchParams.toString());
-        const remaining = activeTags.filter((s) => s !== tagSlug).join(",");
-        if (remaining) p.set("tagi", remaining);
-        else p.delete("tagi");
-        router.push(`${basePath}?${p.toString()}`);
-      },
+      label: tag?.namePl ?? slug,
+      onRemove: () => removeFromList("tagi", activeTags, slug),
     });
   }
 
