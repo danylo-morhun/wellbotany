@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { buildFaqJsonLd, toJsonLdScript } from "@/lib/seo";
 
 export const dynamic = "force-static";
 
@@ -39,8 +40,14 @@ const faqs = [
 ];
 
 export default function FaqPage() {
+  const jsonLd = buildFaqJsonLd(faqs.map((faq) => ({ q: faq.q, a: faq.a })));
+
   return (
     <main className="container mx-auto max-w-prose px-4 py-12">
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: toJsonLdScript(jsonLd) }}
+      />
       <h1 className="mb-8 text-3xl">Najczęściej zadawane pytania</h1>
 
       <div className="space-y-4">
