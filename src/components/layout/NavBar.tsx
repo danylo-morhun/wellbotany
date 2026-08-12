@@ -62,7 +62,15 @@ export async function NavBar() {
               width={177}
               height={31}
               priority
-              className="h-8 w-auto"
+              className="h-8 w-auto dark:hidden"
+            />
+            <Image
+              src="/branding/logo-horizontal-white.svg"
+              alt="Well Botany"
+              width={177}
+              height={31}
+              priority
+              className="hidden h-8 w-auto dark:block"
             />
           </Link>
 
