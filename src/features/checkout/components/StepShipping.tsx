@@ -124,6 +124,56 @@ export function StepShipping({ data, onChange, onBack, onNext }: Props) {
         </label>
       </div>
 
+      {data.shippingMethod === "ORLEN_PACZKA" && (
+        <div className="rounded-lg border border-border bg-muted/30 p-4">
+          {data.inpostMachineId ? (
+            <div className="flex items-center justify-between gap-3">
+              <div>
+                <p className="text-sm font-medium">Wybrany punkt Orlen Paczka</p>
+                <p className="text-sm text-muted-foreground">
+                  {data.inpostMachineName || data.inpostMachineId}
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={() => onChange({ inpostMachineId: "", inpostMachineName: "" })}
+                className="text-sm font-medium text-primary underline underline-offset-2"
+              >
+                Zmień
+              </button>
+            </div>
+          ) : (
+            <>
+              <p className="mb-3 text-sm font-medium">Identyfikator punktu Orlen Paczka</p>
+              <button
+                type="button"
+                disabled
+                title="Mapa punktów będzie dostępna po integracji z Orlen Paczka"
+                className="mb-3 text-sm font-medium text-muted-foreground underline underline-offset-2 disabled:cursor-not-allowed disabled:no-underline"
+              >
+                Wybierz na mapie (wkrótce)
+              </button>
+              <p className="mb-3 text-xs text-muted-foreground">
+                Podaj ID punktu odbioru ręcznie (znajdziesz je na stronie orlenpaczka.pl).
+              </p>
+              <input
+                type="text"
+                required
+                placeholder="np. WA12345"
+                value={data.inpostMachineId}
+                onChange={(e) =>
+                  onChange({
+                    inpostMachineId: e.target.value.toUpperCase(),
+                    inpostMachineName: e.target.value.toUpperCase(),
+                  })
+                }
+                className="w-full rounded-lg border border-border px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary"
+              />
+            </>
+          )}
+        </div>
+      )}
+
       {data.wantsFaktura && (
         <div className="space-y-4 rounded-lg border border-border p-4">
           <h3 className="text-sm font-semibold">Dane do faktury</h3>
