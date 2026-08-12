@@ -1,13 +1,10 @@
-import { ChevronDown } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import type { CategoryItem } from "@/features/catalog/actions";
+import { computeSubtreeCounts } from "@/features/catalog/lib/nav";
 import { getCategoryIcon } from "@/lib/category-icons";
 
 type Props = { categories: CategoryItem[] };
-
-const VISIBLE_COUNT = 6;
-const GRID_CLASS = "grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6";
 
 function pluralProdukt(n: number): string {
   if (n === 1) return "produkt";
@@ -15,64 +12,55 @@ function pluralProdukt(n: number): string {
   return "produktów";
 }
 
-function CategoryTile({ cat }: { cat: CategoryItem }) {
+function CategoryTile({ cat, count }: { cat: CategoryItem; count: number }) {
   const Icon = getCategoryIcon(cat.icon);
   return (
     <Link
-      href={`/katalog?kategoria=${cat.slug}`}
-      className="group flex flex-col items-center gap-3 rounded-2xl bg-card p-5 text-center shadow-card transition-[box-shadow,transform] duration-200 ease-out hover:-translate-y-0.5 hover:shadow-card-hover motion-reduce:transition-none motion-reduce:hover:translate-y-0"
+      href={`/kategoria/${cat.slug}`}
+      className="group flex flex-col items-center gap-3 text-center"
     >
       {cat.image ? (
-        <div className="relative size-14 transition-transform duration-200 group-hover:scale-110 motion-reduce:group-hover:scale-100">
+        <div className="relative size-20 transition-transform duration-200 group-hover:scale-105 motion-reduce:group-hover:scale-100 sm:size-24">
           <Image src={cat.image} alt={cat.namePl} fill className="object-contain" />
         </div>
       ) : (
-        <div className="flex size-14 items-center justify-center rounded-full bg-secondary text-lg font-bold text-primary transition-transform duration-200 group-hover:scale-110 motion-reduce:group-hover:scale-100">
-          {Icon ? <Icon className="size-6" /> : cat.namePl.charAt(0)}
+        <div className="flex size-20 items-center justify-center rounded-full bg-secondary text-primary shadow-card transition-[transform,box-shadow] duration-200 group-hover:scale-105 group-hover:shadow-card-hover motion-reduce:transition-none motion-reduce:group-hover:scale-100 sm:size-24">
+          {Icon ? (
+            <Icon className="size-8 sm:size-9" strokeWidth={1.75} />
+          ) : (
+            <span className="text-2xl font-bold">{cat.namePl.charAt(0)}</span>
+          )}
         </div>
       )}
-      <span className="line-clamp-2 text-sm font-medium text-foreground">{cat.namePl}</span>
-      {cat._count.products > 0 && (
-        <span className="text-xs text-muted-foreground">
-          {cat._count.products} {pluralProdukt(cat._count.products)}
-        </span>
-      )}
+      <div>
+        <p className="text-sm font-medium text-foreground transition-colors group-hover:text-primary sm:text-base">
+          {cat.namePl}
+        </p>
+        {count > 0 && (
+          <p className="mt-0.5 text-xs text-muted-foreground">
+            {count} {pluralProdukt(count)}
+          </p>
+        )}
+      </div>
     </Link>
   );
 }
 
 export function CategoryGrid({ categories }: Props) {
-  const topLevel = categories
-    .filter((c) => c.parentId === null)
-    .sort((a, b) => b._count.products - a._count.products);
-
+  const topLevel = categories.filter((c) => c.parentId === null);
   if (topLevel.length === 0) return null;
 
-  const visible = topLevel.slice(0, VISIBLE_COUNT);
-  const rest = topLevel.slice(VISIBLE_COUNT);
+  const counts = computeSubtreeCounts(categories);
+  const sorted = [...topLevel].sort((a, b) => (counts.get(b.id) ?? 0) - (counts.get(a.id) ?? 0));
 
   return (
-    <section className="space-y-4">
+    <section className="space-y-6">
       <h2 className="text-balance font-heading text-2xl font-bold tracking-tight">Kategorie</h2>
-      <div className={GRID_CLASS}>
-        {visible.map((cat) => (
-          <CategoryTile key={cat.id} cat={cat} />
+      <div className="grid grid-cols-2 gap-x-4 gap-y-8 sm:grid-cols-3 md:grid-flow-col md:auto-cols-fr">
+        {sorted.map((cat) => (
+          <CategoryTile key={cat.id} cat={cat} count={counts.get(cat.id) ?? 0} />
         ))}
       </div>
-      {rest.length > 0 && (
-        <details className="group">
-          <summary className="flex w-fit cursor-pointer list-none items-center gap-1.5 rounded-full px-3 py-2 text-sm font-medium text-primary transition-colors duration-200 hover:bg-secondary motion-reduce:transition-none [&::-webkit-details-marker]:hidden">
-            <span className="group-open:hidden">Pokaż wszystkie kategorie</span>
-            <span className="hidden group-open:inline">Pokaż mniej</span>
-            <ChevronDown className="size-4 transition-transform duration-200 group-open:rotate-180 motion-reduce:transition-none" />
-          </summary>
-          <div className={`${GRID_CLASS} mt-3`}>
-            {rest.map((cat) => (
-              <CategoryTile key={cat.id} cat={cat} />
-            ))}
-          </div>
-        </details>
-      )}
     </section>
   );
 }
