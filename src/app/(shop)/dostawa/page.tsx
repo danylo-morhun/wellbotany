@@ -31,13 +31,13 @@ export default function DostawaPage() {
                   <td className="px-4 py-3">1–2 dni robocze</td>
                 </tr>
                 <tr>
-                  <td className="px-4 py-3">Kurier DPD</td>
-                  <td className="px-4 py-3">15,99 zł</td>
+                  <td className="px-4 py-3">Kurier InPost</td>
+                  <td className="px-4 py-3">19,99 zł</td>
                   <td className="px-4 py-3">1–2 dni robocze</td>
                 </tr>
                 <tr>
-                  <td className="px-4 py-3">Kurier DHL</td>
-                  <td className="px-4 py-3">17,99 zł</td>
+                  <td className="px-4 py-3">Orlen Paczka</td>
+                  <td className="px-4 py-3">12,99 zł</td>
                   <td className="px-4 py-3">1–2 dni robocze</td>
                 </tr>
                 <tr>
