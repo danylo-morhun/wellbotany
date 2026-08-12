@@ -1,12 +1,16 @@
 import type { Prisma } from "@prisma/client";
 import { unstable_cache } from "next/cache";
+import { cache } from "react";
 import { prisma } from "@/lib/prisma";
 import {
+  buildFacetWhere,
   buildProductOrderBy,
   buildProductWhere,
   type CatalogFilters,
+  parseCatalogFilters,
   withStockAvailability,
 } from "./lib/filters";
+import { computeSubtreeCounts } from "./lib/nav";
 import { rankBySearchRelevance } from "./lib/search-relevance";
 
 const PRODUCT_LIST_SELECT = {
@@ -56,7 +60,7 @@ const PRODUCT_SEARCH_SELECT = {
   brand: { select: { name: true } },
   category: { select: { namePl: true } },
   tags: { select: { tag: { select: { namePl: true } } } },
-  variants: { where: { isActive: true }, select: { stock: true } },
+  variants: { where: { isActive: true }, select: { stock: true, pricePln: true } },
 } as const;
 
 /** Every active product, search-relevant fields only — cached for fast, DB-free fuzzy search on every keystroke. */
@@ -83,28 +87,36 @@ export async function fetchProductsByIds(ids: string[]) {
 
 function hasStructuralFilter(filters: CatalogFilters): boolean {
   return Boolean(
-    filters.category ||
-      filters.brand ||
+    filters.category?.length ||
+      filters.brand?.length ||
       filters.tags?.length ||
       filters.priceMin !== undefined ||
       filters.priceMax !== undefined ||
       filters.onlyPromo ||
       filters.onlyNew ||
-      filters.onlyFeatured,
+      filters.onlyFeatured ||
+      filters.inStockOnly,
   );
 }
 
 export async function getProducts(filters: CatalogFilters) {
-  const categoryIds = filters.category
+  const categoryIds = filters.category?.length
     ? await getCategoryDescendantIds(filters.category)
     : undefined;
-  const where = buildProductWhere(filters, categoryIds);
+  let where = buildProductWhere(filters, categoryIds);
+  if (filters.inStockOnly) {
+    where = withStockAvailability(where, true);
+  }
   const orderBy = buildProductOrderBy(filters.sort);
   const skip = (filters.page - 1) * filters.perPage;
 
-  // A search term with the default sort gets relevance-ranked instead of the
-  // usual DB-paginated newest-first order; an explicit sort choice still wins.
-  if (filters.search && filters.sort === "newest") {
+  // A search term always narrows to fuzzy-matched candidates first, no
+  // matter which sort is active — only the order *within* that matched set
+  // changes: relevance for the default sort, otherwise whatever the picked
+  // sort criterion is. (Previously an explicit sort bypassed the search
+  // narrowing entirely, so e.g. "test" + "Cena rosnąco" showed the whole
+  // unfiltered catalog sorted by price instead of just the matches.)
+  if (filters.search) {
     const candidates = hasStructuralFilter(filters)
       ? await prisma.product.findMany({
           where,
@@ -113,9 +125,53 @@ export async function getProducts(filters: CatalogFilters) {
           select: PRODUCT_SEARCH_SELECT,
         })
       : await getSearchableProducts();
-    const ranked = rankBySearchRelevance(candidates, filters.search);
+    let ranked = rankBySearchRelevance(candidates, filters.search);
+    if (filters.sort === "name_asc") {
+      ranked = [...ranked].sort((a, b) => a.namePl.localeCompare(b.namePl, "pl"));
+    } else if (filters.sort === "name_desc") {
+      ranked = [...ranked].sort((a, b) => b.namePl.localeCompare(a.namePl, "pl"));
+    } else if (filters.sort === "price_asc" || filters.sort === "price_desc") {
+      const dir = filters.sort === "price_asc" ? 1 : -1;
+      const minPrice = (p: (typeof ranked)[number]) =>
+        p.variants.length > 0
+          ? Math.min(...p.variants.map((v) => v.pricePln))
+          : Number.POSITIVE_INFINITY;
+      ranked = [...ranked].sort((a, b) => dir * (minPrice(a) - minPrice(b)));
+    }
     const inStockRanked = ranked.filter((p) => p.variants.some((v) => v.stock > 0));
     const outOfStockRanked = ranked.filter((p) => !p.variants.some((v) => v.stock > 0));
+    const orderedIds = [...inStockRanked, ...outOfStockRanked].map((p) => p.id);
+    const pageIds = orderedIds.slice(skip, skip + filters.perPage);
+    const items = await fetchProductsByIds(pageIds);
+    return { items, total: orderedIds.length };
+  }
+
+  // Prisma's relation-aggregate `orderBy` only supports `_count`, not `_min`/
+  // `_max` on a to-many relation — so price sort is ranked in JS (by each
+  // product's cheapest active variant) the same way search relevance is,
+  // rather than via a DB `orderBy`.
+  if (filters.sort === "price_asc" || filters.sort === "price_desc") {
+    const candidates = await prisma.product.findMany({
+      where,
+      select: {
+        id: true,
+        variants: { where: { isActive: true }, select: { pricePln: true, stock: true } },
+      },
+    });
+    const dir = filters.sort === "price_asc" ? 1 : -1;
+    const ranked = candidates
+      .map((p) => ({
+        id: p.id,
+        inStock: p.variants.some((v) => v.stock > 0),
+        minPrice: p.variants.length > 0 ? Math.min(...p.variants.map((v) => v.pricePln)) : null,
+      }))
+      .sort((a, b) => {
+        const pa = a.minPrice ?? Number.POSITIVE_INFINITY;
+        const pb = b.minPrice ?? Number.POSITIVE_INFINITY;
+        return dir * (pa - pb);
+      });
+    const inStockRanked = ranked.filter((p) => p.inStock);
+    const outOfStockRanked = ranked.filter((p) => !p.inStock);
     const orderedIds = [...inStockRanked, ...outOfStockRanked].map((p) => p.id);
     const pageIds = orderedIds.slice(skip, skip + filters.perPage);
     const items = await fetchProductsByIds(pageIds);
@@ -276,12 +332,7 @@ export const getCategories = unstable_cache(
 
 export type CategoryItem = Awaited<ReturnType<typeof getCategories>>[number];
 
-/** A category page must include products from its whole subtree, not just direct hits — parent nodes like "Waga i metabolizm" hold no products of their own. */
-export async function getCategoryDescendantIds(slug: string): Promise<string[]> {
-  const categories = await getCategories();
-  const bySlug = categories.find((c) => c.slug === slug);
-  if (!bySlug) return [];
-
+function buildCategoryChildrenMap(categories: CategoryItem[]): Map<string, CategoryItem[]> {
   const byParent = new Map<string, CategoryItem[]>();
   for (const c of categories) {
     if (!c.parentId) continue;
@@ -289,16 +340,36 @@ export async function getCategoryDescendantIds(slug: string): Promise<string[]> 
     siblings.push(c);
     byParent.set(c.parentId, siblings);
   }
+  return byParent;
+}
 
-  const ids: string[] = [];
-  const stack = [bySlug.id];
+function collectSubtreeIds(rootId: string, byParent: Map<string, CategoryItem[]>): string[] {
+  const ids = new Set<string>();
+  const stack = [rootId];
   while (stack.length) {
     const id = stack.pop();
-    if (!id) continue;
-    ids.push(id);
+    if (!id || ids.has(id)) continue;
+    ids.add(id);
     for (const child of byParent.get(id) ?? []) stack.push(child.id);
   }
-  return ids;
+  return [...ids];
+}
+
+/** A category page must include products from its whole subtree, not just direct hits — parent nodes like "Waga i metabolizm" hold no products of their own. Accepts multiple slugs and returns the union of their subtrees, deduped. */
+export async function getCategoryDescendantIds(slugs: string[]): Promise<string[]> {
+  const categories = await getCategories();
+  const roots = slugs.flatMap((slug) => {
+    const match = categories.find((c) => c.slug === slug);
+    return match ? [match.id] : [];
+  });
+  if (roots.length === 0) return [];
+
+  const byParent = buildCategoryChildrenMap(categories);
+  const ids = new Set<string>();
+  for (const root of roots) {
+    for (const id of collectSubtreeIds(root, byParent)) ids.add(id);
+  }
+  return [...ids];
 }
 
 export const getBrands = unstable_cache(
@@ -319,6 +390,72 @@ export const getBrands = unstable_cache(
 );
 
 export type BrandItem = Awaited<ReturnType<typeof getBrands>>[number];
+
+/**
+ * Resolves the active `CatalogFilters` from the request's `searchParams` —
+ * `react`'s `cache()` dedupes this within a single request as long as the
+ * same `searchParams` promise and `categoryOverride` are passed, so the
+ * desktop sidebar and the mobile drawer (which both need it independently,
+ * each inside its own Suspense boundary) don't each trigger their own parse
+ * + facet-count queries.
+ */
+export const resolveCatalogFilters = cache(
+  async (
+    searchParams: Promise<Record<string, string | string[] | undefined>>,
+    categoryOverride?: string,
+  ): Promise<CatalogFilters> => {
+    const raw = await searchParams;
+    return parseCatalogFilters(categoryOverride ? { ...raw, kategoria: categoryOverride } : raw);
+  },
+);
+
+/** Product counts per category (including its subtree, matching what selecting the checkbox actually filters to) under the currently active filters (excluding the category filter itself) — filter-dependent, so `cache()`d per-request rather than `unstable_cache`d, so checkbox counts track the active combination. */
+export const getCategoryFacetCounts = cache(
+  async (filters: CatalogFilters): Promise<Map<string, number>> => {
+    const where = buildFacetWhere(filters, "category");
+    const [rows, categories] = await Promise.all([
+      prisma.product.groupBy({
+        by: ["categoryId"],
+        where,
+        _count: { _all: true },
+      }),
+      getCategories(),
+    ]);
+
+    const directCounts = new Map<string, number>();
+    for (const r of rows) {
+      if (r.categoryId != null) directCounts.set(r.categoryId, r._count._all);
+    }
+
+    // `computeSubtreeCounts` reads `_count.products`, so stub it with this
+    // request's filtered direct counts before rolling up the subtree sums.
+    const scopedCategories = categories.map((c) => ({
+      ...c,
+      _count: { products: directCounts.get(c.id) ?? 0 },
+    }));
+    return computeSubtreeCounts(scopedCategories);
+  },
+);
+
+/** Product counts per brand under the currently active filters (excluding the brand filter itself) — filter-dependent, so `cache()`d per-request rather than `unstable_cache`d, so checkbox counts track the active combination. */
+export const getBrandFacetCounts = cache(
+  async (filters: CatalogFilters): Promise<Map<string, number>> => {
+    const categoryIds = filters.category?.length
+      ? await getCategoryDescendantIds(filters.category)
+      : undefined;
+    const where = buildFacetWhere(filters, "brand", categoryIds);
+    const rows = await prisma.product.groupBy({
+      by: ["brandId"],
+      where,
+      _count: { _all: true },
+    });
+    return new Map(
+      rows
+        .filter((r): r is typeof r & { brandId: string } => r.brandId != null)
+        .map((r) => [r.brandId, r._count._all]),
+    );
+  },
+);
 
 export const getTags = unstable_cache(
   async () =>

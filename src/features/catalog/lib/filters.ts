@@ -1,10 +1,10 @@
 import type { Prisma } from "@prisma/client";
 
-export type SortOption = "newest" | "name_asc" | "name_desc";
+export type SortOption = "newest" | "name_asc" | "name_desc" | "price_asc" | "price_desc";
 
 export type CatalogFilters = {
-  category?: string;
-  brand?: string;
+  category?: string[];
+  brand?: string[];
   tags?: string[];
   priceMin?: number; // grosz
   priceMax?: number; // grosz
@@ -12,6 +12,7 @@ export type CatalogFilters = {
   onlyPromo?: boolean;
   onlyNew?: boolean;
   onlyFeatured?: boolean;
+  inStockOnly?: boolean;
   page: number;
   perPage: number;
   sort: SortOption;
@@ -19,7 +20,7 @@ export type CatalogFilters = {
 
 export const ITEMS_PER_PAGE = 24;
 
-const VALID_SORTS: SortOption[] = ["newest", "name_asc", "name_desc"];
+const VALID_SORTS: SortOption[] = ["newest", "name_asc", "name_desc", "price_asc", "price_desc"];
 
 export function parseCatalogFilters(
   params: Record<string, string | string[] | undefined>,
@@ -32,8 +33,11 @@ export function parseCatalogFilters(
       : "newest";
 
   return {
-    category: typeof params.kategoria === "string" ? params.kategoria : undefined,
-    brand: typeof params.marka === "string" ? params.marka : undefined,
+    category:
+      typeof params.kategoria === "string"
+        ? params.kategoria.split(",").filter(Boolean)
+        : undefined,
+    brand: typeof params.marka === "string" ? params.marka.split(",").filter(Boolean) : undefined,
     tags: typeof params.tagi === "string" ? params.tagi.split(",").filter(Boolean) : undefined,
     priceMin:
       typeof params.cenaMin === "string" && params.cenaMin !== ""
@@ -47,6 +51,7 @@ export function parseCatalogFilters(
     onlyPromo: params.promocje === "1" || undefined,
     onlyNew: params.nowosci === "1" || undefined,
     onlyFeatured: params.polecane === "1" || undefined,
+    inStockOnly: params.dostepne === "1" || undefined,
     page,
     perPage: ITEMS_PER_PAGE,
     sort,
@@ -61,11 +66,11 @@ export function buildProductWhere(
 
   if (categoryIds) {
     where.categoryId = { in: categoryIds };
-  } else if (filters.category) {
-    where.category = { slug: filters.category };
+  } else if (filters.category?.length) {
+    where.category = { slug: { in: filters.category } };
   }
-  if (filters.brand) {
-    where.brand = { slug: filters.brand };
+  if (filters.brand?.length) {
+    where.brand = { slug: { in: filters.brand } };
   }
   if (filters.tags?.length) {
     where.tags = { some: { tag: { slug: { in: filters.tags } } } };
@@ -99,6 +104,30 @@ export function buildProductWhere(
   return where;
 }
 
+/**
+ * Where-clause for counting a facet's own options — same structural filters
+ * as `buildProductWhere`, minus that facet's own selection (so picking a
+ * brand never shrinks its own checkbox's count), with `inStockOnly` applied
+ * on top since it isn't part of `buildProductWhere` itself.
+ */
+export function buildFacetWhere(
+  filters: CatalogFilters,
+  facet: "category" | "brand",
+  categoryIds?: string[],
+): Prisma.ProductWhereInput {
+  const scoped: CatalogFilters = { ...filters };
+  if (facet === "category") scoped.category = undefined;
+  if (facet === "brand") scoped.brand = undefined;
+
+  const where = buildProductWhere(scoped, facet === "category" ? undefined : categoryIds);
+  return filters.inStockOnly ? withStockAvailability(where, true) : where;
+}
+
+// `price_asc`/`price_desc` are ranked separately in JS by `getProducts` —
+// Prisma's relation-aggregate `orderBy` only supports `_count` on a to-many
+// relation, so there's no DB `orderBy` for "cheapest active variant" without
+// a denormalized price field on `Product`. This function is only ever
+// called for the other sorts.
 export function buildProductOrderBy(sort: SortOption): Prisma.ProductOrderByWithRelationInput {
   switch (sort) {
     case "name_asc":
@@ -133,8 +162,8 @@ export function withStockAvailability(
 
 export function buildCatalogUrl(base: string, overrides: Partial<CatalogFilters>): string {
   const params = new URLSearchParams();
-  if (overrides.category) params.set("kategoria", overrides.category);
-  if (overrides.brand) params.set("marka", overrides.brand);
+  if (overrides.category?.length) params.set("kategoria", overrides.category.join(","));
+  if (overrides.brand?.length) params.set("marka", overrides.brand.join(","));
   if (overrides.tags?.length) params.set("tagi", overrides.tags.join(","));
   if (overrides.priceMin) params.set("cenaMin", String(overrides.priceMin / 100));
   if (overrides.priceMax) params.set("cenaMax", String(overrides.priceMax / 100));
@@ -142,6 +171,7 @@ export function buildCatalogUrl(base: string, overrides: Partial<CatalogFilters>
   if (overrides.onlyPromo) params.set("promocje", "1");
   if (overrides.onlyNew) params.set("nowosci", "1");
   if (overrides.onlyFeatured) params.set("polecane", "1");
+  if (overrides.inStockOnly) params.set("dostepne", "1");
   if (overrides.sort && overrides.sort !== "newest") params.set("sortuj", overrides.sort);
   if (overrides.page && overrides.page > 1) params.set("strona", String(overrides.page));
   const qs = params.toString();
