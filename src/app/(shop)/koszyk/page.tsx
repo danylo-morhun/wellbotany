@@ -6,7 +6,11 @@ import { CartList } from "@/features/cart/components/CartList";
 import { CartSummary } from "@/features/cart/components/CartSummary";
 import { ShippingProgress } from "@/features/cart/components/ShippingProgress";
 import { effectiveUnitPricePln } from "@/features/cart/lib/pricing";
-import { CART_COOKIE_NAME, getCart, getCartByCustomerId } from "@/features/cart/lib/session";
+import {
+  CART_COOKIE_NAME,
+  getCart,
+  getCartByCustomerId,
+} from "@/features/cart/lib/session";
 import { auth } from "@/lib/auth";
 
 export const metadata: Metadata = {
@@ -36,7 +40,9 @@ export default async function KoszykPage() {
           </div>
           <div className="space-y-1">
             <h1 className="text-2xl font-bold">Twój koszyk jest pusty</h1>
-            <p className="text-muted-foreground">Przejrzyj katalog i dodaj produkty do koszyka.</p>
+            <p className="text-muted-foreground">
+              Przejrzyj katalog i dodaj produkty do koszyka.
+            </p>
           </div>
           <Link
             href="/katalog"
@@ -61,14 +67,19 @@ export default async function KoszykPage() {
           Koszyk{" "}
           <span className="text-lg font-normal text-muted-foreground">
             ({items.reduce((s, i) => s + i.quantity, 0)}{" "}
-            {items.reduce((s, i) => s + i.quantity, 0) === 1 ? "produkt" : "produkty"})
+            {items.reduce((s, i) => s + i.quantity, 0) === 1
+              ? "produkt"
+              : "produkty"}
+            )
           </span>
         </h1>
         <Link
           href="/katalog"
           className="group flex items-center gap-1.5 text-sm text-muted-foreground transition-colors hover:text-primary"
         >
-          <span className="transition-transform group-hover:-translate-x-0.5">←</span>
+          <span className="transition-transform group-hover:-translate-x-0.5">
+            ←
+          </span>
           Kontynuuj zakupy
         </Link>
       </div>
