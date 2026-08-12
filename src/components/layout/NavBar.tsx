@@ -3,16 +3,17 @@ import Image from "next/image";
 import Link from "next/link";
 import { Suspense } from "react";
 import { AdminLink } from "@/components/layout/AdminLink";
+import { MegaMenu } from "@/components/layout/MegaMenu";
 import { MobileMenu } from "@/components/layout/MobileMenu";
 import { ThemeToggle } from "@/components/layout/ThemeToggle";
 import { CartIcon } from "@/features/cart/components/CartIcon";
+import { getCategories } from "@/features/catalog/actions";
 import { HeaderSearch } from "@/features/catalog/components/HeaderSearch";
+import { buildCategoryNav } from "@/features/catalog/lib/nav";
 import { WishlistIcon, WishlistIconFallback } from "@/features/wishlist/components/WishlistIcon";
 
 const navLinks = [
   { label: "Katalog", href: "/katalog" },
-  { label: "Kategorie", href: "/kategorie" },
-  { label: "Marki", href: "/marki" },
   { label: "Nowości", href: "/katalog?nowosci=1" },
   { label: "Zestawy prezentowe", href: "/zestawy-prezentowe" },
 ];
@@ -23,7 +24,10 @@ const utilityLinks = [
   { label: "Kontakt", href: "/kontakt" },
 ];
 
-export function NavBar() {
+export async function NavBar() {
+  const categories = await getCategories();
+  const nav = buildCategoryNav(categories);
+
   return (
     <header className="sticky top-0 z-50 bg-background/95 backdrop-blur-sm print:hidden">
       {/* Utility bar */}
@@ -50,7 +54,7 @@ export function NavBar() {
       {/* Main row */}
       <div className="border-b border-border">
         <div className="mx-auto flex h-16 max-w-7xl items-center gap-2 px-4 sm:gap-4 sm:px-6 lg:gap-6 lg:px-8">
-          <MobileMenu navLinks={navLinks} utilityLinks={utilityLinks} />
+          <MobileMenu navLinks={navLinks} utilityLinks={utilityLinks} nav={nav} />
           <Link href="/" className="flex shrink-0 items-center">
             <Image
               src="/branding/logo-horizontal.svg"
@@ -94,27 +98,7 @@ export function NavBar() {
         </div>
       </div>
 
-      {/* Category nav */}
-      <nav className="hidden border-b border-border bg-card md:block">
-        <div className="mx-auto flex h-11 max-w-7xl items-center gap-7 px-4 text-sm font-medium sm:px-6 lg:px-8">
-          {navLinks.map((link) => (
-            <Link
-              key={link.href}
-              href={link.href}
-              className="text-muted-foreground transition-colors hover:text-primary"
-            >
-              {link.label}
-            </Link>
-          ))}
-          <Link
-            href="/katalog?promocje=1"
-            className="flex items-center gap-1.5 font-semibold text-foreground transition-colors hover:text-primary"
-          >
-            <span className="size-1.5 rounded-full bg-accent" aria-hidden="true" />
-            Promocje
-          </Link>
-        </div>
-      </nav>
+      {nav && <MegaMenu nav={nav} />}
     </header>
   );
 }
