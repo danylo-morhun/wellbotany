@@ -72,6 +72,8 @@ function mapStatusId(statusId: number): OrderStatus | null {
 
 function mapShippingMethod(deliveryMethod?: string): ShippingMethod {
   const m = (deliveryMethod ?? "").toLowerCase();
+  if (m.includes("orlen")) return "ORLEN_PACZKA";
+  if (m.includes("inpost") && m.includes("kurier")) return "INPOST_KURIER";
   if (m.includes("inpost") || m.includes("paczkomat")) return "INPOST_PACZKOMAT";
   if (m.includes("dhl")) return "DHL";
   if (m.includes("dpd")) return "DPD";

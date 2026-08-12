@@ -5,6 +5,8 @@ import { blCall } from "./client";
 function deliveryMethodName(method: string): string {
   const map: Record<string, string> = {
     INPOST_PACZKOMAT: "InPost Paczkomat",
+    INPOST_KURIER: "InPost Kurier",
+    ORLEN_PACZKA: "Orlen Paczka",
     DHL: "DHL",
     DPD: "DPD",
     COURIER: "Kurier",
