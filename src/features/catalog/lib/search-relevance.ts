@@ -12,32 +12,25 @@ export type ScorableProduct = {
 // Bitap-based approximate matching (fuse.js) — tolerates typos, missing
 // letters, and swapped hyphen/space ("omega 3" ~ "omega-3") in one pass,
 // unlike a plain-substring DB `contains` which needs an exact match.
+//
+// Deliberately excludes brand/category/tag names from the fuzzy keys: those
+// strings repeat across dozens of unrelated products (e.g. every "BestLab"
+// product, every "Sport" product), so a single loose fuzzy hit on one of
+// them used to flood results with lookalikes ("testo" ~ "BestLab" ~ every
+// BestLab product) — brand/category already have dedicated filters for
+// exact matching, so they don't need fuzzy free-text search too.
 const FUSE_OPTIONS: IFuseOptions<ScorableProduct> = {
   includeScore: true,
-  ignoreLocation: true,
-  minMatchCharLength: 2,
-  threshold: 0.4,
+  ignoreLocation: false,
+  distance: 30,
+  minMatchCharLength: 3,
+  threshold: 0.2,
   keys: [
     { name: "namePl", weight: 1 },
     {
       name: "slug",
       weight: 0.4,
       getFn: (p) => p.slug ?? "",
-    },
-    {
-      name: "brandName",
-      weight: 0.6,
-      getFn: (p) => p.brand?.name ?? "",
-    },
-    {
-      name: "categoryName",
-      weight: 0.5,
-      getFn: (p) => p.category?.namePl ?? "",
-    },
-    {
-      name: "tagNames",
-      weight: 0.5,
-      getFn: (p) => p.tags?.map((t) => t.tag.namePl).join(" ") ?? "",
     },
     { name: "shortDescPl", weight: 0.3 },
   ],
