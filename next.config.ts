@@ -13,6 +13,11 @@ const securityHeaders = [
 
 const nextConfig: NextConfig = {
   images: {
+    // Vercel's optimizer 402s once its Hobby-plan source-image quota is
+    // exhausted — most product images come from external supplier CDNs, so
+    // that quota fills fast. Unoptimized serves the source URL directly
+    // (no resize/format conversion) until the plan moves to Pro.
+    unoptimized: true,
     remotePatterns: [
       { protocol: "https", hostname: "res.cloudinary.com" },
       { protocol: "https", hostname: "images.unsplash.com" },
