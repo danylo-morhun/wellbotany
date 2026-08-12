@@ -19,10 +19,28 @@ function isStrictCspPath(pathname: string): boolean {
   return STRICT_CSP_PATHS.some((p) => pathname === p || pathname.startsWith(`${p}/`));
 }
 
+// Keep in sync with images.remotePatterns in next.config.ts — a host allowed
+// there but missing here loads fine in <Image> but gets silently blocked by
+// the browser's CSP, so the img falls back to alt text.
+const IMG_SRC_HOSTS = [
+  "https://res.cloudinary.com",
+  "https://images.unsplash.com",
+  "https://cdn.baselinker.com",
+  "https://zielarniakaliska.com.pl",
+  "https://yango.pl",
+  "https://kenay.com.pl",
+  "https://bestlab.com.pl",
+  "https://www.mito-pharma.pl",
+  "https://formeds.pl",
+  "https://azcdn.doz.pl",
+  "https://image.ceneostatic.pl",
+  "https://medpak.com.pl",
+].join(" ");
+
 function buildStrictCsp(nonce: string): string {
   return [
     "default-src 'self'",
-    "img-src 'self' data: blob: https://res.cloudinary.com https://images.unsplash.com https://cdn.baselinker.com https://zielarniakaliska.com.pl https://yango.pl https://kenay.com.pl",
+    `img-src 'self' data: blob: ${IMG_SRC_HOSTS}`,
     // 'strict-dynamic' trusts scripts loaded by an already-nonce'd script (e.g. the
     // Cloudinary upload widget, which our own JS injects) — the explicit host below
     // is a fallback for older browsers that don't support strict-dynamic.
@@ -50,7 +68,7 @@ function buildStrictCsp(nonce: string): string {
 function buildRelaxedCsp(): string {
   return [
     "default-src 'self'",
-    "img-src 'self' data: blob: https://res.cloudinary.com https://images.unsplash.com https://cdn.baselinker.com https://zielarniakaliska.com.pl https://yango.pl https://kenay.com.pl",
+    `img-src 'self' data: blob: ${IMG_SRC_HOSTS}`,
     "script-src 'self' 'unsafe-inline'",
     "style-src 'self' 'unsafe-inline'",
     "font-src 'self'",
