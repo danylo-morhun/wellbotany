@@ -147,7 +147,7 @@ export function HeaderSearch({ className, inputClassName }: Props) {
                     i === activeIndex ? "bg-muted" : "hover:bg-muted"
                   }`}
                 >
-                  <span className="relative size-10 shrink-0 overflow-hidden rounded-lg bg-white">
+                  <span className="relative size-10 shrink-0 overflow-hidden rounded-lg bg-card">
                     {r.image && (
                       <Image
                         src={r.image.url}

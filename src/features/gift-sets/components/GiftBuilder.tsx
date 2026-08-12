@@ -110,7 +110,7 @@ export function GiftBuilder({ settings, pool, packagings }: Props) {
                       : "hover:-translate-y-0.5 hover:shadow-card-hover motion-reduce:hover:translate-y-0"
                   }`}
                 >
-                  <div className="relative aspect-square overflow-hidden bg-white">
+                  <div className="relative aspect-square overflow-hidden bg-card">
                     {item.imageUrl ? (
                       <Image
                         src={item.imageUrl}
@@ -174,7 +174,7 @@ export function GiftBuilder({ settings, pool, packagings }: Props) {
                         : "hover:-translate-y-0.5 hover:shadow-card-hover motion-reduce:hover:translate-y-0"
                     }`}
                   >
-                    <div className="relative aspect-[4/3] overflow-hidden bg-white">
+                    <div className="relative aspect-[4/3] overflow-hidden bg-card">
                       {p.imageUrl ? (
                         <Image
                           src={p.imageUrl}

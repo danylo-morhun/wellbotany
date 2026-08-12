@@ -44,7 +44,7 @@ export default async function GiftSetDetailPage({ params }: Props) {
   return (
     <div className="mx-auto max-w-5xl px-4 py-10 sm:px-6 lg:px-8">
       <div className="grid gap-10 lg:grid-cols-2">
-        <div className="relative aspect-square overflow-hidden rounded-2xl bg-white shadow-card">
+        <div className="relative aspect-square overflow-hidden rounded-2xl bg-card shadow-card">
           {giftSet.imageUrl ? (
             <Image
               src={giftSet.imageUrl}

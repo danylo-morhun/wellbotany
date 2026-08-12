@@ -24,7 +24,7 @@ export function ProductCard({ product, priority = false }: Props) {
   return (
     <article className="group relative flex flex-col overflow-hidden rounded-2xl bg-card shadow-card transition-[box-shadow,transform] duration-200 ease-out hover:-translate-y-0.5 hover:shadow-card-hover motion-reduce:transition-none motion-reduce:hover:translate-y-0">
       <Link href={`/produkt/${product.slug}`} className="block">
-        <div className="relative aspect-square overflow-hidden bg-white">
+        <div className="relative aspect-square overflow-hidden bg-card">
           {mainImage ? (
             <Image
               src={mainImage.url}

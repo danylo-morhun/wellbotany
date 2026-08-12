@@ -49,7 +49,7 @@ export function ProductGallery({ images, productName }: Props) {
   return (
     <div className="flex flex-col gap-3">
       <div
-        className="relative aspect-square overflow-hidden rounded-xl bg-white dark:shadow-card"
+        className="relative aspect-square overflow-hidden rounded-xl bg-card dark:shadow-card"
         onTouchStart={handleTouchStart}
         onTouchEnd={handleTouchEnd}
       >

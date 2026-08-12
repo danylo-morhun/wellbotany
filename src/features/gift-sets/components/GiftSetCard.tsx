@@ -19,7 +19,7 @@ export function GiftSetCard({ giftSet }: { giftSet: GiftSetListItem }) {
       href={`/zestawy-prezentowe/${giftSet.slug}`}
       className="group flex flex-col overflow-hidden rounded-2xl bg-card shadow-card transition-[box-shadow,transform] duration-200 ease-out hover:-translate-y-0.5 hover:shadow-card-hover motion-reduce:transition-none motion-reduce:hover:translate-y-0"
     >
-      <div className="relative aspect-square overflow-hidden bg-white">
+      <div className="relative aspect-square overflow-hidden bg-card">
         {giftSet.imageUrl ? (
           <Image
             src={giftSet.imageUrl}

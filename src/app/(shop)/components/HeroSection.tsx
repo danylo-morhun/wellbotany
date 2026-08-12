@@ -68,7 +68,7 @@ export function HeroSection({ product = null }: Props) {
               className="group relative hidden w-64 animate-fade-up rounded-2xl bg-card p-4 shadow-float transition-transform duration-200 ease-out hover:-translate-y-1 md:block motion-reduce:animate-none motion-reduce:hover:translate-y-0"
               style={{ animationDelay: "240ms" }}
             >
-              <div className="relative aspect-square overflow-hidden rounded-xl bg-white">
+              <div className="relative aspect-square overflow-hidden rounded-xl bg-card">
                 <Image
                   src={image.url}
                   alt={image.altPl ?? product.namePl}
