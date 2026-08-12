@@ -3,6 +3,7 @@ import {
   Baby,
   Beef,
   Bone,
+  BookOpen,
   Brain,
   ChefHat,
   Coffee,
@@ -83,6 +84,7 @@ export const CATEGORY_ICONS: { name: string; label: string; icon: LucideIcon }[]
   { name: "Ear", label: "Na słuch", icon: Ear },
   { name: "Leaf", label: "Naturalne i adaptogeny", icon: Leaf },
   { name: "PersonStanding", label: "Senior", icon: PersonStanding },
+  { name: "BookOpen", label: "Książki i media", icon: BookOpen },
 ];
 
 export function getCategoryIcon(name?: string | null): LucideIcon | null {
