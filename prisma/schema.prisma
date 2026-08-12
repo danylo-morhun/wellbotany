@@ -47,6 +47,8 @@ enum OrderStatus {
 
 enum ShippingMethod {
   INPOST_PACZKOMAT // requires inpostMachineId
+  INPOST_KURIER
+  ORLEN_PACZKA // requires inpostMachineId (reused as generic pickup-point id)
   DHL
   DPD
   COURIER // generic courier
