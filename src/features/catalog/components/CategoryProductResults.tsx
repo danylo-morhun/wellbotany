@@ -2,6 +2,7 @@ import { getProducts } from "../actions";
 import { parseCatalogFilters } from "../lib/filters";
 import { Pagination } from "./Pagination";
 import { ProductGrid } from "./ProductGrid";
+import { SortSelect } from "./SortSelect";
 
 type Props = {
   searchParams: Promise<Record<string, string | string[] | undefined>>;
@@ -21,9 +22,12 @@ export async function CategoryProductResults({ searchParams, extraFilters, baseP
 
   return (
     <>
-      <p className="text-sm text-muted-foreground">
-        {total} {total === 1 ? "produkt" : total < 5 ? "produkty" : "produktów"}
-      </p>
+      <div className="flex items-center justify-between gap-4">
+        <p className="text-sm text-muted-foreground">
+          {total} {total === 1 ? "produkt" : total < 5 ? "produkty" : "produktów"}
+        </p>
+        <SortSelect basePath={basePath} />
+      </div>
       <ProductGrid products={items} />
       <Pagination filters={filters} total={total} basePath={basePath} />
     </>
