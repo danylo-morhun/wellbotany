@@ -3,10 +3,10 @@ import { notFound } from "next/navigation";
 import { Suspense } from "react";
 import { Breadcrumbs } from "@/features/catalog/components/Breadcrumbs";
 import { CategoryProductResults } from "@/features/catalog/components/CategoryProductResults";
-import { FilterSidebar } from "@/features/catalog/components/FilterSidebar";
+import { FilterSidebarData } from "@/features/catalog/components/FilterSidebarData";
 import { ProductGridSkeleton } from "@/features/catalog/components/ProductGridSkeleton";
 import { prisma } from "@/lib/prisma";
-import { getBrands, getCategoryBySlug, getTags } from "../../../../features/catalog/actions";
+import { getCategoryBySlug } from "../../../../features/catalog/actions";
 
 type Props = {
   params: Promise<{ slug: string }>;
@@ -36,8 +36,6 @@ export default async function KategoriaSlugPage({ params, searchParams }: Props)
   const category = await getCategoryBySlug(slug);
   if (!category) notFound();
 
-  const [brands, tags] = await Promise.all([getBrands(), getTags()]);
-
   const breadcrumbs = [
     { name: "Strona główna", href: "/" },
     { name: "Katalog", href: "/katalog" },
@@ -64,11 +62,10 @@ export default async function KategoriaSlugPage({ params, searchParams }: Props)
       <div className="mt-6 flex gap-8">
         <div className="hidden w-56 shrink-0 lg:block">
           <Suspense>
-            <FilterSidebar
-              categories={[]}
-              brands={brands}
-              tags={tags}
-              basePath={`/kategoria/${slug}`}
+            <FilterSidebarData
+              searchParams={searchParams}
+              categoryOverride={slug}
+              basePath="/katalog"
             />
           </Suspense>
         </div>

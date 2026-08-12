@@ -3,8 +3,8 @@ import { Suspense } from "react";
 import { ActiveFilterChips } from "@/features/catalog/components/ActiveFilterChips";
 import { Breadcrumbs } from "@/features/catalog/components/Breadcrumbs";
 import { CategoryProductResults } from "@/features/catalog/components/CategoryProductResults";
-import { FilterDrawerButton } from "@/features/catalog/components/FilterDrawerButton";
-import { FilterSidebar } from "@/features/catalog/components/FilterSidebar";
+import { FilterDrawerButtonData } from "@/features/catalog/components/FilterDrawerButtonData";
+import { FilterSidebarData } from "@/features/catalog/components/FilterSidebarData";
 import { ProductGridSkeleton } from "@/features/catalog/components/ProductGridSkeleton";
 import { SearchInput } from "@/features/catalog/components/SearchInput";
 import { getBrands, getCategories, getTags } from "../../../features/catalog/actions";
@@ -37,7 +37,7 @@ export default async function KatalogPage({ searchParams }: Props) {
       <div className="mt-6 flex gap-8">
         <div className="hidden w-56 shrink-0 lg:block">
           <Suspense>
-            <FilterSidebar categories={categories} brands={brands} tags={tags} />
+            <FilterSidebarData searchParams={searchParams} basePath="/katalog" />
           </Suspense>
         </div>
 
@@ -48,7 +48,7 @@ export default async function KatalogPage({ searchParams }: Props) {
                 <SearchInput />
               </Suspense>
               <Suspense>
-                <FilterDrawerButton categories={categories} brands={brands} tags={tags} />
+                <FilterDrawerButtonData searchParams={searchParams} basePath="/katalog" />
               </Suspense>
             </div>
             <Suspense>
