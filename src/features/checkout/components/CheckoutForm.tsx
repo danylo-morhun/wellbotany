@@ -20,7 +20,7 @@ export type CheckoutFormData = {
   apartment: string;
   city: string;
   postalCode: string;
-  shippingMethod: "INPOST_PACZKOMAT" | "DHL" | "DPD";
+  shippingMethod: "INPOST_PACZKOMAT" | "INPOST_KURIER" | "ORLEN_PACZKA";
   inpostMachineId: string;
   inpostMachineName: string;
   wantsFaktura: boolean;

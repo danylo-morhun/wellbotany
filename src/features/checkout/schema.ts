@@ -11,7 +11,7 @@ export const checkoutSchema = z
     apartment: z.string().optional(),
     city: z.string().min(1, "Miasto jest wymagane"),
     postalCode: z.string().regex(/^\d{2}-\d{3}$/, "Format: XX-XXX"),
-    shippingMethod: z.enum(["INPOST_PACZKOMAT", "DHL", "DPD"]),
+    shippingMethod: z.enum(["INPOST_PACZKOMAT", "INPOST_KURIER", "ORLEN_PACZKA"]),
     inpostMachineId: z.string().optional(),
     inpostMachineName: z.string().optional(),
     wantsFaktura: z.boolean().default(false),
@@ -27,10 +27,13 @@ export const checkoutSchema = z
       .refine((v) => v, { message: "Wymagana akceptacja regulaminu i polityki prywatności" }),
   })
   .superRefine((data, ctx) => {
-    if (data.shippingMethod === "INPOST_PACZKOMAT" && !data.inpostMachineId?.trim()) {
+    if (
+      (data.shippingMethod === "INPOST_PACZKOMAT" || data.shippingMethod === "ORLEN_PACZKA") &&
+      !data.inpostMachineId?.trim()
+    ) {
       ctx.addIssue({
         code: z.ZodIssueCode.custom,
-        message: "Podaj identyfikator paczkomatu",
+        message: "Podaj identyfikator punktu odbioru",
         path: ["inpostMachineId"],
       });
     }
