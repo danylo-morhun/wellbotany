@@ -95,7 +95,10 @@ function hasStructuralFilter(filters: CatalogFilters): boolean {
 }
 
 export async function getProducts(filters: CatalogFilters) {
-  const where = buildProductWhere(filters);
+  const categoryIds = filters.category
+    ? await getCategoryDescendantIds(filters.category)
+    : undefined;
+  const where = buildProductWhere(filters, categoryIds);
   const orderBy = buildProductOrderBy(filters.sort);
   const skip = (filters.page - 1) * filters.perPage;
 
@@ -272,6 +275,31 @@ export const getCategories = unstable_cache(
 );
 
 export type CategoryItem = Awaited<ReturnType<typeof getCategories>>[number];
+
+/** A category page must include products from its whole subtree, not just direct hits — parent nodes like "Waga i metabolizm" hold no products of their own. */
+export async function getCategoryDescendantIds(slug: string): Promise<string[]> {
+  const categories = await getCategories();
+  const bySlug = categories.find((c) => c.slug === slug);
+  if (!bySlug) return [];
+
+  const byParent = new Map<string, CategoryItem[]>();
+  for (const c of categories) {
+    if (!c.parentId) continue;
+    const siblings = byParent.get(c.parentId) ?? [];
+    siblings.push(c);
+    byParent.set(c.parentId, siblings);
+  }
+
+  const ids: string[] = [];
+  const stack = [bySlug.id];
+  while (stack.length) {
+    const id = stack.pop();
+    if (!id) continue;
+    ids.push(id);
+    for (const child of byParent.get(id) ?? []) stack.push(child.id);
+  }
+  return ids;
+}
 
 export const getBrands = unstable_cache(
   async () =>

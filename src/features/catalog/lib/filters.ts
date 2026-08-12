@@ -53,10 +53,15 @@ export function parseCatalogFilters(
   };
 }
 
-export function buildProductWhere(filters: CatalogFilters): Prisma.ProductWhereInput {
+export function buildProductWhere(
+  filters: CatalogFilters,
+  categoryIds?: string[],
+): Prisma.ProductWhereInput {
   const where: Prisma.ProductWhereInput = { status: "ACTIVE" };
 
-  if (filters.category) {
+  if (categoryIds) {
+    where.categoryId = { in: categoryIds };
+  } else if (filters.category) {
     where.category = { slug: filters.category };
   }
   if (filters.brand) {
