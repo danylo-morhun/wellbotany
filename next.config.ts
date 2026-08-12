@@ -20,6 +20,12 @@ const nextConfig: NextConfig = {
       { protocol: "https", hostname: "zielarniakaliska.com.pl" },
       { protocol: "https", hostname: "yango.pl" },
       { protocol: "https", hostname: "kenay.com.pl" },
+      { protocol: "https", hostname: "bestlab.com.pl" },
+      { protocol: "https", hostname: "www.mito-pharma.pl" },
+      { protocol: "https", hostname: "formeds.pl" },
+      { protocol: "https", hostname: "azcdn.doz.pl" },
+      { protocol: "https", hostname: "image.ceneostatic.pl" },
+      { protocol: "https", hostname: "medpak.com.pl" },
     ],
   },
   async headers() {
