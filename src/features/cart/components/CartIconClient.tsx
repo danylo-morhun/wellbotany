@@ -76,9 +76,7 @@ export function CartIconClient({ itemCount, items }: Props) {
             {items.length === 0 ? (
               <div className="flex h-full flex-col items-center justify-center gap-3 py-12 text-center">
                 <ShoppingCart className="size-10 text-muted-foreground" />
-                <p className="text-sm text-muted-foreground">
-                  Twój koszyk jest pusty
-                </p>
+                <p className="text-sm text-muted-foreground">Twój koszyk jest pusty</p>
                 <button
                   type="button"
                   onClick={() => setOpen(false)}
