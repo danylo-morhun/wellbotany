@@ -8,18 +8,23 @@ export default async function AdminPage() {
   const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
   const monthStart = new Date(now.getFullYear(), now.getMonth(), 1);
 
-  const [todayOrders, pendingOrders, lowStock, revenueResult] = await Promise.all([
-    prisma.order.count({ where: { createdAt: { gte: today } } }),
-    prisma.order.count({ where: { status: { in: ["PENDING", "PAID", "PROCESSING"] } } }),
-    prisma.productVariant.count({ where: { stock: { lte: 5, gt: 0 }, trackStock: true } }),
-    prisma.order.aggregate({
-      where: {
-        paymentStatus: "CAPTURED",
-        createdAt: { gte: monthStart },
-      },
-      _sum: { totalPln: true },
-    }),
-  ]);
+  const [todayOrders, pendingOrders, lowStock, revenueResult] =
+    await Promise.all([
+      prisma.order.count({ where: { createdAt: { gte: today } } }),
+      prisma.order.count({
+        where: { status: { in: ["PENDING", "PAID", "PROCESSING"] } },
+      }),
+      prisma.productVariant.count({
+        where: { stock: { lte: 5, gt: 0 }, trackStock: true },
+      }),
+      prisma.order.aggregate({
+        where: {
+          paymentStatus: "CAPTURED",
+          createdAt: { gte: monthStart },
+        },
+        _sum: { totalPln: true },
+      }),
+    ]);
 
   const kpis = [
     {
@@ -58,7 +63,9 @@ export default async function AdminPage() {
           const inner = (
             <>
               <div className="mb-3 flex items-center justify-between">
-                <span className="text-sm font-medium text-muted-foreground">{label}</span>
+                <span className="text-sm font-medium text-muted-foreground">
+                  {label}
+                </span>
                 <Icon className="size-4 text-muted-foreground" />
               </div>
               <p className="text-2xl font-bold">{value}</p>
