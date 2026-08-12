@@ -42,7 +42,7 @@ export const baseCheckoutInput = {
   street: "Testowa 1",
   city: "Warszawa",
   postalCode: "00-001",
-  shippingMethod: "DHL" as const,
+  shippingMethod: "INPOST_KURIER" as const,
   wantsFaktura: false,
   paymentMethod: "BLIK" as const,
   acceptedTerms: true,

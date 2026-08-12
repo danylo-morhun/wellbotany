@@ -36,8 +36,8 @@ test("browse -> add to cart -> checkout -> confirmation", async ({ page }) => {
   await page.locator("#co-city").fill("Warszawa");
   await page.getByRole("button", { name: "Dalej: Dostawa →" }).click();
 
-  // Step 2 — shipping method (DHL avoids the InPost locker-picker requirement)
-  await page.locator('input[name="shippingMethod"][value="DHL"]').check();
+  // Step 2 — shipping method (InPost Kurier avoids the locker-picker requirement)
+  await page.locator('input[name="shippingMethod"][value="INPOST_KURIER"]').check();
   await page.getByRole("button", { name: "Dalej: Płatność" }).click();
 
   // Step 3 — payment + terms
