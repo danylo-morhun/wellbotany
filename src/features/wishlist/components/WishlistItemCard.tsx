@@ -43,7 +43,7 @@ export function WishlistItemCard({ item }: Props) {
     <div className="flex gap-4 rounded-2xl bg-card p-4 shadow-card">
       <Link
         href={`/produkt/${item.product.slug}`}
-        className="relative size-20 shrink-0 overflow-hidden rounded-lg bg-white"
+        className="relative size-20 shrink-0 overflow-hidden rounded-lg bg-card"
       >
         {image ? (
           <Image
