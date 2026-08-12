@@ -1,4 +1,4 @@
-import { ShoppingBag } from "lucide-react";
+import { ShoppingCart } from "lucide-react";
 import type { Metadata } from "next";
 import { cookies } from "next/headers";
 import Link from "next/link";
@@ -36,7 +36,7 @@ export default async function KoszykPage() {
       <div className="mx-auto max-w-7xl px-4 py-24 sm:px-6 lg:px-8">
         <div className="flex flex-col items-center gap-5 text-center">
           <div className="flex size-20 items-center justify-center rounded-full bg-muted">
-            <ShoppingBag className="size-9 text-muted-foreground" />
+            <ShoppingCart className="size-9 text-muted-foreground" />
           </div>
           <div className="space-y-1">
             <h1 className="text-2xl font-bold">Twój koszyk jest pusty</h1>

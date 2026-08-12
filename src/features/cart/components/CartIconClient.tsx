@@ -1,6 +1,6 @@
 "use client";
 
-import { ShoppingBag, X } from "lucide-react";
+import { ShoppingCart, X } from "lucide-react";
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
@@ -50,7 +50,7 @@ export function CartIconClient({ itemCount, items }: Props) {
         aria-label={`Koszyk${itemCount > 0 ? ` (${itemCount})` : ""}`}
         className="relative rounded-md p-2 text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
       >
-        <ShoppingBag className="size-5" />
+        <ShoppingCart className="size-5" />
         {itemCount > 0 && (
           <span className="absolute right-0.5 top-0.5 flex size-4 items-center justify-center rounded-full bg-primary text-[10px] font-bold text-primary-foreground">
             {itemCount > 99 ? "99+" : itemCount}
@@ -75,7 +75,7 @@ export function CartIconClient({ itemCount, items }: Props) {
           <div className="flex-1 overflow-y-auto px-6">
             {items.length === 0 ? (
               <div className="flex h-full flex-col items-center justify-center gap-3 py-12 text-center">
-                <ShoppingBag className="size-10 text-muted-foreground" />
+                <ShoppingCart className="size-10 text-muted-foreground" />
                 <p className="text-sm text-muted-foreground">
                   Twój koszyk jest pusty
                 </p>
