@@ -78,7 +78,7 @@ export function buildProductJsonLd(product: {
   description?: string | null;
   images: string[];
   brandName?: string | null;
-  variants: Array<{ pricePln: number; stock: number }>;
+  variants: Array<{ sku?: string; pricePln: number; stock: number; isDefault?: boolean }>;
   slug: string;
 }) {
   const prices = product.variants.map((v) => v.pricePln);
@@ -87,6 +87,7 @@ export function buildProductJsonLd(product: {
   const lowPrice = Math.min(...prices) / 100;
   const highPrice = Math.max(...prices) / 100;
   const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "https://wellbotany.pl";
+  const defaultVariant = product.variants.find((v) => v.isDefault) ?? product.variants[0];
 
   return {
     "@context": "https://schema.org",
@@ -95,6 +96,7 @@ export function buildProductJsonLd(product: {
     description: product.description ?? undefined,
     image: product.images,
     url: `${siteUrl}/produkt/${product.slug}`,
+    ...(defaultVariant?.sku && { sku: defaultVariant.sku }),
     ...(product.brandName && {
       brand: { "@type": "Brand", name: product.brandName },
     }),
