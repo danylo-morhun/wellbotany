@@ -68,6 +68,23 @@ export default async function AdminOrderDetailPage({
               Paczkomat: {order.inpostMachineName ?? order.inpostMachineId}
             </p>
           )}
+          {order.trackingNumber && (
+            <p className="text-sm text-muted-foreground">
+              Przesyłka:{" "}
+              {order.trackingUrl ? (
+                <a
+                  href={order.trackingUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-primary underline-offset-2 hover:underline"
+                >
+                  {order.trackingNumber}
+                </a>
+              ) : (
+                order.trackingNumber
+              )}
+            </p>
+          )}
         </section>
       </div>
 
@@ -170,7 +187,12 @@ export default async function AdminOrderDetailPage({
 
       <section className="rounded-2xl bg-card p-5 shadow-card">
         <h2 className="mb-4 font-semibold">Status i notatka</h2>
-        <StatusForm orderId={order.id} currentStatus={order.status} currentNote={order.noteAdmin} />
+        <StatusForm
+          orderId={order.id}
+          currentStatus={order.status}
+          currentNote={order.noteAdmin}
+          currentTrackingNumber={order.trackingNumber}
+        />
       </section>
     </div>
   );
