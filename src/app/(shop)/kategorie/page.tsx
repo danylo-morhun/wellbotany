@@ -1,7 +1,8 @@
 import Image from "next/image";
 import Link from "next/link";
+import { getCategories } from "@/features/catalog/actions";
+import { childrenOf, computeSubtreeCounts } from "@/features/catalog/lib/nav";
 import { getCategoryIcon } from "@/lib/category-icons";
-import { prisma } from "@/lib/prisma";
 
 export const metadata = {
   title: "Kategorie",
@@ -9,27 +10,11 @@ export const metadata = {
 };
 
 export default async function KategoriePage() {
-  const categories = await prisma.category.findMany({
-    where: { parentId: null },
-    orderBy: { sortOrder: "asc" },
-    select: {
-      id: true,
-      slug: true,
-      namePl: true,
-      image: true,
-      icon: true,
-      children: {
-        orderBy: { sortOrder: "asc" },
-        select: {
-          id: true,
-          slug: true,
-          namePl: true,
-          _count: { select: { products: { where: { status: "ACTIVE" } } } },
-        },
-      },
-      _count: { select: { products: { where: { status: "ACTIVE" } } } },
-    },
-  });
+  const allCategories = await getCategories();
+  const counts = computeSubtreeCounts(allCategories);
+  const categories = allCategories
+    .filter((c) => c.parentId === null)
+    .sort((a, b) => a.sortOrder - b.sortOrder || a.namePl.localeCompare(b.namePl, "pl"));
 
   return (
     <main className="container mx-auto max-w-6xl px-4 py-12">
@@ -44,6 +29,7 @@ export default async function KategoriePage() {
         <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
           {categories.map((cat) => {
             const Icon = getCategoryIcon(cat.icon);
+            const children = childrenOf(allCategories, cat.id);
             return (
               <div
                 key={cat.id}
@@ -77,7 +63,7 @@ export default async function KategoriePage() {
                       {cat.namePl}
                     </h2>
                     <p className="mt-0.5 text-sm text-muted-foreground">
-                      {cat._count.products} produktów
+                      {counts.get(cat.id) ?? 0} produktów
                     </p>
                   </div>
                   <svg
@@ -97,17 +83,17 @@ export default async function KategoriePage() {
                   </svg>
                 </Link>
 
-                {cat.children.length > 0 && (
+                {children.length > 0 && (
                   <div className="border-t border-border px-5 py-4">
                     <div className="flex flex-wrap gap-2">
-                      {cat.children.map((sub) => (
+                      {children.map((sub) => (
                         <Link
                           key={sub.id}
                           href={`/kategoria/${sub.slug}`}
                           className="inline-flex items-center gap-1 rounded-full bg-secondary px-3 py-1 text-xs font-medium text-secondary-foreground transition-colors duration-200 hover:bg-primary hover:text-primary-foreground motion-reduce:transition-none"
                         >
                           {sub.namePl}
-                          <span className="text-[10px] opacity-60">{sub._count.products}</span>
+                          <span className="text-[10px] opacity-60">{counts.get(sub.id) ?? 0}</span>
                         </Link>
                       ))}
                     </div>
