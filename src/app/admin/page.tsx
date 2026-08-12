@@ -1,4 +1,4 @@
-import { AlertTriangle, Clock, ShoppingBag, TrendingUp } from "lucide-react";
+import { AlertTriangle, Clock, ShoppingCart, TrendingUp } from "lucide-react";
 import Link from "next/link";
 import { formatPrice } from "@/lib/format";
 import { prisma } from "@/lib/prisma";
@@ -30,7 +30,7 @@ export default async function AdminPage() {
     {
       label: "Zamówienia dziś",
       value: todayOrders,
-      icon: ShoppingBag,
+      icon: ShoppingCart,
       href: "/admin/zamowienia",
     },
     {
