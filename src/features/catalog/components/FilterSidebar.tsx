@@ -1,7 +1,8 @@
 "use client";
 
 import { useRouter, useSearchParams } from "next/navigation";
-import { useCallback, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
+import { Checkbox } from "@/components/ui/checkbox";
 import type { BrandItem, CategoryItem, TagItem } from "../actions";
 import { SearchInput } from "./SearchInput";
 
@@ -10,40 +11,92 @@ type Props = {
   brands: BrandItem[];
   tags: TagItem[];
   basePath?: string;
+  /** Category implied by the current route (e.g. `/kategoria/sport`) but not present in the URL's query string — shown as checked, and included when toggling other categories. */
+  impliedCategory?: string;
   onFilterChange?: () => void;
 };
+
+/** Stable partition, not a full re-sort — options with zero matches under the active filters sink to the end so the list doesn't visibly reshuffle on every toggle. */
+function withZeroCountsLast<T extends { _count: { products: number } }>(items: T[]): T[] {
+  return [...items].sort(
+    (a, b) => (a._count.products === 0 ? 1 : 0) - (b._count.products === 0 ? 1 : 0),
+  );
+}
+
+function CheckboxRow({
+  id,
+  checked,
+  onChange,
+  label,
+  count,
+}: {
+  id: string;
+  checked: boolean;
+  onChange: (checked: boolean) => void;
+  label: string;
+  count?: number;
+}) {
+  return (
+    <label
+      htmlFor={id}
+      className="flex w-full cursor-pointer items-center justify-between gap-2 rounded-md px-2 py-1.5 text-sm text-foreground transition-colors hover:bg-muted"
+    >
+      <span className="flex items-center gap-2">
+        <Checkbox id={id} checked={checked} onCheckedChange={onChange} />
+        {label}
+      </span>
+      {count !== undefined && <span className="text-xs opacity-70">{count}</span>}
+    </label>
+  );
+}
 
 export function FilterSidebar({
   categories,
   brands,
   tags,
   basePath = "/katalog",
+  impliedCategory,
   onFilterChange,
 }: Props) {
   const router = useRouter();
   const searchParams = useSearchParams();
   const [showAllCategories, setShowAllCategories] = useState(false);
+  const [priceMin, setPriceMin] = useState(searchParams.get("cenaMin") ?? "");
+  const [priceMax, setPriceMax] = useState(searchParams.get("cenaMax") ?? "");
+
+  useEffect(() => {
+    setPriceMin(searchParams.get("cenaMin") ?? "");
+    setPriceMax(searchParams.get("cenaMax") ?? "");
+  }, [searchParams]);
 
   const CATEGORY_PREVIEW_COUNT = 8;
-  const activeCategorySlug = searchParams.get("kategoria");
-  const visibleCategories = showAllCategories
-    ? categories
-    : categories.slice(0, CATEGORY_PREVIEW_COUNT);
-  const activeCategoryHidden =
-    !showAllCategories &&
-    activeCategorySlug != null &&
-    !visibleCategories.some((cat) => cat.slug === activeCategorySlug);
-  const activeCategory = activeCategoryHidden
-    ? categories.find((cat) => cat.slug === activeCategorySlug)
-    : undefined;
-  const hiddenCategoryCount = categories.length - visibleCategories.length;
+
+  const getActiveList = useCallback(
+    (paramKey: string): string[] => {
+      const fromUrl = searchParams.get(paramKey)?.split(",").filter(Boolean);
+      if (fromUrl) return fromUrl;
+      return paramKey === "kategoria" && impliedCategory ? [impliedCategory] : [];
+    },
+    [searchParams, impliedCategory],
+  );
 
   const active = {
-    category: searchParams.get("kategoria"),
-    brand: searchParams.get("marka"),
-    tags: searchParams.get("tagi")?.split(",").filter(Boolean) ?? [],
-    sort: searchParams.get("sortuj") ?? "newest",
+    category: getActiveList("kategoria"),
+    brand: getActiveList("marka"),
+    tags: getActiveList("tagi"),
   };
+
+  const sortedCategories = withZeroCountsLast(categories);
+  const sortedBrands = withZeroCountsLast(brands);
+
+  const visibleCategories = showAllCategories
+    ? sortedCategories
+    : sortedCategories.slice(0, CATEGORY_PREVIEW_COUNT);
+  const visibleSlugs = new Set(visibleCategories.map((c) => c.slug));
+  const pinnedActiveCategories = showAllCategories
+    ? []
+    : sortedCategories.filter((c) => active.category.includes(c.slug) && !visibleSlugs.has(c.slug));
+  const hiddenCategoryCount = sortedCategories.length - visibleCategories.length;
 
   const setParam = useCallback(
     (key: string, value: string | null) => {
@@ -54,27 +107,54 @@ export function FilterSidebar({
         params.set(key, value);
       }
       params.delete("strona");
-      router.push(`${basePath}?${params.toString()}`);
+      router.push(`${basePath}?${params.toString()}`, { scroll: false });
       onFilterChange?.();
     },
     [router, searchParams, basePath, onFilterChange],
   );
 
-  const toggleTag = useCallback(
-    (slug: string) => {
-      const current = searchParams.get("tagi")?.split(",").filter(Boolean) ?? [];
-      const next = current.includes(slug) ? current.filter((t) => t !== slug) : [...current, slug];
-      setParam("tagi", next.length > 0 ? next.join(",") : null);
+  const toggleMulti = useCallback(
+    (paramKey: string, slug: string) => {
+      const current = getActiveList(paramKey);
+      const next = current.includes(slug) ? current.filter((s) => s !== slug) : [...current, slug];
+      setParam(paramKey, next.length > 0 ? next.join(",") : null);
+    },
+    [getActiveList, setParam],
+  );
+
+  const toggleFlag = useCallback(
+    (paramKey: string) => {
+      setParam(paramKey, searchParams.get(paramKey) === "1" ? null : "1");
     },
     [searchParams, setParam],
   );
 
+  const applyPriceRange = useCallback(() => {
+    const params = new URLSearchParams(searchParams.toString());
+    if (priceMin) params.set("cenaMin", priceMin);
+    else params.delete("cenaMin");
+    if (priceMax) params.set("cenaMax", priceMax);
+    else params.delete("cenaMax");
+    params.delete("strona");
+    router.push(`${basePath}?${params.toString()}`, { scroll: false });
+    onFilterChange?.();
+  }, [searchParams, priceMin, priceMax, router, basePath, onFilterChange]);
+
   const clearAll = useCallback(() => {
-    router.push(basePath);
+    router.push(basePath, { scroll: false });
     onFilterChange?.();
   }, [router, basePath, onFilterChange]);
 
-  const hasActiveFilters = active.category || active.brand || active.tags.length > 0;
+  const hasActiveFilters =
+    active.category.length > 0 ||
+    active.brand.length > 0 ||
+    active.tags.length > 0 ||
+    Boolean(searchParams.get("cenaMin")) ||
+    Boolean(searchParams.get("cenaMax")) ||
+    searchParams.get("dostepne") === "1" ||
+    searchParams.get("promocje") === "1" ||
+    searchParams.get("nowosci") === "1" ||
+    searchParams.get("polecane") === "1";
 
   return (
     <aside className="space-y-6">
@@ -93,56 +173,33 @@ export function FilterSidebar({
         )}
       </div>
 
-      <div>
-        <p className="mb-2 text-sm font-semibold text-foreground">Sortowanie</p>
-        <select
-          value={active.sort}
-          onChange={(e) => setParam("sortuj", e.target.value)}
-          className="w-full rounded-md border border-border bg-background px-3 py-2 text-sm text-foreground"
-        >
-          <option value="newest">Najnowsze</option>
-          <option value="name_asc">Nazwa A–Z</option>
-          <option value="name_desc">Nazwa Z–A</option>
-        </select>
-      </div>
-
-      {categories.length > 0 && (
+      {sortedCategories.length > 0 && (
         <div>
           <p className="mb-2 text-sm font-semibold text-foreground">Kategoria</p>
-          <ul className="space-y-1">
-            {activeCategory && (
-              <li key={activeCategory.id}>
-                <button
-                  type="button"
-                  onClick={() => setParam("kategoria", null)}
-                  className="flex w-full items-center justify-between rounded-md bg-primary px-2 py-1.5 text-left text-sm text-primary-foreground"
-                >
-                  <span>{activeCategory.namePl}</span>
-                  <span className="text-xs opacity-70">{activeCategory._count.products}</span>
-                </button>
-              </li>
-            )}
-            {visibleCategories.map((cat) => (
-              <li key={cat.id}>
-                <button
-                  type="button"
-                  onClick={() =>
-                    setParam("kategoria", active.category === cat.slug ? null : cat.slug)
-                  }
-                  className={`flex w-full items-center justify-between rounded-md px-2 py-1.5 text-left text-sm transition-colors ${
-                    active.category === cat.slug
-                      ? "bg-primary text-primary-foreground"
-                      : "hover:bg-muted"
-                  }`}
-                >
-                  <span>{cat.namePl}</span>
-                  <span className="text-xs opacity-70">{cat._count.products}</span>
-                </button>
-              </li>
+          <div className="space-y-1">
+            {pinnedActiveCategories.map((cat) => (
+              <CheckboxRow
+                key={cat.id}
+                id={`kategoria-${cat.slug}`}
+                checked
+                onChange={() => toggleMulti("kategoria", cat.slug)}
+                label={cat.namePl}
+                count={cat._count.products}
+              />
             ))}
-          </ul>
+            {visibleCategories.map((cat) => (
+              <CheckboxRow
+                key={cat.id}
+                id={`kategoria-${cat.slug}`}
+                checked={active.category.includes(cat.slug)}
+                onChange={() => toggleMulti("kategoria", cat.slug)}
+                label={cat.namePl}
+                count={cat._count.products}
+              />
+            ))}
+          </div>
           {(hiddenCategoryCount > 0 || showAllCategories) &&
-            categories.length > CATEGORY_PREVIEW_COUNT && (
+            sortedCategories.length > CATEGORY_PREVIEW_COUNT && (
               <button
                 type="button"
                 onClick={() => setShowAllCategories((v) => !v)}
@@ -154,29 +211,113 @@ export function FilterSidebar({
         </div>
       )}
 
-      {brands.length > 0 && (
+      {sortedBrands.length > 0 && (
         <div>
           <p className="mb-2 text-sm font-semibold text-foreground">Marka</p>
-          <ul className="space-y-1">
-            {brands.map((brand) => (
-              <li key={brand.id}>
-                <button
-                  type="button"
-                  onClick={() => setParam("marka", active.brand === brand.slug ? null : brand.slug)}
-                  className={`flex w-full items-center justify-between rounded-md px-2 py-1.5 text-left text-sm transition-colors ${
-                    active.brand === brand.slug
-                      ? "bg-primary text-primary-foreground"
-                      : "hover:bg-muted"
-                  }`}
-                >
-                  <span>{brand.name}</span>
-                  <span className="text-xs opacity-70">{brand._count.products}</span>
-                </button>
-              </li>
+          <div className="space-y-1">
+            {sortedBrands.map((brand) => (
+              <CheckboxRow
+                key={brand.id}
+                id={`marka-${brand.slug}`}
+                checked={active.brand.includes(brand.slug)}
+                onChange={() => toggleMulti("marka", brand.slug)}
+                label={brand.name}
+                count={brand._count.products}
+              />
             ))}
-          </ul>
+          </div>
         </div>
       )}
+
+      <div>
+        <p className="mb-2 text-sm font-semibold text-foreground">Cena</p>
+        <div className="flex items-center gap-2">
+          <div className="relative flex-1">
+            <label htmlFor="cena-min" className="sr-only">
+              Cena od
+            </label>
+            <input
+              id="cena-min"
+              type="number"
+              min={0}
+              inputMode="decimal"
+              placeholder="0"
+              value={priceMin}
+              onChange={(e) => setPriceMin(e.target.value)}
+              onBlur={applyPriceRange}
+              onKeyDown={(e) => e.key === "Enter" && applyPriceRange()}
+              className="w-full rounded-md border border-border bg-background py-1.5 pl-2 pr-7 text-sm text-foreground [appearance:textfield] focus:border-transparent focus:outline-none focus:ring-2 focus:ring-ring/50 [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
+            />
+            <span className="pointer-events-none absolute right-2 top-1/2 -translate-y-1/2 text-xs text-muted-foreground">
+              zł
+            </span>
+          </div>
+          <span className="shrink-0 text-sm text-muted-foreground">–</span>
+          <div className="relative flex-1">
+            <label htmlFor="cena-max" className="sr-only">
+              Cena do
+            </label>
+            <input
+              id="cena-max"
+              type="number"
+              min={0}
+              inputMode="decimal"
+              placeholder="∞"
+              value={priceMax}
+              onChange={(e) => setPriceMax(e.target.value)}
+              onBlur={applyPriceRange}
+              onKeyDown={(e) => e.key === "Enter" && applyPriceRange()}
+              className="w-full rounded-md border border-border bg-background py-1.5 pl-2 pr-7 text-sm text-foreground [appearance:textfield] focus:border-transparent focus:outline-none focus:ring-2 focus:ring-ring/50 [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
+            />
+            <span className="pointer-events-none absolute right-2 top-1/2 -translate-y-1/2 text-xs text-muted-foreground">
+              zł
+            </span>
+          </div>
+        </div>
+        {(priceMin || priceMax) && (
+          <button
+            type="button"
+            onClick={applyPriceRange}
+            className="mt-1.5 text-sm font-medium text-primary hover:text-primary-deep"
+          >
+            Zastosuj
+          </button>
+        )}
+      </div>
+
+      <div>
+        <p className="mb-2 text-sm font-semibold text-foreground">Dostępność</p>
+        <CheckboxRow
+          id="dostepne"
+          checked={searchParams.get("dostepne") === "1"}
+          onChange={() => toggleFlag("dostepne")}
+          label="Tylko dostępne"
+        />
+      </div>
+
+      <div>
+        <p className="mb-2 text-sm font-semibold text-foreground">Wyróżnione</p>
+        <div className="space-y-1">
+          <CheckboxRow
+            id="promocje"
+            checked={searchParams.get("promocje") === "1"}
+            onChange={() => toggleFlag("promocje")}
+            label="Promocje"
+          />
+          <CheckboxRow
+            id="nowosci"
+            checked={searchParams.get("nowosci") === "1"}
+            onChange={() => toggleFlag("nowosci")}
+            label="Nowości"
+          />
+          <CheckboxRow
+            id="polecane"
+            checked={searchParams.get("polecane") === "1"}
+            onChange={() => toggleFlag("polecane")}
+            label="Polecane"
+          />
+        </div>
+      </div>
 
       {tags.length > 0 && (
         <div>
@@ -188,7 +329,7 @@ export function FilterSidebar({
                 <button
                   key={tag.id}
                   type="button"
-                  onClick={() => toggleTag(tag.slug)}
+                  onClick={() => toggleMulti("tagi", tag.slug)}
                   className={`rounded-full px-3 py-1 text-xs font-medium transition-colors ${
                     isActive
                       ? "bg-primary text-primary-foreground"
