@@ -1,3 +1,10 @@
+export const DEFAULT_OG_IMAGE = {
+  url: "/og-image.jpg",
+  width: 1200,
+  height: 630,
+  alt: "Well Botany — suplementy diety, witaminy i produkty bio",
+};
+
 /**
  * JSON.stringify output can contain "</script>" if a field holds that literal
  * string (e.g. supplier-imported product name/description) — escaping "<"
