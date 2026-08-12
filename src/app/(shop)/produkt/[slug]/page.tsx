@@ -13,7 +13,7 @@ import {
 } from "@/features/wishlist/components/ProductWishlistButton";
 import { prisma } from "@/lib/prisma";
 import { sanitizeRichText } from "@/lib/sanitize";
-import { buildProductJsonLd, toJsonLdScript } from "@/lib/seo";
+import { buildProductJsonLd, DEFAULT_OG_IMAGE, toJsonLdScript } from "@/lib/seo";
 import { getProduct, getRelatedProducts } from "../../../../features/catalog/actions";
 
 type Props = {
@@ -49,7 +49,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     openGraph: {
       title,
       description,
-      images: mainImage ? [{ url: mainImage }] : undefined,
+      images: mainImage ? [{ url: mainImage }] : [DEFAULT_OG_IMAGE],
     },
   };
 }

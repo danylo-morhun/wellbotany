@@ -4,7 +4,12 @@ import { ThemeProvider } from "next-themes";
 import { CookieBanner } from "@/components/CookieBanner";
 import { GoogleAnalytics } from "@/components/GoogleAnalytics";
 import { Toaster } from "@/components/ui/sonner";
-import { buildOrganizationJsonLd, buildWebsiteJsonLd, toJsonLdScript } from "@/lib/seo";
+import {
+  buildOrganizationJsonLd,
+  buildWebsiteJsonLd,
+  DEFAULT_OG_IMAGE,
+  toJsonLdScript,
+} from "@/lib/seo";
 import "./globals.css";
 
 const jakarta = Plus_Jakarta_Sans({
@@ -39,12 +44,14 @@ export const metadata: Metadata = {
     title: "Well Botany — Suplementy i produkty bio",
     description:
       "Sklep z suplementami diety, witaminami i produktami bio. Szeroki wybór, szybka dostawa InPost i DHL.",
+    images: [DEFAULT_OG_IMAGE],
   },
   twitter: {
     card: "summary_large_image",
     title: "Well Botany — Suplementy i produkty bio",
     description:
       "Sklep z suplementami diety, witaminami i produktami bio. Szeroki wybór, szybka dostawa InPost i DHL.",
+    images: [DEFAULT_OG_IMAGE.url],
   },
   verification: {
     google: "8H41cB23kzb36R1T4wR4A_oz4zVtbQGdKUq6Nl5AqsQ",
