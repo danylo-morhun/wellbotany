@@ -1,6 +1,6 @@
 import { ArrowUpRight } from "lucide-react";
 import Link from "next/link";
-import { prisma } from "@/lib/prisma";
+import { getBrands } from "@/features/catalog/actions";
 
 export const metadata = {
   title: "Marki",
@@ -9,21 +9,18 @@ export const metadata = {
 };
 
 export default async function MarkiPage() {
-  const brands = await prisma.brand.findMany({
-    orderBy: { name: "asc" },
-    select: {
-      id: true,
-      slug: true,
-      name: true,
-      _count: { select: { products: true } },
-    },
-  });
+  // getBrands only returns brands with an ACTIVE product and counts ACTIVE
+  // products — a brand whose whole catalog is still DRAFT (e.g. imported
+  // without prices) would otherwise show a misleading count and 404 empty
+  // page (HealthLabs Care, HILKI hit this: 115 and 1 products, 0 ACTIVE).
+  const brands = await getBrands();
 
   const totalProducts = brands.reduce((sum, b) => sum + b._count.products, 0);
 
   const groups = new Map<string, typeof brands>();
   for (const brand of brands) {
-    const letter = /[a-z]/i.test(brand.name[0] ?? "") ? brand.name[0]!.toUpperCase() : "#";
+    const firstChar = brand.name[0] ?? "";
+    const letter = /[a-z]/i.test(firstChar) ? firstChar.toUpperCase() : "#";
     const bucket = groups.get(letter);
     if (bucket) bucket.push(brand);
     else groups.set(letter, [brand]);
