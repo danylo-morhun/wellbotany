@@ -4,6 +4,7 @@ import { notFound } from "next/navigation";
 import { Suspense } from "react";
 import { Breadcrumbs } from "@/features/catalog/components/Breadcrumbs";
 import { CategoryProductResults } from "@/features/catalog/components/CategoryProductResults";
+import { FilterSidebarData } from "@/features/catalog/components/FilterSidebarData";
 import { ProductGridSkeleton } from "@/features/catalog/components/ProductGridSkeleton";
 import { prisma } from "@/lib/prisma";
 import { getBrandBySlug } from "../../../../features/catalog/actions";
@@ -72,14 +73,26 @@ export default async function MarkiSlugPage({ params, searchParams }: Props) {
         </div>
       </div>
 
-      <div className="mt-6 space-y-6">
-        <Suspense fallback={<ProductGridSkeleton count={8} />}>
-          <CategoryProductResults
-            searchParams={searchParams}
-            extraFilters={{ marka: slug }}
-            basePath={`/marki/${slug}`}
-          />
-        </Suspense>
+      <div className="mt-6 flex gap-8">
+        <div className="hidden w-56 shrink-0 lg:block">
+          <Suspense>
+            <FilterSidebarData
+              searchParams={searchParams}
+              brandOverride={slug}
+              basePath={`/marki/${slug}`}
+            />
+          </Suspense>
+        </div>
+
+        <div className="min-w-0 flex-1 space-y-6">
+          <Suspense fallback={<ProductGridSkeleton count={8} />}>
+            <CategoryProductResults
+              searchParams={searchParams}
+              extraFilters={{ marka: slug }}
+              basePath={`/marki/${slug}`}
+            />
+          </Suspense>
+        </div>
       </div>
     </div>
   );

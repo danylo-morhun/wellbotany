@@ -403,9 +403,14 @@ export const resolveCatalogFilters = cache(
   async (
     searchParams: Promise<Record<string, string | string[] | undefined>>,
     categoryOverride?: string,
+    brandOverride?: string,
   ): Promise<CatalogFilters> => {
     const raw = await searchParams;
-    return parseCatalogFilters(categoryOverride ? { ...raw, kategoria: categoryOverride } : raw);
+    return parseCatalogFilters({
+      ...raw,
+      ...(categoryOverride ? { kategoria: categoryOverride } : {}),
+      ...(brandOverride ? { marka: brandOverride } : {}),
+    });
   },
 );
 

@@ -13,6 +13,8 @@ type Props = {
   basePath?: string;
   /** Category implied by the current route (e.g. `/kategoria/sport`) but not present in the URL's query string — shown as checked, and included when toggling other categories. */
   impliedCategory?: string;
+  /** Brand implied by the current route (e.g. `/marki/bicaps`) but not present in the URL's query string — shown as checked, and included when toggling other brands. */
+  impliedBrand?: string;
   onFilterChange?: () => void;
 };
 
@@ -56,6 +58,7 @@ export function FilterSidebar({
   tags,
   basePath = "/katalog",
   impliedCategory,
+  impliedBrand,
   onFilterChange,
 }: Props) {
   const router = useRouter();
@@ -75,9 +78,11 @@ export function FilterSidebar({
     (paramKey: string): string[] => {
       const fromUrl = searchParams.get(paramKey)?.split(",").filter(Boolean);
       if (fromUrl) return fromUrl;
-      return paramKey === "kategoria" && impliedCategory ? [impliedCategory] : [];
+      if (paramKey === "kategoria" && impliedCategory) return [impliedCategory];
+      if (paramKey === "marka" && impliedBrand) return [impliedBrand];
+      return [];
     },
-    [searchParams, impliedCategory],
+    [searchParams, impliedCategory, impliedBrand],
   );
 
   const active = {
