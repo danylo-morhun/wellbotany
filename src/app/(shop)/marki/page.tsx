@@ -1,6 +1,5 @@
-import { ArrowUpRight } from "lucide-react";
-import Link from "next/link";
 import { getBrands } from "@/features/catalog/actions";
+import { BrandRow } from "./BrandRow";
 
 export const metadata = {
   title: "Marki",
@@ -46,22 +45,7 @@ export default async function MarkiPage() {
               </div>
               <div className="flex-1 divide-y divide-border/60 border-b border-border/60">
                 {letterBrands.map((brand) => (
-                  <Link
-                    key={brand.id}
-                    href={`/marki/${brand.slug}`}
-                    className="group flex items-center justify-between gap-4 py-5 transition-colors duration-200 ease-out motion-reduce:transition-none"
-                  >
-                    <span className="text-xl font-semibold text-foreground transition-colors duration-200 ease-out group-hover:text-primary md:text-2xl motion-reduce:transition-none">
-                      {brand.name}
-                    </span>
-                    <span className="flex shrink-0 items-center gap-2 text-sm text-muted-foreground">
-                      {brand._count.products} produktów
-                      <ArrowUpRight
-                        className="size-4 -translate-x-1 opacity-0 transition-[transform,opacity] duration-200 ease-out group-hover:translate-x-0 group-hover:opacity-100 motion-reduce:transition-none"
-                        aria-hidden="true"
-                      />
-                    </span>
-                  </Link>
+                  <BrandRow key={brand.id} brand={brand} />
                 ))}
               </div>
             </section>
