@@ -108,18 +108,25 @@ model Category {
 }
 
 model Brand {
-  id          String    @id @default(cuid())
-  slug        String    @unique
-  name        String
-  description String?
-  logo        String?
-  website     String?
-  countryCode String? // ISO 3166-1 alpha-2, e.g. "PL", "DE"
-  products    Product[]
-  createdAt   DateTime  @default(now())
-  updatedAt   DateTime  @updatedAt
+  id            String    @id @default(cuid())
+  slug          String    @unique
+  name          String
+  description   String?
+  logo          String?
+  website       String?
+  countryCode   String? // ISO 3166-1 alpha-2, e.g. "PL", "DE"
+  // A manufacturer's product line (e.g. ForMeds' BICAPS, PRENACAPS) is
+  // still its own Brand row — parentBrand just groups it under the
+  // manufacturer for browsing, mirroring Category's "CategoryTree".
+  parentBrandId String?
+  parentBrand   Brand?    @relation("BrandTree", fields: [parentBrandId], references: [id])
+  subBrands     Brand[]   @relation("BrandTree")
+  products      Product[]
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
 
   @@index([slug])
+  @@index([parentBrandId])
 }
 
 // Dietary claims, allergen-free labels, certifications (Bio, Vegan, Gluten-Free, etc.)
