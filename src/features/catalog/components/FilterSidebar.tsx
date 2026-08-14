@@ -1,5 +1,6 @@
 "use client";
 
+import { ChevronRight } from "lucide-react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useCallback, useEffect, useState } from "react";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -91,6 +92,37 @@ export function FilterSidebar({
     tags: getActiveList("tagi"),
   };
 
+  // A brand with product lines (e.g. Formeds → BICAPS, PRENACAPS) starts
+  // collapsed, but auto-expands once it or one of its lines is the active
+  // filter — additive (never collapses a group the visitor opened themselves).
+  const [expandedBrands, setExpandedBrands] = useState<Set<string>>(new Set());
+  useEffect(() => {
+    const activeBrandSlugs = getActiveList("marka");
+    setExpandedBrands((prev) => {
+      let changed = false;
+      const next = new Set(prev);
+      for (const b of brands) {
+        const isRelevant =
+          activeBrandSlugs.includes(b.slug) ||
+          b.subBrands.some((line) => activeBrandSlugs.includes(line.slug));
+        if (!next.has(b.id) && isRelevant) {
+          next.add(b.id);
+          changed = true;
+        }
+      }
+      return changed ? next : prev;
+    });
+  }, [brands, getActiveList]);
+
+  const toggleExpandedBrand = useCallback((brandId: string) => {
+    setExpandedBrands((prev) => {
+      const next = new Set(prev);
+      if (next.has(brandId)) next.delete(brandId);
+      else next.add(brandId);
+      return next;
+    });
+  }, []);
+
   const sortedCategories = withZeroCountsLast(categories);
   const sortedBrands = withZeroCountsLast(brands);
 
@@ -125,6 +157,34 @@ export function FilterSidebar({
       setParam(paramKey, next.length > 0 ? next.join(",") : null);
     },
     [getActiveList, setParam],
+  );
+
+  // A parent brand's slug (e.g. "formeds") already expands server-side to
+  // every one of its lines, so a plain `toggleMulti` would never narrow
+  // anything: picking one line while the parent is active is a no-op (the
+  // parent's implicit "all lines" already covers it). Selecting a line while
+  // its parent is active instead *replaces* the parent with just that line;
+  // selecting the parent drops any individually-picked siblings, since the
+  // parent already supersedes them.
+  const toggleBrand = useCallback(
+    (slug: string) => {
+      const current = getActiveList("marka");
+      const parent = brands.find((b) => b.subBrands.some((line) => line.slug === slug));
+      if (parent) {
+        if (current.includes(parent.slug)) {
+          setParam("marka", slug);
+          return;
+        }
+        toggleMulti("marka", slug);
+        return;
+      }
+      const childSlugs = brands.find((b) => b.slug === slug)?.subBrands.map((l) => l.slug) ?? [];
+      const next = current.includes(slug)
+        ? current.filter((s) => s !== slug)
+        : [...current.filter((s) => !childSlugs.includes(s)), slug];
+      setParam("marka", next.length > 0 ? next.join(",") : null);
+    },
+    [brands, getActiveList, setParam, toggleMulti],
   );
 
   const toggleFlag = useCallback(
@@ -220,16 +280,56 @@ export function FilterSidebar({
         <div>
           <p className="mb-2 text-sm font-semibold text-foreground">Marka</p>
           <div className="space-y-1">
-            {sortedBrands.map((brand) => (
-              <CheckboxRow
-                key={brand.id}
-                id={`marka-${brand.slug}`}
-                checked={active.brand.includes(brand.slug)}
-                onChange={() => toggleMulti("marka", brand.slug)}
-                label={brand.name}
-                count={brand._count.products}
-              />
-            ))}
+            {sortedBrands.map((brand) => {
+              const hasLines = brand.subBrands.length > 0;
+              const isExpanded = expandedBrands.has(brand.id);
+              return (
+                <div key={brand.id}>
+                  <div className="flex items-center gap-1">
+                    <div className="min-w-0 flex-1">
+                      <CheckboxRow
+                        id={`marka-${brand.slug}`}
+                        checked={active.brand.includes(brand.slug)}
+                        onChange={() => toggleBrand(brand.slug)}
+                        label={brand.name}
+                        count={brand._count.products}
+                      />
+                    </div>
+                    {hasLines && (
+                      <button
+                        type="button"
+                        onClick={() => toggleExpandedBrand(brand.id)}
+                        aria-expanded={isExpanded}
+                        aria-label={
+                          isExpanded ? `Zwiń linie ${brand.name}` : `Rozwiń linie ${brand.name}`
+                        }
+                        className="shrink-0 rounded-md p-1.5 text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+                      >
+                        <ChevronRight
+                          className={`size-4 transition-transform duration-200 ease-out motion-reduce:transition-none ${
+                            isExpanded ? "rotate-90" : ""
+                          }`}
+                        />
+                      </button>
+                    )}
+                  </div>
+                  {hasLines && isExpanded && (
+                    <div className="mt-1 ml-4 space-y-1 border-border/60 border-l pl-2">
+                      {withZeroCountsLast(brand.subBrands).map((line) => (
+                        <CheckboxRow
+                          key={line.id}
+                          id={`marka-${line.slug}`}
+                          checked={active.brand.includes(line.slug)}
+                          onChange={() => toggleBrand(line.slug)}
+                          label={line.name}
+                          count={line._count.products}
+                        />
+                      ))}
+                    </div>
+                  )}
+                </div>
+              );
+            })}
           </div>
         </div>
       )}
