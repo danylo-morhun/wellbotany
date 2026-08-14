@@ -56,12 +56,13 @@ export async function GET() {
     const link = `${SITE_URL}/produkt/${product.slug}`;
 
     return product.variants.map((variant) => {
-      const title = variant.optionValue
-        ? `${product.namePl} – ${variant.optionValue}`
-        : product.namePl;
+      const title =
+        variant.optionValue && !product.namePl.endsWith(variant.optionValue)
+          ? `${product.namePl} – ${variant.optionValue}`
+          : product.namePl;
 
       return `    <item>
-      <g:id>${escapeXml(variant.sku)}</g:id>
+      <g:id>${escapeXml(variant.id)}</g:id>
       <g:title>${escapeXml(title)}</g:title>
       <g:description>${escapeXml(description)}</g:description>
       <g:link>${escapeXml(link)}</g:link>
