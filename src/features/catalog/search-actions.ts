@@ -2,6 +2,7 @@
 
 import { actionClient } from "@/lib/safe-action";
 import { fetchProductsByIds, getSearchableProducts } from "./actions";
+import { resolveDisplayBrand } from "./lib/brand-tree";
 import { rankBySearchRelevance } from "./lib/search-relevance";
 import { searchSuggestionsSchema } from "./schema";
 
@@ -19,7 +20,7 @@ export const searchProductSuggestions = actionClient
     return products.map((p) => ({
       slug: p.slug,
       namePl: p.namePl,
-      brandName: p.brand?.name ?? null,
+      brandName: p.brand ? resolveDisplayBrand(p.brand).name : null,
       image: p.images[0] ?? null,
       variant: p.variants[0] ?? null,
     }));

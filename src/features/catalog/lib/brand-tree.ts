@@ -64,3 +64,12 @@ export function getBrandSubtreeIds<T extends BrandNode>(brands: T[], slugs: stri
   }
   return [...ids];
 }
+
+type BrandRef = { name: string; slug: string };
+
+/** The name/slug to show as "the brand" anywhere customer-facing (product card, PDP, search, the GMC feed) — a product's own `brand` relation is often a manufacturer's product line (e.g. ForMeds' BICAPS), which duplicates the product name ("BICAPS" eyebrow over "BICAPS white mulberry+"). Customers know the manufacturer, not the line, so prefer `parentBrand` when set. */
+export function resolveDisplayBrand<T extends BrandRef>(
+  brand: T & { parentBrand?: BrandRef | null },
+): BrandRef {
+  return brand.parentBrand ?? brand;
+}

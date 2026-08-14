@@ -9,7 +9,9 @@ const productSelect = {
   shortDescPl: true,
   isNewArrival: true,
   isFeatured: true,
-  brand: { select: { name: true, slug: true } },
+  brand: {
+    select: { name: true, slug: true, parentBrand: { select: { name: true, slug: true } } },
+  },
   category: { select: { namePl: true, slug: true } },
   images: {
     where: { isMain: true },

@@ -21,7 +21,9 @@ const PRODUCT_LIST_SELECT = {
   shortDescPl: true,
   isNewArrival: true,
   isFeatured: true,
-  brand: { select: { name: true, slug: true } },
+  brand: {
+    select: { name: true, slug: true, parentBrand: { select: { name: true, slug: true } } },
+  },
   category: { select: { namePl: true, slug: true } },
   images: {
     where: { isMain: true },
@@ -58,7 +60,7 @@ const PRODUCT_SEARCH_SELECT = {
   slug: true,
   namePl: true,
   shortDescPl: true,
-  brand: { select: { name: true } },
+  brand: { select: { name: true, parentBrand: { select: { name: true } } } },
   category: { select: { namePl: true } },
   tags: { select: { tag: { select: { namePl: true } } } },
   variants: { where: { isActive: true }, select: { stock: true, pricePln: true } },
@@ -262,7 +264,14 @@ export const getProduct = unstable_cache(
         metaTitlePl: true,
         metaDescPl: true,
         brand: {
-          select: { id: true, name: true, slug: true, description: true, logo: true },
+          select: {
+            id: true,
+            name: true,
+            slug: true,
+            description: true,
+            logo: true,
+            parentBrand: { select: { name: true, slug: true } },
+          },
         },
         category: {
           select: {

@@ -1,6 +1,7 @@
 // Google Merchant Center product feed (RSS 2.0 + g: namespace).
 // Register this URL as a "Scheduled fetch" content source in Merchant Center.
 import { NextResponse } from "next/server";
+import { resolveDisplayBrand } from "@/features/catalog/lib/brand-tree";
 import { prisma } from "@/lib/prisma";
 
 export const revalidate = 3600;
@@ -31,7 +32,9 @@ export async function GET() {
       namePl: true,
       shortDescPl: true,
       descriptionPl: true,
-      brand: { select: { name: true } },
+      brand: {
+        select: { name: true, slug: true, parentBrand: { select: { name: true, slug: true } } },
+      },
       images: { where: { isMain: true }, select: { url: true }, take: 1 },
       variants: {
         where: { isActive: true },
@@ -54,6 +57,7 @@ export async function GET() {
     const rawDescription = product.shortDescPl ?? product.descriptionPl ?? product.namePl;
     const description = stripHtml(rawDescription).slice(0, 5000);
     const link = `${SITE_URL}/produkt/${product.slug}`;
+    const displayBrand = product.brand ? resolveDisplayBrand(product.brand) : null;
 
     return product.variants.map((variant) => {
       const title =
@@ -73,7 +77,7 @@ export async function GET() {
       <g:item_group_id>${escapeXml(product.slug)}</g:item_group_id>
       <g:mpn>${escapeXml(variant.sku)}</g:mpn>
       ${variant.ean ? `<g:gtin>${escapeXml(variant.ean)}</g:gtin>` : ""}
-      ${product.brand ? `<g:brand>${escapeXml(product.brand.name)}</g:brand>` : "<g:identifier_exists>no</g:identifier_exists>"}
+      ${displayBrand ? `<g:brand>${escapeXml(displayBrand.name)}</g:brand>` : "<g:identifier_exists>no</g:identifier_exists>"}
     </item>`;
     });
   });

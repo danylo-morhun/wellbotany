@@ -3,6 +3,7 @@ import Link from "next/link";
 import { QuickAddButton } from "@/features/cart/components/QuickAddButton";
 import { formatPrice } from "@/lib/format";
 import type { ProductListItem } from "../actions";
+import { resolveDisplayBrand } from "../lib/brand-tree";
 
 type Props = {
   product: ProductListItem;
@@ -10,6 +11,7 @@ type Props = {
 };
 
 export function ProductCard({ product, priority = false }: Props) {
+  const displayBrand = product.brand ? resolveDisplayBrand(product.brand) : null;
   const defaultVariant = product.variants[0];
   const mainImage = product.images[0];
   const isOutOfStock = defaultVariant ? defaultVariant.stock <= 0 : true;
@@ -66,12 +68,12 @@ export function ProductCard({ product, priority = false }: Props) {
       </Link>
 
       <div className="flex flex-1 flex-col p-4 pt-2">
-        {product.brand && (
+        {displayBrand && (
           <Link
-            href={`/marki/${product.brand.slug}`}
+            href={`/marki/${displayBrand.slug}`}
             className="mb-1 text-xs font-medium text-muted-foreground transition-colors hover:text-foreground"
           >
-            {product.brand.name}
+            {displayBrand.name}
           </Link>
         )}
 

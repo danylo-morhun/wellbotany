@@ -15,6 +15,7 @@ import { prisma } from "@/lib/prisma";
 import { sanitizeRichText } from "@/lib/sanitize";
 import { buildProductJsonLd, DEFAULT_OG_IMAGE, toJsonLdScript } from "@/lib/seo";
 import { getProduct, getRelatedProducts } from "../../../../features/catalog/actions";
+import { resolveDisplayBrand } from "../../../../features/catalog/lib/brand-tree";
 
 type Props = {
   params: Promise<{ slug: string }>;
@@ -58,6 +59,7 @@ export default async function ProduktPage({ params }: Props) {
   const { slug } = await params;
   const product = await getProduct(slug);
   if (!product) notFound();
+  const displayBrand = product.brand ? resolveDisplayBrand(product.brand) : null;
 
   const related = await getRelatedProducts({
     id: product.id,
@@ -70,7 +72,7 @@ export default async function ProduktPage({ params }: Props) {
     name: product.namePl,
     description: product.descriptionPl,
     images: product.images.map((img) => img.url),
-    brandName: product.brand?.name,
+    brandName: displayBrand?.name,
     variants: product.variants,
     slug: product.slug,
   });
@@ -134,12 +136,12 @@ export default async function ProduktPage({ params }: Props) {
           <ProductGallery images={product.images} productName={product.namePl} />
 
           <div className="space-y-6">
-            {product.brand && (
+            {displayBrand && (
               <a
-                href={`/marki/${product.brand.slug}`}
+                href={`/marki/${displayBrand.slug}`}
                 className="text-sm font-medium text-muted-foreground hover:text-foreground"
               >
-                {product.brand.name}
+                {displayBrand.name}
               </a>
             )}
 
