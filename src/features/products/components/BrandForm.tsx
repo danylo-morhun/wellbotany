@@ -23,7 +23,12 @@ export function BrandForm({ brands }: Props) {
   const [formSlug, setFormSlug] = useState("");
   const [formSlugManual, setFormSlugManual] = useState(false);
   const [formLogo, setFormLogo] = useState("");
+  const [formParentBrandId, setFormParentBrandId] = useState("");
   const [deletingBrand, setDeletingBrand] = useState<Brand | null>(null);
+
+  // Only top-level brands can be picked as a parent — keeps the tree exactly
+  // 2 levels deep (manufacturer → product line) with no cycle handling needed.
+  const parentOptions = brands.filter((b) => !b.parentBrandId && b.id !== editing?.id);
 
   const { execute: execSave, isPending: saving } = useAction(saveBrand, {
     onSuccess: () => {
@@ -41,6 +46,7 @@ export function BrandForm({ brands }: Props) {
     setFormSlug("");
     setFormSlugManual(false);
     setFormLogo("");
+    setFormParentBrandId("");
     setShowNew(true);
   }
 
@@ -50,6 +56,7 @@ export function BrandForm({ brands }: Props) {
     setFormSlug(item.slug);
     setFormSlugManual(true);
     setFormLogo(item.logo ?? "");
+    setFormParentBrandId(item.parentBrandId ?? "");
     setEditing(item);
   }
 
@@ -79,6 +86,7 @@ export function BrandForm({ brands }: Props) {
       description: (fd.get("description") as string) || undefined,
       website: (fd.get("website") as string) || undefined,
       countryCode: (fd.get("countryCode") as string) || undefined,
+      parentBrandId: formParentBrandId || undefined,
     });
   }
 
@@ -125,6 +133,19 @@ export function BrandForm({ brands }: Props) {
           maxLength={2}
           className="rounded-lg border border-border px-2 py-1 text-sm"
         />
+        <select
+          name="parentBrandId"
+          value={formParentBrandId}
+          onChange={(e) => setFormParentBrandId(e.target.value)}
+          className="col-span-2 rounded-lg border border-border px-2 py-1 text-sm"
+        >
+          <option value="">— brak (marka nadrzędna) —</option>
+          {parentOptions.map((b) => (
+            <option key={b.id} value={b.id}>
+              {b.name}
+            </option>
+          ))}
+        </select>
         <input
           name="description"
           defaultValue={item?.description ?? ""}

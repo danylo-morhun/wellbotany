@@ -24,6 +24,7 @@ export const brandSchema = z.object({
   logo: z.string().url().optional().or(z.literal("")),
   website: z.string().url().optional().or(z.literal("")),
   countryCode: z.string().length(2).optional().or(z.literal("")),
+  parentBrandId: z.string().optional(),
 });
 
 export const tagSchema = z.object({

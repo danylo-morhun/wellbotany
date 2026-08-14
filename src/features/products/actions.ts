@@ -95,13 +95,14 @@ export const deleteCategory = adminActionClient
 export const saveBrand = adminActionClient
   .schema(brandSchema)
   .action(async ({ parsedInput: input }) => {
-    const { id, logo, website, description, countryCode, ...data } = input;
+    const { id, logo, website, description, countryCode, parentBrandId, ...data } = input;
     const payload = {
       ...data,
       logo: logo || null,
       website: website || null,
       description: description || null,
       countryCode: countryCode || null,
+      parentBrandId: parentBrandId || null,
     };
     let savedId: string;
     if (id) {
