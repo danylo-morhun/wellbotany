@@ -45,15 +45,15 @@ export function BrandRow({ brand }: { brand: BrandItem }) {
         )}
       </div>
       {hasLines && expanded && (
-        <div className="mb-5 flex flex-wrap gap-2">
+        <div className="mb-6 grid grid-cols-2 gap-x-8 gap-y-0.5 sm:grid-cols-3">
           {brand.subBrands.map((line) => (
             <Link
               key={line.id}
               href={`/katalog?marka=${line.slug}`}
-              className="flex items-center gap-1.5 rounded-full bg-muted px-3 py-1.5 text-xs font-medium text-muted-foreground transition-colors duration-200 ease-out hover:bg-primary hover:text-primary-foreground motion-reduce:transition-none"
+              className="flex items-baseline justify-between gap-3 rounded-md px-2 py-1.5 text-sm text-muted-foreground transition-colors duration-200 ease-out hover:bg-muted hover:text-foreground motion-reduce:transition-none"
             >
-              {line.name}
-              <span className="opacity-70">{line._count.products}</span>
+              <span>{line.name}</span>
+              <span className="text-xs tabular-nums opacity-60">{line._count.products}</span>
             </Link>
           ))}
         </div>
