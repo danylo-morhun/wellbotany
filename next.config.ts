@@ -20,17 +20,14 @@ const nextConfig: NextConfig = {
     unoptimized: true,
     remotePatterns: [
       { protocol: "https", hostname: "res.cloudinary.com" },
+      { protocol: "https", hostname: "dcu4fybzavbhk0mv.public.blob.vercel-storage.com" },
       { protocol: "https", hostname: "images.unsplash.com" },
       { protocol: "https", hostname: "cdn.baselinker.com" },
       { protocol: "https", hostname: "zielarniakaliska.com.pl" },
-      { protocol: "https", hostname: "yango.pl" },
+      // kenay.com.pl: ~43 products still point here — their catalog pages 404'd
+      // before the Blob migration could fetch them, so the old (dead) URL is
+      // still in the DB. Keep allowed until those are fixed manually.
       { protocol: "https", hostname: "kenay.com.pl" },
-      { protocol: "https", hostname: "bestlab.com.pl" },
-      { protocol: "https", hostname: "www.mito-pharma.pl" },
-      { protocol: "https", hostname: "formeds.pl" },
-      { protocol: "https", hostname: "azcdn.doz.pl" },
-      { protocol: "https", hostname: "image.ceneostatic.pl" },
-      { protocol: "https", hostname: "medpak.com.pl" },
     ],
   },
   async headers() {

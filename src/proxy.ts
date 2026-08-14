@@ -24,17 +24,14 @@ function isStrictCspPath(pathname: string): boolean {
 // the browser's CSP, so the img falls back to alt text.
 const IMG_SRC_HOSTS = [
   "https://res.cloudinary.com",
+  "https://dcu4fybzavbhk0mv.public.blob.vercel-storage.com",
   "https://images.unsplash.com",
   "https://cdn.baselinker.com",
   "https://zielarniakaliska.com.pl",
-  "https://yango.pl",
+  // kenay.com.pl: ~43 products still point here — their catalog pages 404'd
+  // before the Blob migration could fetch them, so the old (dead) URL is
+  // still in the DB. Keep allowed until those are fixed manually.
   "https://kenay.com.pl",
-  "https://bestlab.com.pl",
-  "https://www.mito-pharma.pl",
-  "https://formeds.pl",
-  "https://azcdn.doz.pl",
-  "https://image.ceneostatic.pl",
-  "https://medpak.com.pl",
 ].join(" ");
 
 function buildStrictCsp(nonce: string): string {
