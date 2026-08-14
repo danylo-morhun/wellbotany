@@ -1,4 +1,5 @@
 import {
+  applyBrandFacetCounts,
   getBrandFacetCounts,
   getBrands,
   getCategories,
@@ -34,10 +35,7 @@ export async function FilterDrawerButtonData({
   const scopedCategories = showCategories
     ? categories.map((c) => ({ ...c, _count: { products: categoryCounts.get(c.id) ?? 0 } }))
     : [];
-  const scopedBrands = brands.map((b) => ({
-    ...b,
-    _count: { products: brandCounts.get(b.id) ?? 0 },
-  }));
+  const scopedBrands = applyBrandFacetCounts(brands, brandCounts);
 
   return (
     <FilterDrawerButton

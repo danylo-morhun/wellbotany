@@ -61,6 +61,7 @@ export function parseCatalogFilters(
 export function buildProductWhere(
   filters: CatalogFilters,
   categoryIds?: string[],
+  brandIds?: string[],
 ): Prisma.ProductWhereInput {
   const where: Prisma.ProductWhereInput = { status: "ACTIVE" };
 
@@ -69,7 +70,9 @@ export function buildProductWhere(
   } else if (filters.category?.length) {
     where.category = { slug: { in: filters.category } };
   }
-  if (filters.brand?.length) {
+  if (brandIds) {
+    where.brandId = { in: brandIds };
+  } else if (filters.brand?.length) {
     where.brand = { slug: { in: filters.brand } };
   }
   if (filters.tags?.length) {
@@ -114,12 +117,17 @@ export function buildFacetWhere(
   filters: CatalogFilters,
   facet: "category" | "brand",
   categoryIds?: string[],
+  brandIds?: string[],
 ): Prisma.ProductWhereInput {
   const scoped: CatalogFilters = { ...filters };
   if (facet === "category") scoped.category = undefined;
   if (facet === "brand") scoped.brand = undefined;
 
-  const where = buildProductWhere(scoped, facet === "category" ? undefined : categoryIds);
+  const where = buildProductWhere(
+    scoped,
+    facet === "category" ? undefined : categoryIds,
+    facet === "brand" ? undefined : brandIds,
+  );
   return filters.inStockOnly ? withStockAvailability(where, true) : where;
 }
 

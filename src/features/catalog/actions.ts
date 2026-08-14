@@ -2,6 +2,7 @@ import type { Prisma } from "@prisma/client";
 import { unstable_cache } from "next/cache";
 import { cache } from "react";
 import { prisma } from "@/lib/prisma";
+import { computeBrandSubtreeCounts, getBrandSubtreeIds } from "./lib/brand-tree";
 import {
   buildFacetWhere,
   buildProductOrderBy,
@@ -103,7 +104,8 @@ export async function getProducts(filters: CatalogFilters) {
   const categoryIds = filters.category?.length
     ? await getCategoryDescendantIds(filters.category)
     : undefined;
-  let where = buildProductWhere(filters, categoryIds);
+  const brandIds = filters.brand?.length ? await getBrandDescendantIds(filters.brand) : undefined;
+  let where = buildProductWhere(filters, categoryIds, brandIds);
   if (filters.inStockOnly) {
     where = withStockAvailability(where, true);
   }
@@ -372,24 +374,64 @@ export async function getCategoryDescendantIds(slugs: string[]): Promise<string[
   return [...ids];
 }
 
-export const getBrands = unstable_cache(
+// Raw, flat brand table — a manufacturer's product line (e.g. ForMeds'
+// BICAPS) is its own Brand row with `parentBrandId` set, so this includes
+// both parents and children, unfiltered by product count (subtree rollup
+// needs every node, even ones with zero direct products of their own).
+const getBrandsFlat = unstable_cache(
   async () =>
     prisma.brand.findMany({
-      where: { products: { some: { status: "ACTIVE" } } },
       select: {
         id: true,
         slug: true,
         name: true,
         logo: true,
+        parentBrandId: true,
         _count: { select: { products: { where: { status: "ACTIVE" } } } },
       },
       orderBy: { name: "asc" },
     }),
-  ["brands"],
+  ["brands-flat"],
   { tags: ["brands"] },
 );
 
-export type BrandItem = Awaited<ReturnType<typeof getBrands>>[number];
+type BrandFlat = Awaited<ReturnType<typeof getBrandsFlat>>[number];
+
+export type BrandItem = Omit<BrandFlat, "_count"> & {
+  _count: { products: number };
+  subBrands: BrandItem[];
+};
+
+/** Top-level brands only, each carrying its non-empty product lines as `subBrands` — a parent like Formeds holds no products directly, so its count is the rolled-up sum of its lines (`computeBrandSubtreeCounts`). Brands (parent or leaf) with zero products anywhere in their subtree are dropped, same as the old direct-count filter did for leaves. */
+export async function getBrands(): Promise<BrandItem[]> {
+  const flat = await getBrandsFlat();
+  const rolledUp = computeBrandSubtreeCounts(flat);
+
+  const byParent = new Map<string, BrandFlat[]>();
+  for (const b of flat) {
+    if (!b.parentBrandId) continue;
+    const siblings = byParent.get(b.parentBrandId) ?? [];
+    siblings.push(b);
+    byParent.set(b.parentBrandId, siblings);
+  }
+
+  // `flat` is already name-sorted at the DB level, and both the top-level
+  // filter below and each `byParent` bucket preserve that relative order.
+  function toItem(b: BrandFlat): BrandItem {
+    const subBrands = (byParent.get(b.id) ?? [])
+      .filter((c) => (rolledUp.get(c.id) ?? 0) > 0)
+      .map(toItem);
+    return { ...b, _count: { products: rolledUp.get(b.id) ?? 0 }, subBrands };
+  }
+
+  return flat.filter((b) => !b.parentBrandId && (rolledUp.get(b.id) ?? 0) > 0).map(toItem);
+}
+
+/** A brand page (e.g. `/marki/formeds`) must include products from its whole subtree, not just direct hits — parent brands hold no products of their own. Accepts multiple slugs and returns the union of their subtrees' ids, deduped. */
+export async function getBrandDescendantIds(slugs: string[]): Promise<string[]> {
+  const flat = await getBrandsFlat();
+  return getBrandSubtreeIds(flat, slugs);
+}
 
 /**
  * Resolves the active `CatalogFilters` from the request's `searchParams` —
@@ -417,7 +459,8 @@ export const resolveCatalogFilters = cache(
 /** Product counts per category (including its subtree, matching what selecting the checkbox actually filters to) under the currently active filters (excluding the category filter itself) — filter-dependent, so `cache()`d per-request rather than `unstable_cache`d, so checkbox counts track the active combination. */
 export const getCategoryFacetCounts = cache(
   async (filters: CatalogFilters): Promise<Map<string, number>> => {
-    const where = buildFacetWhere(filters, "category");
+    const brandIds = filters.brand?.length ? await getBrandDescendantIds(filters.brand) : undefined;
+    const where = buildFacetWhere(filters, "category", undefined, brandIds);
     const [rows, categories] = await Promise.all([
       prisma.product.groupBy({
         by: ["categoryId"],
@@ -442,25 +485,51 @@ export const getCategoryFacetCounts = cache(
   },
 );
 
-/** Product counts per brand under the currently active filters (excluding the brand filter itself) — filter-dependent, so `cache()`d per-request rather than `unstable_cache`d, so checkbox counts track the active combination. */
+/** Product counts per brand (rolled up through `subBrands`, matching what selecting a parent's checkbox actually filters to) under the currently active filters (excluding the brand filter itself) — filter-dependent, so `cache()`d per-request rather than `unstable_cache`d, so checkbox counts track the active combination. */
 export const getBrandFacetCounts = cache(
   async (filters: CatalogFilters): Promise<Map<string, number>> => {
     const categoryIds = filters.category?.length
       ? await getCategoryDescendantIds(filters.category)
       : undefined;
     const where = buildFacetWhere(filters, "brand", categoryIds);
-    const rows = await prisma.product.groupBy({
-      by: ["brandId"],
-      where,
-      _count: { _all: true },
-    });
-    return new Map(
-      rows
-        .filter((r): r is typeof r & { brandId: string } => r.brandId != null)
-        .map((r) => [r.brandId, r._count._all]),
-    );
+    const [rows, brandsFlat] = await Promise.all([
+      prisma.product.groupBy({
+        by: ["brandId"],
+        where,
+        _count: { _all: true },
+      }),
+      getBrandsFlat(),
+    ]);
+
+    const directCounts = new Map<string, number>();
+    for (const r of rows) {
+      if (r.brandId != null) directCounts.set(r.brandId, r._count._all);
+    }
+
+    // `computeBrandSubtreeCounts` reads `_count.products`, so stub it with
+    // this request's filtered direct counts before rolling up the sums.
+    const scopedBrands = brandsFlat.map((b) => ({
+      ...b,
+      _count: { products: directCounts.get(b.id) ?? 0 },
+    }));
+    return computeBrandSubtreeCounts(scopedBrands);
   },
 );
+
+/** Rewrites `_count.products` (top-level and every `subBrands` entry) to the filter-scoped facet counts — `getBrands()`'s own counts are unscoped ("all time"), so the sidebar needs this applied on top before rendering checkboxes. */
+export function applyBrandFacetCounts(
+  brands: BrandItem[],
+  counts: Map<string, number>,
+): BrandItem[] {
+  function apply(b: BrandItem): BrandItem {
+    return {
+      ...b,
+      _count: { products: counts.get(b.id) ?? 0 },
+      subBrands: b.subBrands.map(apply),
+    };
+  }
+  return brands.map(apply);
+}
 
 export const getTags = unstable_cache(
   async () =>
