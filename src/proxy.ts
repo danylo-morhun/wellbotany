@@ -38,17 +38,15 @@ function buildStrictCsp(nonce: string): string {
   return [
     "default-src 'self'",
     `img-src 'self' data: blob: ${IMG_SRC_HOSTS}`,
-    // 'strict-dynamic' trusts scripts loaded by an already-nonce'd script (e.g. the
-    // Cloudinary upload widget, which our own JS injects) — the explicit host below
-    // is a fallback for older browsers that don't support strict-dynamic.
-    `script-src 'self' 'nonce-${nonce}' 'strict-dynamic' https://upload-widget.cloudinary.com`,
+    // 'strict-dynamic' trusts scripts loaded by an already-nonce'd script
+    // (e.g. Google Analytics' gtag.js pulling in further tag scripts).
+    `script-src 'self' 'nonce-${nonce}' 'strict-dynamic'`,
     // No nonce equivalent exists for inline style="..." attributes (only <style>
     // blocks), and Radix/base-ui set inline styles for positioning — unsafe-inline
     // here is a deliberate, lower-severity tradeoff.
     "style-src 'self' 'unsafe-inline'",
     "font-src 'self'",
     "connect-src 'self' https://api.cloudinary.com https://res.cloudinary.com https://*.ingest.de.sentry.io https://*.ingest.sentry.io",
-    "frame-src https://upload-widget.cloudinary.com",
     "object-src 'none'",
     "base-uri 'self'",
     "form-action 'self'",
