@@ -116,6 +116,7 @@ export const saveBrand = adminActionClient
     }
     revalidatePath("/admin/marki");
     revalidatePath("/marki", "layout");
+    revalidatePath("/marki/[slug]", "page");
     revalidateTag("brands", "max");
     return { success: true, id: savedId };
   });
@@ -126,6 +127,7 @@ export const deleteBrand = adminActionClient
     await prisma.brand.delete({ where: { id } });
     revalidatePath("/admin/marki");
     revalidatePath("/marki", "layout");
+    revalidatePath("/marki/[slug]", "page");
     revalidateTag("brands", "max");
     return { success: true };
   });
