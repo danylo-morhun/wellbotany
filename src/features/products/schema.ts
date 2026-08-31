@@ -80,8 +80,8 @@ export const productSchema = z.object({
     .default([]),
   allergenInfo: z
     .object({
-      contains: z.array(z.string().max(100)).default([]),
-      mayContain: z.array(z.string().max(100)).default([]),
+      contains: z.array(z.string().max(300)).default([]),
+      mayContain: z.array(z.string().max(300)).default([]),
     })
     .optional(),
   healthWarnings: z.array(z.string()).default([]),
