@@ -195,7 +195,8 @@ export function VariantsTable({ productId, variants }: Props) {
               <input
                 name="weightGrams"
                 type="number"
-                min={1}
+                min={0.1}
+                step={0.1}
                 defaultValue={item?.weightGrams ?? ""}
                 placeholder="150"
                 className="mt-0.5 w-full rounded-lg border border-border px-2 py-1 text-sm font-normal"
