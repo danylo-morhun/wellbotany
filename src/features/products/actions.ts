@@ -193,6 +193,7 @@ export const saveProduct = adminActionClient
     revalidatePath("/admin/produkty");
     if (savedId) revalidatePath(`/admin/produkty/${savedId}`);
     revalidatePath("/katalog", "layout");
+    revalidatePath("/produkt/[slug]", "page");
     revalidateTag("products", "max");
     if (savedId) void syncProductToBaselinker(savedId).catch(console.error);
     return { success: true, id: savedId };
@@ -210,6 +211,7 @@ export const deleteProduct = adminActionClient
     await prisma.product.delete({ where: { id } });
     revalidatePath("/admin/produkty");
     revalidatePath("/katalog", "layout");
+    revalidatePath("/produkt/[slug]", "page");
     revalidateTag("products", "max");
     return { success: true };
   });
@@ -245,6 +247,7 @@ export const saveVariant = adminActionClient
     }
     revalidatePath("/admin/produkty");
     revalidatePath(`/admin/produkty/${input.productId}`);
+    revalidatePath("/produkt/[slug]", "page");
     revalidateTag("products", "max");
     void syncProductToBaselinker(input.productId).catch(console.error);
     return { success: true };
@@ -259,6 +262,7 @@ export const deleteVariant = adminActionClient
     }
     await prisma.productVariant.delete({ where: { id } });
     revalidatePath("/admin/produkty");
+    revalidatePath("/produkt/[slug]", "page");
     revalidateTag("products", "max");
     return { success: true };
   });
@@ -273,6 +277,7 @@ export const quickUpdateVariant = adminActionClient
       select: { productId: true },
     });
     revalidatePath("/admin/produkty");
+    revalidatePath("/produkt/[slug]", "page");
     revalidateTag("products", "max");
     void syncProductToBaselinker(variant.productId).catch(console.error);
     return { success: true };
@@ -317,6 +322,7 @@ export const bulkUpdateProductStatus = adminActionClient
     });
     revalidatePath("/admin/produkty");
     revalidatePath("/katalog", "layout");
+    revalidatePath("/produkt/[slug]", "page");
     revalidateTag("products", "max");
     return { success: true, count };
   });
@@ -331,6 +337,7 @@ export const bulkAssignBrand = adminActionClient
     });
     revalidatePath("/admin/produkty");
     revalidatePath("/katalog", "layout");
+    revalidatePath("/produkt/[slug]", "page");
     revalidateTag("products", "max");
     return { success: true, count };
   });
@@ -345,6 +352,7 @@ export const bulkAssignCategory = adminActionClient
     });
     revalidatePath("/admin/produkty");
     revalidatePath("/katalog", "layout");
+    revalidatePath("/produkt/[slug]", "page");
     revalidateTag("products", "max");
     return { success: true, count };
   });
@@ -376,6 +384,7 @@ export const bulkDeleteProducts = adminActionClient
     await prisma.product.deleteMany({ where: { id: { in: deletableIds } } });
     revalidatePath("/admin/produkty");
     revalidatePath("/katalog", "layout");
+    revalidatePath("/produkt/[slug]", "page");
     revalidateTag("products", "max");
     return {
       success: true,
@@ -396,6 +405,8 @@ export const addProductImage = adminActionClient
     });
     revalidatePath("/admin/produkty");
     revalidatePath(`/admin/produkty/${input.productId}`);
+    revalidatePath("/produkt/[slug]", "page");
+    revalidateTag("products", "max");
     return { success: true };
   });
 
@@ -405,5 +416,7 @@ export const deleteProductImage = adminActionClient
     await prisma.productImage.delete({ where: { id: imageId } });
     revalidatePath("/admin/produkty");
     revalidatePath(`/admin/produkty/${productId}`);
+    revalidatePath("/produkt/[slug]", "page");
+    revalidateTag("products", "max");
     return { success: true };
   });
