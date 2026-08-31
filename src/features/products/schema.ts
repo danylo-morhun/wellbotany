@@ -87,7 +87,7 @@ export const productSchema = z.object({
   healthWarnings: z.array(z.string()).default([]),
   contraindicationsPl: z.string().max(2000).optional(),
   ageRestriction: z.coerce.number().int().positive().optional(),
-  certifications: z.array(z.string().max(60)).max(10).default([]),
+  certifications: z.array(z.string().max(300)).max(10).default([]),
   responsibleEntity: z.string().max(300).optional(),
   metaTitlePl: z.string().max(120).optional(),
   metaTitleEn: z.string().max(120).optional(),
