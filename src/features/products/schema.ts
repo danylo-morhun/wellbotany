@@ -64,7 +64,7 @@ export const productSchema = z.object({
   servingSize: z.string().max(100).optional(),
   servingsPerContainer: z.coerce.number().int().positive().optional(),
   storageInfo: z.string().max(500).optional(),
-  countryOfOrigin: z.string().length(2).optional().or(z.literal("")),
+  countryOfOrigin: z.string().max(300).optional(),
   usageInstructionsPl: z.string().max(2000).optional(),
   ingredients: z
     .object({ pl: z.string().max(4000).optional(), en: z.string().max(4000).optional() })

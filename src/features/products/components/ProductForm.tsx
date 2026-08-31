@@ -640,8 +640,8 @@ export function ProductForm({ product, categories, brands, tags }: Props) {
                   id="countryOfOrigin"
                   name="countryOfOrigin"
                   defaultValue={product?.countryOfOrigin ?? ""}
-                  placeholder="PL"
-                  maxLength={2}
+                  placeholder="np. Polska (Health Labs Care S.A., Warszawa)"
+                  maxLength={300}
                   className="w-full rounded-md border px-3 py-2 text-sm"
                 />
               </div>
