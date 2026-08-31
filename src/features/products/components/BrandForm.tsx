@@ -2,15 +2,12 @@
 
 import type { Brand } from "@prisma/client";
 import Image from "next/image";
-import { CldUploadWidget } from "next-cloudinary";
 import { useAction } from "next-safe-action/hooks";
 import { useState } from "react";
 import { ConfirmDialog } from "@/components/ConfirmDialog";
+import { CloudinaryDropzone } from "@/components/ui/cloudinary-dropzone";
 import { slugify } from "@/lib/slugify";
 import { deleteBrand, saveBrand } from "../actions";
-
-const CLOUD_NAME = process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME;
-const UPLOAD_PRESET = process.env.NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET;
 
 interface Props {
   brands: Brand[];
@@ -167,25 +164,12 @@ export function BrandForm({ brands }: Props) {
             </div>
           )}
           <div className="flex flex-1 flex-col gap-2">
-            {CLOUD_NAME && UPLOAD_PRESET ? (
-              <CldUploadWidget
-                uploadPreset={UPLOAD_PRESET}
-                onSuccess={(result) => {
-                  const info = result.info as { secure_url: string } | undefined;
-                  if (info?.secure_url) setFormLogo(info.secure_url);
-                }}
-              >
-                {({ open }) => (
-                  <button
-                    type="button"
-                    onClick={() => open()}
-                    className="self-start rounded-lg bg-primary px-3 py-1 text-xs font-medium text-primary-foreground transition-colors duration-200 hover:bg-primary-deep motion-reduce:transition-none"
-                  >
-                    Prześlij logo
-                  </button>
-                )}
-              </CldUploadWidget>
-            ) : null}
+            <CloudinaryDropzone
+              variant="button"
+              multiple={false}
+              buttonLabel="Prześlij logo"
+              onUploaded={setFormLogo}
+            />
             <div className="flex gap-2">
               <input
                 type="url"
