@@ -635,10 +635,11 @@ export function ProductForm({ product, categories, brands, tags }: Props) {
                 <label htmlFor="servingSize" className="mb-1 block text-sm font-medium">
                   Porcja
                 </label>
-                <input
+                <textarea
                   id="servingSize"
                   name="servingSize"
                   defaultValue={product?.servingSize ?? ""}
+                  rows={2}
                   placeholder="2 kapsułki"
                   className="w-full rounded-md border px-3 py-2 text-sm"
                 />
