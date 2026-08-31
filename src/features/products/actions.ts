@@ -191,6 +191,7 @@ export const saveProduct = adminActionClient
     });
 
     revalidatePath("/admin/produkty");
+    if (savedId) revalidatePath(`/admin/produkty/${savedId}`);
     revalidatePath("/katalog", "layout");
     revalidateTag("products", "max");
     if (savedId) void syncProductToBaselinker(savedId).catch(console.error);
