@@ -112,7 +112,7 @@ export const variantSchema = z.object({
   stock: z.coerce.number().int().min(0).default(0),
   lowStockThreshold: z.coerce.number().int().min(0).default(5),
   trackStock: z.boolean().default(true),
-  weightGrams: z.coerce.number().int().positive().optional(),
+  weightGrams: z.coerce.number().positive().optional(),
   isDefault: z.boolean().default(false),
   isActive: z.boolean().default(true),
 });
