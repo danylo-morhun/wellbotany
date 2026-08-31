@@ -259,7 +259,7 @@ model ProductVariant {
   trackStock        Boolean @default(true)
 
   // Physical attributes (for carrier calculation)
-  weightGrams Int?
+  weightGrams Float?
 
   // BaseLinker variant sync
   baselinkerVariantId String? @unique
