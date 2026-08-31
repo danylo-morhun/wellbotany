@@ -7,8 +7,33 @@ import { toast } from "sonner";
 const CLOUD_NAME = process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME;
 const UPLOAD_PRESET = process.env.NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET;
 
+function uploadOne(file: File, onProgress: (percent: number) => void): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const xhr = new XMLHttpRequest();
+    xhr.open("POST", `https://api.cloudinary.com/v1_1/${CLOUD_NAME}/image/upload`);
+    xhr.upload.onprogress = (e) => {
+      if (e.lengthComputable) onProgress(Math.round((e.loaded / e.total) * 100));
+    };
+    xhr.onload = () => {
+      if (xhr.status >= 200 && xhr.status < 300) {
+        resolve((JSON.parse(xhr.responseText) as { secure_url: string }).secure_url);
+      } else {
+        reject(new Error(xhr.responseText));
+      }
+    };
+    xhr.onerror = () => reject(new Error("network error"));
+    const fd = new FormData();
+    fd.append("file", file);
+    fd.append("upload_preset", UPLOAD_PRESET as string);
+    xhr.send(fd);
+  });
+}
+
 function useCloudinaryUpload(onUploaded: (url: string) => void) {
   const [isUploading, setIsUploading] = useState(false);
+  const [progress, setProgress] = useState(0);
+  const [fileIndex, setFileIndex] = useState(0);
+  const [fileTotal, setFileTotal] = useState(0);
 
   const uploadFiles = useCallback(
     async (files: FileList | File[]) => {
@@ -16,30 +41,29 @@ function useCloudinaryUpload(onUploaded: (url: string) => void) {
         toast.error("Cloudinary nie skonfigurowany");
         return;
       }
+      const list = Array.from(files);
       setIsUploading(true);
+      setFileTotal(list.length);
       try {
-        for (const file of Array.from(files)) {
-          const fd = new FormData();
-          fd.append("file", file);
-          fd.append("upload_preset", UPLOAD_PRESET);
-          const res = await fetch(`https://api.cloudinary.com/v1_1/${CLOUD_NAME}/image/upload`, {
-            method: "POST",
-            body: fd,
-          });
-          if (!res.ok) throw new Error(await res.text());
-          const data = (await res.json()) as { secure_url: string };
-          onUploaded(data.secure_url);
+        for (let i = 0; i < list.length; i++) {
+          setFileIndex(i + 1);
+          setProgress(0);
+          const url = await uploadOne(list[i], setProgress);
+          onUploaded(url);
         }
       } catch {
         toast.error("Błąd przesyłania zdjęcia");
       } finally {
         setIsUploading(false);
+        setProgress(0);
+        setFileIndex(0);
+        setFileTotal(0);
       }
     },
     [onUploaded],
   );
 
-  return { uploadFiles, isUploading };
+  return { uploadFiles, isUploading, progress, fileIndex, fileTotal };
 }
 
 interface Props {
@@ -60,7 +84,8 @@ export function CloudinaryDropzone({
 }: Props) {
   const inputRef = useRef<HTMLInputElement>(null);
   const [isDragging, setIsDragging] = useState(false);
-  const { uploadFiles, isUploading } = useCloudinaryUpload(onUploaded);
+  const { uploadFiles, isUploading, progress, fileIndex, fileTotal } =
+    useCloudinaryUpload(onUploaded);
 
   const input = (
     <input
@@ -77,9 +102,14 @@ export function CloudinaryDropzone({
     />
   );
 
+  const progressLabel =
+    fileTotal > 1
+      ? `Przesyłanie ${fileIndex}/${fileTotal}… ${progress}%`
+      : `Przesyłanie… ${progress}%`;
+
   if (variant === "button") {
     return (
-      <>
+      <div className="flex flex-col gap-1.5">
         {input}
         <button
           type="button"
@@ -87,9 +117,17 @@ export function CloudinaryDropzone({
           onClick={() => inputRef.current?.click()}
           className="self-start rounded-lg bg-primary px-3 py-1 text-xs font-medium text-primary-foreground transition-colors duration-200 hover:bg-primary-deep disabled:opacity-50 motion-reduce:transition-none"
         >
-          {isUploading ? "Przesyłanie…" : buttonLabel}
+          {isUploading ? progressLabel : buttonLabel}
         </button>
-      </>
+        {isUploading && (
+          <div className="h-1 w-32 overflow-hidden rounded-full bg-muted">
+            <div
+              className="h-full rounded-full bg-primary transition-[width] duration-200 motion-reduce:transition-none"
+              style={{ width: `${progress}%` }}
+            />
+          </div>
+        )}
+      </div>
     );
   }
 
@@ -118,8 +156,16 @@ export function CloudinaryDropzone({
       >
         <UploadCloud className="h-6 w-6 text-muted-foreground" />
         <p className="text-sm text-muted-foreground">
-          {isUploading ? "Przesyłanie…" : "Przeciągnij zdjęcie tutaj lub kliknij, aby wybrać"}
+          {isUploading ? progressLabel : "Przeciągnij zdjęcie tutaj lub kliknij, aby wybrać"}
         </p>
+        {isUploading && (
+          <div className="h-1.5 w-full max-w-xs overflow-hidden rounded-full bg-muted">
+            <div
+              className="h-full rounded-full bg-primary transition-[width] duration-200 motion-reduce:transition-none"
+              style={{ width: `${progress}%` }}
+            />
+          </div>
+        )}
       </button>
     </div>
   );
