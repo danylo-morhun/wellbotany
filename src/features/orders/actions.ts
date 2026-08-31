@@ -17,7 +17,7 @@ export const updateOrderStatus = adminActionClient
     });
     if (!existing) throw new ActionError("Zamówienie nie istnieje");
 
-    const trackingNumber = input.trackingNumber?.trim() || existing.trackingNumber;
+    const trackingNumber = input.trackingNumber?.trim() || null;
     if (input.status === "SHIPPED" && !trackingNumber) {
       throw new ActionError("Podaj numer przesyłki, aby oznaczyć zamówienie jako wysłane");
     }
@@ -35,7 +35,8 @@ export const updateOrderStatus = adminActionClient
       data: {
         status: input.status,
         ...(input.noteAdmin !== undefined && { noteAdmin: input.noteAdmin }),
-        ...(trackingNumber && { trackingNumber, trackingUrl }),
+        trackingNumber,
+        trackingUrl,
       },
     });
     revalidatePath("/admin/zamowienia");
