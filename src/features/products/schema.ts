@@ -54,7 +54,7 @@ export const productSchema = z.object({
   descriptionPl: z.string().optional(),
   descriptionEn: z.string().optional(),
   descriptionUk: z.string().optional(),
-  benefitsPl: z.array(z.string().max(200)).max(6).default([]),
+  benefitsPl: z.array(z.string().max(200)).max(10).default([]),
   categoryId: z.string().optional(),
   brandId: z.string().optional(),
   isFeatured: z.boolean().default(false),
