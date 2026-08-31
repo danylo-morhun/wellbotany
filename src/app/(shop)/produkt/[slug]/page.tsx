@@ -113,6 +113,8 @@ export default async function ProduktPage({ params }: Props) {
     contains?: string[];
     mayContain?: string[];
   } | null;
+  const hasAllergenInfo =
+    (allergenInfo?.contains?.length ?? 0) > 0 || (allergenInfo?.mayContain?.length ?? 0) > 0;
   const benefitsPl = product.benefitsPl as string[] | null;
   const certifications = product.certifications as string[] | null;
 
@@ -252,7 +254,9 @@ export default async function ProduktPage({ params }: Props) {
             </section>
           )}
 
-          {(ingredients?.pl || (nutritionFacts && nutritionFacts.length > 0) || allergenInfo) && (
+          {(ingredients?.pl ||
+            (nutritionFacts && nutritionFacts.length > 0) ||
+            hasAllergenInfo) && (
             <section>
               <h2 className="text-lg font-semibold text-foreground">Skład</h2>
               {ingredients?.pl && (
@@ -282,15 +286,15 @@ export default async function ProduktPage({ params }: Props) {
                 </div>
               )}
 
-              {allergenInfo && (
+              {hasAllergenInfo && (
                 <div className="mt-4 space-y-1 text-sm text-muted-foreground">
-                  {allergenInfo.contains && allergenInfo.contains.length > 0 && (
+                  {allergenInfo?.contains && allergenInfo.contains.length > 0 && (
                     <p>
                       <span className="font-medium text-foreground">Zawiera:</span>{" "}
                       {allergenInfo.contains.join(", ")}
                     </p>
                   )}
-                  {allergenInfo.mayContain && allergenInfo.mayContain.length > 0 && (
+                  {allergenInfo?.mayContain && allergenInfo.mayContain.length > 0 && (
                     <p>
                       <span className="font-medium text-foreground">
                         Może zawierać śladowe ilości:
