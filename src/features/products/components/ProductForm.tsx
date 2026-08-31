@@ -110,6 +110,9 @@ export function ProductForm({ product, categories, brands, tags }: Props) {
       setNewCatName("");
       setShowNewCategory(false);
     },
+    onError: ({ error }) => {
+      toast.error(error?.serverError ?? "Błąd zapisu kategorii");
+    },
   });
 
   const { execute: execSaveBrand, isPending: savingBrand } = useAction(saveBrand, {
@@ -121,6 +124,9 @@ export function ProductForm({ product, categories, brands, tags }: Props) {
       }
       setNewBrandName("");
       setShowNewBrand(false);
+    },
+    onError: ({ error }) => {
+      toast.error(error?.serverError ?? "Błąd zapisu marki");
     },
   });
 
