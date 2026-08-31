@@ -76,6 +76,7 @@ export const saveCategory = adminActionClient
     }
     revalidatePath("/admin/kategorie");
     revalidatePath("/katalog", "layout");
+    revalidatePath("/kategoria/[slug]", "page");
     revalidateTag("categories", "max");
     return { success: true, id: savedId };
   });
@@ -86,6 +87,7 @@ export const deleteCategory = adminActionClient
     await prisma.category.delete({ where: { id } });
     revalidatePath("/admin/kategorie");
     revalidatePath("/katalog", "layout");
+    revalidatePath("/kategoria/[slug]", "page");
     revalidateTag("categories", "max");
     return { success: true };
   });
