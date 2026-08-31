@@ -4,6 +4,7 @@ import type { Brand, Category, Product, ProductStatus, ProductTag, Tag } from "@
 import { useRouter } from "next/navigation";
 import { useAction } from "next-safe-action/hooks";
 import { useState } from "react";
+import { toast } from "sonner";
 import { RichTextEditor } from "@/components/ui/rich-text-editor";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { slugify } from "@/lib/slugify";
@@ -34,6 +35,15 @@ function parseLines(fd: FormData, name: string): string[] {
     : [];
 }
 
+function firstValidationError(fieldErrors: unknown): string | undefined {
+  if (!fieldErrors || typeof fieldErrors !== "object") return undefined;
+  for (const [field, value] of Object.entries(fieldErrors as Record<string, unknown>)) {
+    const messages = (value as { _errors?: string[] } | undefined)?._errors;
+    if (messages?.length) return `${field}: ${messages[0]}`;
+  }
+  return undefined;
+}
+
 function parseCsv(fd: FormData, name: string): string[] {
   const raw = fd.get(name) as string;
   return raw
@@ -48,7 +58,16 @@ export function ProductForm({ product, categories, brands, tags }: Props) {
   const router = useRouter();
   const { execute, isPending } = useAction(saveProduct, {
     onSuccess: ({ data }) => {
+      toast.success("Zapisano");
       if (!product && data?.id) router.push(`/admin/produkty/${data.id}`);
+      else router.refresh();
+    },
+    onError: ({ error }) => {
+      const msg =
+        error?.serverError ??
+        firstValidationError(error?.validationErrors) ??
+        "Błąd zapisu produktu";
+      toast.error(msg);
     },
   });
 
