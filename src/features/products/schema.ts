@@ -60,10 +60,10 @@ export const productSchema = z.object({
   isFeatured: z.boolean().default(false),
   isNewArrival: z.boolean().default(false),
   isGiftEligible: z.boolean().default(false),
-  netWeight: z.string().max(50).optional(),
-  servingSize: z.string().max(100).optional(),
+  netWeight: z.string().max(200).optional(),
+  servingSize: z.string().max(1000).optional(),
   servingsPerContainer: z.coerce.number().int().positive().optional(),
-  storageInfo: z.string().max(500).optional(),
+  storageInfo: z.string().max(4000).optional(),
   countryOfOrigin: z.string().max(300).optional(),
   usageInstructionsPl: z.string().max(2000).optional(),
   ingredients: z
