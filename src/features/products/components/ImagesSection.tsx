@@ -2,14 +2,11 @@
 
 import type { ProductImage } from "@prisma/client";
 import Image from "next/image";
-import { CldUploadWidget } from "next-cloudinary";
 import { useAction } from "next-safe-action/hooks";
 import { useState } from "react";
 import { ConfirmDialog } from "@/components/ConfirmDialog";
+import { CloudinaryDropzone } from "@/components/ui/cloudinary-dropzone";
 import { addProductImage, deleteProductImage } from "../actions";
-
-const CLOUD_NAME = process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME;
-const UPLOAD_PRESET = process.env.NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET;
 
 interface Props {
   productId: string;
@@ -25,39 +22,15 @@ export function ImagesSection({ productId, images }: Props) {
 
   return (
     <section className="rounded-2xl bg-card p-5 shadow-card">
-      <div className="mb-4 flex items-center justify-between">
+      <div className="mb-4">
         <h2 className="font-semibold">Zdjęcia</h2>
-        {CLOUD_NAME && UPLOAD_PRESET ? (
-          <CldUploadWidget
-            uploadPreset={UPLOAD_PRESET}
-            onSuccess={(result) => {
-              const info = result.info as { secure_url: string } | undefined;
-              if (!info?.secure_url) return;
-              execAdd({
-                productId,
-                url: info.secure_url,
-                isMain: images.length === 0,
-                sortOrder: images.length,
-              });
-            }}
-          >
-            {({ open }) => (
-              <button
-                type="button"
-                onClick={() => open()}
-                className="rounded-lg bg-primary px-3 py-1 text-xs font-medium text-primary-foreground transition-colors duration-200 hover:bg-primary-deep motion-reduce:transition-none"
-              >
-                + Dodaj zdjęcie
-              </button>
-            )}
-          </CldUploadWidget>
-        ) : (
-          <span className="rounded-lg border border-border border-dashed px-2 py-1 text-xs text-muted-foreground">
-            Cloudinary nie skonfigurowany — użyj URL poniżej
-          </span>
-        )}
       </div>
-      <div className="grid grid-cols-3 gap-3 sm:grid-cols-4">
+      <CloudinaryDropzone
+        onUploaded={(url) =>
+          execAdd({ productId, url, isMain: images.length === 0, sortOrder: images.length })
+        }
+      />
+      <div className="mt-4 grid grid-cols-3 gap-3 sm:grid-cols-4">
         {images.map((img) => (
           <div key={img.id} className="group relative">
             <div className="relative aspect-square overflow-hidden rounded-md border bg-muted">
@@ -87,7 +60,7 @@ export function ImagesSection({ productId, images }: Props) {
           <p className="col-span-4 py-4 text-center text-sm text-muted-foreground">Brak zdjęć</p>
         )}
       </div>
-      <details className="mt-4" open={!CLOUD_NAME}>
+      <details className="mt-4">
         <summary className="cursor-pointer text-xs text-muted-foreground">Dodaj przez URL</summary>
         <form
           onSubmit={(e) => {
