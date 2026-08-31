@@ -197,10 +197,7 @@ export function ProductForm({ product, categories, brands, tags }: Props) {
         ? { pl: ingredientsPlInput, en: ingredientsEnInput }
         : undefined;
 
-    const allergenInfoInput =
-      allergenContains.length > 0 || allergenMayContain.length > 0
-        ? { contains: allergenContains, mayContain: allergenMayContain }
-        : undefined;
+    const allergenInfoInput = { contains: allergenContains, mayContain: allergenMayContain };
 
     execute({
       id: (fd.get("id") as string) || undefined,
