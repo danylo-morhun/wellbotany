@@ -190,12 +190,10 @@ export function ProductForm({ product, categories, brands, tags }: Props) {
       })
       .filter((n) => n.name && n.amount);
 
-    const ingredientsPlInput = (fd.get("ingredientsPl") as string) || undefined;
-    const ingredientsEnInput = (fd.get("ingredientsEn") as string) || undefined;
-    const ingredientsInput =
-      ingredientsPlInput || ingredientsEnInput
-        ? { pl: ingredientsPlInput, en: ingredientsEnInput }
-        : undefined;
+    const ingredientsInput = {
+      pl: (fd.get("ingredientsPl") as string) || undefined,
+      en: (fd.get("ingredientsEn") as string) || undefined,
+    };
 
     const allergenInfoInput = { contains: allergenContains, mayContain: allergenMayContain };
 
