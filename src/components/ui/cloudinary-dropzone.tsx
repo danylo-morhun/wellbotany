@@ -16,7 +16,11 @@ function uploadOne(file: File, onProgress: (percent: number) => void): Promise<s
     };
     xhr.onload = () => {
       if (xhr.status >= 200 && xhr.status < 300) {
-        resolve((JSON.parse(xhr.responseText) as { secure_url: string }).secure_url);
+        const { secure_url } = JSON.parse(xhr.responseText) as { secure_url: string };
+        // Next's own image optimizer is disabled (unoptimized: true, Vercel Hobby
+        // quota) — Cloudinary's f_auto/q_auto delivers modern formats + compression
+        // instead, applied at the URL level so it works everywhere the URL is used.
+        resolve(secure_url.replace("/upload/", "/upload/f_auto,q_auto/"));
       } else {
         reject(new Error(xhr.responseText));
       }
