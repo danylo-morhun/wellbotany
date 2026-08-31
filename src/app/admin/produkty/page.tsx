@@ -22,7 +22,7 @@ const ADMIN_PRODUCT_SELECT = {
   slug: true,
   status: true,
   category: { select: { namePl: true } },
-  brand: { select: { name: true } },
+  brand: { select: { name: true, parentBrand: { select: { name: true } } } },
   _count: { select: { variants: true } },
   images: { orderBy: { sortOrder: "asc" as const }, take: 1, select: { url: true } },
   variants: {

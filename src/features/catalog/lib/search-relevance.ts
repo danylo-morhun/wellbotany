@@ -4,7 +4,7 @@ export type ScorableProduct = {
   namePl: string;
   slug?: string;
   shortDescPl?: string | null;
-  brand?: { name: string } | null;
+  brand?: { name: string; parentBrand?: { name: string } | null } | null;
   category?: { namePl: string } | null;
   tags?: { tag: { namePl: string } }[];
 };
@@ -17,8 +17,9 @@ export type ScorableProduct = {
 // strings repeat across dozens of unrelated products (e.g. every "BestLab"
 // product, every "Sport" product), so a single loose fuzzy hit on one of
 // them used to flood results with lookalikes ("testo" ~ "BestLab" ~ every
-// BestLab product) — brand/category already have dedicated filters for
-// exact matching, so they don't need fuzzy free-text search too.
+// BestLab product). Brand search is instead handled separately below as a
+// strict substring match — precise enough to avoid that flooding while still
+// letting "HealthLabs Care" actually find HealthLabs Care products.
 const FUSE_OPTIONS: IFuseOptions<ScorableProduct> = {
   includeScore: true,
   ignoreLocation: false,
@@ -40,6 +41,24 @@ const FUSE_OPTIONS: IFuseOptions<ScorableProduct> = {
 export function rankBySearchRelevance<T extends ScorableProduct>(items: T[], query: string): T[] {
   const trimmed = query.trim();
   if (!trimmed) return items;
+
+  const needle = trimmed.toLowerCase();
+  const brandMatches = items.filter((item) => {
+    const own = item.brand?.name?.toLowerCase() ?? "";
+    const parent = item.brand?.parentBrand?.name?.toLowerCase() ?? "";
+    return own.includes(needle) || parent.includes(needle);
+  });
+
   const fuse = new Fuse(items, FUSE_OPTIONS);
-  return fuse.search(trimmed).map((r) => r.item);
+  const fuzzyMatches = fuse.search(trimmed).map((r) => r.item);
+
+  const seen = new Set<T>();
+  const merged: T[] = [];
+  for (const item of [...brandMatches, ...fuzzyMatches]) {
+    if (!seen.has(item)) {
+      seen.add(item);
+      merged.push(item);
+    }
+  }
+  return merged;
 }
