@@ -106,7 +106,8 @@ export function VariantsTable({ productId, variants }: Props) {
           <input
             name="qty"
             type="number"
-            min={1}
+            min={0.1}
+            step={0.1}
             defaultValue={parsed.qty}
             placeholder="Ilość (np. 60)"
             className="rounded-lg border border-border px-2 py-1 text-sm"
