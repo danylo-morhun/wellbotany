@@ -1,6 +1,5 @@
 "use server";
 
-import { Prisma } from "@prisma/client";
 import { revalidatePath, revalidateTag } from "next/cache";
 import { rankBySearchRelevance } from "@/features/catalog/lib/search-relevance";
 import { ActionError } from "@/lib/action-error";
@@ -292,20 +291,10 @@ export const saveVariant = adminActionClient
       costPricePln: costPricePln ?? null,
       weightGrams: weightGrams ?? null,
     };
-    try {
-      if (id) {
-        await prisma.productVariant.update({ where: { id }, data: payload });
-      } else {
-        await prisma.productVariant.create({ data: payload });
-      }
-    } catch (e) {
-      if (e instanceof Prisma.PrismaClientKnownRequestError && e.code === "P2002") {
-        const field = (e.meta?.target as string[] | undefined)?.[0];
-        throw new ActionError(
-          field === "ean" ? "Wariant z tym kodem EAN już istnieje" : "Wariant z tym SKU już istnieje",
-        );
-      }
-      throw e;
+    if (id) {
+      await prisma.productVariant.update({ where: { id }, data: payload });
+    } else {
+      await prisma.productVariant.create({ data: payload });
     }
     revalidatePath("/admin/produkty");
     revalidatePath(`/admin/produkty/${input.productId}`);
