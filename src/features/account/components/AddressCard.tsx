@@ -2,6 +2,7 @@
 
 import { useAction } from "next-safe-action/hooks";
 import { useState } from "react";
+import { toast } from "sonner";
 import { ConfirmDialog } from "@/components/ConfirmDialog";
 import { deleteAddress } from "../actions";
 
@@ -24,6 +25,7 @@ export function AddressCard({ address, onEdit }: Props) {
   const [confirmingDelete, setConfirmingDelete] = useState(false);
   const { execute, isPending } = useAction(deleteAddress, {
     onSuccess: () => setConfirmingDelete(false),
+    onError: ({ error }) => toast.error(error?.serverError ?? "Błąd usuwania adresu"),
   });
 
   return (
