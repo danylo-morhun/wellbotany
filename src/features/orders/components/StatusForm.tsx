@@ -3,6 +3,7 @@
 import type { OrderStatus } from "@prisma/client";
 import { useAction } from "next-safe-action/hooks";
 import { useState } from "react";
+import { toast } from "sonner";
 import { updateOrderStatus } from "../actions";
 
 const STATUS_LABELS: Record<OrderStatus, string> = {
@@ -24,7 +25,10 @@ interface Props {
 }
 
 export function StatusForm({ orderId, currentStatus, currentNote, currentTrackingNumber }: Props) {
-  const { execute, isPending } = useAction(updateOrderStatus);
+  const { execute, isPending } = useAction(updateOrderStatus, {
+    onSuccess: () => toast.success("Status zamówienia zaktualizowany"),
+    onError: ({ error }) => toast.error(error?.serverError ?? "Błąd aktualizacji statusu"),
+  });
   const [status, setStatus] = useState<OrderStatus>(currentStatus);
 
   function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
