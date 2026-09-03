@@ -4,6 +4,7 @@ import type { Brand } from "@prisma/client";
 import Image from "next/image";
 import { useAction } from "next-safe-action/hooks";
 import { useState } from "react";
+import { toast } from "sonner";
 import { ConfirmDialog } from "@/components/ConfirmDialog";
 import { CloudinaryDropzone } from "@/components/ui/cloudinary-dropzone";
 import { slugify } from "@/lib/slugify";
@@ -32,9 +33,11 @@ export function BrandForm({ brands }: Props) {
       setEditing(null);
       setShowNew(false);
     },
+    onError: ({ error }) => toast.error(error?.serverError ?? "Błąd zapisu marki"),
   });
   const { execute: execDelete, isPending: deleting } = useAction(deleteBrand, {
     onSuccess: () => setDeletingBrand(null),
+    onError: ({ error }) => toast.error(error?.serverError ?? "Błąd usuwania marki"),
   });
 
   function startNew() {

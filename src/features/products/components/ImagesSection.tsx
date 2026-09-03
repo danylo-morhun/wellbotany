@@ -4,6 +4,7 @@ import type { ProductImage } from "@prisma/client";
 import Image from "next/image";
 import { useAction } from "next-safe-action/hooks";
 import { useState } from "react";
+import { toast } from "sonner";
 import { ConfirmDialog } from "@/components/ConfirmDialog";
 import { CloudinaryDropzone } from "@/components/ui/cloudinary-dropzone";
 import { addProductImage, deleteProductImage } from "../actions";
@@ -15,9 +16,12 @@ interface Props {
 
 export function ImagesSection({ productId, images }: Props) {
   const [deletingImage, setDeletingImage] = useState<ProductImage | null>(null);
-  const { execute: execAdd } = useAction(addProductImage);
+  const { execute: execAdd } = useAction(addProductImage, {
+    onError: ({ error }) => toast.error(error?.serverError ?? "Błąd dodawania zdjęcia"),
+  });
   const { execute: execDelete, isPending: deleting } = useAction(deleteProductImage, {
     onSuccess: () => setDeletingImage(null),
+    onError: ({ error }) => toast.error(error?.serverError ?? "Błąd usuwania zdjęcia"),
   });
 
   return (

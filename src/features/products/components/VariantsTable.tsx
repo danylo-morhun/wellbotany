@@ -3,6 +3,7 @@
 import type { ProductVariant } from "@prisma/client";
 import { useAction } from "next-safe-action/hooks";
 import { useState } from "react";
+import { toast } from "sonner";
 import { ConfirmDialog } from "@/components/ConfirmDialog";
 import { deleteVariant, saveVariant } from "../actions";
 
@@ -49,9 +50,11 @@ export function VariantsTable({ productId, variants }: Props) {
       setEditing(null);
       setShowNew(false);
     },
+    onError: ({ error }) => toast.error(error?.serverError ?? "Błąd zapisu wariantu"),
   });
   const { execute: execDelete, isPending: deleting } = useAction(deleteVariant, {
     onSuccess: () => setDeletingVariant(null),
+    onError: ({ error }) => toast.error(error?.serverError ?? "Błąd usuwania wariantu"),
   });
 
   function handleSubmit(e: React.FormEvent<HTMLFormElement>) {

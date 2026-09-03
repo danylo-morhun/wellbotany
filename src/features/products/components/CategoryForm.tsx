@@ -3,6 +3,7 @@
 import type { Category } from "@prisma/client";
 import { useAction } from "next-safe-action/hooks";
 import { useState } from "react";
+import { toast } from "sonner";
 import { ConfirmDialog } from "@/components/ConfirmDialog";
 import { getCategoryIcon } from "@/lib/category-icons";
 import { slugify } from "@/lib/slugify";
@@ -28,9 +29,11 @@ export function CategoryForm({ categories }: Props) {
       setEditing(null);
       setShowNew(false);
     },
+    onError: ({ error }) => toast.error(error?.serverError ?? "Błąd zapisu kategorii"),
   });
   const { execute: execDelete, isPending: deleting } = useAction(deleteCategory, {
     onSuccess: () => setDeletingCategory(null),
+    onError: ({ error }) => toast.error(error?.serverError ?? "Błąd usuwania kategorii"),
   });
 
   function startNew() {

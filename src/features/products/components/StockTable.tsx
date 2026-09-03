@@ -2,6 +2,7 @@
 
 import { useAction } from "next-safe-action/hooks";
 import { useState } from "react";
+import { toast } from "sonner";
 import { bulkUpdateStock } from "../actions";
 
 interface VariantRow {
@@ -20,7 +21,10 @@ export function StockTable({ variants }: Props) {
   const [stocks, setStocks] = useState<Record<string, number>>(
     Object.fromEntries(variants.map((v) => [v.id, v.stock])),
   );
-  const { execute, isPending } = useAction(bulkUpdateStock);
+  const { execute, isPending } = useAction(bulkUpdateStock, {
+    onSuccess: () => toast.success("Zapisano stany magazynowe"),
+    onError: ({ error }) => toast.error(error?.serverError ?? "Błąd zapisu stanów"),
+  });
 
   function handleSave() {
     const updates = Object.entries(stocks).map(([variantId, stock]) => ({ variantId, stock }));
