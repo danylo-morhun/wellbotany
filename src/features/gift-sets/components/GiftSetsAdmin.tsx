@@ -4,6 +4,7 @@ import type { GiftSet, ProductStatus } from "@prisma/client";
 import Image from "next/image";
 import { useAction } from "next-safe-action/hooks";
 import { useState } from "react";
+import { toast } from "sonner";
 import { ConfirmDialog } from "@/components/ConfirmDialog";
 import { CloudinaryDropzone } from "@/components/ui/cloudinary-dropzone";
 import { formatPrice } from "@/lib/format";
@@ -68,9 +69,11 @@ export function GiftSetsAdmin({ giftSets }: Props) {
       setEditing(null);
       setShowNew(false);
     },
+    onError: ({ error }) => toast.error(error?.serverError ?? "Błąd zapisu zestawu"),
   });
   const { execute: execDelete, isPending: deleting } = useAction(deleteGiftSet, {
     onSuccess: () => setDeletingSet(null),
+    onError: ({ error }) => toast.error(error?.serverError ?? "Błąd usuwania zestawu"),
   });
 
   function resetForm() {

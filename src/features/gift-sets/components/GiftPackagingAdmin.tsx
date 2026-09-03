@@ -4,6 +4,7 @@ import type { GiftPackaging } from "@prisma/client";
 import Image from "next/image";
 import { useAction } from "next-safe-action/hooks";
 import { useState } from "react";
+import { toast } from "sonner";
 import { ConfirmDialog } from "@/components/ConfirmDialog";
 import { CloudinaryDropzone } from "@/components/ui/cloudinary-dropzone";
 import { formatPrice } from "@/lib/format";
@@ -31,9 +32,11 @@ export function GiftPackagingAdmin({ packagings }: Props) {
       setEditing(null);
       setShowNew(false);
     },
+    onError: ({ error }) => toast.error(error?.serverError ?? "Błąd zapisu opakowania"),
   });
   const { execute: execDelete, isPending: deleting } = useAction(deleteGiftPackaging, {
     onSuccess: () => setDeletingPackaging(null),
+    onError: ({ error }) => toast.error(error?.serverError ?? "Błąd usuwania opakowania"),
   });
 
   function startNew() {
