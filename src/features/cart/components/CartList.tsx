@@ -18,6 +18,7 @@ export function CartList({ items: initialItems }: Props) {
 
   const { execute: restoreItem } = useAction(addToCart, {
     onSuccess: () => router.refresh(),
+    onError: ({ error }) => toast.error(error?.serverError ?? "Nie udało się przywrócić produktu"),
   });
 
   const handleRemove = (item: CartItem) => {

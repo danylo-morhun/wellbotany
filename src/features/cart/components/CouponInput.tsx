@@ -2,6 +2,7 @@
 
 import { useAction } from "next-safe-action/hooks";
 import { useState } from "react";
+import { toast } from "sonner";
 import { verifyCoupon } from "@/features/checkout/actions";
 import { formatPrice } from "@/lib/format";
 
@@ -26,6 +27,7 @@ export function CouponInput({ subtotal, onDiscount }: Props) {
       setCouponState(data);
       onDiscount(data.valid ? data.discountPln : 0);
     },
+    onError: ({ error }) => toast.error(error?.serverError ?? "Błąd sprawdzania kodu rabatowego"),
   });
 
   const handleVerify = () => {
