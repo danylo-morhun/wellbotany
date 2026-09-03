@@ -167,12 +167,59 @@ export const deleteTag = adminActionClient
 export const saveProduct = adminActionClient
   .schema(productSchema)
   .action(async ({ parsedInput: input }) => {
-    const { id, tagIds, categoryId, brandId, countryOfOrigin, ...data } = input;
+    const {
+      id,
+      tagIds,
+      categoryId,
+      brandId,
+      countryOfOrigin,
+      nameEn,
+      nameUk,
+      shortDescPl,
+      shortDescEn,
+      shortDescUk,
+      descriptionPl,
+      descriptionEn,
+      descriptionUk,
+      netWeight,
+      servingSize,
+      servingsPerContainer,
+      storageInfo,
+      usageInstructionsPl,
+      contraindicationsPl,
+      ageRestriction,
+      responsibleEntity,
+      metaTitlePl,
+      metaTitleEn,
+      metaDescPl,
+      metaDescEn,
+      ...data
+    } = input;
     const payload = {
       ...data,
       categoryId: categoryId || null,
       brandId: brandId || null,
       countryOfOrigin: countryOfOrigin || null,
+      nameEn: nameEn || null,
+      nameUk: nameUk || null,
+      shortDescPl: shortDescPl || null,
+      shortDescEn: shortDescEn || null,
+      shortDescUk: shortDescUk || null,
+      descriptionPl: descriptionPl || null,
+      descriptionEn: descriptionEn || null,
+      descriptionUk: descriptionUk || null,
+      netWeight: netWeight || null,
+      servingSize: servingSize || null,
+      servingsPerContainer: servingsPerContainer ?? null,
+      storageInfo: storageInfo || null,
+      usageInstructionsPl: usageInstructionsPl || null,
+      contraindicationsPl: contraindicationsPl || null,
+      ageRestriction: ageRestriction ?? null,
+      responsibleEntity: responsibleEntity || null,
+      metaTitlePl: metaTitlePl || null,
+      metaTitleEn: metaTitleEn || null,
+      metaDescPl: metaDescPl || null,
+      metaDescEn: metaDescEn || null,
     };
 
     let savedId: string | undefined;
