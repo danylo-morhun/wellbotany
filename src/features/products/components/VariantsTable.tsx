@@ -13,7 +13,7 @@ interface Props {
   variants: SerializedVariant[];
 }
 
-const UNITS = ["kaps.", "tabl.", "g", "ml", "szt.", "saszetka", "ampułka"] as const;
+const UNITS = ["kaps.", "tabl.", "g", "ml", "szt.", "saszetka", "ampułka", "żelek"] as const;
 type Unit = (typeof UNITS)[number];
 
 function unitToLabel(unit: Unit | string): string {
