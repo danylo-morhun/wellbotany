@@ -91,7 +91,10 @@ async function main() {
     await prisma.product.update({
       where: { id: p.id },
       data: {
-        shortDescPl: plainText.slice(0, 500),
+        // No arbitrary truncation — real supplier copy, not a DB-limited column.
+        // A hard .slice() here previously cut mid-word and fed a broken
+        // sentence into the description rebuild step.
+        shortDescPl: plainText,
         descriptionPl: shortDescHtml.startsWith("<p>") ? shortDescHtml : `<p>${plainText}</p>`,
         metaDescPl: plainText.slice(0, 300),
       },
