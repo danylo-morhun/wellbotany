@@ -97,6 +97,50 @@ async function ensureProductImage(
   });
 }
 
+async function ensureGalleryImages(
+  tx: Tx,
+  productId: string,
+  urls: string[] | undefined,
+  altPl: string,
+): Promise<void> {
+  if (!urls?.length) return;
+  for (const url of urls) {
+    await ensureProductImage(tx, productId, url, altPl);
+  }
+}
+
+/** Extra content fields shared by both the create and update paths — kept in one
+ *  place so a new draft field only needs wiring here, not in both branches. */
+function contentUpdateData(draft: SupplierProductDraft) {
+  return {
+    shortDescPl: draft.shortDescPl ?? undefined,
+    descriptionPl: draft.descriptionPl ?? undefined,
+    ingredients: draft.ingredientsPl ? { pl: draft.ingredientsPl } : undefined,
+    nutritionFacts:
+      draft.nutritionFacts && draft.nutritionFacts.length > 0
+        ? draft.nutritionFacts
+        : draft.nutritionFactsPl
+          ? { pl: draft.nutritionFactsPl }
+          : undefined,
+    healthWarnings:
+      draft.healthWarnings && draft.healthWarnings.length > 0
+        ? draft.healthWarnings
+        : draft.healthWarningsPl
+          ? [draft.healthWarningsPl]
+          : undefined,
+    servingSize: draft.servingSize ?? undefined,
+    servingsPerContainer: draft.servingsPerContainer ?? undefined,
+    storageInfo: draft.storageInfo ?? undefined,
+    benefitsPl: draft.benefitsPl && draft.benefitsPl.length > 0 ? draft.benefitsPl : undefined,
+    allergenInfo:
+      draft.allergenContains?.length || draft.allergenMayContain?.length
+        ? { contains: draft.allergenContains ?? [], mayContain: draft.allergenMayContain ?? [] }
+        : undefined,
+    responsibleEntity: draft.responsibleEntity ?? undefined,
+    countryOfOrigin: draft.countryOfOrigin ?? undefined,
+  };
+}
+
 function brandSlugFallback(name: string): string {
   return slugify(name);
 }
@@ -164,19 +208,13 @@ export async function importSupplierProducts(
               categoryId: await resolveCategory(tx, draft.categoryName),
               netWeight: draft.packaging ?? undefined,
             }),
-            shortDescPl: draft.shortDescPl ?? undefined,
-            descriptionPl: draft.descriptionPl ?? undefined,
-            ingredients: draft.ingredientsPl ? { pl: draft.ingredientsPl } : undefined,
-            nutritionFacts: draft.nutritionFactsPl ? { pl: draft.nutritionFactsPl } : undefined,
-            healthWarnings: draft.healthWarningsPl ? [draft.healthWarningsPl] : undefined,
-            servingSize: draft.servingSize ?? undefined,
-            servingsPerContainer: draft.servingsPerContainer ?? undefined,
-            storageInfo: draft.storageInfo ?? undefined,
+            ...contentUpdateData(draft),
           },
         });
         if (imageUrl) {
           await ensureProductImage(tx, existing.productId, imageUrl, draft.name);
         }
+        await ensureGalleryImages(tx, existing.productId, draft.extraImageUrls, draft.name);
         updated++;
         rows.push({
           externalKey: draft.externalKey,
@@ -210,14 +248,7 @@ export async function importSupplierProducts(
           brandId,
           categoryId,
           netWeight: draft.packaging ?? null,
-          shortDescPl: draft.shortDescPl ?? null,
-          descriptionPl: draft.descriptionPl ?? null,
-          ingredients: draft.ingredientsPl ? { pl: draft.ingredientsPl } : undefined,
-          nutritionFacts: draft.nutritionFactsPl ? { pl: draft.nutritionFactsPl } : undefined,
-          healthWarnings: draft.healthWarningsPl ? [draft.healthWarningsPl] : undefined,
-          servingSize: draft.servingSize ?? null,
-          servingsPerContainer: draft.servingsPerContainer ?? null,
-          storageInfo: draft.storageInfo ?? null,
+          ...contentUpdateData(draft),
         },
       });
 
@@ -242,6 +273,7 @@ export async function importSupplierProducts(
       if (imageUrl) {
         await ensureProductImage(tx, product.id, imageUrl, draft.name);
       }
+      await ensureGalleryImages(tx, product.id, draft.extraImageUrls, draft.name);
 
       created++;
       rows.push({
