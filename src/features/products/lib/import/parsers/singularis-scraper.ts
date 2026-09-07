@@ -7,13 +7,13 @@ import type { SupplierProductDraft } from "../types";
 
 const DEST_DIR = path.join(process.cwd(), "public/supplier-images");
 
-async function downloadImageAsync(url: string, filename: string): Promise<boolean> {
+async function downloadImageAsync(url: string, filename: string): Promise<string | undefined> {
   return new Promise((resolve) => {
     try {
       const filePath = path.join(DEST_DIR, filename);
 
-      if (fs.existsSync(filePath)) {
-        resolve(true);
+      if (fs.existsSync(filePath) && fs.statSync(filePath).size > 0) {
+        resolve(`/supplier-images/${filename}`);
         return;
       }
 
@@ -25,7 +25,7 @@ async function downloadImageAsync(url: string, filename: string): Promise<boolea
           if (res.statusCode !== 200) {
             file.destroy();
             fs.unlink(filePath, () => {});
-            resolve(false);
+            resolve(undefined);
             return;
           }
           res.pipe(file);
@@ -33,167 +33,231 @@ async function downloadImageAsync(url: string, filename: string): Promise<boolea
         .on("error", () => {
           file.destroy();
           fs.unlink(filePath, () => {});
-          resolve(false);
+          resolve(undefined);
         });
 
       file.on("finish", () => {
         file.close();
-        resolve(true);
+        resolve(`/supplier-images/${filename}`);
       });
 
       file.on("error", () => {
         fs.unlink(filePath, () => {});
-        resolve(false);
+        resolve(undefined);
       });
     } catch {
-      resolve(false);
+      resolve(undefined);
     }
   });
 }
 
-interface RawProduct {
+interface ProductCardData {
   name: string;
   price: string;
+  url: string;
   imageUrl?: string;
-  categoryName?: string;
-  link?: string;
 }
 
-export async function scrapeSingularis(
-  source: SupplierSource,
-): Promise<SupplierProductDraft[]> {
+interface ProductDetails {
+  descriptionPl?: string;
+  shortDescPl?: string;
+  categoryName?: string;
+  ingredientsPl?: string;
+  netWeight?: string;
+  servingSize?: string;
+}
+
+async function scrapeProductDetails(page: any, productUrl: string): Promise<ProductDetails> {
+  try {
+    await page.goto(productUrl, { waitUntil: "domcontentloaded", timeout: 30000 });
+    await page.waitForTimeout(1000);
+
+    const details: ProductDetails = await page.evaluate(() => {
+      const data: ProductDetails = {};
+
+      // Description
+      const descEl = document.querySelector(
+        ".woocommerce-product-details__short-description, [data-tab='description'] .panel, .product-description",
+      );
+      if (descEl) {
+        const text = descEl.textContent?.trim();
+        if (text && text.length > 20) {
+          data.descriptionPl = text.slice(0, 2000);
+          data.shortDescPl = text.slice(0, 200);
+        }
+      }
+
+      // Category from breadcrumb
+      const breadcrumb = document.querySelector(".woocommerce-breadcrumb");
+      if (breadcrumb) {
+        const parts = breadcrumb.textContent?.split("/").filter((p) => p.trim());
+        if (parts && parts.length > 1) {
+          data.categoryName = parts[parts.length - 1].trim();
+        }
+      }
+
+      // Attributes table (packaging, serving, etc)
+      const attrTable = document.querySelector(".woocommerce-product-attributes");
+      if (attrTable) {
+        const rows = attrTable.querySelectorAll("tr");
+        rows.forEach((row) => {
+          const th = row.querySelector("th");
+          const td = row.querySelector("td");
+          const label = th?.textContent?.toLowerCase() || "";
+          const value = td?.textContent?.trim() || "";
+
+          if (label.includes("waga") || label.includes("pojemno")) {
+            data.netWeight = value;
+          }
+          if (label.includes("porcja") || label.includes("dziennie")) {
+            data.servingSize = value;
+          }
+        });
+      }
+
+      // Try to find ingredients in tabs or content
+      const allText = document.body.innerText;
+      if (allText.includes("składniki") || allText.includes("ingredients")) {
+        const startIdx = allText.toLowerCase().indexOf("składniki");
+        if (startIdx !== -1) {
+          const endIdx = allText.indexOf("\n\n", startIdx);
+          const ingredientsText = allText.slice(startIdx, endIdx > 0 ? endIdx : startIdx + 1000);
+          if (ingredientsText.length > 20) {
+            data.ingredientsPl = ingredientsText.slice(0, 1000);
+          }
+        }
+      }
+
+      return data;
+    });
+
+    return details;
+  } catch (error) {
+    return {};
+  }
+}
+
+export async function scrapeSingularis(source: SupplierSource): Promise<SupplierProductDraft[]> {
   fs.mkdirSync(DEST_DIR, { recursive: true });
 
   const browser = await chromium.launch();
-  const products: RawProduct[] = [];
+  const productUrls: ProductCardData[] = [];
+
   let pageNum = 1;
   let hasMore = true;
 
-  console.log("Starting Singularis scrape...");
+  console.log("Step 1: Collecting product URLs...");
 
+  // Scrape listing pages to get all product URLs
   while (hasMore) {
     const url =
       pageNum === 1 ? "https://singularis.com.pl/sklep/" : `https://singularis.com.pl/sklep/page/${pageNum}/`;
 
-    console.log(`Scraping page ${pageNum}...`);
+    console.log(`  Listing page ${pageNum}...`);
     const page = await browser.newPage();
 
-    await page.goto(url, { waitUntil: "domcontentloaded", timeout: 60000 });
-    await page.waitForTimeout(2000); // Let JS render
+    await page.goto(url, { waitUntil: "networkidle", timeout: 90000 }).catch(() => {});
+    await page.waitForTimeout(2000);
+
+    // Close cookie banner if present
+    try {
+      await page.evaluate(() => {
+        const cookie = document.getElementById("CybotCookiebotDialogBodyButtonDecline");
+        if (cookie) cookie.click();
+      });
+      await page.waitForTimeout(500);
+    } catch {}
+
+    // Wait for products to load
+    try {
+      await page.waitForSelector("li.product", { timeout: 10000 });
+    } catch {
+      console.log(`    ⚠ Timeout waiting for products on page ${pageNum}`);
+    }
+
+    await page.waitForTimeout(1000);
 
     const pageProducts = await page.evaluate(() => {
-      const items: RawProduct[] = [];
+      const items: ProductCardData[] = [];
+      document.querySelectorAll("li.product").forEach((el) => {
+        // Name is in image alt attribute
+        const imgEl = el.querySelector("img");
+        const priceEl = el.querySelector(".price");
+        const linkEl = el.querySelector("a[href*='/sklep/']");
 
-      // Try WooCommerce selectors first, then fallback to generic ones
-      let productElements = document.querySelectorAll("li.product");
-      if (productElements.length === 0) {
-        productElements = document.querySelectorAll("[data-product-id]");
-      }
-      if (productElements.length === 0) {
-        productElements = document.querySelectorAll(".product-card, .product-item, .product");
-      }
-
-      productElements.forEach((el) => {
-        // Name
-        let nameEl = el.querySelector("h2 a, .product-name a, .product-title a, h3 a");
-        if (!nameEl) nameEl = el.querySelector("h2, h3, .product-name, .product-title");
-        const name = nameEl?.textContent?.trim()?.replace(/\n/g, " ").substring(0, 200);
-
-        // Price
-        let priceEl = el.querySelector(".price, .product-price, .woocommerce-Price-amount");
-        if (!priceEl) priceEl = el.querySelector(".amount, [data-price]");
+        const name = (imgEl as HTMLImageElement)?.alt?.trim();
         const price = priceEl?.textContent?.trim();
+        const url = (linkEl as HTMLAnchorElement)?.href;
+        const imageUrl = (imgEl as HTMLImageElement)?.src || (imgEl as HTMLImageElement)?.dataset.src;
 
-        // Image
-        let imageEl = el.querySelector("img");
-        let imageUrl = (imageEl as HTMLImageElement)?.src || (imageEl as HTMLImageElement)?.dataset.src;
-        if (imageUrl && imageUrl.includes("placeholder")) imageUrl = undefined;
-
-        if (name && price) {
-          items.push({
-            name,
-            price,
-            imageUrl,
-          });
+        if (name && price && url) {
+          items.push({ name, price, url, imageUrl });
         }
       });
-
       return items;
     });
 
-    products.push(...pageProducts);
-    console.log(`  Found ${pageProducts.length} products on page ${pageNum}`);
-
-    // Check if there's a next page
-    const hasNextPage = await page.evaluate(() => {
-      const nextBtn = document.querySelector("a.next, .next-page, a[rel='next']");
-      return !!nextBtn;
-    });
+    productUrls.push(...pageProducts);
+    console.log(`    Found ${pageProducts.length} products`);
 
     await page.close();
 
-    if (!hasNextPage || pageProducts.length === 0) {
-      hasMore = false;
-    } else {
+    // Continue if we found products on this page
+    if (pageProducts.length > 0) {
       pageNum++;
+    } else {
+      hasMore = false;
     }
 
-    // Rate limit
-    await new Promise((resolve) => setTimeout(resolve, 1000));
+    await new Promise((r) => setTimeout(r, 500));
+  }
+
+  console.log(`\nStep 2: Scraping ${productUrls.length} product detail pages...`);
+
+  const allProducts: SupplierProductDraft[] = [];
+
+  for (let i = 0; i < productUrls.length; i++) {
+    const product = productUrls[i];
+
+    if ((i + 1) % 50 === 0) console.log(`  ${i + 1}/${productUrls.length}...`);
+
+    const page = await browser.newPage();
+    const details = await scrapeProductDetails(page, product.url);
+
+    let imageUrl: string | undefined;
+    if (product.imageUrl) {
+      const filename = `singularis-${i}.jpg`;
+      imageUrl = await downloadImageAsync(product.imageUrl, filename);
+    }
+
+    await page.close();
+
+    const priceGrosz = parsePriceToGrosz(product.price);
+    if (!priceGrosz) continue;
+
+    allProducts.push({
+      sourceId: source.id,
+      externalKey: product.name,
+      name: product.name,
+      brandName: source.brandName,
+      categoryName: details.categoryName,
+      sku: `SINGULARIS-${i}`,
+      priceGrosz,
+      vatRate: source.defaultVatRate,
+      stock: 99,
+      imageUrl,
+      descriptionPl: details.descriptionPl,
+      shortDescPl: details.shortDescPl,
+      ingredientsPl: details.ingredientsPl,
+      netWeight: details.netWeight,
+      servingSize: details.servingSize,
+    });
+
+    await new Promise((r) => setTimeout(r, 300));
   }
 
   await browser.close();
 
-  console.log(`\nTotal products scraped: ${products.length}`);
-  console.log("Downloading images...");
-
-  // Download images in parallel batches
-  const downloadBatch = async (batch: RawProduct[]) => {
-    await Promise.all(
-      batch.map(async (product) => {
-        if (product.imageUrl) {
-          const filename = `singularis-${product.name.slice(0, 30).replace(/[^a-z0-9]/gi, "_")}-${Math.random().toString(36).slice(7)}.jpg`;
-          await downloadImageAsync(product.imageUrl, filename);
-        }
-      }),
-    );
-  };
-
-  const batchSize = 5;
-  for (let i = 0; i < products.length; i += batchSize) {
-    await downloadBatch(products.slice(i, i + batchSize));
-  }
-
-  console.log("Converting to SupplierProductDraft format...");
-
-  const drafts: SupplierProductDraft[] = products
-    .map((product, idx) => {
-      const priceGrosz = parsePriceToGrosz(product.price);
-      if (!priceGrosz) return null;
-
-      const imageFilename = `singularis-${product.name.slice(0, 30).replace(/[^a-z0-9]/gi, "_")}-${idx}.jpg`;
-      const imageUrl = fs.existsSync(path.join(DEST_DIR, imageFilename))
-        ? `/supplier-images/${imageFilename}`
-        : undefined;
-
-      // Unique SKU per product: brand-name-index
-      const sku = `SINGULARIS-${idx}`;
-
-      return {
-        sourceId: source.id,
-        externalKey: product.name,
-        name: product.name,
-        brandName: source.brandName,
-        categoryName: product.categoryName,
-        sku, // Force unique SKU
-        priceGrosz,
-        vatRate: source.defaultVatRate,
-        stock: 99, // Default stock, user can adjust
-        imageUrl,
-      };
-    })
-    .filter((p) => p !== null) as SupplierProductDraft[];
-
-  console.log(`Converted ${drafts.length} products to import format`);
-  return drafts;
+  console.log(`\n✅ Scraped ${allProducts.length} products with full details`);
+  return allProducts;
 }
