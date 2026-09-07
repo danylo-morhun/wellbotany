@@ -29,7 +29,7 @@ Odpowiedź w JSON:
 }`;
 
   const response = await client.messages.create({
-    model: "claude-opus-5",
+    model: "claude-3-5-haiku-20241022",
     max_tokens: 1000,
     messages: [{ role: "user", content: prompt }],
   });
