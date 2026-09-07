@@ -260,7 +260,7 @@ export async function scrapeSingularis(source: SupplierSource): Promise<Supplier
       descriptionPl: details.descriptionPl,
       shortDescPl: details.shortDescPl,
       ingredientsPl: details.ingredientsPl,
-      netWeight: details.netWeight,
+      packaging: details.netWeight,
       servingSize: details.servingSize,
     });
 
