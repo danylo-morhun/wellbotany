@@ -70,61 +70,72 @@ interface ProductDetails {
 async function scrapeProductDetails(page: any, productUrl: string): Promise<ProductDetails> {
   try {
     await page.goto(productUrl, { waitUntil: "domcontentloaded", timeout: 30000 });
-    await page.waitForTimeout(1000);
+    await page.waitForTimeout(1500);
 
     const details: ProductDetails = await page.evaluate(() => {
       const data: ProductDetails = {};
 
-      // Description
-      const descEl = document.querySelector(
-        ".woocommerce-product-details__short-description, [data-tab='description'] .panel, .product-description",
-      );
-      if (descEl) {
-        const text = descEl.textContent?.trim();
-        if (text && text.length > 20) {
-          data.descriptionPl = text.slice(0, 2000);
-          data.shortDescPl = text.slice(0, 200);
+      // Get full description with HTML structure
+      const mainContent = document.querySelector(".woocommerce-product-details");
+      if (!mainContent) {
+        // Fallback: get from various possible locations
+        const descEl = document.querySelector(
+          ".woocommerce-product-details__short-description, .product-description, .entry-content",
+        );
+        if (descEl) {
+          const html = descEl.innerHTML;
+          if (html) {
+            data.descriptionPl = html.trim();
+            // Short version: just text
+            data.shortDescPl = descEl.textContent?.trim().slice(0, 250);
+          }
+        }
+      } else {
+        // Extract HTML content for rich formatting
+        const descSection = mainContent.querySelector(".product-short-description, .description");
+        if (descSection) {
+          data.descriptionPl = descSection.innerHTML.trim().slice(0, 5000);
+          data.shortDescPl = descSection.textContent?.trim().slice(0, 250);
         }
       }
 
       // Category from breadcrumb
       const breadcrumb = document.querySelector(".woocommerce-breadcrumb");
       if (breadcrumb) {
-        const parts = breadcrumb.textContent?.split("/").filter((p) => p.trim());
-        if (parts && parts.length > 1) {
-          data.categoryName = parts[parts.length - 1].trim();
+        const parts = Array.from(breadcrumb.querySelectorAll("a"))
+          .map((a) => a.textContent?.trim())
+          .filter(Boolean);
+        if (parts.length > 0) {
+          data.categoryName = parts[parts.length - 1];
         }
       }
 
-      // Attributes table (packaging, serving, etc)
+      // Attributes table for packaging, weight
       const attrTable = document.querySelector(".woocommerce-product-attributes");
       if (attrTable) {
         const rows = attrTable.querySelectorAll("tr");
         rows.forEach((row) => {
           const th = row.querySelector("th");
           const td = row.querySelector("td");
-          const label = th?.textContent?.toLowerCase() || "";
+          const label = th?.textContent?.toLowerCase().trim() || "";
           const value = td?.textContent?.trim() || "";
 
-          if (label.includes("waga") || label.includes("pojemno")) {
+          if (label.includes("waga") || label.includes("pojemno") || label.includes("opakowanie")) {
             data.netWeight = value;
           }
-          if (label.includes("porcja") || label.includes("dziennie")) {
+          if (label.includes("porcja") || label.includes("dziennie") || label.includes("serving")) {
             data.servingSize = value;
           }
         });
       }
 
-      // Try to find ingredients in tabs or content
+      // Extract all text content for ingredients/nutrition
       const allText = document.body.innerText;
-      if (allText.includes("składniki") || allText.includes("ingredients")) {
-        const startIdx = allText.toLowerCase().indexOf("składniki");
-        if (startIdx !== -1) {
-          const endIdx = allText.indexOf("\n\n", startIdx);
-          const ingredientsText = allText.slice(startIdx, endIdx > 0 ? endIdx : startIdx + 1000);
-          if (ingredientsText.length > 20) {
-            data.ingredientsPl = ingredientsText.slice(0, 1000);
-          }
+      if (allText.includes("składniki")) {
+        const idx = allText.toLowerCase().indexOf("składniki");
+        const section = allText.slice(idx, idx + 1500);
+        if (section.length > 30) {
+          data.ingredientsPl = section;
         }
       }
 
