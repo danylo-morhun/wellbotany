@@ -1,16 +1,8 @@
+import { shippingLabel } from "@/features/checkout/lib/shipping";
 import { formatPrice } from "@/lib/format";
 import { prisma } from "@/lib/prisma";
 import { BANK_TRANSFER_DETAILS } from "@/lib/shop-config";
 import { EMAIL_FROM, resendClient } from "./client";
-
-const SHIPPING_LABELS: Record<string, string> = {
-  INPOST_PACZKOMAT: "InPost Paczkomat",
-  INPOST_KURIER: "InPost Kurier",
-  ORLEN_PACZKA: "Orlen Paczka",
-  DHL: "DHL Kurier",
-  DPD: "DPD Kurier",
-  COURIER: "Kurier",
-};
 
 function layout(title: string, body: string): string {
   return `<div style="font-family:-apple-system,Segoe UI,Roboto,sans-serif;max-width:560px;margin:0 auto;color:#1a1a1a">
@@ -55,7 +47,7 @@ export async function sendOrderConfirmationEmail(orderNumber: string): Promise<v
     <p>Numer zamówienia: <strong>${order.orderNumber}</strong></p>
     <table style="width:100%;border-collapse:collapse;margin-top:16px">
       ${itemRows}
-      <tr><td style="padding-top:12px;border-top:1px solid #e5e5e5">Dostawa (${SHIPPING_LABELS[order.shippingMethod] ?? order.shippingMethod})</td><td style="padding-top:12px;border-top:1px solid #e5e5e5;text-align:right">${formatPrice(order.shippingPln)}</td></tr>
+      <tr><td style="padding-top:12px;border-top:1px solid #e5e5e5">Dostawa (${shippingLabel(order.shippingMethod)})</td><td style="padding-top:12px;border-top:1px solid #e5e5e5;text-align:right">${formatPrice(order.shippingPln)}</td></tr>
       ${order.discountPln > 0 ? `<tr><td>Rabat</td><td style="text-align:right">-${formatPrice(order.discountPln)}</td></tr>` : ""}
       <tr><td style="padding-top:8px;font-weight:600">Łącznie</td><td style="padding-top:8px;text-align:right;font-weight:600">${formatPrice(order.totalPln)}</td></tr>
     </table>
@@ -98,7 +90,7 @@ export async function sendTrackingEmail(orderId: string): Promise<void> {
 
   const body = `
     <p>Cześć ${order.customerName}, Twoje zamówienie <strong>${order.orderNumber}</strong> zostało nadane.</p>
-    <p>Przewoźnik: ${SHIPPING_LABELS[order.shippingMethod] ?? order.shippingMethod}</p>
+    <p>Przewoźnik: ${shippingLabel(order.shippingMethod)}</p>
     <p>Numer przesyłki: <strong>${order.trackingNumber}</strong></p>
     ${order.trackingUrl ? `<p><a href="${order.trackingUrl}">Śledź przesyłkę</a></p>` : ""}
   `;

@@ -1,5 +1,6 @@
 import { notFound } from "next/navigation";
 import { PAYMENT_LABELS } from "@/features/checkout/lib/payment";
+import { shippingLabel } from "@/features/checkout/lib/shipping";
 import { MarkPaidButton } from "@/features/orders/components/MarkPaidButton";
 import { StatusForm } from "@/features/orders/components/StatusForm";
 import { prisma } from "@/lib/prisma";
@@ -64,7 +65,7 @@ export default async function AdminOrderDetailPage({
           <p className="text-sm">
             {order.shipPostalCode} {order.shipCity}
           </p>
-          <p className="mt-1 text-sm text-muted-foreground">{order.shippingMethod}</p>
+          <p className="mt-1 text-sm font-medium">{shippingLabel(order.shippingMethod)}</p>
           {order.inpostMachineId && (
             <p className="text-sm text-muted-foreground">
               Paczkomat: {order.inpostMachineName ?? order.inpostMachineId}

@@ -1,20 +1,11 @@
 import { notFound, redirect } from "next/navigation";
+import { shippingLabel } from "@/features/checkout/lib/shipping";
 import { ORDER_STATUS_LABELS } from "@/features/orders/lib/status-labels";
 import { auth } from "@/lib/auth";
 import { formatPrice } from "@/lib/format";
 import { prisma } from "@/lib/prisma";
 
 export const metadata = { title: "Szczegóły zamówienia — Well Botany" };
-
-const SHIPPING_LABELS: Record<string, string> = {
-  INPOST_PACZKOMAT: "InPost Paczkomat",
-  INPOST_KURIER: "InPost Kurier",
-  ORLEN_PACZKA: "Orlen Paczka",
-  DHL: "DHL",
-  DPD: "DPD",
-  COURIER: "Kurier",
-  PICKUP: "Odbiór osobisty",
-};
 
 export default async function OrderDetailPage({
   params,
@@ -134,9 +125,7 @@ export default async function OrderDetailPage({
         {/* Shipping */}
         <div>
           <h2 className="mb-2 font-medium">Dostawa</h2>
-          <p className="text-sm text-muted-foreground">
-            {SHIPPING_LABELS[order.shippingMethod] ?? order.shippingMethod}
-          </p>
+          <p className="text-sm text-muted-foreground">{shippingLabel(order.shippingMethod)}</p>
           {order.inpostMachineName && (
             <p className="text-sm text-muted-foreground">{order.inpostMachineName}</p>
           )}

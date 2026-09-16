@@ -3,6 +3,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { PAYMENT_LABELS } from "@/features/checkout/lib/payment";
+import { shippingLabel } from "@/features/checkout/lib/shipping";
 import { formatPrice } from "@/lib/format";
 import { prisma } from "@/lib/prisma";
 import { BANK_TRANSFER_DETAILS } from "@/lib/shop-config";
@@ -49,12 +50,6 @@ export default async function PotwierdzeniePage({ params }: Props) {
   });
 
   if (!order) notFound();
-
-  const shippingLabel: Record<string, string> = {
-    INPOST_PACZKOMAT: "InPost Paczkomat",
-    DHL: "DHL Kurier",
-    DPD: "DPD Kurier",
-  };
 
   return (
     <div className="mx-auto max-w-2xl px-4 py-8 sm:px-6 lg:px-8">
@@ -125,7 +120,7 @@ export default async function PotwierdzeniePage({ params }: Props) {
             <span>{formatPrice(order.subtotalPln)}</span>
           </div>
           <div className="flex justify-between text-muted-foreground">
-            <span>Dostawa ({shippingLabel[order.shippingMethod] ?? order.shippingMethod})</span>
+            <span>Dostawa ({shippingLabel(order.shippingMethod)})</span>
             <span>{formatPrice(order.shippingPln)}</span>
           </div>
           {order.discountPln > 0 && (
