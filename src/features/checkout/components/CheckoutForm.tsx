@@ -32,7 +32,13 @@ export type CheckoutFormData = {
   billStreet: string;
   billCity: string;
   billPostalCode: string;
-  paymentMethod: "BLIK" | "PRZELEWY24" | "APPLE_PAY" | "GOOGLE_PAY" | "BANK_TRANSFER";
+  paymentMethod:
+    | "BLIK"
+    | "PRZELEWY24"
+    | "APPLE_PAY"
+    | "GOOGLE_PAY"
+    | "BANK_TRANSFER"
+    | "CASH_ON_DELIVERY";
   couponCode: string;
   acceptedTerms: boolean;
 };
@@ -61,12 +67,6 @@ const INITIAL_DATA: CheckoutFormData = {
   acceptedTerms: false,
 };
 
-const STEP_LABELS = ["Kontakt", "Dostawa", "Płatność"];
-
-type InitialContact = Pick<
-  CheckoutFormData,
-  "email" | "firstName" | "lastName" | "phone" | "street" | "apartment" | "city" | "postalCode"
->;
 /** First message from a next-safe-action validation error tree (root or any field). */
 function firstValidationMessage(errors: unknown): string | undefined {
   if (!errors || typeof errors !== "object") return undefined;
@@ -79,6 +79,12 @@ function firstValidationMessage(errors: unknown): string | undefined {
   return undefined;
 }
 
+const STEP_LABELS = ["Kontakt", "Dostawa", "Płatność"];
+
+type InitialContact = Pick<
+  CheckoutFormData,
+  "email" | "firstName" | "lastName" | "phone" | "street" | "apartment" | "city" | "postalCode"
+>;
 
 type Props = {
   cartId: string;

@@ -18,6 +18,7 @@ import {
 import { actionClient } from "@/lib/safe-action";
 import { checkoutItemUnitPricePln, getCartForCheckout } from "./lib/cart";
 import { grantOrderAccess } from "./lib/order-access";
+import { isOfflinePayment } from "./lib/payment";
 import { requiresAddress, SHIPPING_COSTS } from "./lib/shipping";
 import { checkoutSchema } from "./schema";
 
@@ -182,7 +183,8 @@ export const placeOrder = actionClient
         data: {
           orderNumber,
           customerId: session?.user?.id ?? null,
-          status: "PAYMENT_PENDING",
+          // Pay-at-pickup orders are prepared right away; the rest wait for payment
+          status: input.paymentMethod === "CASH_ON_DELIVERY" ? "PROCESSING" : "PAYMENT_PENDING",
           customerEmail: input.email,
           customerPhone: input.phone,
           customerName: `${input.firstName} ${input.lastName}`,
@@ -252,7 +254,7 @@ export const placeOrder = actionClient
       console.error(`[email] confirmation failed for ${order.orderNumber}:`, err);
     });
 
-    if (input.paymentMethod === "BANK_TRANSFER" || process.env.P24_SANDBOX_BYPASS === "true") {
+    if (isOfflinePayment(input.paymentMethod) || process.env.P24_SANDBOX_BYPASS === "true") {
       return { orderNumber: order.orderNumber, redirectUrl: null };
     }
 

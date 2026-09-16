@@ -67,7 +67,16 @@ export function StepShipping({ data, onChange, onBack, onNext }: Props) {
                 name="shippingMethod"
                 value={opt.value}
                 checked={data.shippingMethod === opt.value}
-                onChange={() => onChange({ shippingMethod: opt.value })}
+                onChange={() =>
+                  onChange({
+                    shippingMethod: opt.value,
+                    // Pay-at-pickup only exists for in-store pickup
+                    ...(opt.value !== "PICKUP" &&
+                      data.paymentMethod === "CASH_ON_DELIVERY" && {
+                        paymentMethod: "BANK_TRANSFER",
+                      }),
+                  })
+                }
                 className="accent-primary"
               />
               <span className="text-sm font-medium">{opt.label}</span>

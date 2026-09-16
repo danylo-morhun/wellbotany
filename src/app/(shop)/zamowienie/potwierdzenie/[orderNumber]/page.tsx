@@ -4,7 +4,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { BankTransferDetails } from "@/features/checkout/components/BankTransferDetails";
 import { hasOrderAccess } from "@/features/checkout/lib/order-access";
-import { PAYMENT_LABELS } from "@/features/checkout/lib/payment";
+import { isOfflinePayment, PAYMENT_LABELS } from "@/features/checkout/lib/payment";
 import { shippingLabel } from "@/features/checkout/lib/shipping";
 import { auth } from "@/lib/auth";
 import { formatPrice } from "@/lib/format";
@@ -92,7 +92,14 @@ export default async function PotwierdzeniePage({ params }: Props) {
         </div>
       )}
 
-      {order.paymentStatus !== "CAPTURED" && order.paymentMethod !== "BANK_TRANSFER" && (
+      {order.paymentStatus !== "CAPTURED" && order.paymentMethod === "CASH_ON_DELIVERY" && (
+        <div className="mb-6 rounded-xl bg-muted px-4 py-3 text-sm">
+          Do zapłaty przy odbiorze:{" "}
+          <span className="font-semibold">{formatPrice(order.totalPln)}</span>
+        </div>
+      )}
+
+      {order.paymentStatus !== "CAPTURED" && !isOfflinePayment(order.paymentMethod) && (
         <div className="mb-6 rounded-xl bg-warning/15 px-4 py-3 text-sm text-warning-foreground">
           Czekamy na potwierdzenie płatności (
           {PAYMENT_LABELS[order.paymentMethod] ?? order.paymentMethod}). Po zaksięgowaniu

@@ -23,7 +23,14 @@ export const checkoutSchema = z
     billStreet: z.string().optional(),
     billCity: z.string().optional(),
     billPostalCode: z.string().optional(),
-    paymentMethod: z.enum(["BLIK", "PRZELEWY24", "APPLE_PAY", "GOOGLE_PAY", "BANK_TRANSFER"]),
+    paymentMethod: z.enum([
+      "BLIK",
+      "PRZELEWY24",
+      "APPLE_PAY",
+      "GOOGLE_PAY",
+      "BANK_TRANSFER",
+      "CASH_ON_DELIVERY",
+    ]),
     couponCode: z.string().optional(),
     acceptedTerms: z
       .boolean()
@@ -65,6 +72,13 @@ export const checkoutSchema = z
         code: z.ZodIssueCode.custom,
         message: "Wybierz punkt odbioru",
         path: ["pickupLocation"],
+      });
+    }
+    if (data.paymentMethod === "CASH_ON_DELIVERY" && data.shippingMethod !== "PICKUP") {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: "Płatność przy odbiorze jest dostępna tylko przy odbiorze osobistym",
+        path: ["paymentMethod"],
       });
     }
     if (data.wantsFaktura) {

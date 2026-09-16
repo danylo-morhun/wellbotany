@@ -72,6 +72,11 @@ export async function sendOrderConfirmationEmail(orderNumber: string): Promise<v
     <p>Zamówienie zrealizujemy po zaksięgowaniu wpłaty.</p>`
         : ""
     }
+    ${
+      order.paymentMethod === "CASH_ON_DELIVERY"
+        ? `<p>Do zapłaty przy odbiorze: <strong>${formatPrice(order.totalPln)}</strong></p>`
+        : ""
+    }
   `;
 
   await resend.emails.send({

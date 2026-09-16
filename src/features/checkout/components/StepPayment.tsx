@@ -8,6 +8,7 @@ import { effectiveUnitPricePln } from "@/features/cart/lib/pricing";
 import type { CartItem } from "@/features/cart/lib/session";
 import { formatPrice } from "@/lib/format";
 import { verifyCoupon } from "../actions";
+import { isOfflinePayment } from "../lib/payment";
 import { SHIPPING_COSTS, SHIPPING_LABELS } from "../lib/shipping";
 import type { CheckoutFormData } from "./CheckoutForm";
 
@@ -24,6 +25,7 @@ type Props = {
 
 const PAYMENT_OPTIONS = [
   { value: "BANK_TRANSFER" as const, label: "Przelew tradycyjny" },
+  { value: "CASH_ON_DELIVERY" as const, label: "Płatność przy odbiorze w sklepie" },
   { value: "BLIK" as const, label: "BLIK" },
   { value: "PRZELEWY24" as const, label: "Przelew online (Przelewy24)" },
   { value: "APPLE_PAY" as const, label: "Apple Pay" },
@@ -169,7 +171,9 @@ export function StepPayment({
       <div>
         <p className="mb-3 text-sm font-medium">Metoda płatności</p>
         <div className="space-y-2">
-          {PAYMENT_OPTIONS.map((opt) => (
+          {PAYMENT_OPTIONS.filter(
+            (opt) => opt.value !== "CASH_ON_DELIVERY" || data.shippingMethod === "PICKUP",
+          ).map((opt) => (
             <label
               key={opt.value}
               className={`flex cursor-pointer items-center gap-3 rounded-lg border px-4 py-3 transition-colors ${
@@ -194,6 +198,11 @@ export function StepPayment({
           <p className="mt-2 text-xs text-muted-foreground">
             Dane do przelewu pokażemy po złożeniu zamówienia i wyślemy e-mailem. Zamówienie
             zrealizujemy po zaksięgowaniu wpłaty.
+          </p>
+        )}
+        {data.paymentMethod === "CASH_ON_DELIVERY" && (
+          <p className="mt-2 text-xs text-muted-foreground">
+            Zapłacisz przy odbiorze zamówienia w sklepie.
           </p>
         )}
       </div>
@@ -241,7 +250,7 @@ export function StepPayment({
           {pending ? "Składam zamówienie…" : `Złóż zamówienie — ${formatPrice(total)}`}
         </button>
       </div>
-      {data.paymentMethod !== "BANK_TRANSFER" && (
+      {!isOfflinePayment(data.paymentMethod) && (
         <p className="flex items-center justify-center gap-1.5 text-xs text-muted-foreground">
           <ShieldCheck className="size-3.5 shrink-0" aria-hidden />
           Płatność zabezpieczona przez Przelewy24
