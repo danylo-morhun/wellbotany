@@ -5,6 +5,7 @@ import { z } from "zod";
 import { CART_COOKIE_NAME } from "@/features/cart/lib/session";
 import { paymentUrl, registerTransaction } from "@/features/przelewy24/lib/client";
 import { ActionError } from "@/lib/action-error";
+import { auth } from "@/lib/auth";
 import { sendOrderConfirmationEmail } from "@/lib/email/order-emails";
 import { formatPrice } from "@/lib/format";
 import { prisma } from "@/lib/prisma";
@@ -70,6 +71,7 @@ export const placeOrder = actionClient
   .action(async ({ parsedInput: input }) => {
     await assertNotRateLimited(checkoutLimiter, await getClientIp());
 
+    const session = await auth();
     const cart = await getCartForCheckout(input.cartId);
     if (!cart || cart.items.length === 0) {
       throw new ActionError("Koszyk jest pusty");
@@ -173,6 +175,7 @@ export const placeOrder = actionClient
       const newOrder = await tx.order.create({
         data: {
           orderNumber,
+          customerId: session?.user?.id ?? null,
           status: "PAYMENT_PENDING",
           customerEmail: input.email,
           customerPhone: input.phone,
