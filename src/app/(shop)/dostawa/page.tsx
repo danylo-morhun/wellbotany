@@ -1,6 +1,12 @@
 import type { Metadata } from "next";
+import {
+  SHIPPING_COSTS,
+  type ShippingMethodKey,
+  shippingLabel,
+} from "@/features/checkout/lib/shipping";
 import { getShopSettings } from "@/features/settings/lib/shop-settings";
 import { formatPriceCompact } from "@/lib/format";
+import { PICKUP_HOLD_DAYS, PICKUP_LOCATIONS } from "@/lib/pickup-locations";
 
 export const dynamic = "force-static";
 
@@ -9,10 +15,21 @@ export const metadata: Metadata = {
   description: "Informacje o metodach dostawy, kosztach i czasie realizacji zamówień.",
 };
 
+// Delivery time shown per method. Keyed by string so methods added to
+// SHIPPING_COSTS later still render (with the default) before copy is written.
+const DELIVERY_TIME: Record<string, string> = {
+  PICKUP: "gotowe do odbioru zwykle w 1–2 dni robocze",
+};
+const DEFAULT_DELIVERY_TIME = "1–2 dni robocze od nadania";
+
 export default async function DostawaPage() {
   const { freeShippingThresholdPln } = await getShopSettings();
   const threshold =
     freeShippingThresholdPln !== null ? formatPriceCompact(freeShippingThresholdPln) : null;
+
+  const methods = (Object.entries(SHIPPING_COSTS) as [ShippingMethodKey, number][]).sort(
+    ([, a], [, b]) => a - b,
+  );
 
   return (
     <main className="container mx-auto max-w-prose px-4 py-12">
@@ -31,21 +48,15 @@ export default async function DostawaPage() {
                 </tr>
               </thead>
               <tbody className="divide-y">
-                <tr>
-                  <td className="px-4 py-3">Paczkomat InPost</td>
-                  <td className="px-4 py-3">12,99 zł</td>
-                  <td className="px-4 py-3">1–2 dni robocze</td>
-                </tr>
-                <tr>
-                  <td className="px-4 py-3">Kurier InPost</td>
-                  <td className="px-4 py-3">19,99 zł</td>
-                  <td className="px-4 py-3">1–2 dni robocze</td>
-                </tr>
-                <tr>
-                  <td className="px-4 py-3">Orlen Paczka</td>
-                  <td className="px-4 py-3">12,99 zł</td>
-                  <td className="px-4 py-3">1–2 dni robocze</td>
-                </tr>
+                {methods.map(([method, cost]) => (
+                  <tr key={method}>
+                    <td className="px-4 py-3">{shippingLabel(method)}</td>
+                    <td className="px-4 py-3">
+                      {cost === 0 ? "bezpłatnie" : formatPriceCompact(cost)}
+                    </td>
+                    <td className="px-4 py-3">{DELIVERY_TIME[method] ?? DEFAULT_DELIVERY_TIME}</td>
+                  </tr>
+                ))}
                 {threshold && (
                   <tr>
                     <td className="px-4 py-3 font-medium text-success">Wszystkie metody</td>
@@ -72,32 +83,55 @@ export default async function DostawaPage() {
         )}
 
         <section>
-          <h2 className="mb-3 text-xl">Paczkomaty InPost</h2>
+          <h2 className="mb-3 text-xl">Czas realizacji</h2>
           <p className="text-muted-foreground">
-            Podczas składania zamówienia możesz wybrać dowolny Paczkomat InPost w Polsce. Po
-            opłaceniu zamówienia otrzymasz e-mail z kodem odbioru oraz numerem przesyłki. Paczka
-            czeka w paczkomacie przez 48 godzin od momentu dostarczenia.
+            Zamówienia wysyłamy w ciągu 2 dni roboczych od zaksięgowania płatności. Przy płatności
+            online (BLIK, karta, szybki przelew) płatność księgowana jest od razu, przy przelewie
+            tradycyjnym — zwykle w ciągu 1 dnia roboczego. Czas doręczenia przez przewoźnika to
+            najczęściej 1–2 dni robocze od nadania.
           </p>
-          <p className="mt-2 text-muted-foreground">
-            Sieć liczy ponad 20 000 automatów na terenie całego kraju — znajdź najbliższy na{" "}
-            <a
-              href="https://inpost.pl/znajdz-paczkomat"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="text-primary underline-offset-4 hover:underline"
-            >
-              inpost.pl
-            </a>
-            .
+        </section>
+
+        <section>
+          <h2 className="mb-3 text-xl">Odbiór w paczkomacie lub punkcie</h2>
+          <p className="text-muted-foreground">
+            Wybierając dostawę do paczkomatu lub punktu odbioru (InPost, Orlen Paczka, DPD, DHL),
+            wskazujesz wygodne miejsce na mapie podczas składania zamówienia. Gdy paczka dotrze na
+            miejsce, przewoźnik wyśle Ci SMS lub e-mail z informacją o odbiorze. Czas oczekiwania
+            paczki w punkcie określa regulamin danego przewoźnika.
           </p>
+        </section>
+
+        <section>
+          <h2 className="mb-3 text-xl">Dostawa kurierem</h2>
+          <p className="text-muted-foreground">
+            Kurier dostarcza paczkę pod wskazany adres, zwykle w dni robocze w godzinach 8:00–18:00.
+            Podaj numer telefonu — kurier może skontaktować się z Tobą przed doręczeniem.
+          </p>
+        </section>
+
+        <section>
+          <h2 className="mb-3 text-xl">Odbiór osobisty w Kaliszu</h2>
+          <p className="text-muted-foreground">
+            Zamówienie możesz odebrać bezpłatnie w jednym z naszych sklepów stacjonarnych. Gdy
+            będzie gotowe, wyślemy Ci e-mail. Zamówienie czeka na odbiór {PICKUP_HOLD_DAYS} dni.
+          </p>
+          <ul className="mt-3 space-y-3">
+            {Object.entries(PICKUP_LOCATIONS).map(([key, location]) => (
+              <li key={key} className="rounded-2xl bg-card p-4 shadow-card">
+                <p className="font-medium">{location.name}</p>
+                <p className="text-muted-foreground">{location.address}</p>
+                <p className="text-muted-foreground">{location.hours.join(" · ")}</p>
+              </li>
+            ))}
+          </ul>
         </section>
 
         <section>
           <h2 className="mb-3 text-xl">Śledzenie przesyłki</h2>
           <p className="text-muted-foreground">
-            Po nadaniu paczki wyślemy Ci e-mail z numerem śledzenia oraz linkiem do śledzenia
-            przesyłki na stronie przewoźnika. Powiadomienie wysyłamy automatycznie w momencie
-            przekazania paczki do kuriera.
+            Po nadaniu paczki wyślemy Ci e-mail z numerem przesyłki, dzięki któremu sprawdzisz jej
+            status na stronie przewoźnika.
           </p>
         </section>
 
@@ -111,19 +145,22 @@ export default async function DostawaPage() {
 
         <section>
           <h2 className="mb-3 text-xl">Formy płatności</h2>
-          <p className="text-muted-foreground">
-            Płatności obsługuje operator Przelewy24. Akceptujemy:
-          </p>
-          <ul className="mt-2 list-inside list-disc space-y-1 text-muted-foreground">
-            <li>BLIK</li>
-            <li>Karty płatnicze (Visa, Mastercard)</li>
-            <li>Apple Pay i Google Pay</li>
-            <li>Szybkie przelewy bankowe</li>
-            <li>Przelew tradycyjny</li>
+          <ul className="list-inside list-disc space-y-1 text-muted-foreground">
+            <li>
+              Płatność online przez Przelewy24 — BLIK, karty płatnicze (Visa, Mastercard), Apple
+              Pay, Google Pay, szybkie przelewy bankowe. Zamówienie realizujemy od razu po
+              potwierdzeniu płatności.
+            </li>
+            <li>
+              Przelew tradycyjny na nasz rachunek bankowy — dane do przelewu otrzymasz po złożeniu
+              zamówienia i w e-mailu. Prosimy o wpłatę w ciągu 3 dni roboczych; zamówienie
+              realizujemy po zaksięgowaniu wpłaty.
+            </li>
+            <li>
+              Płatność przy odbiorze osobistym w sklepie (gotówką lub kartą) — dostępna tylko przy
+              wyborze odbioru osobistego w Kaliszu.
+            </li>
           </ul>
-          <p className="mt-2 text-muted-foreground">
-            Zamówienie jest realizowane po potwierdzeniu płatności przez Przelewy24.
-          </p>
         </section>
       </div>
     </main>
