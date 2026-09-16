@@ -161,7 +161,7 @@ export const placeOrder = actionClient
           discountPln =
             coupon.type === "PERCENTAGE"
               ? Math.round((subtotalPln * coupon.value) / 100)
-              : coupon.value;
+              : Math.min(coupon.value, subtotalPln);
         }
       }
 
