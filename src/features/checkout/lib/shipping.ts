@@ -21,6 +21,19 @@ export function requiresAddress(method: string): boolean {
   return ADDRESS_SHIPPING_METHODS.includes(method);
 }
 
+/**
+ * Delivery cost for an order. `productsPln` is the subtotal after discounts;
+ * `freeShippingThresholdPln` null means free delivery is switched off.
+ */
+export function shippingCostFor(
+  method: ShippingMethodKey,
+  productsPln: number,
+  freeShippingThresholdPln: number | null,
+): number {
+  if (freeShippingThresholdPln !== null && productsPln >= freeShippingThresholdPln) return 0;
+  return SHIPPING_COSTS[method];
+}
+
 /** Label for any stored ShippingMethod, including ones not offered at checkout. */
 export function shippingLabel(method: string): string {
   const other: Record<string, string> = {

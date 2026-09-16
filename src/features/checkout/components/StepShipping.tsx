@@ -3,20 +3,29 @@
 import { useState } from "react";
 import { formatPrice } from "@/lib/format";
 import { PICKUP_HOLD_DAYS, PICKUP_LOCATION_KEYS, PICKUP_LOCATIONS } from "@/lib/pickup-locations";
-import { requiresAddress, SHIPPING_COSTS, SHIPPING_LABELS } from "../lib/shipping";
+import {
+  requiresAddress,
+  SHIPPING_COSTS,
+  SHIPPING_LABELS,
+  type ShippingMethodKey,
+  shippingCostFor,
+} from "../lib/shipping";
 import type { CheckoutFormData } from "./CheckoutForm";
 import { InPostGeowidget } from "./InPostGeowidget";
 
 type Props = {
   data: CheckoutFormData;
+  subtotal: number;
+  freeShippingThresholdPln: number | null;
   onChange: (updates: Partial<CheckoutFormData>) => void;
   onBack: () => void;
   onNext: () => void;
 };
 
-const SHIPPING_OPTIONS = (Object.keys(SHIPPING_COSTS) as Array<keyof typeof SHIPPING_COSTS>).map(
-  (key) => ({ value: key, label: SHIPPING_LABELS[key], cost: SHIPPING_COSTS[key] }),
-);
+const SHIPPING_OPTIONS = (Object.keys(SHIPPING_COSTS) as ShippingMethodKey[]).map((key) => ({
+  value: key,
+  label: SHIPPING_LABELS[key],
+}));
 
 const inputClass =
   "w-full rounded-lg border border-border px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary";
@@ -34,7 +43,14 @@ function validateNip(nip: string): boolean {
   return sum % 11 === parseInt(digits[9], 10);
 }
 
-export function StepShipping({ data, onChange, onBack, onNext }: Props) {
+export function StepShipping({
+  data,
+  subtotal,
+  freeShippingThresholdPln,
+  onChange,
+  onBack,
+  onNext,
+}: Props) {
   const [nipError, setNipError] = useState<string | null>(null);
 
   function handleSubmit(e: React.FormEvent) {
@@ -52,38 +68,49 @@ export function StepShipping({ data, onChange, onBack, onNext }: Props) {
       <h2 className="text-lg font-semibold">Metoda dostawy</h2>
 
       <div className="space-y-3">
-        {SHIPPING_OPTIONS.map((opt) => (
-          <label
-            key={opt.value}
-            className={`flex cursor-pointer items-center justify-between rounded-lg border px-4 py-3 transition-colors ${
-              data.shippingMethod === opt.value
-                ? "border-primary bg-primary/5"
-                : "border-border hover:border-primary/50"
-            }`}
-          >
-            <div className="flex items-center gap-3">
-              <input
-                type="radio"
-                name="shippingMethod"
-                value={opt.value}
-                checked={data.shippingMethod === opt.value}
-                onChange={() =>
-                  onChange({
-                    shippingMethod: opt.value,
-                    // Pay-at-pickup only exists for in-store pickup
-                    ...(opt.value !== "PICKUP" &&
-                      data.paymentMethod === "CASH_ON_DELIVERY" && {
-                        paymentMethod: "BANK_TRANSFER",
-                      }),
-                  })
-                }
-                className="accent-primary"
-              />
-              <span className="text-sm font-medium">{opt.label}</span>
-            </div>
-            <span className="text-sm font-semibold">{formatPrice(opt.cost)}</span>
-          </label>
-        ))}
+        {SHIPPING_OPTIONS.map((opt) => {
+          const cost = shippingCostFor(opt.value, subtotal, freeShippingThresholdPln);
+          const regularCost = SHIPPING_COSTS[opt.value];
+          return (
+            <label
+              key={opt.value}
+              className={`flex cursor-pointer items-center justify-between rounded-lg border px-4 py-3 transition-colors ${
+                data.shippingMethod === opt.value
+                  ? "border-primary bg-primary/5"
+                  : "border-border hover:border-primary/50"
+              }`}
+            >
+              <div className="flex items-center gap-3">
+                <input
+                  type="radio"
+                  name="shippingMethod"
+                  value={opt.value}
+                  checked={data.shippingMethod === opt.value}
+                  onChange={() =>
+                    onChange({
+                      shippingMethod: opt.value,
+                      // Pay-at-pickup only exists for in-store pickup
+                      ...(opt.value !== "PICKUP" &&
+                        data.paymentMethod === "CASH_ON_DELIVERY" && {
+                          paymentMethod: "BANK_TRANSFER",
+                        }),
+                    })
+                  }
+                  className="accent-primary"
+                />
+                <span className="text-sm font-medium">{opt.label}</span>
+              </div>
+              <span className="text-sm font-semibold">
+                {cost < regularCost && (
+                  <span className="mr-2 font-normal text-muted-foreground line-through">
+                    {formatPrice(regularCost)}
+                  </span>
+                )}
+                {formatPrice(cost)}
+              </span>
+            </label>
+          );
+        })}
       </div>
 
       {data.shippingMethod === "PICKUP" && (

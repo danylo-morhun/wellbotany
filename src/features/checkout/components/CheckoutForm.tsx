@@ -90,10 +90,17 @@ type Props = {
   cartId: string;
   items: CartItem[];
   subtotal: number;
+  freeShippingThresholdPln: number | null;
   initialContact?: InitialContact;
 };
 
-export function CheckoutForm({ cartId, items, subtotal, initialContact }: Props) {
+export function CheckoutForm({
+  cartId,
+  items,
+  subtotal,
+  freeShippingThresholdPln,
+  initialContact,
+}: Props) {
   const router = useRouter();
   const [step, setStep] = useState(1);
   const [formData, setFormData] = useState<CheckoutFormData>({
@@ -193,6 +200,8 @@ export function CheckoutForm({ cartId, items, subtotal, initialContact }: Props)
           {step === 2 && (
             <StepShipping
               data={formData}
+              subtotal={subtotal}
+              freeShippingThresholdPln={freeShippingThresholdPln}
               onChange={update}
               onBack={() => setStep(1)}
               onNext={() => setStep(3)}
@@ -209,6 +218,7 @@ export function CheckoutForm({ cartId, items, subtotal, initialContact }: Props)
           onSubmit={handlePlaceOrder}
           items={items}
           subtotal={subtotal}
+          freeShippingThresholdPln={freeShippingThresholdPln}
           pending={isPending || redirecting}
           error={error}
         />

@@ -4,6 +4,7 @@ import { redirect } from "next/navigation";
 import { effectiveUnitPricePln } from "@/features/cart/lib/pricing";
 import { CART_COOKIE_NAME, getCart, getCartByCustomerId } from "@/features/cart/lib/session";
 import { CheckoutForm } from "@/features/checkout/components/CheckoutForm";
+import { getShopSettings } from "@/features/settings/lib/shop-settings";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 
@@ -58,6 +59,7 @@ export default async function ZamowieniePage() {
         cartId={cartId}
         items={items}
         subtotal={subtotal}
+        freeShippingThresholdPln={(await getShopSettings()).freeShippingThresholdPln}
         initialContact={{
           email: session?.user?.email ?? "",
           firstName: defaultAddress?.firstName ?? "",

@@ -4,6 +4,7 @@ import { cookies, headers } from "next/headers";
 import { z } from "zod";
 import { CART_COOKIE_NAME } from "@/features/cart/lib/session";
 import { paymentUrl, registerTransaction } from "@/features/przelewy24/lib/client";
+import { getShopSettings } from "@/features/settings/lib/shop-settings";
 import { ActionError } from "@/lib/action-error";
 import { auth } from "@/lib/auth";
 import { sendOrderConfirmationEmail } from "@/lib/email/order-emails";
@@ -19,7 +20,7 @@ import { actionClient } from "@/lib/safe-action";
 import { checkoutItemUnitPricePln, getCartForCheckout } from "./lib/cart";
 import { grantOrderAccess } from "./lib/order-access";
 import { isOfflinePayment } from "./lib/payment";
-import { requiresAddress, SHIPPING_COSTS } from "./lib/shipping";
+import { requiresAddress, shippingCostFor } from "./lib/shipping";
 import { checkoutSchema } from "./schema";
 
 export const verifyCoupon = actionClient
@@ -87,7 +88,7 @@ export const placeOrder = actionClient
     const hasAddress = requiresAddress(input.shippingMethod);
     const hasPickupPoint =
       input.shippingMethod === "INPOST_PACZKOMAT" || input.shippingMethod === "ORLEN_PACZKA";
-    const shippingPln = SHIPPING_COSTS[input.shippingMethod as keyof typeof SHIPPING_COSTS] ?? 1999;
+    const { freeShippingThresholdPln } = await getShopSettings();
     const subtotalPln = cart.items.reduce(
       (sum, item) => sum + checkoutItemUnitPricePln(item) * item.quantity,
       0,
@@ -164,6 +165,12 @@ export const placeOrder = actionClient
         }
       }
 
+      // Free-delivery threshold applies to the subtotal after discounts
+      const shippingPln = shippingCostFor(
+        input.shippingMethod,
+        subtotalPln - discountPln,
+        freeShippingThresholdPln,
+      );
       const totalPln = subtotalPln + shippingPln - discountPln;
 
       // Decrement stock atomically
