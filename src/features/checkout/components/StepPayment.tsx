@@ -23,6 +23,7 @@ type Props = {
 };
 
 const PAYMENT_OPTIONS = [
+  { value: "BANK_TRANSFER" as const, label: "Przelew tradycyjny" },
   { value: "BLIK" as const, label: "BLIK" },
   { value: "PRZELEWY24" as const, label: "Przelew online (Przelewy24)" },
   { value: "APPLE_PAY" as const, label: "Apple Pay" },
@@ -189,6 +190,12 @@ export function StepPayment({
             </label>
           ))}
         </div>
+        {data.paymentMethod === "BANK_TRANSFER" && (
+          <p className="mt-2 text-xs text-muted-foreground">
+            Dane do przelewu pokażemy po złożeniu zamówienia i wyślemy e-mailem. Zamówienie
+            zrealizujemy po zaksięgowaniu wpłaty.
+          </p>
+        )}
       </div>
 
       {error && (
@@ -234,10 +241,12 @@ export function StepPayment({
           {pending ? "Składam zamówienie…" : `Złóż zamówienie — ${formatPrice(total)}`}
         </button>
       </div>
-      <p className="flex items-center justify-center gap-1.5 text-xs text-muted-foreground">
-        <ShieldCheck className="size-3.5 shrink-0" aria-hidden />
-        Płatność zabezpieczona przez Przelewy24
-      </p>
+      {data.paymentMethod !== "BANK_TRANSFER" && (
+        <p className="flex items-center justify-center gap-1.5 text-xs text-muted-foreground">
+          <ShieldCheck className="size-3.5 shrink-0" aria-hidden />
+          Płatność zabezpieczona przez Przelewy24
+        </p>
+      )}
     </div>
   );
 }

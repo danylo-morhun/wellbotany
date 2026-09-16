@@ -29,7 +29,7 @@ export type CheckoutFormData = {
   billStreet: string;
   billCity: string;
   billPostalCode: string;
-  paymentMethod: "BLIK" | "PRZELEWY24" | "APPLE_PAY" | "GOOGLE_PAY";
+  paymentMethod: "BLIK" | "PRZELEWY24" | "APPLE_PAY" | "GOOGLE_PAY" | "BANK_TRANSFER";
   couponCode: string;
   acceptedTerms: boolean;
 };
@@ -52,7 +52,7 @@ const INITIAL_DATA: CheckoutFormData = {
   billStreet: "",
   billCity: "",
   billPostalCode: "",
-  paymentMethod: "BLIK",
+  paymentMethod: "BANK_TRANSFER",
   couponCode: "",
   acceptedTerms: false,
 };

@@ -239,7 +239,7 @@ export const placeOrder = actionClient
       console.error(`[email] confirmation failed for ${order.orderNumber}:`, err);
     });
 
-    if (process.env.P24_SANDBOX_BYPASS === "true") {
+    if (input.paymentMethod === "BANK_TRANSFER" || process.env.P24_SANDBOX_BYPASS === "true") {
       return { orderNumber: order.orderNumber, redirectUrl: null };
     }
 

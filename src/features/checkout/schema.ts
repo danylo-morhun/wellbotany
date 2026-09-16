@@ -20,7 +20,7 @@ export const checkoutSchema = z
     billStreet: z.string().optional(),
     billCity: z.string().optional(),
     billPostalCode: z.string().optional(),
-    paymentMethod: z.enum(["BLIK", "PRZELEWY24", "APPLE_PAY", "GOOGLE_PAY"]),
+    paymentMethod: z.enum(["BLIK", "PRZELEWY24", "APPLE_PAY", "GOOGLE_PAY", "BANK_TRANSFER"]),
     couponCode: z.string().optional(),
     acceptedTerms: z
       .boolean()
