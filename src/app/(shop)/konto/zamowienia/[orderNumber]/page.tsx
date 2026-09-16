@@ -3,6 +3,7 @@ import { shippingLabel } from "@/features/checkout/lib/shipping";
 import { ORDER_STATUS_LABELS } from "@/features/orders/lib/status-labels";
 import { auth } from "@/lib/auth";
 import { formatPrice } from "@/lib/format";
+import { PICKUP_HOLD_DAYS, pickupLocation } from "@/lib/pickup-locations";
 import { prisma } from "@/lib/prisma";
 
 export const metadata = { title: "Szczegóły zamówienia — Well Botany" };
@@ -26,6 +27,7 @@ export default async function OrderDetailPage({
       shippingMethod: true,
       shippingCostPln: true,
       inpostMachineName: true,
+      pickupLocation: true,
       shipFirstName: true,
       shipLastName: true,
       shipStreet: true,
@@ -56,6 +58,8 @@ export default async function OrderDetailPage({
   });
 
   if (!order) notFound();
+
+  const pickup = pickupLocation(order.pickupLocation);
 
   return (
     <div className="space-y-6">
@@ -129,16 +133,27 @@ export default async function OrderDetailPage({
           {order.inpostMachineName && (
             <p className="text-sm text-muted-foreground">{order.inpostMachineName}</p>
           )}
+          {pickup && (
+            <div className="text-sm text-muted-foreground">
+              <p className="font-medium text-foreground">{pickup.address}</p>
+              <p>{pickup.hours.join(", ")}</p>
+              <p>Zamówienie czeka na odbiór {PICKUP_HOLD_DAYS} dni od powiadomienia.</p>
+            </div>
+          )}
           <p className="mt-2 text-sm">
             {order.shipFirstName} {order.shipLastName}
           </p>
-          <p className="text-sm text-muted-foreground">
-            {order.shipStreet}
-            {order.shipApartment ? ` / ${order.shipApartment}` : ""}
-          </p>
-          <p className="text-sm text-muted-foreground">
-            {order.shipPostalCode} {order.shipCity}
-          </p>
+          {order.shipStreet && (
+            <>
+              <p className="text-sm text-muted-foreground">
+                {order.shipStreet}
+                {order.shipApartment ? ` / ${order.shipApartment}` : ""}
+              </p>
+              <p className="text-sm text-muted-foreground">
+                {order.shipPostalCode} {order.shipCity}
+              </p>
+            </>
+          )}
           {order.shipPhone && <p className="text-sm text-muted-foreground">{order.shipPhone}</p>}
         </div>
 

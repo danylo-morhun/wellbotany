@@ -1,5 +1,6 @@
 import { shippingLabel } from "@/features/checkout/lib/shipping";
 import { formatPrice } from "@/lib/format";
+import { PICKUP_HOLD_DAYS, pickupLocation } from "@/lib/pickup-locations";
 import { prisma } from "@/lib/prisma";
 import { BANK_TRANSFER_DETAILS } from "@/lib/shop-config";
 import { EMAIL_FROM, resendClient } from "./client";
@@ -10,6 +11,14 @@ function layout(title: string, body: string): string {
     ${body}
     <p style="margin-top:32px;font-size:12px;color:#767676">Well Botany</p>
   </div>`;
+}
+
+function pickupBlock(key: string | null): string {
+  const location = pickupLocation(key);
+  if (!location) return "";
+  return `<h2 style="font-size:16px;margin-top:24px">Odbiór osobisty</h2>
+    <p><strong>${location.name}</strong><br>${location.address}<br>${location.hours.join(", ")}</p>
+    <p>Napiszemy, gdy zamówienie będzie gotowe do odbioru. Będzie na Ciebie czekać ${PICKUP_HOLD_DAYS} dni.</p>`;
 }
 
 export async function sendOrderConfirmationEmail(orderNumber: string): Promise<void> {
@@ -24,6 +33,7 @@ export async function sendOrderConfirmationEmail(orderNumber: string): Promise<v
       customerName: true,
       shippingMethod: true,
       paymentMethod: true,
+      pickupLocation: true,
       subtotalPln: true,
       shippingPln: true,
       discountPln: true,
@@ -51,6 +61,7 @@ export async function sendOrderConfirmationEmail(orderNumber: string): Promise<v
       ${order.discountPln > 0 ? `<tr><td>Rabat</td><td style="text-align:right">-${formatPrice(order.discountPln)}</td></tr>` : ""}
       <tr><td style="padding-top:8px;font-weight:600">Łącznie</td><td style="padding-top:8px;text-align:right;font-weight:600">${formatPrice(order.totalPln)}</td></tr>
     </table>
+    ${pickupBlock(order.pickupLocation)}
     ${
       order.paymentMethod === "BANK_TRANSFER"
         ? `<h2 style="font-size:16px;margin-top:24px">Dane do przelewu</h2>

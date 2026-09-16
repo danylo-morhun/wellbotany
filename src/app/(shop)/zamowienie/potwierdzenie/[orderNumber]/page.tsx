@@ -5,6 +5,7 @@ import { notFound } from "next/navigation";
 import { PAYMENT_LABELS } from "@/features/checkout/lib/payment";
 import { shippingLabel } from "@/features/checkout/lib/shipping";
 import { formatPrice } from "@/lib/format";
+import { PICKUP_HOLD_DAYS, pickupLocation } from "@/lib/pickup-locations";
 import { prisma } from "@/lib/prisma";
 import { BANK_TRANSFER_DETAILS } from "@/lib/shop-config";
 
@@ -28,6 +29,7 @@ export default async function PotwierdzeniePage({ params }: Props) {
       customerName: true,
       shippingMethod: true,
       inpostMachineId: true,
+      pickupLocation: true,
       shipCity: true,
       shipPostalCode: true,
       paymentMethod: true,
@@ -50,6 +52,8 @@ export default async function PotwierdzeniePage({ params }: Props) {
   });
 
   if (!order) notFound();
+
+  const pickup = pickupLocation(order.pickupLocation);
 
   return (
     <div className="mx-auto max-w-2xl px-4 py-8 sm:px-6 lg:px-8">
@@ -134,6 +138,17 @@ export default async function PotwierdzeniePage({ params }: Props) {
             <span>{formatPrice(order.totalPln)}</span>
           </div>
         </div>
+
+        {pickup && (
+          <div className="rounded-lg bg-muted/50 px-3 py-2 text-sm">
+            <p className="font-medium">Odbiór osobisty: {pickup.address}</p>
+            <p className="text-muted-foreground">{pickup.hours.join(", ")}</p>
+            <p className="text-muted-foreground">
+              Napiszemy, gdy zamówienie będzie gotowe do odbioru. Będzie czekać {PICKUP_HOLD_DAYS}{" "}
+              dni.
+            </p>
+          </div>
+        )}
 
         {order.inpostMachineId && (
           <div className="rounded-lg bg-muted/50 px-3 py-2 text-sm">

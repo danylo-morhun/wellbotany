@@ -3,6 +3,7 @@ import { PAYMENT_LABELS } from "@/features/checkout/lib/payment";
 import { shippingLabel } from "@/features/checkout/lib/shipping";
 import { MarkPaidButton } from "@/features/orders/components/MarkPaidButton";
 import { StatusForm } from "@/features/orders/components/StatusForm";
+import { pickupLocation } from "@/lib/pickup-locations";
 import { prisma } from "@/lib/prisma";
 
 export default async function AdminOrderDetailPage({
@@ -60,12 +61,21 @@ export default async function AdminOrderDetailPage({
           <p className="text-sm">
             {order.shipFirstName} {order.shipLastName}
           </p>
-          <p className="text-sm">{order.shipStreet}</p>
-          {order.shipApartment && <p className="text-sm">{order.shipApartment}</p>}
-          <p className="text-sm">
-            {order.shipPostalCode} {order.shipCity}
-          </p>
+          {order.shipStreet && (
+            <>
+              <p className="text-sm">{order.shipStreet}</p>
+              {order.shipApartment && <p className="text-sm">{order.shipApartment}</p>}
+              <p className="text-sm">
+                {order.shipPostalCode} {order.shipCity}
+              </p>
+            </>
+          )}
           <p className="mt-1 text-sm font-medium">{shippingLabel(order.shippingMethod)}</p>
+          {order.shippingMethod === "PICKUP" && (
+            <p className="text-sm text-muted-foreground">
+              Punkt: {pickupLocation(order.pickupLocation)?.address ?? order.pickupLocation}
+            </p>
+          )}
           {order.inpostMachineId && (
             <p className="text-sm text-muted-foreground">
               Paczkomat: {order.inpostMachineName ?? order.inpostMachineId}
