@@ -34,15 +34,35 @@ export default function ONasPage() {
       <div className="space-y-10 text-sm leading-relaxed">
         <section className="space-y-3 text-muted-foreground">
           <p>
-            Well Botany to polski sklep internetowy z certyfikowanymi suplementami diety, witaminami
-            i produktami bio. Powstał z prostego przekonania: dbanie o zdrowie nie powinno wymagać
-            przedzierania się przez marketingowe obietnice.
+            Well Botany to internetowa odsłona zielarni Twoje Zdrowie — od ponad 20 lat prowadzimy
+            stacjonarną zielarnię w Kaliszu, a od teraz te same certyfikowane suplementy diety,
+            witaminy i produkty bio dostępne są też online.
           </p>
           <p>
-            Zamiast tego stawiamy na sprawdzony skład, uczciwe ceny i rzetelne informacje o każdym
-            produkcie — od dawkowania po kraj pochodzenia. Sprzedajemy wyłącznie produkty
+            W ofercie znajdziesz m.in. ekologiczne zioła, certyfikowane herbaty, przyprawy, zdrową
+            żywność, suplementy diety, kosmetyki naturalne i olejki eteryczne. Współpracujemy ze
+            sprawdzonymi producentami, stawiając na jakość, uczciwy skład i rzetelne informacje o
+            każdym produkcie — od dawkowania po kraj pochodzenia. Sprzedajemy wyłącznie produkty
             dopuszczone do obrotu w Polsce i oznaczone zgodnie z wymogami GIS.
           </p>
+        </section>
+
+        <section>
+          <h2 className="mb-3 text-xl">Nasze sklepy stacjonarne</h2>
+          <p className="mb-4 text-muted-foreground">
+            Poza sklepem internetowym zapraszamy do dwóch punktów stacjonarnych zielarni Twoje
+            Zdrowie w Kaliszu — tam też pomożemy dobrać produkty do Twoich potrzeb.
+          </p>
+          <div className="grid gap-3 sm:grid-cols-2">
+            <div className="rounded-2xl bg-card p-5 shadow-card">
+              <p className="font-semibold text-foreground">Zielarnia Twoje Zdrowie</p>
+              <p className="text-muted-foreground">ul. Polna 102, 62-800 Kalisz</p>
+            </div>
+            <div className="rounded-2xl bg-card p-5 shadow-card">
+              <p className="font-semibold text-foreground">Zielarnia Twoje Zdrowie</p>
+              <p className="text-muted-foreground">ul. Młynarska 69, 62-800 Kalisz</p>
+            </div>
+          </div>
         </section>
 
         <section>
