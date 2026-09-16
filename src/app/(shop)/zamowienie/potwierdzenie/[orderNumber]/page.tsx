@@ -3,8 +3,10 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { BankTransferDetails } from "@/features/checkout/components/BankTransferDetails";
+import { hasOrderAccess } from "@/features/checkout/lib/order-access";
 import { PAYMENT_LABELS } from "@/features/checkout/lib/payment";
 import { shippingLabel } from "@/features/checkout/lib/shipping";
+import { auth } from "@/lib/auth";
 import { formatPrice } from "@/lib/format";
 import { PICKUP_HOLD_DAYS, pickupLocation } from "@/lib/pickup-locations";
 import { prisma } from "@/lib/prisma";
@@ -23,6 +25,7 @@ export default async function PotwierdzeniePage({ params }: Props) {
     where: { orderNumber },
     select: {
       orderNumber: true,
+      customerId: true,
       status: true,
       paymentStatus: true,
       customerEmail: true,
@@ -52,6 +55,13 @@ export default async function PotwierdzeniePage({ params }: Props) {
   });
 
   if (!order) notFound();
+
+  const session = await auth();
+  const canView =
+    session?.user?.role === "ADMIN" ||
+    (!!order.customerId && order.customerId === session?.user?.id) ||
+    (await hasOrderAccess(order.orderNumber));
+  if (!canView) notFound();
 
   const pickup = pickupLocation(order.pickupLocation);
 

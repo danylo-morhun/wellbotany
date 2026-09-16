@@ -17,6 +17,7 @@ import {
 } from "@/lib/rate-limit";
 import { actionClient } from "@/lib/safe-action";
 import { checkoutItemUnitPricePln, getCartForCheckout } from "./lib/cart";
+import { grantOrderAccess } from "./lib/order-access";
 import { requiresAddress, SHIPPING_COSTS } from "./lib/shipping";
 import { checkoutSchema } from "./schema";
 
@@ -241,6 +242,7 @@ export const placeOrder = actionClient
 
     const cookieStore = await cookies();
     cookieStore.delete(CART_COOKIE_NAME);
+    await grantOrderAccess(order.orderNumber);
 
     sendOrderConfirmationEmail(order.orderNumber).catch((err) => {
       console.error(`[email] confirmation failed for ${order.orderNumber}:`, err);
