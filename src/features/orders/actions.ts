@@ -17,7 +17,8 @@ export const updateOrderStatus = adminActionClient
     });
     if (!existing) throw new ActionError("Zamówienie nie istnieje");
 
-    const trackingNumber = input.trackingNumber?.trim() || null;
+    // Tracking input is only rendered for SHIPPED — keep the stored number when it's absent
+    const trackingNumber = input.trackingNumber?.trim() || existing.trackingNumber || null;
     if (input.status === "SHIPPED" && !trackingNumber) {
       throw new ActionError("Podaj numer przesyłki, aby oznaczyć zamówienie jako wysłane");
     }
