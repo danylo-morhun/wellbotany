@@ -67,6 +67,18 @@ type InitialContact = Pick<
   CheckoutFormData,
   "email" | "firstName" | "lastName" | "phone" | "street" | "apartment" | "city" | "postalCode"
 >;
+/** First message from a next-safe-action validation error tree (root or any field). */
+function firstValidationMessage(errors: unknown): string | undefined {
+  if (!errors || typeof errors !== "object") return undefined;
+  const { _errors, ...fields } = errors as { _errors?: unknown };
+  if (Array.isArray(_errors) && typeof _errors[0] === "string") return _errors[0];
+  for (const value of Object.values(fields)) {
+    const message = firstValidationMessage(value);
+    if (message) return message;
+  }
+  return undefined;
+}
+
 
 type Props = {
   cartId: string;
@@ -95,9 +107,10 @@ export function CheckoutForm({ cartId, items, subtotal, initialContact }: Props)
       }
     },
     onError: ({ error: actionError }) => {
-      const msg =
-        actionError.serverError ?? actionError.validationErrors?._errors?.[0] ?? "Wystąpił błąd";
-      const msgStr = typeof msg === "string" ? msg : "Wystąpił błąd. Spróbuj ponownie.";
+      const msgStr =
+        actionError.serverError ??
+        firstValidationMessage(actionError.validationErrors) ??
+        "Wystąpił błąd. Spróbuj ponownie.";
       setError(msgStr);
       toast.error("Błąd zamówienia", { description: msgStr });
     },
