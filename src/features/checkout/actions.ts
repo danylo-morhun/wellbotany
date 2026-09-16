@@ -16,7 +16,7 @@ import {
 } from "@/lib/rate-limit";
 import { actionClient } from "@/lib/safe-action";
 import { checkoutItemUnitPricePln, getCartForCheckout } from "./lib/cart";
-import { SHIPPING_COSTS } from "./lib/shipping";
+import { requiresAddress, SHIPPING_COSTS } from "./lib/shipping";
 import { checkoutSchema } from "./schema";
 
 export const verifyCoupon = actionClient
@@ -75,6 +75,9 @@ export const placeOrder = actionClient
       throw new ActionError("Koszyk jest pusty");
     }
 
+    const hasAddress = requiresAddress(input.shippingMethod);
+    const hasPickupPoint =
+      input.shippingMethod === "INPOST_PACZKOMAT" || input.shippingMethod === "ORLEN_PACZKA";
     const shippingPln = SHIPPING_COSTS[input.shippingMethod as keyof typeof SHIPPING_COSTS] ?? 1999;
     const subtotalPln = cart.items.reduce(
       (sum, item) => sum + checkoutItemUnitPricePln(item) * item.quantity,
@@ -177,14 +180,15 @@ export const placeOrder = actionClient
           shippingMethod: input.shippingMethod,
           shippingCostPln: shippingPln,
           shippingPln,
-          inpostMachineId: input.inpostMachineId ?? null,
-          inpostMachineName: input.inpostMachineName ?? null,
+          inpostMachineId: hasPickupPoint ? (input.inpostMachineId ?? null) : null,
+          inpostMachineName: hasPickupPoint ? (input.inpostMachineName ?? null) : null,
+          pickupLocation: input.shippingMethod === "PICKUP" ? (input.pickupLocation ?? null) : null,
           shipFirstName: input.firstName,
           shipLastName: input.lastName,
-          shipStreet: input.street,
-          shipApartment: input.apartment ?? null,
-          shipCity: input.city,
-          shipPostalCode: input.postalCode,
+          shipStreet: hasAddress ? (input.street ?? null) : null,
+          shipApartment: hasAddress ? (input.apartment ?? null) : null,
+          shipCity: hasAddress ? (input.city ?? null) : null,
+          shipPostalCode: hasAddress ? (input.postalCode ?? null) : null,
           shipCountry: "PL",
           shipPhone: input.phone,
           wantsFaktura: input.wantsFaktura,

@@ -1,4 +1,6 @@
 import { z } from "zod";
+import { PICKUP_LOCATION_KEYS } from "@/lib/pickup-locations";
+import { requiresAddress } from "./lib/shipping";
 
 export const checkoutSchema = z
   .object({
@@ -7,13 +9,14 @@ export const checkoutSchema = z
     phone: z.string().min(9, "Min. 9 znaków").max(15),
     firstName: z.string().min(1, "Imię jest wymagane").max(60),
     lastName: z.string().min(1, "Nazwisko jest wymagane").max(60),
-    street: z.string().min(1, "Ulica jest wymagana"),
+    street: z.string().optional(),
     apartment: z.string().optional(),
-    city: z.string().min(1, "Miasto jest wymagane"),
-    postalCode: z.string().regex(/^\d{2}-\d{3}$/, "Format: XX-XXX"),
-    shippingMethod: z.enum(["INPOST_PACZKOMAT", "INPOST_KURIER", "ORLEN_PACZKA"]),
+    city: z.string().optional(),
+    postalCode: z.string().optional(),
+    shippingMethod: z.enum(["INPOST_PACZKOMAT", "INPOST_KURIER", "ORLEN_PACZKA", "PICKUP"]),
     inpostMachineId: z.string().optional(),
     inpostMachineName: z.string().optional(),
+    pickupLocation: z.enum(PICKUP_LOCATION_KEYS).optional(),
     wantsFaktura: z.boolean().default(false),
     billCompany: z.string().optional(),
     billNip: z.string().optional(),
@@ -35,6 +38,33 @@ export const checkoutSchema = z
         code: z.ZodIssueCode.custom,
         message: "Podaj identyfikator punktu odbioru",
         path: ["inpostMachineId"],
+      });
+    }
+    if (requiresAddress(data.shippingMethod)) {
+      if (!data.street?.trim())
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          message: "Ulica jest wymagana",
+          path: ["street"],
+        });
+      if (!data.city?.trim())
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          message: "Miasto jest wymagane",
+          path: ["city"],
+        });
+      if (!/^\d{2}-\d{3}$/.test(data.postalCode ?? ""))
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          message: "Format: XX-XXX",
+          path: ["postalCode"],
+        });
+    }
+    if (data.shippingMethod === "PICKUP" && !data.pickupLocation) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: "Wybierz punkt odbioru",
+        path: ["pickupLocation"],
       });
     }
     if (data.wantsFaktura) {

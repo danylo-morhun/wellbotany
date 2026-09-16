@@ -2,7 +2,8 @@
 
 import { useState } from "react";
 import { formatPrice } from "@/lib/format";
-import { SHIPPING_COSTS, SHIPPING_LABELS } from "../lib/shipping";
+import { PICKUP_HOLD_DAYS, PICKUP_LOCATION_KEYS, PICKUP_LOCATIONS } from "@/lib/pickup-locations";
+import { requiresAddress, SHIPPING_COSTS, SHIPPING_LABELS } from "../lib/shipping";
 import type { CheckoutFormData } from "./CheckoutForm";
 import { InPostGeowidget } from "./InPostGeowidget";
 
@@ -16,6 +17,14 @@ type Props = {
 const SHIPPING_OPTIONS = (Object.keys(SHIPPING_COSTS) as Array<keyof typeof SHIPPING_COSTS>).map(
   (key) => ({ value: key, label: SHIPPING_LABELS[key], cost: SHIPPING_COSTS[key] }),
 );
+
+const inputClass =
+  "w-full rounded-lg border border-border px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary";
+
+function formatPostalCode(raw: string): string {
+  const digits = raw.replace(/\D/g, "").slice(0, 5);
+  return digits.length > 2 ? `${digits.slice(0, 2)}-${digits.slice(2)}` : digits;
+}
 
 function validateNip(nip: string): boolean {
   const digits = nip.replace(/\D/g, "");
@@ -67,6 +76,115 @@ export function StepShipping({ data, onChange, onBack, onNext }: Props) {
           </label>
         ))}
       </div>
+
+      {data.shippingMethod === "PICKUP" && (
+        <fieldset className="space-y-3">
+          <legend className="mb-3 text-sm font-medium">Punkt odbioru</legend>
+          {PICKUP_LOCATION_KEYS.map((key) => {
+            const location = PICKUP_LOCATIONS[key];
+            return (
+              <label
+                key={key}
+                className={`flex cursor-pointer items-start gap-3 rounded-lg border px-4 py-3 transition-colors ${
+                  data.pickupLocation === key
+                    ? "border-primary bg-primary/5"
+                    : "border-border hover:border-primary/50"
+                }`}
+              >
+                <input
+                  type="radio"
+                  name="pickupLocation"
+                  value={key}
+                  required
+                  checked={data.pickupLocation === key}
+                  onChange={() => onChange({ pickupLocation: key })}
+                  className="mt-1 accent-primary"
+                />
+                <span className="text-sm">
+                  <span className="block font-medium">{location.address}</span>
+                  <span className="block text-muted-foreground">{location.name}</span>
+                  <span className="block text-muted-foreground">{location.hours.join(", ")}</span>
+                </span>
+              </label>
+            );
+          })}
+          <p className="text-xs text-muted-foreground">
+            Damy znać e-mailem, gdy zamówienie będzie gotowe do odbioru. Czeka na Ciebie{" "}
+            {PICKUP_HOLD_DAYS} dni.
+          </p>
+        </fieldset>
+      )}
+
+      {requiresAddress(data.shippingMethod) && (
+        <div className="space-y-4">
+          <h3 className="text-sm font-semibold">Adres dostawy</h3>
+          <div>
+            <label htmlFor="co-street" className="mb-1 block text-sm font-medium">
+              Ulica i numer *
+            </label>
+            <input
+              id="co-street"
+              type="text"
+              required
+              minLength={3}
+              autoComplete="address-line1"
+              value={data.street}
+              onChange={(e) => onChange({ street: e.target.value })}
+              className={inputClass}
+            />
+          </div>
+          <div>
+            <label htmlFor="co-apartment" className="mb-1 block text-sm font-medium">
+              Numer lokalu
+            </label>
+            <input
+              id="co-apartment"
+              type="text"
+              autoComplete="address-line2"
+              placeholder="Opcjonalnie"
+              value={data.apartment}
+              onChange={(e) => onChange({ apartment: e.target.value })}
+              className={inputClass}
+            />
+          </div>
+          <div className="grid gap-4 sm:grid-cols-2">
+            <div>
+              <label htmlFor="co-postalCode" className="mb-1 block text-sm font-medium">
+                Kod pocztowy *
+              </label>
+              <input
+                id="co-postalCode"
+                type="text"
+                inputMode="numeric"
+                required
+                pattern="\d{2}-\d{3}"
+                title="Format: 00-000"
+                placeholder="00-000"
+                maxLength={6}
+                autoComplete="postal-code"
+                value={data.postalCode}
+                onChange={(e) => onChange({ postalCode: formatPostalCode(e.target.value) })}
+                className={inputClass}
+              />
+            </div>
+            <div>
+              <label htmlFor="co-city" className="mb-1 block text-sm font-medium">
+                Miasto *
+              </label>
+              <input
+                id="co-city"
+                type="text"
+                required
+                minLength={2}
+                autoComplete="address-level2"
+                value={data.city}
+                onChange={(e) => onChange({ city: e.target.value })}
+                className={inputClass}
+              />
+            </div>
+          </div>
+        </div>
+      )}
 
       {data.shippingMethod === "INPOST_PACZKOMAT" && (
         <div className="rounded-lg border border-border bg-muted/30 p-4">

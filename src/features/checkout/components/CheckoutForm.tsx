@@ -5,7 +5,9 @@ import { useAction } from "next-safe-action/hooks";
 import { useState } from "react";
 import { toast } from "sonner";
 import type { CartItem } from "@/features/cart/lib/session";
+import type { PickupLocationKey } from "@/lib/pickup-locations";
 import { placeOrder } from "../actions";
+import { requiresAddress, type ShippingMethodKey } from "../lib/shipping";
 import { OrderSummarySidebar } from "./OrderSummarySidebar";
 import { StepContact } from "./StepContact";
 import { StepPayment } from "./StepPayment";
@@ -20,9 +22,10 @@ export type CheckoutFormData = {
   apartment: string;
   city: string;
   postalCode: string;
-  shippingMethod: "INPOST_PACZKOMAT" | "INPOST_KURIER" | "ORLEN_PACZKA";
+  shippingMethod: ShippingMethodKey;
   inpostMachineId: string;
   inpostMachineName: string;
+  pickupLocation: PickupLocationKey | "";
   wantsFaktura: boolean;
   billCompany: string;
   billNip: string;
@@ -46,6 +49,7 @@ const INITIAL_DATA: CheckoutFormData = {
   shippingMethod: "INPOST_PACZKOMAT",
   inpostMachineId: "",
   inpostMachineName: "",
+  pickupLocation: "",
   wantsFaktura: false,
   billCompany: "",
   billNip: "",
@@ -105,19 +109,21 @@ export function CheckoutForm({ cartId, items, subtotal, initialContact }: Props)
 
   function handlePlaceOrder() {
     setError(null);
+    const hasAddress = requiresAddress(formData.shippingMethod);
     execute({
       cartId,
       email: formData.email,
       phone: formData.phone,
       firstName: formData.firstName,
       lastName: formData.lastName,
-      street: formData.street,
-      apartment: formData.apartment || undefined,
-      city: formData.city,
-      postalCode: formData.postalCode,
+      street: hasAddress ? formData.street : undefined,
+      apartment: hasAddress ? formData.apartment || undefined : undefined,
+      city: hasAddress ? formData.city : undefined,
+      postalCode: hasAddress ? formData.postalCode : undefined,
       shippingMethod: formData.shippingMethod,
       inpostMachineId: formData.inpostMachineId || undefined,
       inpostMachineName: formData.inpostMachineName || undefined,
+      pickupLocation: formData.pickupLocation || undefined,
       wantsFaktura: formData.wantsFaktura,
       billCompany: formData.billCompany || undefined,
       billNip: formData.billNip || undefined,
