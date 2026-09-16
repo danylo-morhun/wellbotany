@@ -2,12 +2,12 @@ import { CheckCircle, Clock } from "lucide-react";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import { BankTransferDetails } from "@/features/checkout/components/BankTransferDetails";
 import { PAYMENT_LABELS } from "@/features/checkout/lib/payment";
 import { shippingLabel } from "@/features/checkout/lib/shipping";
 import { formatPrice } from "@/lib/format";
 import { PICKUP_HOLD_DAYS, pickupLocation } from "@/lib/pickup-locations";
 import { prisma } from "@/lib/prisma";
-import { BANK_TRANSFER_DETAILS } from "@/lib/shop-config";
 
 type Props = { params: Promise<{ orderNumber: string }> };
 
@@ -77,21 +77,8 @@ export default async function PotwierdzeniePage({ params }: Props) {
       </div>
 
       {order.paymentStatus !== "CAPTURED" && order.paymentMethod === "BANK_TRANSFER" && (
-        <div className="mb-6 space-y-3 rounded-2xl bg-card p-6 shadow-card">
-          <h2 className="font-semibold">Dane do przelewu</h2>
-          <dl className="grid grid-cols-[auto_1fr] gap-x-4 gap-y-1.5 text-sm">
-            <dt className="text-muted-foreground">Odbiorca</dt>
-            <dd className="font-medium">{BANK_TRANSFER_DETAILS.recipient}</dd>
-            <dt className="text-muted-foreground">Numer rachunku</dt>
-            <dd className="font-medium tabular-nums">{BANK_TRANSFER_DETAILS.account}</dd>
-            <dt className="text-muted-foreground">Kwota</dt>
-            <dd className="font-medium">{formatPrice(order.totalPln)}</dd>
-            <dt className="text-muted-foreground">Tytuł przelewu</dt>
-            <dd className="font-medium">{order.orderNumber}</dd>
-          </dl>
-          <p className="text-sm text-muted-foreground">
-            Zamówienie zrealizujemy po zaksięgowaniu wpłaty.
-          </p>
+        <div className="mb-6">
+          <BankTransferDetails orderNumber={order.orderNumber} totalPln={order.totalPln} />
         </div>
       )}
 
