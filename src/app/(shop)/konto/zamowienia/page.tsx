@@ -1,22 +1,12 @@
 import { PackageSearch } from "lucide-react";
 import Link from "next/link";
 import { redirect } from "next/navigation";
+import { ORDER_STATUS_LABELS } from "@/features/orders/lib/status-labels";
 import { auth } from "@/lib/auth";
 import { formatPrice } from "@/lib/format";
 import { prisma } from "@/lib/prisma";
 
 export const metadata = { title: "Zamówienia — Well Botany" };
-
-const STATUS_LABELS: Record<string, string> = {
-  PENDING: "Oczekujące",
-  PAYMENT_PENDING: "Oczekiwanie na płatność",
-  PAID: "Opłacone",
-  PROCESSING: "W realizacji",
-  SHIPPED: "Wysłane",
-  DELIVERED: "Dostarczone",
-  CANCELLED: "Anulowane",
-  REFUNDED: "Zwrócone",
-};
 
 export default async function ZamowieniaPage() {
   const session = await auth();
@@ -79,7 +69,7 @@ export default async function ZamowieniaPage() {
             </div>
             <div className="flex items-center gap-4 text-sm">
               <span className="rounded-full bg-muted px-2 py-0.5 text-xs font-medium">
-                {STATUS_LABELS[order.status] ?? order.status}
+                {ORDER_STATUS_LABELS[order.status] ?? order.status}
               </span>
               <span className="font-medium">{formatPrice(order.totalPln)}</span>
             </div>

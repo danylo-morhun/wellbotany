@@ -4,18 +4,8 @@ import { Suspense } from "react";
 import { AdminPagination } from "@/app/admin/components/AdminPagination";
 import { AdminSearch } from "@/app/admin/components/AdminSearch";
 import { OrderStatusFilter } from "@/app/admin/components/OrderStatusFilter";
+import { ORDER_STATUS_LABELS } from "@/features/orders/lib/status-labels";
 import { prisma } from "@/lib/prisma";
-
-const STATUS_LABELS: Record<OrderStatus, string> = {
-  PENDING: "Oczekujące",
-  PAYMENT_PENDING: "Oczekuje płatności",
-  PAID: "Opłacone",
-  PROCESSING: "W realizacji",
-  SHIPPED: "Wysłane",
-  DELIVERED: "Dostarczone",
-  CANCELLED: "Anulowane",
-  REFUNDED: "Zwrócone",
-};
 
 const PAGE_SIZE = 25;
 
@@ -114,7 +104,7 @@ export default async function AdminOrdersPage({
                 </td>
                 <td className="px-4 py-3">
                   <span className="rounded-full bg-muted px-2 py-0.5 text-xs font-medium">
-                    {STATUS_LABELS[order.status]}
+                    {ORDER_STATUS_LABELS[order.status] ?? order.status}
                   </span>
                 </td>
                 <td className="px-4 py-3">

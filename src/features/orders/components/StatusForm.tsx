@@ -5,17 +5,7 @@ import { useAction } from "next-safe-action/hooks";
 import { useState } from "react";
 import { toast } from "sonner";
 import { updateOrderStatus } from "../actions";
-
-const STATUS_LABELS: Record<OrderStatus, string> = {
-  PENDING: "Oczekujące",
-  PAYMENT_PENDING: "Oczekuje na płatność",
-  PAID: "Opłacone",
-  PROCESSING: "W realizacji",
-  SHIPPED: "Wysłane",
-  DELIVERED: "Dostarczone",
-  CANCELLED: "Anulowane",
-  REFUNDED: "Zwrócone",
-};
+import { ORDER_STATUS_LABELS } from "../lib/status-labels";
 
 interface Props {
   orderId: string;
@@ -55,7 +45,7 @@ export function StatusForm({ orderId, currentStatus, currentNote, currentTrackin
           onChange={(e) => setStatus(e.target.value as OrderStatus)}
           className="w-full rounded-lg border border-border bg-card px-3 py-2 text-sm focus:border-transparent focus:outline-none focus:ring-2 focus:ring-ring/50"
         >
-          {Object.entries(STATUS_LABELS).map(([value, label]) => (
+          {Object.entries(ORDER_STATUS_LABELS).map(([value, label]) => (
             <option key={value} value={value}>
               {label}
             </option>

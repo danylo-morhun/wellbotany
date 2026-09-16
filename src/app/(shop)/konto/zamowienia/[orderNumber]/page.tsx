@@ -1,20 +1,10 @@
 import { notFound, redirect } from "next/navigation";
+import { ORDER_STATUS_LABELS } from "@/features/orders/lib/status-labels";
 import { auth } from "@/lib/auth";
 import { formatPrice } from "@/lib/format";
 import { prisma } from "@/lib/prisma";
 
 export const metadata = { title: "Szczegóły zamówienia — Well Botany" };
-
-const STATUS_LABELS: Record<string, string> = {
-  PENDING: "Oczekujące",
-  PAYMENT_PENDING: "Oczekiwanie na płatność",
-  PAID: "Opłacone",
-  PROCESSING: "W realizacji",
-  SHIPPED: "Wysłane",
-  DELIVERED: "Dostarczone",
-  CANCELLED: "Anulowane",
-  REFUNDED: "Zwrócone",
-};
 
 const SHIPPING_LABELS: Record<string, string> = {
   INPOST_PACZKOMAT: "InPost Paczkomat",
@@ -90,7 +80,7 @@ export default async function OrderDetailPage({
           </p>
         </div>
         <span className="rounded-full bg-muted px-3 py-1 text-sm font-medium">
-          {STATUS_LABELS[order.status] ?? order.status}
+          {ORDER_STATUS_LABELS[order.status] ?? order.status}
         </span>
       </div>
 
