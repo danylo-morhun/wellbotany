@@ -579,14 +579,18 @@ model Order {
   inpostMachineId   String? // e.g. "WAW123M" — paczkomat machine ID from Geowidget
   inpostMachineName String? // display name, e.g. "Warszawa Centrum 1"
 
-  // Delivery address snapshot (copied at placement, never changes)
+  // In-store pickup — required when shippingMethod = PICKUP (key from src/lib/pickup-locations.ts)
+  pickupLocation String?
+
+  // Delivery address snapshot (copied at placement, never changes).
+  // Street/city/postal code are null for PICKUP and INPOST_PACZKOMAT (no home delivery).
   shipFirstName  String
   shipLastName   String
   shipCompany    String?
-  shipStreet     String
+  shipStreet     String?
   shipApartment  String?
-  shipCity       String
-  shipPostalCode String
+  shipCity       String?
+  shipPostalCode String?
   shipCountry    String  @default("PL")
   shipPhone      String?
 
