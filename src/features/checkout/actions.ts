@@ -117,9 +117,10 @@ export const placeOrder = actionClient
       let couponCode: string | undefined;
 
       if (input.couponCode?.trim()) {
+        const code = input.couponCode.trim().toUpperCase();
         const coupon = await tx.coupon.findFirst({
           where: {
-            code: input.couponCode.trim(),
+            code,
             isActive: true,
             AND: [
               { OR: [{ validFrom: null }, { validFrom: { lte: new Date() } }] },
@@ -136,33 +137,38 @@ export const placeOrder = actionClient
           },
         });
 
-        if (coupon) {
-          if (coupon.minOrderPln !== null && subtotalPln < coupon.minOrderPln) {
-            throw new ActionError(
-              `Minimalna wartość zamówienia dla tego kodu: ${formatPrice(coupon.minOrderPln)}`,
-            );
-          }
-
-          // Atomic increment — WHERE guards against exceeding maxUsages
-          const used = await tx.coupon.updateMany({
-            where: {
-              id: coupon.id,
-              OR: [{ maxUsages: null }, { usageCount: { lt: coupon.maxUsages ?? 0 } }],
-            },
-            data: { usageCount: { increment: 1 } },
-          });
-
-          if (used.count === 0) {
-            throw new ActionError("Kod rabatowy jest już wyczerpany");
-          }
-
-          couponId = coupon.id;
-          couponCode = input.couponCode.trim();
-          discountPln =
-            coupon.type === "PERCENTAGE"
-              ? Math.round((subtotalPln * coupon.value) / 100)
-              : Math.min(coupon.value, subtotalPln);
+        // Customer saw this discount in the summary — don't silently drop it
+        if (!coupon) {
+          throw new ActionError(
+            "Kod rabatowy jest nieprawidłowy lub wygasł. Usuń go i spróbuj ponownie.",
+          );
         }
+
+        if (coupon.minOrderPln !== null && subtotalPln < coupon.minOrderPln) {
+          throw new ActionError(
+            `Minimalna wartość zamówienia dla tego kodu: ${formatPrice(coupon.minOrderPln)}`,
+          );
+        }
+
+        // Atomic increment — WHERE guards against exceeding maxUsages
+        const used = await tx.coupon.updateMany({
+          where: {
+            id: coupon.id,
+            OR: [{ maxUsages: null }, { usageCount: { lt: coupon.maxUsages ?? 0 } }],
+          },
+          data: { usageCount: { increment: 1 } },
+        });
+
+        if (used.count === 0) {
+          throw new ActionError("Kod rabatowy jest już wyczerpany");
+        }
+
+        couponId = coupon.id;
+        couponCode = code;
+        discountPln =
+          coupon.type === "PERCENTAGE"
+            ? Math.round((subtotalPln * coupon.value) / 100)
+            : Math.min(coupon.value, subtotalPln);
       }
 
       // Free-delivery threshold applies to the subtotal after discounts
