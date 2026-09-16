@@ -1,4 +1,6 @@
 import { notFound, redirect } from "next/navigation";
+import { BankTransferDetails } from "@/features/checkout/components/BankTransferDetails";
+import { PAYMENT_LABELS } from "@/features/checkout/lib/payment";
 import { shippingLabel } from "@/features/checkout/lib/shipping";
 import { orderStatusLabel } from "@/features/orders/lib/status-labels";
 import { auth } from "@/lib/auth";
@@ -40,6 +42,8 @@ export default async function OrderDetailPage({
       shippingPln: true,
       taxPln: true,
       totalPln: true,
+      paymentMethod: true,
+      paymentStatus: true,
       couponCode: true,
       trackingNumber: true,
       trackingUrl: true,
@@ -78,6 +82,12 @@ export default async function OrderDetailPage({
           {orderStatusLabel(order.status, order.shippingMethod)}
         </span>
       </div>
+
+      {order.paymentMethod === "BANK_TRANSFER" &&
+        order.paymentStatus !== "CAPTURED" &&
+        order.status !== "CANCELLED" && (
+          <BankTransferDetails orderNumber={order.orderNumber} totalPln={order.totalPln} />
+        )}
 
       {order.trackingNumber && (
         <div className="rounded-2xl bg-card p-5 text-sm shadow-card">
@@ -179,6 +189,10 @@ export default async function OrderDetailPage({
               <span>Razem</span>
               <span>{formatPrice(order.totalPln)}</span>
             </div>
+            <p className="pt-2 text-muted-foreground">
+              Płatność: {PAYMENT_LABELS[order.paymentMethod] ?? order.paymentMethod} ·{" "}
+              {order.paymentStatus === "CAPTURED" ? "opłacone" : "nieopłacone"}
+            </p>
           </div>
         </div>
       </div>
