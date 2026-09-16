@@ -1,7 +1,8 @@
+// Grosz, at cost (Furgonetka price list, rounded up to ,99) — approved 2026-09-17
 export const SHIPPING_COSTS = {
-  INPOST_PACZKOMAT: 1299,
+  INPOST_PACZKOMAT: 1699,
   INPOST_KURIER: 1999,
-  ORLEN_PACZKA: 1299,
+  ORLEN_PACZKA: 1499,
   PICKUP: 0,
 } as const;
 
