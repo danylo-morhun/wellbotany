@@ -16,6 +16,7 @@ export default async function AdminLayout({ children }: { children: React.ReactN
     { href: "/admin/kategorie", label: "Kategorie", badge: null },
     { href: "/admin/marki", label: "Marki", badge: null },
     { href: "/admin/tagi", label: "Tagi", badge: null },
+    { href: "/admin/ustawienia", label: "Ustawienia", badge: null },
   ];
 
   return (
