@@ -9,7 +9,7 @@ import type { CartItem } from "@/features/cart/lib/session";
 import { formatPrice } from "@/lib/format";
 import { verifyCoupon } from "../actions";
 import { isOfflinePayment } from "../lib/payment";
-import { SHIPPING_LABELS, shippingCostFor } from "../lib/shipping";
+import { shippingCostFor, shippingLabel } from "../lib/shipping";
 import type { CheckoutFormData } from "./CheckoutForm";
 
 type Props = {
@@ -44,9 +44,6 @@ export function StepPayment({
   pending,
   error,
 }: Props) {
-  const shippingLabel =
-    SHIPPING_LABELS[data.shippingMethod as keyof typeof SHIPPING_LABELS] ?? data.shippingMethod;
-
   const [couponResult, setCouponResult] = useState<{
     valid: boolean;
     discountPln: number;
@@ -122,7 +119,7 @@ export function StepPayment({
             <span>{formatPrice(subtotal)}</span>
           </div>
           <div className="flex justify-between text-muted-foreground">
-            <span>Dostawa ({shippingLabel})</span>
+            <span>Dostawa ({shippingLabel(data.shippingMethod)})</span>
             <span>{formatPrice(shippingCost)}</span>
           </div>
           {discount > 0 && (
