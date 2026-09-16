@@ -19,7 +19,7 @@ const faqs = [
   },
   {
     q: "Ile trwa realizacja i dostawa zamówienia?",
-    a: "Zamówienia opłacone do godziny 14:00 w dni robocze wysyłamy tego samego dnia. Czas dostawy wynosi 1–2 dni robocze (Paczkomat InPost, kurier DPD lub DHL). Po nadaniu przesyłki otrzymasz e-mail z numerem śledzenia.",
+    a: "Zamówienia wysyłamy w ciągu 2 dni roboczych od zaksięgowania płatności. Doręczenie przez przewoźnika (InPost, Orlen Paczka, DPD, DHL) trwa zwykle 1–2 dni robocze. Po nadaniu przesyłki otrzymasz e-mail z numerem śledzenia. Szczegóły i ceny znajdziesz na stronie Dostawa i płatność.",
   },
   {
     q: "Czy muszę mieć konto, żeby złożyć zamówienie?",
