@@ -121,11 +121,15 @@ export default function RegulaminPage() {
           <h2 className="mb-3 text-xl">§5 Płatności</h2>
           <p className="mb-2 text-muted-foreground">Za złożone zamówienie można zapłacić:</p>
           <ul className="list-inside list-disc space-y-1 text-muted-foreground">
-            <li>BLIK,</li>
-            <li>kartą płatniczą (Visa, Mastercard),</li>
-            <li>Apple Pay lub Google Pay,</li>
-            <li>szybkim przelewem online,</li>
-            <li>zwykłym przelewem na rachunek bankowy Sprzedawcy.</li>
+            <li>
+              online za pośrednictwem operatora Przelewy24 (PayPro S.A.) — BLIK, kartą płatniczą
+              (Visa, Mastercard), Apple Pay, Google Pay lub szybkim przelewem online,
+            </li>
+            <li>zwykłym przelewem na rachunek bankowy Sprzedawcy,</li>
+            <li>
+              gotówką lub kartą przy odbiorze osobistym w sklepie Sprzedawcy — wyłącznie przy
+              wyborze odbioru osobistego.
+            </li>
           </ul>
           <p className="mt-2 text-muted-foreground">
             W przypadku wybrania płatności z góry, za zamówienie należy zapłacić w terminie 3 Dni
@@ -154,7 +158,9 @@ export default function RegulaminPage() {
             <li>Towar dostarczany jest wyłącznie na terytorium Rzeczypospolitej Polskiej.</li>
             <li>
               Dostawa realizowana jest za pośrednictwem Paczkomatów InPost, kuriera InPost, Orlen
-              Paczki, DHL oraz DPD — szczegóły na stronie{" "}
+              Paczki, DPD (kurier i punkty odbioru) oraz DHL (kurier i punkty odbioru). Kupujący
+              może również odebrać zamówienie osobiście w sklepie Sprzedawcy w Kaliszu — szczegóły
+              na stronie{" "}
               <Link href="/dostawa" className="text-primary underline-offset-4 hover:underline">
                 Dostawa i płatność
               </Link>
