@@ -509,6 +509,16 @@ model GiftBuilderSettings {
   updatedAt DateTime @updatedAt
 }
 
+// Store-wide settings editable in /admin/ustawienia (singleton row, id = 1).
+model ShopSettings {
+  id Int @id @default(1)
+
+  // Subtotal after discounts (grosz) from which delivery is free; null = no free delivery
+  freeShippingThresholdPln Int? @default(20000)
+
+  updatedAt DateTime @updatedAt
+}
+
 // Admin-managed packaging options for the custom gift-set builder — the
 // customer must pick one; its price is added on top of the items total.
 model GiftPackaging {
