@@ -1,6 +1,8 @@
 import { Leaf, ShieldCheck, Truck } from "lucide-react";
 import type { Metadata } from "next";
 import Link from "next/link";
+import { getShopSettings } from "@/features/settings/lib/shop-settings";
+import { formatPriceCompact } from "@/lib/format";
 
 export const metadata: Metadata = {
   title: "O nas — Well Botany",
@@ -22,11 +24,13 @@ const values = [
   {
     icon: Truck,
     title: "Szybka dostawa",
-    text: "Wysyłamy w 24h przez InPost Paczkomaty, DHL i DPD. Darmowa dostawa od 200 zł.",
+    text: "Wysyłamy w 24h przez InPost Paczkomaty, DHL i DPD.",
   },
 ];
 
-export default function ONasPage() {
+export default async function ONasPage() {
+  const { freeShippingThresholdPln } = await getShopSettings();
+
   return (
     <main className="container mx-auto max-w-prose px-4 py-12">
       <h1 className="mb-8 text-3xl">O nas</h1>
@@ -68,15 +72,23 @@ export default function ONasPage() {
         <section>
           <h2 className="mb-4 text-xl">Na czym nam zależy</h2>
           <div className="grid gap-3 sm:grid-cols-3">
-            {values.map(({ icon: Icon, title, text }) => (
-              <div key={title} className="rounded-2xl bg-card p-5 shadow-card">
-                <span className="mb-3 flex size-10 items-center justify-center rounded-full bg-secondary text-primary">
-                  <Icon className="size-5" strokeWidth={1.75} />
-                </span>
-                <p className="font-semibold text-foreground">{title}</p>
-                <p className="mt-1 text-xs leading-relaxed text-muted-foreground">{text}</p>
-              </div>
-            ))}
+            {values.map(({ icon, title, text }) => {
+              const Icon = icon;
+              return (
+                <div key={title} className="rounded-2xl bg-card p-5 shadow-card">
+                  <span className="mb-3 flex size-10 items-center justify-center rounded-full bg-secondary text-primary">
+                    <Icon className="size-5" strokeWidth={1.75} />
+                  </span>
+                  <p className="font-semibold text-foreground">{title}</p>
+                  <p className="mt-1 text-xs leading-relaxed text-muted-foreground">
+                    {text}
+                    {icon === Truck && freeShippingThresholdPln !== null
+                      ? ` Darmowa dostawa od ${formatPriceCompact(freeShippingThresholdPln)}.`
+                      : ""}
+                  </p>
+                </div>
+              );
+            })}
           </div>
         </section>
 

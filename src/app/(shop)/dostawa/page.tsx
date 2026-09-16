@@ -1,4 +1,6 @@
 import type { Metadata } from "next";
+import { getShopSettings } from "@/features/settings/lib/shop-settings";
+import { formatPriceCompact } from "@/lib/format";
 
 export const dynamic = "force-static";
 
@@ -7,7 +9,11 @@ export const metadata: Metadata = {
   description: "Informacje o metodach dostawy, kosztach i czasie realizacji zamówień.",
 };
 
-export default function DostawaPage() {
+export default async function DostawaPage() {
+  const { freeShippingThresholdPln } = await getShopSettings();
+  const threshold =
+    freeShippingThresholdPln !== null ? formatPriceCompact(freeShippingThresholdPln) : null;
+
   return (
     <main className="container mx-auto max-w-prose px-4 py-12">
       <h1 className="mb-8 text-3xl">Dostawa i płatność</h1>
@@ -40,24 +46,30 @@ export default function DostawaPage() {
                   <td className="px-4 py-3">12,99 zł</td>
                   <td className="px-4 py-3">1–2 dni robocze</td>
                 </tr>
-                <tr>
-                  <td className="px-4 py-3 font-medium text-success">Wszystkie metody</td>
-                  <td className="px-4 py-3 font-medium text-success">GRATIS</td>
-                  <td className="px-4 py-3 text-muted-foreground">przy zamówieniu od 200 zł</td>
-                </tr>
+                {threshold && (
+                  <tr>
+                    <td className="px-4 py-3 font-medium text-success">Wszystkie metody</td>
+                    <td className="px-4 py-3 font-medium text-success">GRATIS</td>
+                    <td className="px-4 py-3 text-muted-foreground">
+                      przy zamówieniu od {threshold}
+                    </td>
+                  </tr>
+                )}
               </tbody>
             </table>
           </div>
         </section>
 
-        <section>
-          <h2 className="mb-3 text-xl">Darmowa dostawa od 200 zł</h2>
-          <p className="text-muted-foreground">
-            Przy zamówieniu o wartości 200 zł lub więcej dostawa jest bezpłatna dla wszystkich
-            dostępnych metod. Próg liczony jest od wartości produktów po zastosowaniu rabatów, bez
-            uwzględnienia kosztów dostawy.
-          </p>
-        </section>
+        {threshold && (
+          <section>
+            <h2 className="mb-3 text-xl">Darmowa dostawa od {threshold}</h2>
+            <p className="text-muted-foreground">
+              Przy zamówieniu o wartości {threshold} lub więcej dostawa jest bezpłatna dla
+              wszystkich dostępnych metod. Próg liczony jest od wartości produktów po zastosowaniu
+              rabatów, bez uwzględnienia kosztów dostawy.
+            </p>
+          </section>
+        )}
 
         <section>
           <h2 className="mb-3 text-xl">Paczkomaty InPost</h2>

@@ -1,13 +1,26 @@
 import { Leaf, Phone, ShieldCheck, Truck } from "lucide-react";
+import { getShopSettings } from "@/features/settings/lib/shop-settings";
+import { formatPriceCompact } from "@/lib/format";
 
-const items = [
-  { icon: Truck, title: "Darmowa dostawa", sub: "od 200 zł" },
+const staticItems = [
   { icon: ShieldCheck, title: "Certyfikowana jakość", sub: "atestowane GIS/Sanepid" },
   { icon: Leaf, title: "Naturalne składniki", sub: "bez sztucznych dodatków" },
   { icon: Phone, title: "Wsparcie eksperta", sub: "pon–pt 9:00–17:00" },
 ];
 
-export function TrustStrip() {
+export async function TrustStrip() {
+  const { freeShippingThresholdPln } = await getShopSettings();
+  const items = [
+    freeShippingThresholdPln !== null
+      ? {
+          icon: Truck,
+          title: "Darmowa dostawa",
+          sub: `od ${formatPriceCompact(freeShippingThresholdPln)}`,
+        }
+      : { icon: Truck, title: "Szybka wysyłka", sub: "wysyłamy w 24h" },
+    ...staticItems,
+  ];
+
   return (
     <section aria-label="Nasze gwarancje">
       <div className="grid grid-cols-2 gap-3 md:grid-cols-4">

@@ -10,7 +10,9 @@ import { CartIcon } from "@/features/cart/components/CartIcon";
 import { getCategories } from "@/features/catalog/actions";
 import { HeaderSearch } from "@/features/catalog/components/HeaderSearch";
 import { buildCategoryNav } from "@/features/catalog/lib/nav";
+import { getShopSettings } from "@/features/settings/lib/shop-settings";
 import { WishlistIcon, WishlistIconFallback } from "@/features/wishlist/components/WishlistIcon";
+import { formatPriceCompact } from "@/lib/format";
 
 const navLinks = [
   { label: "Katalog", href: "/katalog" },
@@ -25,7 +27,10 @@ const utilityLinks = [
 ];
 
 export async function NavBar() {
-  const categories = await getCategories();
+  const [categories, { freeShippingThresholdPln }] = await Promise.all([
+    getCategories(),
+    getShopSettings(),
+  ]);
   const nav = buildCategoryNav(categories);
 
   return (
@@ -34,8 +39,12 @@ export async function NavBar() {
       <div className="bg-band text-band-foreground">
         <div className="mx-auto flex h-9 max-w-7xl items-center justify-between px-4 text-xs font-medium sm:px-6 lg:px-8">
           <p className="flex items-center gap-1.5">
-            <Truck className="size-3.5" strokeWidth={2} />
-            Darmowa dostawa od 200 zł
+            {freeShippingThresholdPln !== null && (
+              <>
+                <Truck className="size-3.5" strokeWidth={2} />
+                Darmowa dostawa od {formatPriceCompact(freeShippingThresholdPln)}
+              </>
+            )}
           </p>
           <nav className="hidden items-center gap-5 sm:flex">
             {utilityLinks.map((link) => (
