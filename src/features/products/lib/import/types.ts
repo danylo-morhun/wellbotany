@@ -1,3 +1,19 @@
+/** One packaging-size option of a multi-variant product (e.g. "7 saszetek" vs
+ *  "Słoik (60 g)"), each with its own EAN/price — see the draft's `variants`
+ *  field comment for when to use this vs. the flat single-SKU fields. */
+export type SupplierVariantDraft = {
+  /** e.g. "Wielkość opakowania" — shown as the variant-picker's label */
+  optionLabel?: string;
+  /** e.g. "Słoik (60 g)", "30 saszetek" */
+  optionValue: string;
+  sku?: string;
+  ean?: string;
+  priceGrosz: number;
+  comparePriceGrosz?: number;
+  stock: number;
+  isDefault?: boolean;
+};
+
 export type SupplierProductDraft = {
   sourceId: string;
   externalKey: string;
@@ -8,6 +24,13 @@ export type SupplierProductDraft = {
   packaging?: string;
   sku?: string;
   ean?: string;
+  /** When a supplier product page offers multiple packaging sizes as one
+   *  product (own EAN/price each — e.g. Omni-Biotic's "7 saszetek" /
+   *  "Słoik (60 g)" radio picker), populate this instead of the flat
+   *  `sku`/`ean`/`priceGrosz`/`stock` fields below. The importer creates one
+   *  Product with one ProductVariant per entry. Leave undefined for the
+   *  common single-SKU case — the flat fields are used as before. */
+  variants?: SupplierVariantDraft[];
   /** Shoper's numeric product_id — persisted so a later sync can refresh
    *  this exact product via GET /products/{id} instead of re-matching by
    *  SKU/EAN. Only set by the Shoper API source. */
@@ -39,6 +62,7 @@ export type SupplierProductDraft = {
   servingSize?: string;
   servingsPerContainer?: number;
   storageInfo?: string;
+  usageInstructionsPl?: string;
   /** Short marketing bullets shown under the title (max 4-6). AI-polish OK here —
    *  it's a hook, not a factual/health claim. */
   benefitsPl?: string[];

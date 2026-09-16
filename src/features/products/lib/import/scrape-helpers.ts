@@ -116,6 +116,9 @@ export function detectAllergens(ingredientsText: string): string[] {
   const lower = ingredientsText.toLowerCase();
   const found = new Set<string>();
   for (const [term, label] of Object.entries(EU_ALLERGEN_TERMS_PL)) {
+    // "ryb" (fish) substring-matches "ryboflawina" (riboflavin, vitamin B2) —
+    // an unrelated ingredient name with no fish connection whatsoever.
+    if (term === "ryb" && /ryb(?!oflawin)/i.test(ingredientsText) === false) continue;
     if (lower.includes(term)) found.add(label);
   }
   return [...found];

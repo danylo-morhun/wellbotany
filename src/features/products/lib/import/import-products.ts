@@ -1,8 +1,13 @@
 import fs from "node:fs";
 import path from "node:path";
-import type { Prisma } from "@prisma/client";
+import type { Prisma, ProductStatus } from "@prisma/client";
 import { slugify } from "@/lib/slugify";
-import type { ImportRowResult, ImportSummary, SupplierProductDraft } from "./types";
+import type {
+  ImportRowResult,
+  ImportSummary,
+  SupplierProductDraft,
+  SupplierVariantDraft,
+} from "./types";
 
 type Tx = Prisma.TransactionClient;
 
@@ -36,25 +41,33 @@ async function resolveCategory(tx: Tx, categoryName: string | undefined): Promis
   return created.id;
 }
 
-async function findExistingVariant(
+async function findExistingVariantByCodes(
   tx: Tx,
-  draft: SupplierProductDraft,
+  ean: string | undefined,
+  sku: string | undefined,
 ): Promise<{ productId: string; variantId: string } | null> {
-  if (draft.ean) {
+  if (ean) {
     const byEan = await tx.productVariant.findUnique({
-      where: { ean: draft.ean },
+      where: { ean },
       select: { id: true, productId: true },
     });
     if (byEan) return { productId: byEan.productId, variantId: byEan.id };
   }
-  if (draft.sku) {
+  if (sku) {
     const bySku = await tx.productVariant.findUnique({
-      where: { sku: draft.sku },
+      where: { sku },
       select: { id: true, productId: true },
     });
     if (bySku) return { productId: bySku.productId, variantId: bySku.id };
   }
   return null;
+}
+
+async function findExistingVariant(
+  tx: Tx,
+  draft: SupplierProductDraft,
+): Promise<{ productId: string; variantId: string } | null> {
+  return findExistingVariantByCodes(tx, draft.ean, draft.sku);
 }
 
 function resolveImageUrl(draft: SupplierProductDraft): string | undefined {
@@ -131,6 +144,7 @@ function contentUpdateData(draft: SupplierProductDraft) {
     servingSize: draft.servingSize ?? undefined,
     servingsPerContainer: draft.servingsPerContainer ?? undefined,
     storageInfo: draft.storageInfo ?? undefined,
+    usageInstructionsPl: draft.usageInstructionsPl ?? undefined,
     benefitsPl: draft.benefitsPl && draft.benefitsPl.length > 0 ? draft.benefitsPl : undefined,
     allergenInfo:
       draft.allergenContains?.length || draft.allergenMayContain?.length
@@ -145,10 +159,144 @@ function brandSlugFallback(name: string): string {
   return slugify(name);
 }
 
+/** Upserts one ProductVariant of a multi-variant draft (own SKU/EAN/price per
+ *  packaging size). Matched independently by its own EAN/SKU — a re-run can
+ *  add a newly-scraped packaging size to an existing product without
+ *  touching the sibling variants already there. */
+async function upsertVariant(
+  tx: Tx,
+  productId: string,
+  draft: SupplierProductDraft,
+  variant: SupplierVariantDraft,
+  fallbackSku: string,
+): Promise<void> {
+  const existing = await findExistingVariantByCodes(tx, variant.ean, variant.sku);
+  const data = {
+    optionLabel: variant.optionLabel ?? "Wielkość opakowania",
+    optionValue: variant.optionValue,
+    pricePln: variant.priceGrosz,
+    comparePricePln: variant.comparePriceGrosz ?? null,
+    vatRate: draft.vatRate,
+    stock: variant.stock,
+    isActive: variant.priceGrosz > 0,
+  };
+  if (existing) {
+    await tx.productVariant.update({ where: { id: existing.variantId }, data });
+    return;
+  }
+  await tx.productVariant.create({
+    data: {
+      ...data,
+      productId,
+      sku: variant.sku ?? fallbackSku,
+      ean: variant.ean || null,
+      isDefault: variant.isDefault ?? false,
+    },
+  });
+}
+
+/** Multi-variant path: one Product, one ProductVariant per `draft.variants`
+ *  entry (own EAN/price each — see `SupplierVariantDraft`). The anchor
+ *  product is found by matching ANY variant's EAN/SKU against an existing
+ *  ProductVariant, so a re-run recognizes the product even if only one of
+ *  its packaging sizes was imported before. */
+async function importVariantDraft(
+  tx: Tx,
+  draft: SupplierProductDraft & { variants: SupplierVariantDraft[] },
+  options: {
+    brandName?: string;
+    brandSlug?: string;
+    updateExisting?: boolean;
+    status?: ProductStatus;
+  },
+  brandIdFor: (draft: SupplierProductDraft) => Promise<string | null>,
+): Promise<ImportRowResult> {
+  let anchorProductId: string | null = null;
+  for (const v of draft.variants) {
+    const found = await findExistingVariantByCodes(tx, v.ean, v.sku);
+    if (found) {
+      anchorProductId = found.productId;
+      break;
+    }
+  }
+
+  if (anchorProductId && !options.updateExisting) {
+    return {
+      externalKey: draft.externalKey,
+      name: draft.name,
+      status: "skipped",
+      productId: anchorProductId,
+      message: "Produkt już istnieje",
+    };
+  }
+
+  const imageUrl = resolveImageUrl(draft);
+  const brandId = await brandIdFor(draft);
+
+  let productId: string;
+  let rowStatus: ImportRowResult["status"];
+
+  if (anchorProductId) {
+    productId = anchorProductId;
+    await tx.product.update({
+      where: { id: productId },
+      data: {
+        namePl: draft.name,
+        brandId,
+        categoryId: await resolveCategory(tx, draft.categoryName),
+        netWeight: draft.packaging ?? undefined,
+        ...contentUpdateData(draft),
+      },
+    });
+    rowStatus = "updated";
+  } else {
+    const slug = await uniqueSlug(tx, draft.name);
+    const categoryId = await resolveCategory(tx, draft.categoryName);
+    const product = await tx.product.create({
+      data: {
+        slug,
+        status: options.status ?? "DRAFT",
+        namePl: draft.name,
+        brandId,
+        categoryId,
+        netWeight: draft.packaging ?? null,
+        ...contentUpdateData(draft),
+      },
+    });
+    productId = product.id;
+    rowStatus = "created";
+  }
+
+  const hasDefault = draft.variants.some((v) => v.isDefault);
+  for (const [i, v] of draft.variants.entries()) {
+    const fallbackSku = `${draft.sourceId.toUpperCase()}-${draft.externalKey}-${slugify(v.optionValue)}`;
+    await upsertVariant(
+      tx,
+      productId,
+      draft,
+      hasDefault ? v : { ...v, isDefault: i === 0 },
+      fallbackSku,
+    );
+  }
+
+  if (imageUrl) {
+    await ensureProductImage(tx, productId, imageUrl, draft.name);
+  }
+  await ensureGalleryImages(tx, productId, draft.extraImageUrls, draft.name);
+
+  return { externalKey: draft.externalKey, name: draft.name, status: rowStatus, productId };
+}
+
 export async function importSupplierProducts(
   tx: Tx,
   drafts: SupplierProductDraft[],
-  options: { brandName?: string; brandSlug?: string; updateExisting?: boolean },
+  options: {
+    brandName?: string;
+    brandSlug?: string;
+    updateExisting?: boolean;
+    /** Status new products are created with. Defaults to DRAFT (review before going live). */
+    status?: ProductStatus;
+  },
 ): Promise<ImportSummary> {
   const rows: ImportRowResult[] = [];
   let created = 0;
@@ -174,6 +322,20 @@ export async function importSupplierProducts(
 
   for (const draft of drafts) {
     try {
+      if (draft.variants && draft.variants.length > 0) {
+        const row = await importVariantDraft(
+          tx,
+          draft as SupplierProductDraft & { variants: SupplierVariantDraft[] },
+          options,
+          brandIdFor,
+        );
+        if (row.status === "created") created++;
+        else if (row.status === "updated") updated++;
+        else if (row.status === "skipped") skipped++;
+        rows.push(row);
+        continue;
+      }
+
       const existing = await findExistingVariant(tx, draft);
       const imageUrl = resolveImageUrl(draft);
       const brandId = await brandIdFor(draft);
@@ -243,7 +405,7 @@ export async function importSupplierProducts(
       const product = await tx.product.create({
         data: {
           slug,
-          status: "DRAFT",
+          status: options.status ?? "DRAFT",
           namePl: draft.name,
           brandId,
           categoryId,
