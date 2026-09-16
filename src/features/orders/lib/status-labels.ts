@@ -9,3 +9,16 @@ export const ORDER_STATUS_LABELS: Record<string, string> = {
   REFUNDED: "Zwrócone",
 };
 
+// Pickup orders reuse SHIPPED/DELIVERED for "ready in store"/"collected".
+const PICKUP_STATUS_LABELS: Record<string, string> = {
+  SHIPPED: "Gotowe do odbioru",
+  DELIVERED: "Odebrane",
+};
+
+export function orderStatusLabel(status: string, shippingMethod: string): string {
+  return (
+    (shippingMethod === "PICKUP" ? PICKUP_STATUS_LABELS[status] : undefined) ??
+    ORDER_STATUS_LABELS[status] ??
+    status
+  );
+}

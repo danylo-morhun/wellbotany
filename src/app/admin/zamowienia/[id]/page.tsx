@@ -217,6 +217,7 @@ export default async function AdminOrderDetailPage({
           // Remount when status changes elsewhere (e.g. "mark as paid") — the select is uncontrolled
           key={order.status}
           orderId={order.id}
+          shippingMethod={order.shippingMethod}
           currentStatus={order.status}
           currentNote={order.noteAdmin}
           currentTrackingNumber={order.trackingNumber}

@@ -1,7 +1,7 @@
 import { PackageSearch } from "lucide-react";
 import Link from "next/link";
 import { redirect } from "next/navigation";
-import { ORDER_STATUS_LABELS } from "@/features/orders/lib/status-labels";
+import { orderStatusLabel } from "@/features/orders/lib/status-labels";
 import { auth } from "@/lib/auth";
 import { formatPrice } from "@/lib/format";
 import { prisma } from "@/lib/prisma";
@@ -19,6 +19,7 @@ export default async function ZamowieniaPage() {
       id: true,
       orderNumber: true,
       status: true,
+      shippingMethod: true,
       totalPln: true,
       createdAt: true,
       items: { select: { productName: true }, take: 4 },
@@ -69,7 +70,7 @@ export default async function ZamowieniaPage() {
             </div>
             <div className="flex items-center gap-4 text-sm">
               <span className="rounded-full bg-muted px-2 py-0.5 text-xs font-medium">
-                {ORDER_STATUS_LABELS[order.status] ?? order.status}
+                {orderStatusLabel(order.status, order.shippingMethod)}
               </span>
               <span className="font-medium">{formatPrice(order.totalPln)}</span>
             </div>

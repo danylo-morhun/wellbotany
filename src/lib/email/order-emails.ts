@@ -113,3 +113,36 @@ export async function sendTrackingEmail(orderId: string): Promise<void> {
     html: layout("Zamówienie w drodze", body),
   });
 }
+
+export async function sendPickupReadyEmail(orderId: string): Promise<void> {
+  const resend = resendClient();
+  if (!resend) return;
+
+  const order = await prisma.order.findUnique({
+    where: { id: orderId },
+    select: {
+      orderNumber: true,
+      customerEmail: true,
+      customerName: true,
+      pickupLocation: true,
+      paymentStatus: true,
+      totalPln: true,
+    },
+  });
+  const location = pickupLocation(order?.pickupLocation);
+  if (!order || !location) return;
+
+  const body = `
+    <p>Cześć ${order.customerName}, Twoje zamówienie <strong>${order.orderNumber}</strong> czeka na odbiór.</p>
+    <p><strong>${location.name}</strong><br>${location.address}<br>${location.hours.join(", ")}</p>
+    ${order.paymentStatus !== "CAPTURED" ? `<p>Do zapłaty przy odbiorze: <strong>${formatPrice(order.totalPln)}</strong></p>` : ""}
+    <p>Zamówienie będzie czekać ${PICKUP_HOLD_DAYS} dni. Podaj przy odbiorze numer zamówienia.</p>
+  `;
+
+  await resend.emails.send({
+    from: EMAIL_FROM,
+    to: order.customerEmail,
+    subject: `Zamówienie ${order.orderNumber} czeka na odbiór`,
+    html: layout("Gotowe do odbioru", body),
+  });
+}

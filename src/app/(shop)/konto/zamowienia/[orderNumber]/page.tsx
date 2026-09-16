@@ -1,6 +1,6 @@
 import { notFound, redirect } from "next/navigation";
 import { shippingLabel } from "@/features/checkout/lib/shipping";
-import { ORDER_STATUS_LABELS } from "@/features/orders/lib/status-labels";
+import { orderStatusLabel } from "@/features/orders/lib/status-labels";
 import { auth } from "@/lib/auth";
 import { formatPrice } from "@/lib/format";
 import { PICKUP_HOLD_DAYS, pickupLocation } from "@/lib/pickup-locations";
@@ -75,7 +75,7 @@ export default async function OrderDetailPage({
           </p>
         </div>
         <span className="rounded-full bg-muted px-3 py-1 text-sm font-medium">
-          {ORDER_STATUS_LABELS[order.status] ?? order.status}
+          {orderStatusLabel(order.status, order.shippingMethod)}
         </span>
       </div>
 
