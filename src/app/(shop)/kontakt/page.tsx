@@ -44,7 +44,9 @@ export default function KontaktPage() {
               >
                 +48 797 771 703
               </a>
-              <p className="mt-1 text-xs text-muted-foreground">Pon–Pt, 9:00–17:00</p>
+              <p className="mt-1 text-xs text-muted-foreground">
+                Pon–Pt, 9:00–18:00, Sob 9:00–14:00
+              </p>
             </div>
           </div>
 
@@ -52,8 +54,8 @@ export default function KontaktPage() {
             <Clock className="mt-0.5 size-5 shrink-0 text-primary" />
             <div>
               <p className="text-sm font-semibold">Godziny obsługi</p>
-              <p className="mt-1 text-sm text-muted-foreground">Poniedziałek – Piątek</p>
-              <p className="text-sm text-muted-foreground">9:00 – 17:00</p>
+              <p className="mt-1 text-sm text-muted-foreground">Pon – Pt: 9:00 – 18:00</p>
+              <p className="text-sm text-muted-foreground">Sob: 9:00 – 14:00</p>
             </div>
           </div>
 
