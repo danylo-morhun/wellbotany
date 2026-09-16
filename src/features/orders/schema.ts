@@ -8,4 +8,6 @@ export const updateOrderStatusSchema = z.object({
   trackingNumber: z.string().max(100).optional(),
 });
 
+export const markOrderPaidSchema = z.object({ orderId: z.string().min(1) });
+
 export type UpdateOrderStatusInput = z.input<typeof updateOrderStatusSchema>;

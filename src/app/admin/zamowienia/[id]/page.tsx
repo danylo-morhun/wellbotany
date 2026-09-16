@@ -1,4 +1,6 @@
 import { notFound } from "next/navigation";
+import { PAYMENT_LABELS } from "@/features/checkout/lib/payment";
+import { MarkPaidButton } from "@/features/orders/components/MarkPaidButton";
 import { StatusForm } from "@/features/orders/components/StatusForm";
 import { prisma } from "@/lib/prisma";
 
@@ -186,8 +188,23 @@ export default async function AdminOrderDetailPage({
       </section>
 
       <section className="rounded-2xl bg-card p-5 shadow-card">
+        <h2 className="mb-3 font-semibold">Płatność</h2>
+        <p className="text-sm">{PAYMENT_LABELS[order.paymentMethod] ?? order.paymentMethod}</p>
+        {order.paymentStatus === "CAPTURED" ? (
+          <p className="mt-1 text-sm text-success">Opłacone</p>
+        ) : (
+          <div className="mt-3 flex flex-wrap items-center gap-3">
+            <p className="text-sm text-muted-foreground">Nieopłacone</p>
+            <MarkPaidButton orderId={order.id} />
+          </div>
+        )}
+      </section>
+
+      <section className="rounded-2xl bg-card p-5 shadow-card">
         <h2 className="mb-4 font-semibold">Status i notatka</h2>
         <StatusForm
+          // Remount when status changes elsewhere (e.g. "mark as paid") — the select is uncontrolled
+          key={order.status}
           orderId={order.id}
           currentStatus={order.status}
           currentNote={order.noteAdmin}
