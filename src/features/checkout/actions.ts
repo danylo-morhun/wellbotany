@@ -73,8 +73,13 @@ export const placeOrder = actionClient
     await assertNotRateLimited(checkoutLimiter, await getClientIp());
 
     const session = await auth();
+    const cookieStore = await cookies();
     const cart = await getCartForCheckout(input.cartId);
-    if (!cart || cart.items.length === 0) {
+    // cartId comes from the client — only accept the caller's own cart
+    const ownsCart = cart?.customerId
+      ? cart.customerId === session?.user?.id
+      : cart?.id === cookieStore.get(CART_COOKIE_NAME)?.value;
+    if (!cart || !ownsCart || cart.items.length === 0) {
       throw new ActionError("Koszyk jest pusty");
     }
 
@@ -240,7 +245,6 @@ export const placeOrder = actionClient
       return { orderNumber: newOrder.orderNumber, totalPln };
     });
 
-    const cookieStore = await cookies();
     cookieStore.delete(CART_COOKIE_NAME);
     await grantOrderAccess(order.orderNumber);
 

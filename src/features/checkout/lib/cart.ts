@@ -8,6 +8,7 @@ export async function getCartForCheckout(cartId: string) {
     },
     select: {
       id: true,
+      customerId: true,
       items: {
         select: {
           id: true,
