@@ -15,6 +15,12 @@ export const SHIPPING_LABELS = {
 
 export type ShippingMethodKey = keyof typeof SHIPPING_COSTS;
 
+/** Display order: cheapest first; in-store pickup last since it only suits local customers. */
+export const SHIPPING_METHODS_BY_PRICE = (Object.keys(SHIPPING_COSTS) as ShippingMethodKey[]).sort(
+  (a, b) =>
+    Number(a === "PICKUP") - Number(b === "PICKUP") || SHIPPING_COSTS[a] - SHIPPING_COSTS[b],
+);
+
 /** Methods delivered to the customer's door — the only ones that need a street address. */
 export const ADDRESS_SHIPPING_METHODS: readonly string[] = ["INPOST_KURIER"];
 

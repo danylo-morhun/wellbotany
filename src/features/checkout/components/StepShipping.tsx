@@ -7,7 +7,7 @@ import {
   requiresAddress,
   SHIPPING_COSTS,
   SHIPPING_LABELS,
-  type ShippingMethodKey,
+  SHIPPING_METHODS_BY_PRICE,
   shippingCostFor,
 } from "../lib/shipping";
 import type { CheckoutFormData } from "./CheckoutForm";
@@ -22,7 +22,7 @@ type Props = {
   onNext: () => void;
 };
 
-const SHIPPING_OPTIONS = (Object.keys(SHIPPING_COSTS) as ShippingMethodKey[]).map((key) => ({
+const SHIPPING_OPTIONS = SHIPPING_METHODS_BY_PRICE.map((key) => ({
   value: key,
   label: SHIPPING_LABELS[key],
 }));

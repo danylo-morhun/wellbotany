@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import {
   SHIPPING_COSTS,
-  type ShippingMethodKey,
+  SHIPPING_METHODS_BY_PRICE,
   shippingLabel,
 } from "@/features/checkout/lib/shipping";
 import { getShopSettings } from "@/features/settings/lib/shop-settings";
@@ -27,8 +27,8 @@ export default async function DostawaPage() {
   const threshold =
     freeShippingThresholdPln !== null ? formatPriceCompact(freeShippingThresholdPln) : null;
 
-  const methods = (Object.entries(SHIPPING_COSTS) as [ShippingMethodKey, number][]).sort(
-    ([, a], [, b]) => a - b,
+  const methods = SHIPPING_METHODS_BY_PRICE.map(
+    (method) => [method, SHIPPING_COSTS[method]] as const,
   );
 
   return (
