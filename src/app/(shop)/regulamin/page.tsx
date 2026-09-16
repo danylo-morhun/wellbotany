@@ -119,10 +119,7 @@ export default function RegulaminPage() {
 
         <section>
           <h2 className="mb-3 text-xl">§5 Płatności</h2>
-          <p className="mb-2 text-muted-foreground">
-            Płatności obsługuje operator Przelewy24 (PayPro S.A.). Za złożone zamówienie można
-            zapłacić:
-          </p>
+          <p className="mb-2 text-muted-foreground">Za złożone zamówienie można zapłacić:</p>
           <ul className="list-inside list-disc space-y-1 text-muted-foreground">
             <li>BLIK,</li>
             <li>kartą płatniczą (Visa, Mastercard),</li>
