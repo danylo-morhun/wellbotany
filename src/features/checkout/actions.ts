@@ -172,6 +172,7 @@ export const placeOrder = actionClient
         freeShippingThresholdPln,
       );
       const totalPln = subtotalPln + shippingPln - discountPln;
+      const isFree = totalPln === 0;
 
       // Decrement stock atomically
       for (const item of cart.items) {
@@ -190,8 +191,13 @@ export const placeOrder = actionClient
         data: {
           orderNumber,
           customerId: session?.user?.id ?? null,
-          // Pay-at-pickup orders are prepared right away; the rest wait for payment
-          status: input.paymentMethod === "CASH_ON_DELIVERY" ? "PROCESSING" : "PAYMENT_PENDING",
+          // Fully discounted orders need no payment; pay-at-pickup orders are prepared
+          // right away; the rest wait for payment
+          status: isFree
+            ? "PAID"
+            : input.paymentMethod === "CASH_ON_DELIVERY"
+              ? "PROCESSING"
+              : "PAYMENT_PENDING",
           customerEmail: input.email,
           customerPhone: input.phone,
           customerName: `${input.firstName} ${input.lastName}`,
@@ -217,7 +223,7 @@ export const placeOrder = actionClient
           billPostalCode: input.billPostalCode ?? null,
           billCountry: input.wantsFaktura ? "PL" : null,
           paymentMethod: input.paymentMethod,
-          paymentStatus: "PENDING",
+          paymentStatus: isFree ? "CAPTURED" : "PENDING",
           subtotalPln,
           discountPln,
           taxPln,
@@ -261,7 +267,11 @@ export const placeOrder = actionClient
       console.error(`[email] confirmation failed for ${order.orderNumber}:`, err);
     });
 
-    if (isOfflinePayment(input.paymentMethod) || process.env.P24_SANDBOX_BYPASS === "true") {
+    if (
+      order.totalPln === 0 ||
+      isOfflinePayment(input.paymentMethod) ||
+      process.env.P24_SANDBOX_BYPASS === "true"
+    ) {
       return { orderNumber: order.orderNumber, redirectUrl: null };
     }
 

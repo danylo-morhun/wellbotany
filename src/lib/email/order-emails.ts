@@ -33,6 +33,7 @@ export async function sendOrderConfirmationEmail(orderNumber: string): Promise<v
       customerName: true,
       shippingMethod: true,
       paymentMethod: true,
+      paymentStatus: true,
       pickupLocation: true,
       subtotalPln: true,
       shippingPln: true,
@@ -63,7 +64,7 @@ export async function sendOrderConfirmationEmail(orderNumber: string): Promise<v
     </table>
     ${pickupBlock(order.pickupLocation)}
     ${
-      order.paymentMethod === "BANK_TRANSFER"
+      order.paymentMethod === "BANK_TRANSFER" && order.paymentStatus !== "CAPTURED"
         ? `<h2 style="font-size:16px;margin-top:24px">Dane do przelewu</h2>
     <p>Odbiorca: <strong>${BANK_TRANSFER_DETAILS.recipient}</strong><br>
     Numer rachunku: <strong>${BANK_TRANSFER_DETAILS.account}</strong><br>
@@ -73,7 +74,7 @@ export async function sendOrderConfirmationEmail(orderNumber: string): Promise<v
         : ""
     }
     ${
-      order.paymentMethod === "CASH_ON_DELIVERY"
+      order.paymentMethod === "CASH_ON_DELIVERY" && order.paymentStatus !== "CAPTURED"
         ? `<p>Do zapłaty przy odbiorze: <strong>${formatPrice(order.totalPln)}</strong></p>`
         : ""
     }
