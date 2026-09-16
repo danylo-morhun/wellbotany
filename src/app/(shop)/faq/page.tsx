@@ -15,7 +15,7 @@ const faqs = [
   },
   {
     q: "Jakie są formy płatności?",
-    a: "Akceptujemy: BLIK, karty płatnicze (Visa, Mastercard), Apple Pay, Google Pay oraz szybkie przelewy bankowe. Płatności obsługuje bezpieczny operator Przelewy24.",
+    a: "Płatności online obsługuje bezpieczny operator Przelewy24: BLIK, karty płatnicze (Visa, Mastercard), Apple Pay, Google Pay oraz szybkie przelewy bankowe. Możesz też zapłacić zwykłym przelewem na nasz rachunek, a przy odbiorze osobistym w Kaliszu — gotówką lub kartą w sklepie.",
   },
   {
     q: "Ile trwa realizacja i dostawa zamówienia?",
