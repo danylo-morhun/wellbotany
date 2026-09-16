@@ -2,8 +2,10 @@ import { CheckCircle, Clock } from "lucide-react";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import { PAYMENT_LABELS } from "@/features/checkout/lib/payment";
 import { formatPrice } from "@/lib/format";
 import { prisma } from "@/lib/prisma";
+import { BANK_TRANSFER_DETAILS } from "@/lib/shop-config";
 
 type Props = { params: Promise<{ orderNumber: string }> };
 
@@ -54,13 +56,6 @@ export default async function PotwierdzeniePage({ params }: Props) {
     DPD: "DPD Kurier",
   };
 
-  const paymentLabel: Record<string, string> = {
-    BLIK: "BLIK",
-    PRZELEWY24: "Przelew online",
-    APPLE_PAY: "Apple Pay",
-    GOOGLE_PAY: "Google Pay",
-  };
-
   return (
     <div className="mx-auto max-w-2xl px-4 py-8 sm:px-6 lg:px-8">
       <div className="mb-8 flex flex-col items-center gap-3 text-center">
@@ -82,11 +77,30 @@ export default async function PotwierdzeniePage({ params }: Props) {
         </p>
       </div>
 
-      {order.paymentStatus !== "CAPTURED" && (
+      {order.paymentStatus !== "CAPTURED" && order.paymentMethod === "BANK_TRANSFER" && (
+        <div className="mb-6 space-y-3 rounded-2xl bg-card p-6 shadow-card">
+          <h2 className="font-semibold">Dane do przelewu</h2>
+          <dl className="grid grid-cols-[auto_1fr] gap-x-4 gap-y-1.5 text-sm">
+            <dt className="text-muted-foreground">Odbiorca</dt>
+            <dd className="font-medium">{BANK_TRANSFER_DETAILS.recipient}</dd>
+            <dt className="text-muted-foreground">Numer rachunku</dt>
+            <dd className="font-medium tabular-nums">{BANK_TRANSFER_DETAILS.account}</dd>
+            <dt className="text-muted-foreground">Kwota</dt>
+            <dd className="font-medium">{formatPrice(order.totalPln)}</dd>
+            <dt className="text-muted-foreground">Tytuł przelewu</dt>
+            <dd className="font-medium">{order.orderNumber}</dd>
+          </dl>
+          <p className="text-sm text-muted-foreground">
+            Zamówienie zrealizujemy po zaksięgowaniu wpłaty.
+          </p>
+        </div>
+      )}
+
+      {order.paymentStatus !== "CAPTURED" && order.paymentMethod !== "BANK_TRANSFER" && (
         <div className="mb-6 rounded-xl bg-warning/15 px-4 py-3 text-sm text-warning-foreground">
           Czekamy na potwierdzenie płatności (
-          {paymentLabel[order.paymentMethod] ?? order.paymentMethod}). Po zaksięgowaniu rozpoczniemy
-          realizację zamówienia.
+          {PAYMENT_LABELS[order.paymentMethod] ?? order.paymentMethod}). Po zaksięgowaniu
+          rozpoczniemy realizację zamówienia.
         </div>
       )}
 

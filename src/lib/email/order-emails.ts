@@ -1,5 +1,6 @@
 import { formatPrice } from "@/lib/format";
 import { prisma } from "@/lib/prisma";
+import { BANK_TRANSFER_DETAILS } from "@/lib/shop-config";
 import { EMAIL_FROM, resendClient } from "./client";
 
 const SHIPPING_LABELS: Record<string, string> = {
@@ -30,6 +31,7 @@ export async function sendOrderConfirmationEmail(orderNumber: string): Promise<v
       customerEmail: true,
       customerName: true,
       shippingMethod: true,
+      paymentMethod: true,
       subtotalPln: true,
       shippingPln: true,
       discountPln: true,
@@ -57,6 +59,16 @@ export async function sendOrderConfirmationEmail(orderNumber: string): Promise<v
       ${order.discountPln > 0 ? `<tr><td>Rabat</td><td style="text-align:right">-${formatPrice(order.discountPln)}</td></tr>` : ""}
       <tr><td style="padding-top:8px;font-weight:600">Łącznie</td><td style="padding-top:8px;text-align:right;font-weight:600">${formatPrice(order.totalPln)}</td></tr>
     </table>
+    ${
+      order.paymentMethod === "BANK_TRANSFER"
+        ? `<h2 style="font-size:16px;margin-top:24px">Dane do przelewu</h2>
+    <p>Odbiorca: <strong>${BANK_TRANSFER_DETAILS.recipient}</strong><br>
+    Numer rachunku: <strong>${BANK_TRANSFER_DETAILS.account}</strong><br>
+    Kwota: <strong>${formatPrice(order.totalPln)}</strong><br>
+    Tytuł przelewu: <strong>${order.orderNumber}</strong></p>
+    <p>Zamówienie zrealizujemy po zaksięgowaniu wpłaty.</p>`
+        : ""
+    }
   `;
 
   await resend.emails.send({
