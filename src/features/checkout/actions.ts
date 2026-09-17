@@ -20,7 +20,7 @@ import { actionClient } from "@/lib/safe-action";
 import { checkoutItemUnitPricePln, getCartForCheckout } from "./lib/cart";
 import { grantOrderAccess } from "./lib/order-access";
 import { isOfflinePayment } from "./lib/payment";
-import { requiresAddress, shippingCostFor } from "./lib/shipping";
+import { requiresAddress, requiresPickupPoint, shippingCostFor } from "./lib/shipping";
 import { checkoutSchema } from "./schema";
 
 export const verifyCoupon = actionClient
@@ -86,8 +86,7 @@ export const placeOrder = actionClient
     }
 
     const hasAddress = requiresAddress(input.shippingMethod);
-    const hasPickupPoint =
-      input.shippingMethod === "INPOST_PACZKOMAT" || input.shippingMethod === "ORLEN_PACZKA";
+    const hasPickupPoint = requiresPickupPoint(input.shippingMethod);
     const { freeShippingThresholdPln } = await getShopSettings();
     const subtotalPln = cart.items.reduce(
       (sum, item) => sum + checkoutItemUnitPricePln(item) * item.quantity,

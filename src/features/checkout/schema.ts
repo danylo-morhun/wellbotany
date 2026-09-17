@@ -1,6 +1,6 @@
 import { z } from "zod";
 import { PICKUP_LOCATION_KEYS } from "@/lib/pickup-locations";
-import { requiresAddress } from "./lib/shipping";
+import { requiresAddress, requiresPickupPoint } from "./lib/shipping";
 
 export const checkoutSchema = z
   .object({
@@ -37,10 +37,7 @@ export const checkoutSchema = z
       .refine((v) => v, { message: "Wymagana akceptacja regulaminu i polityki prywatności" }),
   })
   .superRefine((data, ctx) => {
-    if (
-      (data.shippingMethod === "INPOST_PACZKOMAT" || data.shippingMethod === "ORLEN_PACZKA") &&
-      !data.inpostMachineId?.trim()
-    ) {
+    if (requiresPickupPoint(data.shippingMethod) && !data.inpostMachineId?.trim()) {
       ctx.addIssue({
         code: z.ZodIssueCode.custom,
         message: "Podaj identyfikator punktu odbioru",

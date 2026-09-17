@@ -28,6 +28,21 @@ export function requiresAddress(method: string): boolean {
   return ADDRESS_SHIPPING_METHODS.includes(method);
 }
 
+/** Carrier id understood by the Furgonetka point map (`courierServices`). */
+export type PointMapService = "inpost" | "orlen" | "dpd" | "dhl";
+
+/** Methods delivered to a pickup point / parcel locker — the customer picks the point on a map. */
+export const PICKUP_POINT_METHODS: Partial<
+  Record<ShippingMethodKey, { service: PointMapService; pointName: string; placeholder: string }>
+> = {
+  INPOST_PACZKOMAT: { service: "inpost", pointName: "paczkomat", placeholder: "np. WAW123M" },
+  ORLEN_PACZKA: { service: "orlen", pointName: "punkt Orlen Paczka", placeholder: "np. 123456" },
+};
+
+export function requiresPickupPoint(method: string): boolean {
+  return method in PICKUP_POINT_METHODS;
+}
+
 /**
  * Delivery cost for an order. `productsPln` is the subtotal after discounts;
  * `freeShippingThresholdPln` null means free delivery is switched off.
