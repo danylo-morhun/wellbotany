@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
+import { THEME_INIT_SCRIPT_HASH } from "@/lib/theme-script";
 
 // Routes that are already per-request dynamic (session, cart, checkout) — a
 // per-request nonce costs nothing extra there, so they keep the strictest
@@ -40,7 +41,7 @@ function buildStrictCsp(nonce: string): string {
     `img-src 'self' data: blob: ${IMG_SRC_HOSTS}`,
     // 'strict-dynamic' trusts scripts loaded by an already-nonce'd script
     // (e.g. Google Analytics' gtag.js pulling in further tag scripts).
-    `script-src 'self' 'nonce-${nonce}' 'strict-dynamic'`,
+    `script-src 'self' 'nonce-${nonce}' '${THEME_INIT_SCRIPT_HASH}' 'strict-dynamic'`,
     // No nonce equivalent exists for inline style="..." attributes (only <style>
     // blocks), and Radix/base-ui set inline styles for positioning — unsafe-inline
     // here is a deliberate, lower-severity tradeoff.
