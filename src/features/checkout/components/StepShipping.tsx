@@ -89,6 +89,11 @@ export function StepShipping({
                   onChange={() =>
                     onChange({
                       shippingMethod: opt.value,
+                      // A point code belongs to one carrier — don't carry it across methods
+                      ...(opt.value !== data.shippingMethod && {
+                        inpostMachineId: "",
+                        inpostMachineName: "",
+                      }),
                       // Pay-at-pickup only exists for in-store pickup
                       ...(opt.value !== "PICKUP" &&
                         data.paymentMethod === "CASH_ON_DELIVERY" && {
