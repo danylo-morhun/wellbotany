@@ -35,19 +35,33 @@ const IMG_SRC_HOSTS = [
   "https://kenay.com.pl",
 ].join(" ");
 
-function buildStrictCsp(nonce: string): string {
+// Furgonetka pickup-point map on checkout: its script pulls maplibre + a scrollbar
+// lib from CDNs, Google Fonts, vector tiles/glyphs from c.furgonetka.pl, point
+// data from api.furgonetka.pl, and runs maplibre's worker from a blob: URL.
+// Scripts need no host entries — they're injected by our nonce'd bundle, which
+// 'strict-dynamic' trusts.
+const POINT_MAP_CSP = {
+  img: "https://furgonetka.pl https://c.furgonetka.pl",
+  style: "https://unpkg.com https://cdn.jsdelivr.net https://fonts.googleapis.com",
+  font: "https://fonts.gstatic.com",
+  connect: "https://furgonetka.pl https://api.furgonetka.pl https://c.furgonetka.pl",
+};
+
+function buildStrictCsp(nonce: string, withPointMap: boolean): string {
+  const map = (hosts: string) => (withPointMap ? ` ${hosts}` : "");
   return [
     "default-src 'self'",
-    `img-src 'self' data: blob: ${IMG_SRC_HOSTS}`,
+    `img-src 'self' data: blob: ${IMG_SRC_HOSTS}${map(POINT_MAP_CSP.img)}`,
     // 'strict-dynamic' trusts scripts loaded by an already-nonce'd script
     // (e.g. Google Analytics' gtag.js pulling in further tag scripts).
     `script-src 'self' 'nonce-${nonce}' '${THEME_INIT_SCRIPT_HASH}' 'strict-dynamic'`,
     // No nonce equivalent exists for inline style="..." attributes (only <style>
     // blocks), and Radix/base-ui set inline styles for positioning — unsafe-inline
     // here is a deliberate, lower-severity tradeoff.
-    "style-src 'self' 'unsafe-inline'",
-    "font-src 'self'",
-    "connect-src 'self' https://api.cloudinary.com https://res.cloudinary.com https://*.ingest.de.sentry.io https://*.ingest.sentry.io",
+    `style-src 'self' 'unsafe-inline'${map(POINT_MAP_CSP.style)}`,
+    `font-src 'self'${map(POINT_MAP_CSP.font)}`,
+    `connect-src 'self' https://api.cloudinary.com https://res.cloudinary.com https://*.ingest.de.sentry.io https://*.ingest.sentry.io${map(POINT_MAP_CSP.connect)}`,
+    ...(withPointMap ? ["worker-src 'self' blob:"] : []),
     "object-src 'none'",
     "base-uri 'self'",
     "form-action 'self'",
@@ -103,7 +117,7 @@ export default auth((req) => {
   }
 
   const nonce = Buffer.from(crypto.randomUUID()).toString("base64");
-  const csp = buildStrictCsp(nonce);
+  const csp = buildStrictCsp(nonce, req.nextUrl.pathname === "/zamowienie");
 
   const requestHeaders = new Headers(req.headers);
   requestHeaders.set("x-nonce", nonce);
