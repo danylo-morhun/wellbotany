@@ -4,6 +4,7 @@ import { useState } from "react";
 import { formatPrice } from "@/lib/format";
 import { PICKUP_HOLD_DAYS, PICKUP_LOCATION_KEYS, PICKUP_LOCATIONS } from "@/lib/pickup-locations";
 import {
+  PICKUP_POINT_METHODS,
   requiresAddress,
   SHIPPING_COSTS,
   SHIPPING_LABELS,
@@ -11,7 +12,7 @@ import {
   shippingCostFor,
 } from "../lib/shipping";
 import type { CheckoutFormData } from "./CheckoutForm";
-import { InPostGeowidget } from "./InPostGeowidget";
+import { PointMapPicker } from "./PointMapPicker";
 
 type Props = {
   data: CheckoutFormData;
@@ -52,6 +53,7 @@ export function StepShipping({
   onNext,
 }: Props) {
   const [nipError, setNipError] = useState<string | null>(null);
+  const pointMethod = PICKUP_POINT_METHODS[data.shippingMethod];
 
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -227,12 +229,13 @@ export function StepShipping({
         </div>
       )}
 
-      {data.shippingMethod === "INPOST_PACZKOMAT" && (
+      {pointMethod && (
         <div className="rounded-lg border border-border bg-muted/30 p-4">
-          {data.inpostMachineId ? (
+          {/* A name is only set when the point came from the map; manual entry stores just the code */}
+          {data.inpostMachineName ? (
             <div className="flex items-center justify-between gap-3">
               <div>
-                <p className="text-sm font-medium">Wybrany paczkomat</p>
+                <p className="text-sm font-medium">Wybrany {pointMethod.pointName}</p>
                 <p className="text-sm text-muted-foreground">
                   {data.inpostMachineName || data.inpostMachineId}
                 </p>
@@ -247,30 +250,41 @@ export function StepShipping({
             </div>
           ) : (
             <>
-              <p className="mb-3 text-sm font-medium">Identyfikator paczkomatu</p>
+              <p className="mb-3 text-sm font-medium">Wybierz {pointMethod.pointName}</p>
               <div className="mb-3">
-                <InPostGeowidget
-                  onSelect={(id, name) =>
-                    onChange({ inpostMachineId: id, inpostMachineName: name })
+                <PointMapPicker
+                  key={pointMethod.service}
+                  service={pointMethod.service}
+                  onSelect={(code, name) =>
+                    onChange({
+                      inpostMachineId: code,
+                      // Carrier names usually already contain the code — don't repeat it
+                      inpostMachineName: name.includes(code) ? name : `${name} (${code})`,
+                    })
                   }
                 />
               </div>
-              <p className="mb-3 text-xs text-muted-foreground">
-                Lub podaj ID paczkomatu ręcznie (np. WAW123M).
-              </p>
+              <label htmlFor="co-pointCode" className="mb-1 block text-xs text-muted-foreground">
+                Lub wpisz kod punktu ręcznie
+              </label>
               <input
+                id="co-pointCode"
                 type="text"
                 required
-                placeholder="np. WAW123M"
+                placeholder={pointMethod.placeholder}
                 value={data.inpostMachineId}
-                onChange={(e) => onChange({ inpostMachineId: e.target.value.toUpperCase() })}
+                onChange={(e) =>
+                  onChange({
+                    inpostMachineId: e.target.value.toUpperCase().trim(),
+                    inpostMachineName: "",
+                  })
+                }
                 className="w-full rounded-lg border border-border px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary"
               />
             </>
           )}
         </div>
       )}
-
       <div className="border-t border-border pt-4">
         <label className="flex cursor-pointer items-center gap-3">
           <input
@@ -282,56 +296,6 @@ export function StepShipping({
           <span className="text-sm font-medium">Chcę fakturę VAT</span>
         </label>
       </div>
-
-      {data.shippingMethod === "ORLEN_PACZKA" && (
-        <div className="rounded-lg border border-border bg-muted/30 p-4">
-          {data.inpostMachineId ? (
-            <div className="flex items-center justify-between gap-3">
-              <div>
-                <p className="text-sm font-medium">Wybrany punkt Orlen Paczka</p>
-                <p className="text-sm text-muted-foreground">
-                  {data.inpostMachineName || data.inpostMachineId}
-                </p>
-              </div>
-              <button
-                type="button"
-                onClick={() => onChange({ inpostMachineId: "", inpostMachineName: "" })}
-                className="text-sm font-medium text-primary underline underline-offset-2"
-              >
-                Zmień
-              </button>
-            </div>
-          ) : (
-            <>
-              <p className="mb-3 text-sm font-medium">Identyfikator punktu Orlen Paczka</p>
-              <button
-                type="button"
-                disabled
-                title="Mapa punktów będzie dostępna po integracji z Orlen Paczka"
-                className="mb-3 text-sm font-medium text-muted-foreground underline underline-offset-2 disabled:cursor-not-allowed disabled:no-underline"
-              >
-                Wybierz na mapie (wkrótce)
-              </button>
-              <p className="mb-3 text-xs text-muted-foreground">
-                Podaj ID punktu odbioru ręcznie (znajdziesz je na stronie orlenpaczka.pl).
-              </p>
-              <input
-                type="text"
-                required
-                placeholder="np. WA12345"
-                value={data.inpostMachineId}
-                onChange={(e) =>
-                  onChange({
-                    inpostMachineId: e.target.value.toUpperCase(),
-                    inpostMachineName: e.target.value.toUpperCase(),
-                  })
-                }
-                className="w-full rounded-lg border border-border px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary"
-              />
-            </>
-          )}
-        </div>
-      )}
 
       {data.wantsFaktura && (
         <div className="space-y-4 rounded-lg border border-border p-4">
