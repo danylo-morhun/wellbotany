@@ -13,6 +13,7 @@ import {
   withStockAvailability,
 } from "./lib/filters";
 import { computeSubtreeCounts } from "./lib/nav";
+import { ingredientTokens, type RelatedSeed, rankRelated } from "./lib/related";
 import { rankBySearchRelevance } from "./lib/search-relevance";
 
 const PRODUCT_LIST_SELECT = {
@@ -270,6 +271,7 @@ export const getProduct = unstable_cache(
             slug: true,
             description: true,
             logo: true,
+            parentBrandId: true,
             parentBrand: { select: { name: true, slug: true } },
           },
         },
@@ -278,6 +280,7 @@ export const getProduct = unstable_cache(
             id: true,
             namePl: true,
             slug: true,
+            parentId: true,
             parent: { select: { namePl: true, slug: true } },
           },
         },
@@ -588,58 +591,75 @@ export const getBrandBySlug = unstable_cache(
   { tags: ["brands"] },
 );
 
-const RELATED_CANDIDATE_TAKE = 40;
-
-export type RelatedProductSeed = {
-  id: string;
-  categorySlug?: string | null;
-  brandSlug?: string | null;
-  tagSlugs: string[];
-};
+const RELATED_CANDIDATE_TAKE = 300;
+const RELATED_NAME_TOKENS = 3;
 
 /**
- * Weighted "similar products" pick for the PDP — shared tags count more than
- * shared category, which counts more than shared brand. Falls back to
- * featured, then newest, so the section is never empty.
+ * "Podobne produkty" for the PDP. Pulls a lean candidate pool (same
+ * category, sibling categories, same brand family, or sharing an ingredient
+ * word in the name) and ranks it with `rankRelated`. Falls back to featured,
+ * then newest, so the section is never empty.
  */
 export const getRelatedProducts = unstable_cache(
-  async (seed: RelatedProductSeed, take = 4) => getRelatedProductsUncached(seed, take),
-  ["related-products"],
+  async (seed: RelatedSeed, take = 4) => getRelatedProductsUncached(seed, take),
+  ["related-products-v2"],
   { tags: ["products"] },
 );
 
-async function getRelatedProductsUncached(seed: RelatedProductSeed, take = 4) {
-  const orConditions: Prisma.ProductWhereInput[] = [];
-  if (seed.categorySlug) orConditions.push({ category: { slug: seed.categorySlug } });
-  if (seed.brandSlug) orConditions.push({ brand: { slug: seed.brandSlug } });
-  if (seed.tagSlugs.length) {
-    orConditions.push({ tags: { some: { tag: { slug: { in: seed.tagSlugs } } } } });
-  }
+async function getRelatedProductsUncached(seed: RelatedSeed, take = 4) {
+  const brandFamilyId = seed.brandParentId ?? seed.brandId;
+  const orConditions: Prisma.ProductWhereInput[] = [
+    ...(seed.categoryId ? [{ categoryId: seed.categoryId }] : []),
+    ...(seed.categoryParentId ? [{ category: { parentId: seed.categoryParentId } }] : []),
+    ...(brandFamilyId
+      ? [{ brand: { OR: [{ id: brandFamilyId }, { parentBrandId: brandFamilyId }] } }]
+      : []),
+    ...[...ingredientTokens(seed)]
+      .slice(0, RELATED_NAME_TOKENS)
+      .map((t) => ({ namePl: { contains: t, mode: "insensitive" as const } })),
+  ];
 
-  const candidates = orConditions.length
+  const rows = orConditions.length
     ? await prisma.product.findMany({
         where: { status: "ACTIVE", id: { not: seed.id }, OR: orConditions },
         take: RELATED_CANDIDATE_TAKE,
-        orderBy: { updatedAt: "desc" },
-        select: PRODUCT_LIST_SELECT,
+        select: {
+          id: true,
+          namePl: true,
+          categoryId: true,
+          category: { select: { parentId: true } },
+          brandId: true,
+          brand: { select: { name: true, parentBrandId: true } },
+          _count: { select: { images: true } },
+          variants: { where: { isActive: true }, select: { stock: true, trackStock: true } },
+        },
       })
     : [];
 
-  const ranked = candidates
-    .map((item) => {
-      const sharedTags = item.tags.filter((t) => seed.tagSlugs.includes(t.tag.slug)).length;
-      const sameCategory = seed.categorySlug != null && item.category?.slug === seed.categorySlug;
-      const sameBrand = seed.brandSlug != null && item.brand?.slug === seed.brandSlug;
-      const inStock = item.variants.some((v) => v.stock > 0);
-      const score =
-        sharedTags * 3 + (sameCategory ? 2 : 0) + (sameBrand ? 1 : 0) + (inStock ? 1 : 0);
-      return { item, score };
-    })
-    .sort((a, b) => b.score - a.score)
-    .map(({ item }) => item)
-    .slice(0, take);
+  const rankedIds = rankRelated(
+    seed,
+    rows.map((r) => ({
+      id: r.id,
+      namePl: r.namePl,
+      categoryId: r.categoryId,
+      categoryParentId: r.category?.parentId ?? null,
+      brandId: r.brandId,
+      brandParentId: r.brand?.parentBrandId ?? null,
+      brandName: r.brand?.name ?? null,
+      hasImage: r._count.images > 0,
+      inStock: r.variants.some((v) => !v.trackStock || v.stock > 0),
+    })),
+    take,
+  );
 
-  if (ranked.length > 0) return ranked;
+  if (rankedIds.length > 0) {
+    const products = await prisma.product.findMany({
+      where: { id: { in: rankedIds } },
+      select: PRODUCT_LIST_SELECT,
+    });
+    const byId = new Map(products.map((p) => [p.id, p]));
+    return rankedIds.flatMap((id) => byId.get(id) ?? []);
+  }
 
   const featured = await prisma.product.findMany({
     where: { status: "ACTIVE", id: { not: seed.id }, isFeatured: true },

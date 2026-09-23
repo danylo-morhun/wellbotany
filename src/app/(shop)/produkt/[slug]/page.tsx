@@ -64,9 +64,12 @@ export default async function ProduktPage({ params }: Props) {
 
   const related = await getRelatedProducts({
     id: product.id,
-    categorySlug: product.category?.slug ?? null,
-    brandSlug: product.brand?.slug ?? null,
-    tagSlugs: product.tags.map((t) => t.tag.slug),
+    namePl: product.namePl,
+    categoryId: product.category?.id ?? null,
+    categoryParentId: product.category?.parentId ?? null,
+    brandId: product.brand?.id ?? null,
+    brandParentId: product.brand?.parentBrandId ?? null,
+    brandName: product.brand?.name ?? null,
   });
 
   const jsonLd = buildProductJsonLd({
