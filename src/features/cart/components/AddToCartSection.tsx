@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { useAction } from "next-safe-action/hooks";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
+import { useVariantSelection } from "@/features/catalog/components/VariantSelection";
 import { formatPrice } from "@/lib/format";
 import { addToCart } from "../actions";
 
@@ -25,7 +26,11 @@ type Props = {
 export function AddToCartSection({ variants }: Props) {
   const router = useRouter();
   const defaultVariant = variants.find((v) => v.isDefault) ?? variants[0];
-  const [selectedId, setSelectedId] = useState(defaultVariant?.id ?? "");
+  const [localId, setLocalId] = useState(defaultVariant?.id ?? "");
+  // On the PDP the choice is shared with the gallery (and the URL)
+  const shared = useVariantSelection();
+  const selectedId = shared?.selectedId ?? localId;
+  const setSelectedId = shared?.select ?? setLocalId;
   const [quantity, setQuantity] = useState(1);
   const [succeeded, setSucceeded] = useState(false);
 

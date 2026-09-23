@@ -3,6 +3,8 @@
 import Image from "next/image";
 import type { TouchEvent } from "react";
 import { useState } from "react";
+import { imagesForVariant } from "../lib/variant-images";
+import { useVariantSelection } from "./VariantSelection";
 
 type GalleryImage = {
   id: string;
@@ -17,9 +19,14 @@ type Props = {
   productName: string;
 };
 
-export function ProductGallery({ images, productName }: Props) {
-  const visibleImages = images.filter((img) => img.variantId === null);
-  const fallback = visibleImages.length > 0 ? visibleImages : images;
+/** Remounted per variant (see key) so the active photo resets to that variant's first. */
+export function ProductGallery(props: Props) {
+  const selectedId = useVariantSelection()?.selectedId ?? null;
+  return <VariantGallery key={selectedId ?? "all"} {...props} variantId={selectedId} />;
+}
+
+function VariantGallery({ images, productName, variantId }: Props & { variantId: string | null }) {
+  const fallback = imagesForVariant(images, variantId);
   const mainIndex = fallback.findIndex((img) => img.isMain);
   const [active, setActive] = useState(mainIndex >= 0 ? mainIndex : 0);
   const [touchStart, setTouchStart] = useState<number | null>(null);

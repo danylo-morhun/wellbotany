@@ -1,12 +1,13 @@
 import { AlertTriangle, Check, ShieldCheck } from "lucide-react";
 import type { Metadata } from "next";
-import { notFound } from "next/navigation";
+import { notFound, permanentRedirect } from "next/navigation";
 import { Suspense } from "react";
 import { AdminEditBar } from "@/features/catalog/components/AdminEditBar";
 import { Breadcrumbs } from "@/features/catalog/components/Breadcrumbs";
 import { ProductActionsClient } from "@/features/catalog/components/ProductActionsClient";
 import { ProductCard } from "@/features/catalog/components/ProductCard";
 import { ProductGallery } from "@/features/catalog/components/ProductGallery";
+import { VariantSelectionProvider } from "@/features/catalog/components/VariantSelection";
 import { readNutritionFacts } from "@/features/products/lib/nutrition-facts";
 import {
   ProductWishlistButton,
@@ -15,7 +16,11 @@ import {
 import { prisma } from "@/lib/prisma";
 import { sanitizeRichText } from "@/lib/sanitize";
 import { buildProductJsonLd, DEFAULT_OG_IMAGE, toJsonLdScript } from "@/lib/seo";
-import { getProduct, getRelatedProducts } from "../../../../features/catalog/actions";
+import {
+  getProduct,
+  getRedirectTarget,
+  getRelatedProducts,
+} from "../../../../features/catalog/actions";
 import { resolveDisplayBrand } from "../../../../features/catalog/lib/brand-tree";
 
 type Props = {
@@ -59,7 +64,11 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 export default async function ProduktPage({ params }: Props) {
   const { slug } = await params;
   const product = await getProduct(slug);
-  if (!product) notFound();
+  if (!product) {
+    const target = await getRedirectTarget(`/produkt/${slug}`);
+    if (target) permanentRedirect(target);
+    notFound();
+  }
   const displayBrand = product.brand ? resolveDisplayBrand(product.brand) : null;
 
   const related = await getRelatedProducts({
@@ -75,7 +84,7 @@ export default async function ProduktPage({ params }: Props) {
   const jsonLd = buildProductJsonLd({
     name: product.namePl,
     description: product.descriptionPl,
-    images: product.images.map((img) => img.url),
+    images: product.images,
     brandName: displayBrand?.name,
     variants: product.variants,
     slug: product.slug,
@@ -134,107 +143,111 @@ export default async function ProduktPage({ params }: Props) {
       <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
         <Breadcrumbs items={breadcrumbs} />
 
-        <div className="mt-8 grid gap-8 lg:grid-cols-2">
-          <ProductGallery images={product.images} productName={product.namePl} />
+        <VariantSelectionProvider variants={product.variants}>
+          <div className="mt-8 grid gap-8 lg:grid-cols-2">
+            <ProductGallery images={product.images} productName={product.namePl} />
 
-          <div className="space-y-6">
-            {displayBrand && (
-              <a
-                href={`/marki/${displayBrand.slug}`}
-                className="text-sm font-medium text-muted-foreground hover:text-foreground"
-              >
-                {displayBrand.name}
-              </a>
-            )}
+            <div className="space-y-6">
+              {displayBrand && (
+                <a
+                  href={`/marki/${displayBrand.slug}`}
+                  className="text-sm font-medium text-muted-foreground hover:text-foreground"
+                >
+                  {displayBrand.name}
+                </a>
+              )}
 
-            <h1 className="text-balance text-2xl text-foreground leading-tight">
-              {product.namePl}
-            </h1>
+              <h1 className="text-balance text-2xl text-foreground leading-tight">
+                {product.namePl}
+              </h1>
 
-            {product.shortDescPl && <p className="text-muted-foreground">{product.shortDescPl}</p>}
+              {product.shortDescPl && (
+                <p className="text-muted-foreground">{product.shortDescPl}</p>
+              )}
 
-            {benefitsPl && benefitsPl.length > 0 && (
-              <ul className="grid gap-2 sm:grid-cols-2">
-                {benefitsPl.map((benefit) => (
-                  <li key={benefit} className="flex items-start gap-2 text-sm text-foreground">
-                    <Check className="mt-0.5 size-4 shrink-0 text-primary" aria-hidden />
-                    {benefit}
-                  </li>
-                ))}
-              </ul>
-            )}
+              {benefitsPl && benefitsPl.length > 0 && (
+                <ul className="grid gap-2 sm:grid-cols-2">
+                  {benefitsPl.map((benefit) => (
+                    <li key={benefit} className="flex items-start gap-2 text-sm text-foreground">
+                      <Check className="mt-0.5 size-4 shrink-0 text-primary" aria-hidden />
+                      {benefit}
+                    </li>
+                  ))}
+                </ul>
+              )}
 
-            {product.tags.length > 0 && (
-              <div className="flex flex-wrap gap-2">
-                {product.tags.map(({ tag }) => (
-                  <span
-                    key={tag.id}
-                    className="rounded-full bg-muted px-3 py-1 text-xs font-medium text-muted-foreground"
-                  >
-                    {tag.namePl}
-                  </span>
-                ))}
+              {product.tags.length > 0 && (
+                <div className="flex flex-wrap gap-2">
+                  {product.tags.map(({ tag }) => (
+                    <span
+                      key={tag.id}
+                      className="rounded-full bg-muted px-3 py-1 text-xs font-medium text-muted-foreground"
+                    >
+                      {tag.namePl}
+                    </span>
+                  ))}
+                </div>
+              )}
+
+              {product.ageRestriction && (
+                <p className="flex items-center gap-2 text-sm font-medium text-destructive">
+                  <AlertTriangle className="size-4 shrink-0" aria-hidden />
+                  Produkt przeznaczony dla osób powyżej {product.ageRestriction} lat
+                </p>
+              )}
+
+              <div className="flex gap-3">
+                <div className="flex-1">
+                  <ProductActionsClient variants={product.variants} productName={product.namePl} />
+                </div>
+                <div className="flex items-end pb-0.5">
+                  <Suspense fallback={<ProductWishlistButtonFallback />}>
+                    <ProductWishlistButton productId={product.id} />
+                  </Suspense>
+                </div>
               </div>
-            )}
 
-            {product.ageRestriction && (
-              <p className="flex items-center gap-2 text-sm font-medium text-destructive">
-                <AlertTriangle className="size-4 shrink-0" aria-hidden />
-                Produkt przeznaczony dla osób powyżej {product.ageRestriction} lat
-              </p>
-            )}
+              {product.netWeight && (
+                <dl className="grid grid-cols-2 gap-2 text-sm">
+                  <dt className="text-muted-foreground">Masa netto</dt>
+                  <dd className="font-medium">{product.netWeight}</dd>
+                  {product.servingSize && (
+                    <>
+                      <dt className="text-muted-foreground">Porcja</dt>
+                      <dd className="font-medium">{product.servingSize}</dd>
+                    </>
+                  )}
+                  {product.servingsPerContainer && (
+                    <>
+                      <dt className="text-muted-foreground">Porcji w opakowaniu</dt>
+                      <dd className="font-medium">{product.servingsPerContainer}</dd>
+                    </>
+                  )}
+                  {product.countryOfOrigin && (
+                    <>
+                      <dt className="text-muted-foreground">Kraj pochodzenia</dt>
+                      <dd className="font-medium">{product.countryOfOrigin}</dd>
+                    </>
+                  )}
+                </dl>
+              )}
 
-            <div className="flex gap-3">
-              <div className="flex-1">
-                <ProductActionsClient variants={product.variants} productName={product.namePl} />
-              </div>
-              <div className="flex items-end pb-0.5">
-                <Suspense fallback={<ProductWishlistButtonFallback />}>
-                  <ProductWishlistButton productId={product.id} />
-                </Suspense>
-              </div>
+              {certifications && certifications.length > 0 && (
+                <div className="flex flex-wrap gap-2">
+                  {certifications.map((cert) => (
+                    <span
+                      key={cert}
+                      className="flex items-center gap-1 rounded-full bg-secondary/60 px-3 py-1 text-xs font-medium text-secondary-foreground"
+                    >
+                      <ShieldCheck className="size-3.5" aria-hidden />
+                      {cert}
+                    </span>
+                  ))}
+                </div>
+              )}
             </div>
-
-            {product.netWeight && (
-              <dl className="grid grid-cols-2 gap-2 text-sm">
-                <dt className="text-muted-foreground">Masa netto</dt>
-                <dd className="font-medium">{product.netWeight}</dd>
-                {product.servingSize && (
-                  <>
-                    <dt className="text-muted-foreground">Porcja</dt>
-                    <dd className="font-medium">{product.servingSize}</dd>
-                  </>
-                )}
-                {product.servingsPerContainer && (
-                  <>
-                    <dt className="text-muted-foreground">Porcji w opakowaniu</dt>
-                    <dd className="font-medium">{product.servingsPerContainer}</dd>
-                  </>
-                )}
-                {product.countryOfOrigin && (
-                  <>
-                    <dt className="text-muted-foreground">Kraj pochodzenia</dt>
-                    <dd className="font-medium">{product.countryOfOrigin}</dd>
-                  </>
-                )}
-              </dl>
-            )}
-
-            {certifications && certifications.length > 0 && (
-              <div className="flex flex-wrap gap-2">
-                {certifications.map((cert) => (
-                  <span
-                    key={cert}
-                    className="flex items-center gap-1 rounded-full bg-secondary/60 px-3 py-1 text-xs font-medium text-secondary-foreground"
-                  >
-                    <ShieldCheck className="size-3.5" aria-hidden />
-                    {cert}
-                  </span>
-                ))}
-              </div>
-            )}
           </div>
-        </div>
+        </VariantSelectionProvider>
 
         <div className="mt-12 space-y-8">
           {product.descriptionPl && (

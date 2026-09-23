@@ -4,6 +4,7 @@ import { NextResponse } from "next/server";
 import { resolveDisplayBrand } from "@/features/catalog/lib/brand-tree";
 import { MAIN_IMAGE_FIRST } from "@/features/catalog/lib/main-image";
 import { prisma } from "@/lib/prisma";
+import { stripHtml } from "@/lib/seo";
 
 export const revalidate = 3600;
 
@@ -16,13 +17,6 @@ function escapeXml(value: string): string {
     .replace(/>/g, "&gt;")
     .replace(/"/g, "&quot;")
     .replace(/'/g, "&apos;");
-}
-
-function stripHtml(value: string): string {
-  return value
-    .replace(/<[^>]*>/g, " ")
-    .replace(/\s+/g, " ")
-    .trim();
 }
 
 export async function GET() {
