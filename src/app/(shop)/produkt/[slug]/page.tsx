@@ -7,6 +7,7 @@ import { Breadcrumbs } from "@/features/catalog/components/Breadcrumbs";
 import { ProductActionsClient } from "@/features/catalog/components/ProductActionsClient";
 import { ProductCard } from "@/features/catalog/components/ProductCard";
 import { ProductGallery } from "@/features/catalog/components/ProductGallery";
+import { readNutritionFacts } from "@/features/products/lib/nutrition-facts";
 import {
   ProductWishlistButton,
   ProductWishlistButtonFallback,
@@ -104,11 +105,7 @@ export default async function ProduktPage({ params }: Props) {
     pl?: string;
     en?: string;
   } | null;
-  const nutritionFacts = product.nutritionFacts as Array<{
-    name: string;
-    amount: string;
-    rws?: string;
-  }> | null;
+  const { rows: nutritionFacts, text: nutritionText } = readNutritionFacts(product.nutritionFacts);
   const allergenInfo = product.allergenInfo as {
     contains?: string[];
     mayContain?: string[];
@@ -254,16 +251,20 @@ export default async function ProduktPage({ params }: Props) {
             </section>
           )}
 
-          {(ingredients?.pl ||
-            (nutritionFacts && nutritionFacts.length > 0) ||
-            hasAllergenInfo) && (
+          {(ingredients?.pl || nutritionFacts.length > 0 || nutritionText || hasAllergenInfo) && (
             <section>
               <h2 className="text-lg font-semibold text-foreground">Skład</h2>
               {ingredients?.pl && (
                 <p className="mt-3 text-sm text-muted-foreground">{ingredients.pl}</p>
               )}
 
-              {nutritionFacts && nutritionFacts.length > 0 && (
+              {nutritionText && (
+                <p className="mt-4 whitespace-pre-line text-sm text-muted-foreground">
+                  {nutritionText}
+                </p>
+              )}
+
+              {nutritionFacts.length > 0 && (
                 <div className="mt-4 overflow-x-auto">
                   <table className="w-full text-left text-sm">
                     <thead>
