@@ -451,8 +451,23 @@ export const addProductImage = adminActionClient
   .schema(productImageSchema)
   .action(async ({ parsedInput: input }) => {
     const { altPl, ...data } = input;
+    // The server decides isMain: the client's image list can be stale (e.g.
+    // right after deleting the old main), which used to leave no main image.
+    const [hasMain, last] = await Promise.all([
+      prisma.productImage.count({ where: { productId: input.productId, isMain: true } }),
+      prisma.productImage.findFirst({
+        where: { productId: input.productId },
+        orderBy: { sortOrder: "desc" },
+        select: { sortOrder: true },
+      }),
+    ]);
     await prisma.productImage.create({
-      data: { ...data, altPl: altPl || null },
+      data: {
+        ...data,
+        altPl: altPl || null,
+        isMain: hasMain === 0,
+        sortOrder: (last?.sortOrder ?? -1) + 1,
+      },
     });
     revalidatePath("/admin/produkty");
     revalidatePath(`/admin/produkty/${input.productId}`);
@@ -464,7 +479,16 @@ export const addProductImage = adminActionClient
 export const deleteProductImage = adminActionClient
   .schema(deleteImageSchema)
   .action(async ({ parsedInput: { imageId, productId } }) => {
-    await prisma.productImage.delete({ where: { id: imageId } });
+    const deleted = await prisma.productImage.delete({ where: { id: imageId } });
+    if (deleted.isMain) {
+      const next = await prisma.productImage.findFirst({
+        where: { productId },
+        orderBy: { sortOrder: "asc" },
+        select: { id: true },
+      });
+      if (next)
+        await prisma.productImage.update({ where: { id: next.id }, data: { isMain: true } });
+    }
     revalidatePath("/admin/produkty");
     revalidatePath(`/admin/produkty/${productId}`);
     revalidatePath("/produkt/[slug]", "page");
