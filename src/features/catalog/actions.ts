@@ -1,6 +1,7 @@
 import type { Prisma } from "@prisma/client";
 import { unstable_cache } from "next/cache";
 import { cache } from "react";
+import { MAIN_IMAGE_FIRST } from "@/features/catalog/lib/main-image";
 import { prisma } from "@/lib/prisma";
 import { computeBrandSubtreeCounts, getBrandSubtreeIds } from "./lib/brand-tree";
 import {
@@ -26,9 +27,8 @@ const PRODUCT_LIST_SELECT = {
   },
   category: { select: { namePl: true, slug: true } },
   images: {
-    where: { isMain: true },
     select: { url: true, altPl: true },
-    orderBy: { sortOrder: "asc" },
+    orderBy: MAIN_IMAGE_FIRST,
     take: 1,
   },
   variants: {

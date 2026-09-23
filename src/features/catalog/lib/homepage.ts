@@ -1,4 +1,5 @@
 import { unstable_cache } from "next/cache";
+import { MAIN_IMAGE_FIRST } from "@/features/catalog/lib/main-image";
 import { prisma } from "@/lib/prisma";
 import { getCategories } from "../actions";
 
@@ -14,9 +15,8 @@ const productSelect = {
   },
   category: { select: { namePl: true, slug: true } },
   images: {
-    where: { isMain: true },
     select: { url: true, altPl: true },
-    orderBy: { sortOrder: "asc" as const },
+    orderBy: MAIN_IMAGE_FIRST,
     take: 1,
   },
   variants: {

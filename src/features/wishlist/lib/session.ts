@@ -1,4 +1,5 @@
 import { cache } from "react";
+import { MAIN_IMAGE_FIRST } from "@/features/catalog/lib/main-image";
 import { prisma } from "@/lib/prisma";
 
 export const WISHLIST_COOKIE_NAME = "wishlist_id";
@@ -27,10 +28,9 @@ export const getWishlist = cache(async (wishlistId: string) => {
               slug: true,
               namePl: true,
               images: {
-                where: { isMain: true },
                 select: { url: true, altPl: true },
                 take: 1,
-                orderBy: { sortOrder: "asc" },
+                orderBy: MAIN_IMAGE_FIRST,
               },
               brand: {
                 select: { name: true, slug: true },

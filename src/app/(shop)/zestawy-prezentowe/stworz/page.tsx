@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { MAIN_IMAGE_FIRST } from "@/features/catalog/lib/main-image";
 import { GiftBuilder } from "@/features/gift-sets/components/GiftBuilder";
 import { DEFAULT_GIFT_BUILDER_POLICY } from "@/features/gift-sets/lib/pricing";
 import { prisma } from "@/lib/prisma";
@@ -32,10 +33,9 @@ export default async function GiftBuilderPage() {
           select: {
             namePl: true,
             images: {
-              where: { isMain: true },
               select: { url: true },
               take: 1,
-              orderBy: { sortOrder: "asc" },
+              orderBy: MAIN_IMAGE_FIRST,
             },
           },
         },

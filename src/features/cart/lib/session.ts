@@ -1,5 +1,6 @@
 import { cookies } from "next/headers";
 import { cache } from "react";
+import { MAIN_IMAGE_FIRST } from "@/features/catalog/lib/main-image";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 
@@ -67,10 +68,9 @@ const cartItemSelect = {
           slug: true,
           namePl: true,
           images: {
-            where: { isMain: true },
             select: { url: true, altPl: true },
             take: 1,
-            orderBy: { sortOrder: "asc" as const },
+            orderBy: MAIN_IMAGE_FIRST,
           },
         },
       },

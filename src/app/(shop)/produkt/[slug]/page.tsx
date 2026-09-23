@@ -42,7 +42,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 
   const title = product.metaTitlePl ?? product.namePl;
   const description = product.metaDescPl ?? product.shortDescPl ?? undefined;
-  const mainImage = product.images.find((img) => img.isMain)?.url;
+  const mainImage = (product.images.find((img) => img.isMain) ?? product.images[0])?.url;
 
   return {
     title,

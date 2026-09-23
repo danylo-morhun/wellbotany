@@ -2,6 +2,7 @@
 // Register this URL as a "Scheduled fetch" content source in Merchant Center.
 import { NextResponse } from "next/server";
 import { resolveDisplayBrand } from "@/features/catalog/lib/brand-tree";
+import { MAIN_IMAGE_FIRST } from "@/features/catalog/lib/main-image";
 import { prisma } from "@/lib/prisma";
 
 export const revalidate = 3600;
@@ -35,7 +36,11 @@ export async function GET() {
       brand: {
         select: { name: true, slug: true, parentBrand: { select: { name: true, slug: true } } },
       },
-      images: { where: { isMain: true }, select: { url: true }, take: 1 },
+      images: {
+        select: { url: true },
+        orderBy: MAIN_IMAGE_FIRST,
+        take: 1,
+      },
       variants: {
         where: { isActive: true },
         select: {
