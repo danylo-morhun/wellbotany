@@ -20,15 +20,37 @@ const items = keys.map((key) => {
   const sources = read(`${key}.sources.json`);
   return {
     key,
-    before: input.products.map((p: { id: string; slug: string; brand: string; currentCategory: string; current: object; images: unknown[] }) => ({
-      id: p.id, slug: p.slug, brand: p.brand, category: p.currentCategory, ...p.current, images: p.images,
+    before: input.products.map(
+      (p: {
+        id: string;
+        slug: string;
+        brand: string;
+        currentCategory: string;
+        current: object;
+        images: unknown[];
+      }) => ({
+        id: p.id,
+        slug: p.slug,
+        brand: p.brand,
+        category: p.currentCategory,
+        ...p.current,
+        images: p.images,
+      }),
+    ),
+    sources: (sources?.sources ?? []).map((s: { id: string; url: string; tier: string }) => ({
+      id: s.id,
+      url: s.url,
+      tier: s.tier,
     })),
-    sources: (sources?.sources ?? []).map((s: { id: string; url: string; tier: string }) => ({ id: s.id, url: s.url, tier: s.tier })),
     imageVerdicts: sources?.images ?? [],
     models: Object.fromEntries(
       ["haiku", "sonnet"].map((m) => [
         m,
-        { out: read(`${key}.${m}.json`), check: read(`${key}.${m}.check.json`) ?? [], verify: read(`${key}.${m}.verify.json`) },
+        {
+          out: read(`${key}.${m}.json`),
+          check: read(`${key}.${m}.check.json`) ?? [],
+          verify: read(`${key}.${m}.verify.json`),
+        },
       ]),
     ),
   };

@@ -76,8 +76,15 @@ export function checkProduct(
   for (const [field, value] of textFields) {
     if (value == null) continue;
     const text = typeof value === "string" ? value : JSON.stringify(value);
+    // "1–2 kapsułki" is sourced when the source has the same range ("1-2 dziennie")
+    const ranges = new Set(
+      [...text.matchAll(/(\d+)\s*[-–]\s*(\d+)/g)]
+        .filter(([, a, b]) => new RegExp(`\\b${a}\\s*[-–]\\s*${b}\\b`).test(sourceText))
+        .map(([, , b]) => b),
+    );
     for (const q of quantities(text)) {
-      if (!known.has(q)) problems.push({ field, type: "unsourced-number", text: q });
+      if (!known.has(q) && !ranges.has(q.split(" ")[0]))
+        problems.push({ field, type: "unsourced-number", text: q });
     }
     const lower = text.toLowerCase();
     for (const word of BANNED)

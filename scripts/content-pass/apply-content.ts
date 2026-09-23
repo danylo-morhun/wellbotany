@@ -13,6 +13,11 @@ const [dir = "data/content-pass/pilot", model = "sonnet"] = process.argv
   .slice(2)
   .filter((a) => !a.startsWith("--"));
 const dry = process.argv.includes("--dry");
+// --only=key1,key2 limits the run (re-applying an already merged group fails)
+const only = process.argv
+  .find((a) => a.startsWith("--only="))
+  ?.slice(7)
+  .split(",");
 
 const CONTENT_FIELDS = [
   "namePl",
@@ -97,6 +102,7 @@ async function main() {
 
   for (const file of fs.readdirSync(dir).filter((f) => f.endsWith(`.${model}.json`))) {
     const key = file.slice(0, -`.${model}.json`.length);
+    if (only && !only.includes(key)) continue;
     const out = readJson<Out>(path.join(dir, file));
     const verify = readJson<{ verdict: string }>(path.join(dir, `${key}.${model}.verify.json`));
     const check = readJson<{ type: string }[]>(path.join(dir, `${key}.${model}.check.json`)) ?? [];

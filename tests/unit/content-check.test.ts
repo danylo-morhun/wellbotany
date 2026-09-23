@@ -53,3 +53,15 @@ describe("checkProduct", () => {
     expect(problems.find((p) => p.type === "unsourced-number")?.text).toBe("350 mg");
   });
 });
+
+describe("checkProduct ranges", () => {
+  it("accepts a dose range the source states", () => {
+    const problems = checkProduct(
+      { id: "p", servingSize: "1–2 kapsułki dziennie" },
+      "Przyjmuj jedną kapsułkę 1-2 dziennie",
+      "",
+      new Set(),
+    );
+    expect(problems).toEqual([]);
+  });
+});
