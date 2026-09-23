@@ -100,6 +100,7 @@ async function main() {
     ]),
   );
 
+  const applied: string[] = [];
   for (const file of fs.readdirSync(dir).filter((f) => f.endsWith(`.${model}.json`))) {
     const key = file.slice(0, -`.${model}.json`.length);
     if (only && !only.includes(key)) continue;
@@ -117,6 +118,7 @@ async function main() {
       `APPLY ${key} → base ${base}${out.variantGroup ? ` (+${out.variantGroup.members.length - 1} merged)` : ""}`,
     );
     if (dry) continue;
+    applied.push(base, ...(out.variantGroup?.members.map((m) => m.productId) ?? []));
 
     await prisma.$transaction(async (tx) => {
       // 1. Variant group: move the other packs' variants + photos onto the base
@@ -285,6 +287,13 @@ async function main() {
         });
       }
     });
+  }
+  if (!dry && applied.length) {
+    const doneFile = path.join(__dirname, "../../data/content-pass/done.json");
+    const prev: string[] = fs.existsSync(doneFile)
+      ? JSON.parse(fs.readFileSync(doneFile, "utf8"))
+      : [];
+    fs.writeFileSync(doneFile, JSON.stringify([...new Set([...prev, ...applied])], null, 1));
   }
   await prisma.$disconnect();
 }
