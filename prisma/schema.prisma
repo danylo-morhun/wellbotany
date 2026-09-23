@@ -86,22 +86,38 @@ enum GiftBuilderPricingMode {
 
 // ─── TAXONOMY ─────────────────────────────────────────────────────────────────
 
+// Menu column a category belongs to: what the product is (TYPE), what it's
+// for (NEED), who it's for (AUDIENCE), or non-supplement lines (OTHER).
+enum CategoryGroup {
+  TYPE
+  NEED
+  AUDIENCE
+  OTHER
+}
+
 model Category {
-  id            String     @id @default(cuid())
-  slug          String     @unique
+  id            String            @id @default(cuid())
+  slug          String            @unique
   namePl        String
   nameEn        String?
   nameUk        String?
+  // H1 + meta title base when it differs from the menu label
+  // ("Na stawy i kości" → "Suplementy na stawy i kości")
+  headingPl     String?
   descriptionPl String?
   image         String?
   icon          String?
-  sortOrder     Int        @default(0)
+  group         CategoryGroup     @default(TYPE)
+  sortOrder     Int               @default(0)
   parentId      String?
-  parent        Category?  @relation("CategoryTree", fields: [parentId], references: [id])
-  children      Category[] @relation("CategoryTree")
+  parent        Category?         @relation("CategoryTree", fields: [parentId], references: [id])
+  children      Category[]        @relation("CategoryTree")
+  // Primary category only (breadcrumbs, canonical, feed) — see Product.categoryId
   products      Product[]
-  createdAt     DateTime   @default(now())
-  updatedAt     DateTime   @updatedAt
+  // Every category a product is listed in, primary included
+  productLinks  ProductCategory[]
+  createdAt     DateTime          @default(now())
+  updatedAt     DateTime          @updatedAt
 
   @@index([parentId])
   @@index([slug])
@@ -164,11 +180,14 @@ model Product {
   // USP bullets shown under the title — string[], e.g. ["Wspiera odporność", "Wysoka biodostępność"]
   benefitsPl Json?
 
-  // Taxonomy
-  categoryId String?
-  category   Category? @relation(fields: [categoryId], references: [id])
-  brandId    String?
-  brand      Brand?    @relation(fields: [brandId], references: [id])
+  // Taxonomy — categoryId is the primary category (breadcrumbs, canonical,
+  // feed); categoryLinks lists every category the product appears in and
+  // always includes the primary one.
+  categoryId    String?
+  category      Category?         @relation(fields: [categoryId], references: [id])
+  categoryLinks ProductCategory[]
+  brandId       String?
+  brand         Brand?            @relation(fields: [brandId], references: [id])
 
   // Homepage / listing flags
   isFeatured   Boolean @default(false)
@@ -283,6 +302,24 @@ model ProductVariant {
   @@index([productId])
   @@index([sku])
   @@index([isActive])
+}
+
+model ProductCategory {
+  productId  String
+  categoryId String
+  product    Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+  category   Category @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+
+  @@id([productId, categoryId])
+  @@index([categoryId])
+}
+
+// Permanent (301) redirects for storefront paths that moved — merged variant
+// products and renamed categories. Checked only when a page would 404.
+model Redirect {
+  fromPath  String   @id // "/produkt/old-slug"
+  toPath    String // "/produkt/new-slug?wariant=<variantId>"
+  createdAt DateTime @default(now())
 }
 
 model ProductImage {
