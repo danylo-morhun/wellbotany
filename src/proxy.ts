@@ -82,7 +82,9 @@ function buildRelaxedCsp(): string {
     "script-src 'self' 'unsafe-inline'",
     "style-src 'self' 'unsafe-inline'",
     "font-src 'self'",
-    "connect-src 'self' https://*.ingest.de.sentry.io https://*.ingest.sentry.io",
+    // Cloudinary too: a client-side nav from the storefront into /admin keeps
+    // this document's CSP, so the admin image upload runs under it.
+    "connect-src 'self' https://api.cloudinary.com https://res.cloudinary.com https://*.ingest.de.sentry.io https://*.ingest.sentry.io",
     "object-src 'none'",
     "base-uri 'self'",
     "form-action 'self'",
