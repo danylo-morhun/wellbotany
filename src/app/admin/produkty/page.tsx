@@ -4,6 +4,7 @@ import { Suspense } from "react";
 import { AdminPagination } from "@/app/admin/components/AdminPagination";
 import { AdminProductFilters } from "@/app/admin/components/AdminProductFilters";
 import { AdminSearch } from "@/app/admin/components/AdminSearch";
+import { toBrandOptions } from "@/features/catalog/lib/brand-tree";
 import { rankBySearchRelevance } from "@/features/catalog/lib/search-relevance";
 import { ProductsTable } from "@/features/products/components/ProductsTable";
 import { buildProductWhere, type ProductFilters } from "@/features/products/lib/where";
@@ -96,11 +97,12 @@ export default async function AdminProductsPage({
     ]);
   }
 
-  const [brands, categories] = await Promise.all([
-    prisma.brand.findMany({ select: { id: true, name: true }, orderBy: { name: "asc" } }),
+  const [brandRows, categories] = await Promise.all([
+    prisma.brand.findMany({ select: { id: true, name: true, parentBrandId: true } }),
     prisma.category.findMany({ select: { id: true, namePl: true }, orderBy: { namePl: "asc" } }),
   ]);
 
+  const brands = toBrandOptions(brandRows).map((b) => ({ id: b.id, name: b.label }));
   const totalPages = Math.ceil(total / PAGE_SIZE);
 
   return (

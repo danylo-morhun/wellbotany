@@ -73,3 +73,20 @@ export function resolveDisplayBrand<T extends BrandRef>(
 ): BrandRef {
   return brand.parentBrand ?? brand;
 }
+
+type BrandOptionInput = { id: string; name: string; parentBrandId?: string | null };
+
+/** Brands for a <select>: each top-level brand followed by its sub-brands, indented — so a product line (e.g. BICAPS) is picked under its manufacturer. */
+export function toBrandOptions(brands: BrandOptionInput[]): { id: string; label: string }[] {
+  const byName = [...brands].sort((a, b) => a.name.localeCompare(b.name, "pl"));
+  const ids = new Set(brands.map((b) => b.id));
+  const isRoot = (b: BrandOptionInput) => !b.parentBrandId || !ids.has(b.parentBrandId);
+  return byName
+    .filter(isRoot)
+    .flatMap((root) => [
+      { id: root.id, label: root.name },
+      ...byName
+        .filter((b) => b.parentBrandId === root.id)
+        .map((b) => ({ id: b.id, label: `\u00a0\u00a0— ${b.name}` })),
+    ]);
+}

@@ -7,6 +7,7 @@ import { useState } from "react";
 import { toast } from "sonner";
 import { RichTextEditor } from "@/components/ui/rich-text-editor";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { toBrandOptions } from "@/features/catalog/lib/brand-tree";
 import { slugify } from "@/lib/slugify";
 import { saveBrand, saveCategory, saveProduct } from "../actions";
 import {
@@ -95,8 +96,9 @@ export function ProductForm({ product, categories, brands, tags }: Props) {
   const [localCategories, setLocalCategories] = useState<Array<{ id: string; namePl: string }>>(
     categories.map((c) => ({ id: c.id, namePl: c.namePl })),
   );
+  // Sub-brands (product lines, e.g. ForMeds' BICAPS) listed under their parent
   const [localBrands, setLocalBrands] = useState<Array<{ id: string; name: string }>>(
-    brands.map((b) => ({ id: b.id, name: b.name })),
+    toBrandOptions(brands).map((b) => ({ id: b.id, name: b.label })),
   );
   const [categoryId, setCategoryId] = useState(product?.categoryId ?? "");
   const [brandId, setBrandId] = useState(product?.brandId ?? "");
