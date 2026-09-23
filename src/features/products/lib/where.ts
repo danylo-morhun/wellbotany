@@ -23,7 +23,10 @@ export function buildProductWhere(filters: ProductFilters): Prisma.ProductWhereI
 
   if (filters.status) where.status = filters.status;
   if (filters.noBrand) where.brandId = null;
-  else if (filters.brandId) where.brandId = filters.brandId;
+  // A parent brand (e.g. Formeds) holds no products itself — match its
+  // sub-brands too. The tree is one level deep (see BrandForm).
+  else if (filters.brandId)
+    where.brand = { OR: [{ id: filters.brandId }, { parentBrandId: filters.brandId }] };
   if (filters.noCategory) where.categoryId = null;
   else if (filters.categoryId) where.categoryId = filters.categoryId;
   if (filters.noImage) where.images = { none: {} };
