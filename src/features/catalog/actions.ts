@@ -300,11 +300,13 @@ export const getProduct = unstable_cache(
           select: {
             id: true,
             sku: true,
+            ean: true,
             optionLabel: true,
             optionValue: true,
             pricePln: true,
             comparePricePln: true,
             stock: true,
+            trackStock: true,
             isDefault: true,
             weightGrams: true,
           },
@@ -319,29 +321,40 @@ export const getProduct = unstable_cache(
         },
       },
     }),
-  ["product-by-slug"],
+  ["product-by-slug-v2"],
   { tags: ["products"] },
 );
 
 export type ProductDetail = NonNullable<Awaited<ReturnType<typeof getProduct>>>;
 
+/** Every category with `productCount` = distinct active products in its whole subtree. */
 export const getCategories = unstable_cache(
-  async () =>
-    prisma.category.findMany({
-      select: {
-        id: true,
-        slug: true,
-        namePl: true,
-        image: true,
-        icon: true,
-        sortOrder: true,
-        parentId: true,
-        _count: { select: { products: { where: { status: "ACTIVE" } } } },
-      },
-      orderBy: { sortOrder: "asc" },
-    }),
-  ["categories"],
-  { tags: ["categories"] },
+  async () => {
+    const [categories, links] = await Promise.all([
+      prisma.category.findMany({
+        select: {
+          id: true,
+          slug: true,
+          namePl: true,
+          headingPl: true,
+          group: true,
+          image: true,
+          icon: true,
+          sortOrder: true,
+          parentId: true,
+        },
+        orderBy: { sortOrder: "asc" },
+      }),
+      prisma.productCategory.findMany({
+        where: { product: { status: "ACTIVE" } },
+        select: { productId: true, categoryId: true },
+      }),
+    ]);
+    const counts = computeSubtreeCounts(categories, links);
+    return categories.map((c) => ({ ...c, productCount: counts.get(c.id) ?? 0 }));
+  },
+  ["categories-v2"],
+  { tags: ["categories", "products"] },
 );
 
 export type CategoryItem = Awaited<ReturnType<typeof getCategories>>[number];
@@ -473,27 +486,14 @@ export const getCategoryFacetCounts = cache(
   async (filters: CatalogFilters): Promise<Map<string, number>> => {
     const brandIds = filters.brand?.length ? await getBrandDescendantIds(filters.brand) : undefined;
     const where = buildFacetWhere(filters, "category", undefined, brandIds);
-    const [rows, categories] = await Promise.all([
-      prisma.product.groupBy({
-        by: ["categoryId"],
-        where,
-        _count: { _all: true },
+    const [links, categories] = await Promise.all([
+      prisma.productCategory.findMany({
+        where: { product: where },
+        select: { productId: true, categoryId: true },
       }),
       getCategories(),
     ]);
-
-    const directCounts = new Map<string, number>();
-    for (const r of rows) {
-      if (r.categoryId != null) directCounts.set(r.categoryId, r._count._all);
-    }
-
-    // `computeSubtreeCounts` reads `_count.products`, so stub it with this
-    // request's filtered direct counts before rolling up the subtree sums.
-    const scopedCategories = categories.map((c) => ({
-      ...c,
-      _count: { products: directCounts.get(c.id) ?? 0 },
-    }));
-    return computeSubtreeCounts(scopedCategories);
+    return computeSubtreeCounts(categories, links);
   },
 );
 
@@ -563,14 +563,24 @@ export const getCategoryBySlug = unstable_cache(
         id: true,
         slug: true,
         namePl: true,
+        headingPl: true,
         descriptionPl: true,
         image: true,
         parentId: true,
         parent: { select: { namePl: true, slug: true } },
       },
     }),
-  ["category-by-slug"],
+  ["category-by-slug-v2"],
   { tags: ["categories"] },
+);
+
+/** Target of a moved storefront path (merged product, renamed category), if any. */
+export const getRedirectTarget = unstable_cache(
+  async (fromPath: string) =>
+    (await prisma.redirect.findUnique({ where: { fromPath }, select: { toPath: true } }))?.toPath ??
+    null,
+  ["redirect-target"],
+  { tags: ["redirects"] },
 );
 
 export const getBrandBySlug = unstable_cache(

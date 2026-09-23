@@ -79,59 +79,43 @@ export function MobileMenu({ navLinks, utilityLinks, nav }: Props) {
             Promocje
           </Link>
 
+          {nav?.map((menu) => (
+            <details key={menu.key} className="group">
+              <summary
+                className={`${linkClass} flex cursor-pointer list-none items-center justify-between [&::-webkit-details-marker]:hidden`}
+              >
+                {menu.label}
+                <ChevronDown className="size-4 shrink-0 text-muted-foreground transition-transform group-open:rotate-180" />
+              </summary>
+              <div className="flex flex-col gap-0.5 pb-1">
+                {menu.sections.map((section) =>
+                  section.title ? (
+                    <details key={section.title} className="group/col">
+                      <summary className="flex cursor-pointer list-none items-center justify-between rounded-xl py-2 pr-3.5 pl-5 text-sm font-medium text-foreground transition-colors hover:bg-secondary hover:text-primary [&::-webkit-details-marker]:hidden">
+                        {section.title}
+                        <ChevronDown className="size-3.5 shrink-0 text-muted-foreground transition-transform group-open/col:rotate-180" />
+                      </summary>
+                      <div className="flex flex-col gap-0.5 pb-1">
+                        {section.href && (
+                          <Link href={section.href} className={subLinkClass}>
+                            Wszystkie: {section.title}
+                          </Link>
+                        )}
+                        <LeafLinks leaves={section.links} />
+                      </div>
+                    </details>
+                  ) : (
+                    <LeafLinks key={section.links[0]?.slug} leaves={section.links} />
+                  ),
+                )}
+              </div>
+            </details>
+          ))}
+
           {nav && (
-            <>
-              <details className="group">
-                <summary
-                  className={`${linkClass} flex cursor-pointer list-none items-center justify-between [&::-webkit-details-marker]:hidden`}
-                >
-                  {nav.supplements.namePl}
-                  <ChevronDown className="size-4 shrink-0 text-muted-foreground transition-transform group-open:rotate-180" />
-                </summary>
-                <div className="flex flex-col gap-0.5 pb-1">
-                  {nav.supplements.columns.map((col) =>
-                    col.children.length > 0 ? (
-                      <details key={col.slug} className="group/col">
-                        <summary className="flex cursor-pointer list-none items-center justify-between rounded-xl py-2 pr-3.5 pl-5 text-sm font-medium text-foreground transition-colors hover:bg-secondary hover:text-primary [&::-webkit-details-marker]:hidden">
-                          {col.namePl}
-                          <ChevronDown className="size-3.5 shrink-0 text-muted-foreground transition-transform group-open/col:rotate-180" />
-                        </summary>
-                        <div className="flex flex-col gap-0.5 pb-1">
-                          <LeafLinks leaves={col.children} />
-                        </div>
-                      </details>
-                    ) : (
-                      <Link key={col.slug} href={col.href} className={subLinkClass}>
-                        {col.namePl}
-                      </Link>
-                    ),
-                  )}
-                </div>
-              </details>
-
-              <Link href={nav.sport.href} className={linkClass}>
-                {nav.sport.namePl}
-              </Link>
-              <Link href={nav.kosmetyki.href} className={linkClass}>
-                {nav.kosmetyki.namePl}
-              </Link>
-
-              <details className="group">
-                <summary
-                  className={`${linkClass} flex cursor-pointer list-none items-center justify-between [&::-webkit-details-marker]:hidden`}
-                >
-                  {nav.zywnosc.namePl}
-                  <ChevronDown className="size-4 shrink-0 text-muted-foreground transition-transform group-open:rotate-180" />
-                </summary>
-                <div className="flex flex-col gap-0.5 pb-1">
-                  <LeafLinks leaves={nav.zywnosc.children} />
-                </div>
-              </details>
-
-              <Link href="/marki" className={linkClass}>
-                Marki
-              </Link>
-            </>
+            <Link href="/marki" className={linkClass}>
+              Marki
+            </Link>
           )}
 
           <div className="my-2 border-t border-border" />

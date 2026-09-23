@@ -20,11 +20,12 @@ type Props = {
 };
 
 /** Stable partition, not a full re-sort — options with zero matches under the active filters sink to the end so the list doesn't visibly reshuffle on every toggle. */
-function withZeroCountsLast<T extends { _count: { products: number } }>(items: T[]): T[] {
-  return [...items].sort(
-    (a, b) => (a._count.products === 0 ? 1 : 0) - (b._count.products === 0 ? 1 : 0),
-  );
+function withZeroCountsLast<T>(items: T[], count: (item: T) => number): T[] {
+  return [...items].sort((a, b) => (count(a) === 0 ? 1 : 0) - (count(b) === 0 ? 1 : 0));
 }
+
+const categoryCount = (c: CategoryItem) => c.productCount;
+const brandCount = (b: { _count: { products: number } }) => b._count.products;
 
 function CheckboxRow({
   id,
@@ -123,8 +124,8 @@ export function FilterSidebar({
     });
   }, []);
 
-  const sortedCategories = withZeroCountsLast(categories);
-  const sortedBrands = withZeroCountsLast(brands);
+  const sortedCategories = withZeroCountsLast(categories, categoryCount);
+  const sortedBrands = withZeroCountsLast(brands, brandCount);
 
   const visibleCategories = showAllCategories
     ? sortedCategories
@@ -249,7 +250,7 @@ export function FilterSidebar({
                 checked
                 onChange={() => toggleMulti("kategoria", cat.slug)}
                 label={cat.namePl}
-                count={cat._count.products}
+                count={cat.productCount}
               />
             ))}
             {visibleCategories.map((cat) => (
@@ -259,7 +260,7 @@ export function FilterSidebar({
                 checked={active.category.includes(cat.slug)}
                 onChange={() => toggleMulti("kategoria", cat.slug)}
                 label={cat.namePl}
-                count={cat._count.products}
+                count={cat.productCount}
               />
             ))}
           </div>
@@ -315,7 +316,7 @@ export function FilterSidebar({
                   </div>
                   {hasLines && isExpanded && (
                     <div className="mt-1 ml-4 space-y-1 border-border/60 border-l pl-2">
-                      {withZeroCountsLast(brand.subBrands).map((line) => (
+                      {withZeroCountsLast(brand.subBrands, brandCount).map((line) => (
                         <CheckboxRow
                           key={line.id}
                           id={`marka-${line.slug}`}

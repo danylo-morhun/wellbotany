@@ -1,7 +1,6 @@
 import Image from "next/image";
 import Link from "next/link";
 import type { CategoryItem } from "@/features/catalog/actions";
-import { computeSubtreeCounts } from "@/features/catalog/lib/nav";
 import { getCategoryIcon } from "@/lib/category-icons";
 
 type Props = { categories: CategoryItem[] };
@@ -50,7 +49,7 @@ export function CategoryGrid({ categories }: Props) {
   const topLevel = categories.filter((c) => c.parentId === null);
   if (topLevel.length === 0) return null;
 
-  const counts = computeSubtreeCounts(categories);
+  const counts = new Map(categories.map((c) => [c.id, c.productCount]));
   const sorted = [...topLevel].sort((a, b) => (counts.get(b.id) ?? 0) - (counts.get(a.id) ?? 0));
 
   return (

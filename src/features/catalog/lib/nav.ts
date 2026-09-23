@@ -1,21 +1,19 @@
 import type { CategoryItem } from "../actions";
 
 export type NavLeaf = { slug: string; namePl: string; href: string };
-export type NavColumn = NavLeaf & { children: NavLeaf[] };
-
-export type CategoryNav = {
-  supplements: { href: string; namePl: string; columns: NavColumn[] };
-  sport: { href: string; namePl: string; children: NavLeaf[] };
-  kosmetyki: { href: string; namePl: string };
-  zywnosc: { href: string; namePl: string; children: NavLeaf[] };
+/** A titled section renders as a heading + list; an untitled one's links flow on their own. */
+export type NavSection = { title?: string; href?: string; links: NavLeaf[] };
+export type NavMenu = {
+  key: string;
+  label: string;
+  href: string;
+  wide: boolean;
+  sections: NavSection[];
 };
+export type CategoryNav = NavMenu[];
 
-const ROOT_SLUGS = {
-  supplements: "suplementy-diety",
-  sport: "sport",
-  kosmetyki: "kosmetyki",
-  zywnosc: "zywnosc-i-przyprawy",
-} as const;
+/** Below this a category stays out of the menu and the sitemap, and is noindex — a near-empty listing is a poor landing page. */
+export const MIN_LISTED_PRODUCTS = 3;
 
 function toLeaf(c: CategoryItem): NavLeaf {
   return { slug: c.slug, namePl: c.namePl, href: `/kategoria/${c.slug}` };
@@ -27,53 +25,91 @@ export function childrenOf(categories: CategoryItem[], parentId: string): Catego
     .sort((a, b) => a.sortOrder - b.sortOrder || a.namePl.localeCompare(b.namePl, "pl"));
 }
 
-/** Parent categories (e.g. "Suplementy diety") hold no products directly — their count is the sum of their whole subtree, not just `_count.products`. */
-export function computeSubtreeCounts(categories: CategoryItem[]): Map<string, number> {
-  const byParent = new Map<string, CategoryItem[]>();
-  for (const c of categories) {
-    if (!c.parentId) continue;
-    const siblings = byParent.get(c.parentId) ?? [];
-    siblings.push(c);
-    byParent.set(c.parentId, siblings);
-  }
+type CategoryNode = { id: string; parentId: string | null };
+type CategoryLink = { productId: string; categoryId: string };
 
-  const counts = new Map<string, number>();
-  function total(cat: CategoryItem): number {
-    const cached = counts.get(cat.id);
-    if (cached !== undefined) return cached;
-    let sum = cat._count.products;
-    for (const child of byParent.get(cat.id) ?? []) sum += total(child);
-    counts.set(cat.id, sum);
-    return sum;
+/**
+ * Distinct products per category, counting its whole subtree. A product can
+ * sit in several categories (e.g. "Magnez" and "Na sen"), so summing the
+ * children would count it twice under their shared parent.
+ */
+export function computeSubtreeCounts(
+  categories: CategoryNode[],
+  links: CategoryLink[],
+): Map<string, number> {
+  const parentOf = new Map(categories.map((c) => [c.id, c.parentId]));
+  const products = new Map<string, Set<string>>();
+  for (const { productId, categoryId } of links) {
+    // Walk up to the root; the visited guard stops a bad parent cycle.
+    const seen = new Set<string>();
+    for (
+      let id: string | null | undefined = categoryId;
+      id && !seen.has(id);
+      id = parentOf.get(id)
+    ) {
+      seen.add(id);
+      const set = products.get(id) ?? new Set<string>();
+      set.add(productId);
+      products.set(id, set);
+    }
   }
-  for (const c of categories) total(c);
-  return counts;
+  return new Map(categories.map((c) => [c.id, products.get(c.id)?.size ?? 0]));
 }
 
-/** Builds the header's department + mega-menu structure from the flat category table. Returns null if the expected department categories are missing (e.g. before seeding). */
-export function buildCategoryNav(categories: CategoryItem[]): CategoryNav | null {
-  const bySlug = new Map(categories.map((c) => [c.slug, c]));
-  const supplementsRoot = bySlug.get(ROOT_SLUGS.supplements);
-  const sportRoot = bySlug.get(ROOT_SLUGS.sport);
-  const kosmetykiRoot = bySlug.get(ROOT_SLUGS.kosmetyki);
-  const zywnoscRoot = bySlug.get(ROOT_SLUGS.zywnosc);
-  if (!supplementsRoot || !sportRoot || !kosmetykiRoot || !zywnoscRoot) return null;
+/**
+ * Header menus from the category table, one per menu group: "Suplementy"
+ * (what it is — TYPE roots with their children), "Na co?" (NEED + AUDIENCE),
+ * then each OTHER root with children; OTHER roots without children share
+ * the last "Więcej" section. Categories below MIN_LISTED_PRODUCTS are left out.
+ */
+export function buildCategoryNav(categories: CategoryItem[]): CategoryNav {
+  const listed = categories.filter((c) => c.productCount >= MIN_LISTED_PRODUCTS);
+  const roots = (group: CategoryItem["group"]) =>
+    listed
+      .filter((c) => c.parentId === null && c.group === group)
+      .sort((a, b) => a.sortOrder - b.sortOrder || a.namePl.localeCompare(b.namePl, "pl"));
 
-  const columns: NavColumn[] = childrenOf(categories, supplementsRoot.id).map((col) => ({
-    ...toLeaf(col),
-    children: childrenOf(categories, col.id).map(toLeaf),
+  const typeSections = roots("TYPE").map((root) => ({
+    title: root.namePl,
+    href: `/kategoria/${root.slug}`,
+    links: childrenOf(listed, root.id).map(toLeaf),
   }));
+  const needs = roots("NEED").map(toLeaf);
+  const audiences = roots("AUDIENCE").map(toLeaf);
+  const others = roots("OTHER");
+  const otherWithChildren = others.filter((r) => childrenOf(listed, r.id).length > 0);
+  const otherLeaves = others.filter((r) => childrenOf(listed, r.id).length === 0).map(toLeaf);
 
-  return {
-    supplements: { ...toLeaf(supplementsRoot), columns },
-    sport: {
-      ...toLeaf(sportRoot),
-      children: childrenOf(categories, sportRoot.id).map(toLeaf),
+  const menus: NavMenu[] = [
+    {
+      key: "suplementy",
+      label: "Suplementy",
+      href: "/katalog",
+      wide: true,
+      sections: typeSections,
     },
-    kosmetyki: toLeaf(kosmetykiRoot),
-    zywnosc: {
-      ...toLeaf(zywnoscRoot),
-      children: childrenOf(categories, zywnoscRoot.id).map(toLeaf),
+    {
+      key: "na-co",
+      label: "Na co?",
+      href: "/kategorie",
+      wide: true,
+      sections: [
+        { links: needs },
+        ...(audiences.length ? [{ title: "Dla kogo", links: audiences }] : []),
+      ],
     },
-  };
+    ...otherWithChildren.map((root, i) => ({
+      key: root.slug,
+      label: root.namePl,
+      href: `/kategoria/${root.slug}`,
+      wide: false,
+      sections: [
+        { links: childrenOf(listed, root.id).map(toLeaf) },
+        ...(i === otherWithChildren.length - 1 && otherLeaves.length
+          ? [{ title: "Więcej", links: otherLeaves }]
+          : []),
+      ],
+    })),
+  ];
+  return menus.filter((m) => m.sections.some((s) => s.links.length > 0 || s.href));
 }

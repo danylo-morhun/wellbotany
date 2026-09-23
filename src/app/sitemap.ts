@@ -1,4 +1,6 @@
 import type { MetadataRoute } from "next";
+import { getCategories } from "@/features/catalog/actions";
+import { MIN_LISTED_PRODUCTS } from "@/features/catalog/lib/nav";
 import { prisma } from "@/lib/prisma";
 
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? "https://wellbotany.pl";
@@ -32,7 +34,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
         where: { status: "ACTIVE" },
         select: { slug: true, updatedAt: true },
       }),
-      prisma.category.findMany({ select: { slug: true, updatedAt: true } }),
+      getCategories(),
       prisma.brand.findMany({ select: { slug: true } }),
       prisma.giftSet.findMany({
         where: { status: "ACTIVE" },
@@ -47,12 +49,14 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       priority: 0.8,
     }));
 
-    const categoryEntries: MetadataRoute.Sitemap = categories.map((c) => ({
-      url: `${SITE_URL}/kategoria/${c.slug}`,
-      lastModified: c.updatedAt,
-      changeFrequency: "weekly",
-      priority: 0.6,
-    }));
+    // Near-empty categories are noindex (see kategoria/[slug]) — keep them out
+    const categoryEntries: MetadataRoute.Sitemap = categories
+      .filter((c) => c.productCount >= MIN_LISTED_PRODUCTS)
+      .map((c) => ({
+        url: `${SITE_URL}/kategoria/${c.slug}`,
+        changeFrequency: "weekly",
+        priority: 0.6,
+      }));
 
     const brandEntries: MetadataRoute.Sitemap = brands.map((b) => ({
       url: `${SITE_URL}/marki/${b.slug}`,

@@ -1,7 +1,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { getCategories } from "@/features/catalog/actions";
-import { childrenOf, computeSubtreeCounts } from "@/features/catalog/lib/nav";
+import { childrenOf } from "@/features/catalog/lib/nav";
 import { getCategoryIcon } from "@/lib/category-icons";
 
 export const metadata = {
@@ -11,7 +11,7 @@ export const metadata = {
 
 export default async function KategoriePage() {
   const allCategories = await getCategories();
-  const counts = computeSubtreeCounts(allCategories);
+  const counts = new Map(allCategories.map((c) => [c.id, c.productCount]));
   const categories = allCategories
     .filter((c) => c.parentId === null)
     .sort((a, b) => a.sortOrder - b.sortOrder || a.namePl.localeCompare(b.namePl, "pl"));

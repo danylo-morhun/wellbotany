@@ -65,10 +65,11 @@ export function buildProductWhere(
 ): Prisma.ProductWhereInput {
   const where: Prisma.ProductWhereInput = { status: "ACTIVE" };
 
+  // Any listed category counts, not just the primary one
   if (categoryIds) {
-    where.categoryId = { in: categoryIds };
+    where.categoryLinks = { some: { categoryId: { in: categoryIds } } };
   } else if (filters.category?.length) {
-    where.category = { slug: { in: filters.category } };
+    where.categoryLinks = { some: { category: { slug: { in: filters.category } } } };
   }
   if (brandIds) {
     where.brandId = { in: brandIds };

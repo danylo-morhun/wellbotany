@@ -115,7 +115,7 @@ export async function NavBar() {
         </div>
       </div>
 
-      {nav && <MegaMenu nav={nav} />}
+      {nav.length > 0 && <MegaMenu nav={nav} />}
     </header>
   );
 }

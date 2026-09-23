@@ -1,12 +1,17 @@
 import type { Metadata } from "next";
-import { notFound } from "next/navigation";
+import { notFound, permanentRedirect } from "next/navigation";
 import { Suspense } from "react";
 import { Breadcrumbs } from "@/features/catalog/components/Breadcrumbs";
 import { CategoryProductResults } from "@/features/catalog/components/CategoryProductResults";
 import { FilterSidebarData } from "@/features/catalog/components/FilterSidebarData";
 import { ProductGridSkeleton } from "@/features/catalog/components/ProductGridSkeleton";
+import { MIN_LISTED_PRODUCTS } from "@/features/catalog/lib/nav";
 import { prisma } from "@/lib/prisma";
-import { getCategoryBySlug } from "../../../../features/catalog/actions";
+import {
+  getCategories,
+  getCategoryBySlug,
+  getRedirectTarget,
+} from "../../../../features/catalog/actions";
 
 type Props = {
   params: Promise<{ slug: string }>;
@@ -20,13 +25,17 @@ export async function generateStaticParams() {
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { slug } = await params;
-  const category = await getCategoryBySlug(slug);
+  const [category, categories] = await Promise.all([getCategoryBySlug(slug), getCategories()]);
   if (!category) return {};
+  const productCount = categories.find((c) => c.id === category.id)?.productCount ?? 0;
+  const heading = category.headingPl ?? category.namePl;
 
   return {
-    title: category.namePl,
-    description: category.descriptionPl ?? `Produkty w kategorii ${category.namePl}`,
+    title: heading,
+    description: category.descriptionPl ?? `${heading} — sprawdź produkty w sklepie Well Botany.`,
     alternates: { canonical: `/kategoria/${category.slug}` },
+    // A near-empty listing is a thin page; index it once it fills up
+    ...(productCount < MIN_LISTED_PRODUCTS && { robots: { index: false, follow: true } }),
   };
 }
 
@@ -34,7 +43,11 @@ export default async function KategoriaSlugPage({ params, searchParams }: Props)
   const { slug } = await params;
 
   const category = await getCategoryBySlug(slug);
-  if (!category) notFound();
+  if (!category) {
+    const target = await getRedirectTarget(`/kategoria/${slug}`);
+    if (target) permanentRedirect(target);
+    notFound();
+  }
 
   const breadcrumbs = [
     { name: "Strona główna", href: "/" },
@@ -54,7 +67,9 @@ export default async function KategoriaSlugPage({ params, searchParams }: Props)
     <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
       <Breadcrumbs items={breadcrumbs} />
 
-      <h1 className="mt-4 text-balance text-2xl text-foreground">{category.namePl}</h1>
+      <h1 className="mt-4 text-balance text-2xl text-foreground">
+        {category.headingPl ?? category.namePl}
+      </h1>
       {category.descriptionPl && (
         <p className="mt-2 text-muted-foreground">{category.descriptionPl}</p>
       )}
