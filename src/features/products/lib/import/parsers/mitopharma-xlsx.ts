@@ -10,6 +10,14 @@ function cellValue(row: unknown[], index: number): string {
   return String(value).trim();
 }
 
+// Mitopharma distributes MSE Pharmazeutika (Dr. Enzmann) — those rows belong
+// to the "Dr. Enzmann" sub-brand, not Mitopharma itself.
+export const ENZMANN_BRAND = { name: "Dr. Enzmann", slug: "dr-enzmann" };
+
+export function isEnzmannProduct(name: string): boolean {
+  return /\bMSE\b|enzmann/i.test(name);
+}
+
 export function parseMitopharmaXlsx(
   filePath: string,
   source: SupplierSource,
@@ -38,7 +46,9 @@ export function parseMitopharmaXlsx(
       sourceId: source.id,
       externalKey: ean,
       name,
-      brandName: source.brandName,
+      ...(isEnzmannProduct(name)
+        ? { brandName: ENZMANN_BRAND.name, brandSlug: ENZMANN_BRAND.slug }
+        : { brandName: source.brandName }),
       ean,
       sku: ean,
       priceGrosz,
