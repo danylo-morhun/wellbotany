@@ -1,6 +1,6 @@
 "use client";
 
-import type { Category } from "@prisma/client";
+import type { Category, CategoryGroup } from "@prisma/client";
 import { useAction } from "next-safe-action/hooks";
 import { useState } from "react";
 import { toast } from "sonner";
@@ -13,6 +13,15 @@ import { CategoryIconPicker } from "./CategoryIconPicker";
 interface Props {
   categories: Category[];
 }
+
+const GROUP_OPTIONS: { value: CategoryGroup; label: string }[] = [
+  { value: "TYPE", label: "Rodzaj (co to jest)" },
+  { value: "NEED", label: "Na co" },
+  { value: "AUDIENCE", label: "Dla kogo" },
+  { value: "OTHER", label: "Inne (kosmetyki, żywność…)" },
+];
+
+const fieldClass = "rounded-lg border border-border px-2 py-1 text-sm";
 
 export function CategoryForm({ categories }: Props) {
   const [editing, setEditing] = useState<Category | null>(null);
@@ -77,6 +86,12 @@ export function CategoryForm({ categories }: Props) {
       slug: formSlug,
       namePl: formName,
       nameEn: (fd.get("nameEn") as string) || undefined,
+      headingPl: (fd.get("headingPl") as string) || undefined,
+      descriptionPl: (fd.get("descriptionPl") as string) || undefined,
+      group: fd.get("group") as CategoryGroup,
+      // Sent every time: the action writes null for a missing parent/description,
+      // which used to detach a category from its parent on any edit.
+      parentId: (fd.get("parentId") as string) || undefined,
       icon: formIcon || undefined,
       sortOrder: Number(fd.get("sortOrder") || 0),
     });
@@ -126,6 +141,46 @@ export function CategoryForm({ categories }: Props) {
           className="rounded-lg border border-border px-2 py-1 text-sm"
         />
         <CategoryIconPicker value={formIcon} onChange={setFormIcon} />
+        <select
+          name="group"
+          aria-label="Grupa w menu"
+          defaultValue={item?.group ?? "TYPE"}
+          className={fieldClass}
+        >
+          {GROUP_OPTIONS.map((g) => (
+            <option key={g.value} value={g.value}>
+              {g.label}
+            </option>
+          ))}
+        </select>
+        <select
+          name="parentId"
+          aria-label="Kategoria nadrzędna"
+          defaultValue={item?.parentId ?? ""}
+          className={fieldClass}
+        >
+          <option value="">— bez nadrzędnej —</option>
+          {categories
+            .filter((c) => c.parentId === null && c.id !== item?.id)
+            .map((c) => (
+              <option key={c.id} value={c.id}>
+                {c.namePl}
+              </option>
+            ))}
+        </select>
+        <input
+          name="headingPl"
+          defaultValue={item?.headingPl ?? ""}
+          placeholder="Nagłówek H1, np. „Suplementy na sen”"
+          className={`${fieldClass} col-span-2`}
+        />
+        <textarea
+          name="descriptionPl"
+          defaultValue={item?.descriptionPl ?? ""}
+          placeholder="Opis kategorii (pod nagłówkiem)"
+          rows={3}
+          className={`${fieldClass} col-span-2`}
+        />
       </div>
       <div className="flex gap-2">
         <button
