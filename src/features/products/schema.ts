@@ -69,14 +69,18 @@ export const productSchema = z.object({
   ingredients: z
     .object({ pl: z.string().max(4000).optional(), en: z.string().max(4000).optional() })
     .optional(),
+  // Rows, or an imported free-text label — see lib/nutrition-facts.ts
   nutritionFacts: z
-    .array(
-      z.object({
-        name: z.string().max(200),
-        amount: z.string().max(100),
-        rws: z.string().max(20).optional(),
-      }),
-    )
+    .union([
+      z.array(
+        z.object({
+          name: z.string().max(200),
+          amount: z.string().max(100),
+          rws: z.string().max(20).optional(),
+        }),
+      ),
+      z.object({ pl: z.string().max(10000) }),
+    ])
     .default([]),
   allergenInfo: z
     .object({

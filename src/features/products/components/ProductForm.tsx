@@ -9,6 +9,11 @@ import { RichTextEditor } from "@/components/ui/rich-text-editor";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { slugify } from "@/lib/slugify";
 import { saveBrand, saveCategory, saveProduct } from "../actions";
+import {
+  nutritionFactsToText,
+  parseNutritionFactsText,
+  readNutritionFacts,
+} from "../lib/nutrition-facts";
 
 const STATUS_LABELS: Record<ProductStatus, string> = {
   DRAFT: "Szkic",
@@ -136,18 +141,11 @@ export function ProductForm({ product, categories, brands, tags }: Props) {
 
   // Existing JSON-field values, pre-formatted for their plain-text editors
   const ingredients = product?.ingredients as { pl?: string; en?: string } | null;
-  const nutritionFacts = product?.nutritionFacts as Array<{
-    name: string;
-    amount: string;
-    rws?: string;
-  }> | null;
   const allergenInfo = product?.allergenInfo as {
     contains?: string[];
     mayContain?: string[];
   } | null;
-  const nutritionFactsDefault = (nutritionFacts ?? [])
-    .map((n) => `${n.name} | ${n.amount}${n.rws ? ` | ${n.rws}` : ""}`)
-    .join("\n");
+  const nutritionFactsDefault = nutritionFactsToText(readNutritionFacts(product?.nutritionFacts));
 
   function handleNameChange(value: string) {
     setNamePl(value);
@@ -183,12 +181,9 @@ export function ProductForm({ product, categories, brands, tags }: Props) {
     const allergenContains = parseCsv(fd, "allergenContains");
     const allergenMayContain = parseCsv(fd, "allergenMayContain");
 
-    const nutritionFactsInput = parseLines(fd, "nutritionFactsLines")
-      .map((line) => {
-        const [name, amount, rws] = line.split("|").map((s) => s.trim());
-        return { name: name ?? "", amount: amount ?? "", rws: rws || undefined };
-      })
-      .filter((n) => n.name && n.amount);
+    const nutritionFactsInput = parseNutritionFactsText(
+      (fd.get("nutritionFactsLines") as string) ?? "",
+    );
 
     const ingredientsInput = {
       pl: (fd.get("ingredientsPl") as string) || undefined,
@@ -735,7 +730,7 @@ export function ProductForm({ product, categories, brands, tags }: Props) {
             <p className="mb-3 text-xs text-muted-foreground">
               Aktywne składniki: jedna linia na składnik, format{" "}
               <code className="rounded bg-muted px-1">Nazwa | Dawka na porcję | %RWS</code>. %RWS
-              opcjonalne.
+              opcjonalne. Tekst w innym formacie zostanie zapisany i pokazany bez zmian.
             </p>
             <textarea
               id="nutritionFactsLines"
