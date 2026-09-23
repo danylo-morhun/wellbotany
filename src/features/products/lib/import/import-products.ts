@@ -2,6 +2,7 @@ import fs from "node:fs";
 import path from "node:path";
 import type { Prisma, ProductStatus } from "@prisma/client";
 import { slugify } from "@/lib/slugify";
+import { onlyEmptyFields } from "./merge";
 import type {
   ImportRowResult,
   ImportSummary,
@@ -124,6 +125,23 @@ async function ensureGalleryImages(
 
 /** Extra content fields shared by both the create and update paths — kept in one
  *  place so a new draft field only needs wiring here, not in both branches. */
+const CONTENT_FIELDS = {
+  shortDescPl: true,
+  descriptionPl: true,
+  ingredients: true,
+  nutritionFacts: true,
+  healthWarnings: true,
+  servingSize: true,
+  servingsPerContainer: true,
+  storageInfo: true,
+  usageInstructionsPl: true,
+  benefitsPl: true,
+  allergenInfo: true,
+  responsibleEntity: true,
+  countryOfOrigin: true,
+  netWeight: true,
+} as const;
+
 function contentUpdateData(draft: SupplierProductDraft) {
   return {
     shortDescPl: draft.shortDescPl ?? undefined,
@@ -238,14 +256,19 @@ async function importVariantDraft(
 
   if (anchorProductId) {
     productId = anchorProductId;
+    // Name, category and filled content are curated in the shop — keep them.
+    const current = await tx.product.findUniqueOrThrow({
+      where: { id: productId },
+      select: CONTENT_FIELDS,
+    });
     await tx.product.update({
       where: { id: productId },
       data: {
-        namePl: draft.name,
         brandId,
-        categoryId: await resolveCategory(tx, draft.categoryName),
-        netWeight: draft.packaging ?? undefined,
-        ...contentUpdateData(draft),
+        ...onlyEmptyFields(current, {
+          ...contentUpdateData(draft),
+          netWeight: draft.packaging ?? undefined,
+        }),
       },
     });
     rowStatus = "updated";
@@ -261,6 +284,7 @@ async function importVariantDraft(
         categoryId,
         netWeight: draft.packaging ?? null,
         ...contentUpdateData(draft),
+        ...(categoryId && { categoryLinks: { create: { categoryId } } }),
       },
     });
     productId = product.id;
@@ -361,16 +385,19 @@ export async function importSupplierProducts(
             shoperProductId: draft.externalProductId ?? undefined,
           },
         });
+        // Name, category and filled content are curated in the shop — keep them.
+        const current = await tx.product.findUniqueOrThrow({
+          where: { id: existing.productId },
+          select: CONTENT_FIELDS,
+        });
         await tx.product.update({
           where: { id: existing.productId },
           data: {
-            ...(hasRealPrice && {
-              namePl: draft.name,
-              brandId,
-              categoryId: await resolveCategory(tx, draft.categoryName),
-              netWeight: draft.packaging ?? undefined,
+            ...(hasRealPrice && { brandId }),
+            ...onlyEmptyFields(current, {
+              ...contentUpdateData(draft),
+              ...(hasRealPrice && { netWeight: draft.packaging ?? undefined }),
             }),
-            ...contentUpdateData(draft),
           },
         });
         if (imageUrl) {
@@ -411,6 +438,7 @@ export async function importSupplierProducts(
           categoryId,
           netWeight: draft.packaging ?? null,
           ...contentUpdateData(draft),
+          ...(categoryId && { categoryLinks: { create: { categoryId } } }),
         },
       });
 
