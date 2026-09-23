@@ -15,6 +15,7 @@ import {
   parseNutritionFactsText,
   readNutritionFacts,
 } from "../lib/nutrition-facts";
+import { ExtraCategoriesPicker } from "./ExtraCategoriesPicker";
 
 const STATUS_LABELS: Record<ProductStatus, string> = {
   DRAFT: "Szkic",
@@ -22,7 +23,10 @@ const STATUS_LABELS: Record<ProductStatus, string> = {
   ARCHIVED: "Zarchiwizowany",
 };
 
-type ProductWithTags = Product & { tags: ProductTag[] };
+type ProductWithTags = Product & {
+  tags: ProductTag[];
+  categoryLinks: { categoryId: string }[];
+};
 
 interface Props {
   product?: ProductWithTags;
@@ -88,6 +92,13 @@ export function ProductForm({ product, categories, brands, tags }: Props) {
   const [metaTitlePl, setMetaTitlePl] = useState(product?.metaTitlePl ?? "");
   const [metaDescPl, setMetaDescPl] = useState(product?.metaDescPl ?? "");
   const [tagQuery, setTagQuery] = useState("");
+  const [extraCategoryIds, setExtraCategoryIds] = useState<Set<string>>(
+    new Set(
+      product?.categoryLinks
+        .map((l) => l.categoryId)
+        .filter((categoryId) => categoryId !== product.categoryId) ?? [],
+    ),
+  );
   const [selectedTagIds, setSelectedTagIds] = useState<Set<string>>(
     new Set(product?.tags.map((t) => t.tagId) ?? []),
   );
@@ -232,6 +243,7 @@ export function ProductForm({ product, categories, brands, tags }: Props) {
       metaTitlePl: metaTitlePl || undefined,
       metaDescPl: metaDescPl || undefined,
       tagIds: Array.from(selectedTagIds),
+      extraCategoryIds: Array.from(extraCategoryIds).filter((id) => id !== categoryId),
     });
   }
 
@@ -476,6 +488,20 @@ export function ProductForm({ product, categories, brands, tags }: Props) {
               </div>
             </div>
           </section>
+
+          <ExtraCategoriesPicker
+            categories={categories}
+            primaryId={categoryId}
+            selected={extraCategoryIds}
+            onToggle={(id) =>
+              setExtraCategoryIds((prev) => {
+                const next = new Set(prev);
+                if (next.has(id)) next.delete(id);
+                else next.add(id);
+                return next;
+              })
+            }
+          />
 
           <section className="rounded-2xl bg-card p-5 shadow-card">
             <div className="mb-3 flex items-center justify-between">

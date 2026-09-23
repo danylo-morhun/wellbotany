@@ -7,17 +7,21 @@ import { useState } from "react";
 import { toast } from "sonner";
 import { ConfirmDialog } from "@/components/ConfirmDialog";
 import { CloudinaryDropzone } from "@/components/ui/cloudinary-dropzone";
-import { addProductImage, deleteProductImage } from "../actions";
+import { addProductImage, deleteProductImage, setImageVariant } from "../actions";
 
 interface Props {
   productId: string;
   images: ProductImage[];
+  variants: { id: string; sku: string; optionValue: string | null }[];
 }
 
-export function ImagesSection({ productId, images }: Props) {
+export function ImagesSection({ productId, images, variants }: Props) {
   const [deletingImage, setDeletingImage] = useState<ProductImage | null>(null);
   const { execute: execAdd } = useAction(addProductImage, {
     onError: ({ error }) => toast.error(error?.serverError ?? "Błąd dodawania zdjęcia"),
+  });
+  const { execute: execSetVariant } = useAction(setImageVariant, {
+    onError: ({ error }) => toast.error(error?.serverError ?? "Błąd przypisania wariantu"),
   });
   const { execute: execDelete, isPending: deleting } = useAction(deleteProductImage, {
     onSuccess: () => setDeletingImage(null),
@@ -50,6 +54,23 @@ export function ImagesSection({ productId, images }: Props) {
               <span className="absolute left-1 top-1 rounded bg-foreground/80 px-1 py-0.5 text-[10px] text-background">
                 Główne
               </span>
+            )}
+            {variants.length > 1 && (
+              <select
+                aria-label="Wariant zdjęcia"
+                value={img.variantId ?? ""}
+                onChange={(e) =>
+                  execSetVariant({ imageId: img.id, productId, variantId: e.target.value || null })
+                }
+                className="mt-1 w-full truncate rounded-md border border-border bg-card px-1 py-0.5 text-[11px]"
+              >
+                <option value="">Wszystkie warianty</option>
+                {variants.map((v) => (
+                  <option key={v.id} value={v.id}>
+                    {v.optionValue ?? v.sku}
+                  </option>
+                ))}
+              </select>
             )}
             <button
               type="button"

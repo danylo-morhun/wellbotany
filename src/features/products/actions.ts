@@ -6,6 +6,7 @@ import { ActionError } from "@/lib/action-error";
 import { syncProductToBaselinker, syncStockToBaselinker } from "@/lib/baselinker/inventory";
 import { prisma } from "@/lib/prisma";
 import { adminActionClient } from "@/lib/safe-action";
+import { categoryLinkIds } from "./lib/category-links";
 import { buildProductWhere } from "./lib/where";
 import {
   brandSchema,
@@ -21,6 +22,7 @@ import {
   productImageSchema,
   productSchema,
   quickUpdateVariantSchema,
+  setImageVariantSchema,
   tagSchema,
   variantSchema,
 } from "./schema";
@@ -171,6 +173,7 @@ export const saveProduct = adminActionClient
     const {
       id,
       tagIds,
+      extraCategoryIds,
       categoryId,
       brandId,
       countryOfOrigin,
@@ -238,6 +241,14 @@ export const saveProduct = adminActionClient
       if (tagIds.length > 0) {
         await tx.productTag.createMany({
           data: tagIds.map((tagId) => ({ productId: resolvedId as string, tagId })),
+        });
+      }
+      // Sync category links (primary + extras)
+      await tx.productCategory.deleteMany({ where: { productId: resolvedId } });
+      const linkIds = categoryLinkIds(payload.categoryId, extraCategoryIds);
+      if (linkIds.length > 0) {
+        await tx.productCategory.createMany({
+          data: linkIds.map((categoryId) => ({ productId: resolvedId as string, categoryId })),
         });
       }
     });
@@ -398,9 +409,27 @@ export const bulkAssignCategory = adminActionClient
   .schema(bulkAssignCategorySchema)
   .action(async ({ parsedInput: { categoryId, ...selection } }) => {
     const ids = await resolveProductIds(selection);
-    const { count } = await prisma.product.updateMany({
+    // Moves the primary category: the old primary's link goes, the new one's
+    // is added; extra (need/audience) links stay.
+    const products = await prisma.product.findMany({
       where: { id: { in: ids } },
-      data: { categoryId },
+      select: { id: true, categoryId: true },
+    });
+    const { count } = await prisma.$transaction(async (tx) => {
+      await tx.productCategory.deleteMany({
+        where: {
+          OR: products.flatMap((p) =>
+            p.categoryId ? [{ productId: p.id, categoryId: p.categoryId }] : [],
+          ),
+        },
+      });
+      if (categoryId) {
+        await tx.productCategory.createMany({
+          data: ids.map((productId) => ({ productId, categoryId })),
+          skipDuplicates: true,
+        });
+      }
+      return tx.product.updateMany({ where: { id: { in: ids } }, data: { categoryId } });
     });
     revalidatePath("/admin/produkty");
     revalidatePath("/katalog", "layout");
@@ -491,6 +520,20 @@ export const deleteProductImage = adminActionClient
         await prisma.productImage.update({ where: { id: next.id }, data: { isMain: true } });
     }
     revalidatePath("/admin/produkty");
+    revalidatePath(`/admin/produkty/${productId}`);
+    revalidatePath("/produkt/[slug]", "page");
+    revalidateTag("products", "max");
+    return { success: true };
+  });
+
+export const setImageVariant = adminActionClient
+  .schema(setImageVariantSchema)
+  .action(async ({ parsedInput: { imageId, productId, variantId } }) => {
+    // Scoped by productId so an image can't be tied to another product's variant
+    await prisma.productImage.update({
+      where: { id: imageId, productId },
+      data: { variantId },
+    });
     revalidatePath(`/admin/produkty/${productId}`);
     revalidatePath("/produkt/[slug]", "page");
     revalidateTag("products", "max");

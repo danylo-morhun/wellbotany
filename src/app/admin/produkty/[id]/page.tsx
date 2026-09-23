@@ -16,6 +16,7 @@ export default async function AdminEditProductPage({
       where: { id },
       include: {
         tags: true,
+        categoryLinks: { select: { categoryId: true } },
         variants: { orderBy: { createdAt: "asc" } },
         images: { orderBy: { sortOrder: "asc" } },
       },
@@ -35,7 +36,7 @@ export default async function AdminEditProductPage({
       <h1 className="text-2xl font-bold">{product.namePl}</h1>
       <ProductForm product={productFields} categories={categories} brands={brands} tags={tags} />
       <VariantsTable productId={product.id} variants={serializedVariants} />
-      <ImagesSection productId={product.id} images={images} />
+      <ImagesSection productId={product.id} images={images} variants={variants} />
     </div>
   );
 }

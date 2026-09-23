@@ -100,6 +100,8 @@ export const productSchema = z.object({
   metaDescPl: z.string().max(320).optional(),
   metaDescEn: z.string().max(320).optional(),
   tagIds: z.array(z.string()).default([]),
+  // Categories besides the primary `categoryId` (needs, audience)
+  extraCategoryIds: z.array(z.string()).default([]),
 });
 
 // ─── Variant ──────────────────────────────────────────────────────────────────
@@ -197,6 +199,13 @@ export const productImageSchema = z.object({
 export const deleteImageSchema = z.object({
   imageId: z.string().min(1),
   productId: z.string().min(1),
+});
+
+export const setImageVariantSchema = z.object({
+  imageId: z.string().min(1),
+  productId: z.string().min(1),
+  // null = shown for every variant
+  variantId: z.string().min(1).nullable(),
 });
 
 export type CategoryInput = z.input<typeof categorySchema>;
