@@ -28,7 +28,7 @@ export function buildProductWhere(filters: ProductFilters): Prisma.ProductWhereI
   else if (filters.brandId)
     where.brand = { OR: [{ id: filters.brandId }, { parentBrandId: filters.brandId }] };
   if (filters.noCategory) where.categoryId = null;
-  else if (filters.categoryId) where.categoryId = filters.categoryId;
+  else if (filters.categoryId) where.categoryLinks = { some: { categoryId: filters.categoryId } };
   if (filters.noImage) where.images = { none: {} };
 
   return where;
