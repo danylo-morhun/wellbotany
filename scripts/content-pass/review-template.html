@@ -1,0 +1,210 @@
+<title>Pilot treści Well Botany</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Onest:wght@500;600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap">
+<style>
+  :root {
+    --ground: #f5f8f7;
+    --surface: #ffffff;
+    --ink: #13201c;
+    --muted: #5a6b66;
+    --line: #dde6e3;
+    --teal: #16775c;
+    --teal-deep: #0f5e48;
+    --teal-soft: #e3f1ec;
+    --warn: #9a6212;
+    --warn-soft: #fbf0dc;
+    --bad: #b23a2e;
+    --bad-soft: #fbe6e3;
+    --ok: #2c7a4b;
+    --ok-soft: #e2f3e8;
+    --shadow: 0 1px 2px rgb(19 32 28 / 0.06), 0 4px 14px rgb(19 32 28 / 0.05);
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      color-scheme: dark;
+      --ground: #0f1614; --surface: #17211e; --ink: #e5eeeb; --muted: #97a8a2; --line: #2a3733;
+      --teal: #4cc59f; --teal-deep: #7ad8b9; --teal-soft: #173229;
+      --warn: #e2b46a; --warn-soft: #33281a; --bad: #f08a7e; --bad-soft: #3a1f1c; --ok: #7fd3a1; --ok-soft: #173024;
+      --shadow: 0 1px 2px rgb(0 0 0 / 0.4);
+    }
+  }
+  :root[data-theme="dark"] {
+    color-scheme: dark;
+    --ground: #0f1614; --surface: #17211e; --ink: #e5eeeb; --muted: #97a8a2; --line: #2a3733;
+    --teal: #4cc59f; --teal-deep: #7ad8b9; --teal-soft: #173229;
+    --warn: #e2b46a; --warn-soft: #33281a; --bad: #f08a7e; --bad-soft: #3a1f1c; --ok: #7fd3a1; --ok-soft: #173024;
+    --shadow: 0 1px 2px rgb(0 0 0 / 0.4);
+  }
+  * { box-sizing: border-box; }
+  body { background: var(--ground); color: var(--ink); font: 14px/1.55 "Plus Jakarta Sans", system-ui, sans-serif; }
+  .wrap { max-width: 1440px; margin: 0 auto; padding-inline: 16px; padding-block: 24px 48px; }
+  h1, h2, h3 { font-family: Onest, "Plus Jakarta Sans", system-ui, sans-serif; text-wrap: balance; margin: 0; }
+  h1 { font-size: 26px; font-weight: 700; }
+  .lede { color: var(--muted); max-width: 70ch; margin: 6px 0 20px; }
+  .layout { display: grid; grid-template-columns: 280px 1fr; gap: 20px; align-items: start; }
+  @media (max-width: 900px) { .layout { grid-template-columns: 1fr; } }
+  nav.list { background: var(--surface); border-radius: 14px; box-shadow: var(--shadow); padding: 6px; position: sticky; top: calc(env(safe-area-inset-top, 0px) + 12px); max-height: calc(100vh - 24px); overflow: auto; }
+  @media (max-width: 900px) { nav.list { position: static; max-height: 260px; } }
+  nav.list button { all: unset; display: grid; grid-template-columns: 1fr auto auto; gap: 6px; align-items: center; width: 100%; box-sizing: border-box; padding: 8px 10px; border-radius: 9px; cursor: pointer; font-size: 13px; }
+  nav.list button:hover { background: var(--teal-soft); }
+  nav.list button[aria-current="true"] { background: var(--teal); color: #fff; }
+  nav.list button:focus-visible, .tabs button:focus-visible { outline: 2px solid var(--teal); outline-offset: 2px; }
+  .name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .pill { font-size: 11px; font-weight: 600; padding: 1px 7px; border-radius: 99px; font-variant-numeric: tabular-nums; white-space: nowrap; }
+  .pill.ok { background: var(--ok-soft); color: var(--ok); }
+  .pill.warn { background: var(--warn-soft); color: var(--warn); }
+  .pill.bad { background: var(--bad-soft); color: var(--bad); }
+  .pill.none { background: var(--line); color: var(--muted); }
+  nav.list button[aria-current="true"] .pill { background: rgb(255 255 255 / 0.2); color: #fff; }
+  .legend { display: flex; gap: 10px; flex-wrap: wrap; font-size: 12px; color: var(--muted); margin-bottom: 14px; }
+  main { min-width: 0; display: grid; gap: 16px; }
+  .panel { background: var(--surface); border-radius: 14px; box-shadow: var(--shadow); padding: 18px; min-width: 0; }
+  .head { display: flex; flex-wrap: wrap; gap: 8px 16px; align-items: baseline; justify-content: space-between; }
+  .meta { color: var(--muted); font-size: 13px; }
+  .sources { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 10px; }
+  .sources a { font-size: 12px; color: var(--teal-deep); background: var(--teal-soft); padding: 3px 9px; border-radius: 99px; text-decoration: none; max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .issues { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+  @media (max-width: 700px) { .issues { grid-template-columns: 1fr; } }
+  .issues h3 { font-size: 15px; display: flex; gap: 8px; align-items: center; margin-bottom: 8px; }
+  .issues ul { margin: 0; padding-left: 18px; display: grid; gap: 4px; font-size: 13px; }
+  .issues .t { font-weight: 600; }
+  .tabs { display: none; gap: 6px; margin-bottom: 10px; }
+  .tabs button { all: unset; cursor: pointer; padding: 6px 12px; border-radius: 99px; background: var(--line); font-size: 13px; font-weight: 600; }
+  .tabs button[aria-pressed="true"] { background: var(--teal); color: #fff; }
+  .grid { display: grid; grid-template-columns: 150px repeat(3, minmax(0, 1fr)); border-top: 1px solid var(--line); }
+  .grid > div { padding: 10px 10px; border-bottom: 1px solid var(--line); min-width: 0; overflow-wrap: anywhere; }
+  .grid .colhead { font-family: Onest, sans-serif; font-weight: 600; font-size: 13px; color: var(--muted); position: sticky; top: 0; background: var(--surface); }
+  .grid .field { font-size: 12px; font-weight: 600; color: var(--muted); letter-spacing: 0.02em; }
+  .grid .empty { color: var(--muted); font-style: italic; }
+  .grid .flagged { background: var(--bad-soft); }
+  .rich h2 { font-size: 16px; margin: 0 0 6px; } .rich h3 { font-size: 14px; margin: 12px 0 4px; }
+  .rich p { margin: 0 0 8px; } .rich ul { margin: 0 0 8px; padding-left: 18px; }
+  @media (max-width: 900px) {
+    .tabs { display: flex; }
+    .grid { grid-template-columns: 110px minmax(0, 1fr); }
+  }
+  .hide-col { display: none !important; }
+  @media (prefers-reduced-motion: no-preference) { nav.list button { transition: background 120ms; } }
+</style>
+
+<div class="wrap">
+  <h1>Pilot treści — porównanie Haiku i Sonnet</h1>
+  <p class="lede">18 pozycji (23 produkty), te same źródła dla obu modeli. Czerwone pole = automatyczna kontrola lub weryfikator znalazł problem. Kolumna „Było” to obecny tekst w sklepie.</p>
+  <div class="legend">
+    <span><span class="pill ok">0</span> brak problemów</span>
+    <span><span class="pill warn">n</span> do poprawki</span>
+    <span><span class="pill bad">n</span> fakty/claimy bez źródła</span>
+    <span><span class="pill none">–</span> brak wyniku</span>
+  </div>
+  <div class="layout">
+    <nav class="list" id="list" aria-label="Pozycje pilotażu"></nav>
+    <main id="main"></main>
+  </div>
+</div>
+
+<script>
+const DATA = /*__DATA__*/null;
+const FIELDS = [
+  ["namePl", "Nazwa"], ["metaTitlePl", "Meta title"], ["metaDescPl", "Meta opis"], ["shortDescPl", "Krótki opis"],
+  ["descriptionPl", "Opis"], ["benefitsPl", "Korzyści"], ["nutritionFacts", "Wartości / skład na porcję"],
+  ["ingredients", "Składniki"], ["usageInstructionsPl", "Sposób użycia"], ["servingSize", "Porcja"],
+  ["netWeight", "Zawartość"], ["storageInfo", "Przechowywanie"], ["contraindicationsPl", "Przeciwwskazania"],
+  ["healthWarnings", "Ostrzeżenia"], ["certifications", "Certyfikaty"], ["responsibleEntity", "Podmiot odpowiedzialny"],
+  ["categories", "Kategorie"], ["optionValue", "Wariant"],
+];
+const SERIOUS = new Set(["unsourced-number", "unsourced-ean", "bad-ean", "banned-word", "unknown-slug", "unsupported", "changed", "claim"]);
+const ALLOWED = new Set(["H2", "H3", "P", "UL", "LI", "STRONG"]);
+
+function esc(s) { return String(s).replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[c]); }
+function safeHtml(html) {
+  const tpl = document.createElement("template"); tpl.innerHTML = html;
+  const walk = (node) => {
+    for (const el of [...node.children]) {
+      walk(el);
+      if (!ALLOWED.has(el.tagName)) el.replaceWith(...el.childNodes);
+      else [...el.attributes].forEach((a) => el.removeAttribute(a.name));
+    }
+  };
+  walk(tpl.content); return tpl.innerHTML;
+}
+function show(v, field) {
+  if (v == null || v === "" || (Array.isArray(v) && !v.length)) return '<span class="empty">—</span>';
+  if (field === "descriptionPl") return `<div class="rich">${safeHtml(v)}</div>`;
+  if (field === "nutritionFacts") {
+    if (Array.isArray(v)) return v.map((r) => `${esc(r.name)}: <b>${esc(r.amount)}</b>${r.rws ? ` (${esc(r.rws)})` : ""}`).join("<br>");
+    if (v.pl) return esc(v.pl).replace(/\n/g, "<br>");
+  }
+  if (field === "ingredients" && v.pl) return esc(v.pl);
+  if (Array.isArray(v)) return "<ul style='margin:0;padding-left:16px'>" + v.map((x) => `<li>${esc(x)}</li>`).join("") + "</ul>";
+  if (typeof v === "object") return esc(JSON.stringify(v));
+  return esc(v);
+}
+function counts(m) {
+  if (!m.out) return null;
+  const all = [...(m.check || []), ...((m.verify && m.verify.issues) || [])];
+  return { serious: all.filter((i) => SERIOUS.has(i.type)).length, total: all.length, verdict: m.verify && m.verify.verdict };
+}
+function pill(c) {
+  if (!c) return '<span class="pill none">–</span>';
+  const cls = c.serious ? "bad" : c.total ? "warn" : "ok";
+  return `<span class="pill ${cls}" title="${c.serious} poważnych / ${c.total} wszystkich">${c.serious || c.total}</span>`;
+}
+
+let current = 0; let active = "sonnet";
+function renderList() {
+  document.getElementById("list").innerHTML = DATA.map((it, i) => {
+    const n = it.before[0].namePl.trim();
+    return `<button type="button" aria-current="${i === current}" data-i="${i}"><span class="name" title="${esc(n)}">${esc(n)}${it.before.length > 1 ? ` <small>(+${it.before.length - 1})</small>` : ""}</span>${pill(counts(it.models.haiku))}${pill(counts(it.models.sonnet))}</button>`;
+  }).join("");
+}
+function renderItem() {
+  const it = DATA[current];
+  const base = (m) => {
+    const out = it.models[m].out; if (!out) return null;
+    const id = (out.variantGroup && out.variantGroup.baseProductId) || out.products[0].id;
+    const p = out.products.find((x) => x.id === id) || out.products[0];
+    return { ...p, categories: [p.primaryCategory, ...(p.extraCategories || [])].filter(Boolean).join(", ") };
+  };
+  const before = { ...it.before[0], categories: it.before[0].category };
+  const cols = { before, haiku: base("haiku"), sonnet: base("sonnet") };
+  const issueFields = (m) => new Set([...(it.models[m].check || []), ...((it.models[m].verify && it.models[m].verify.issues) || [])].filter((i) => SERIOUS.has(i.type)).map((i) => i.field));
+  const bad = { haiku: issueFields("haiku"), sonnet: issueFields("sonnet") };
+  const issueList = (m) => {
+    const mm = it.models[m]; if (!mm.out) return `<p class="meta">Brak wyniku.</p>`;
+    const all = [...(mm.check || []).map((i) => ({ ...i, by: "skrypt" })), ...((mm.verify && mm.verify.issues) || []).map((i) => ({ ...i, by: "weryfikator" }))];
+    const flags = (mm.out.flags || []).map((f) => `<li><span class="t">flaga autora:</span> ${esc(f)}</li>`).join("");
+    if (!all.length && !flags) return `<p class="meta">Bez uwag.</p>`;
+    return `<ul>${all.map((i) => `<li><span class="t">${esc(i.type)}</span> · ${esc(i.field)} — ${esc(i.text)}${i.why ? ` <span class="meta">(${esc(i.why)})</span>` : ""} <span class="meta">[${i.by}]</span></li>`).join("")}${flags}</ul>`;
+  };
+  const vg = (m) => { const g = it.models[m].out && it.models[m].out.variantGroup; return g ? `warianty: ${g.members.map((x) => esc(x.optionValue)).join(" / ")}` : ""; };
+  const head = ["before", "haiku", "sonnet"];
+  const label = { before: "Było", haiku: "Haiku", sonnet: "Sonnet" };
+  document.getElementById("main").innerHTML = `
+    <section class="panel">
+      <div class="head"><h2>${esc(it.before[0].namePl)}</h2><span class="meta">${esc(it.before[0].brand || "")} · ${it.before.map((p) => esc(p.slug)).join(", ")}</span></div>
+      <div class="sources">${it.sources.map((s) => `<a href="${esc(s.url || "#")}" target="_blank" rel="noopener">${esc(s.id)} · ${esc(s.tier)}</a>`).join("") || '<span class="meta">Brak źródeł</span>'}</div>
+      ${it.imageVerdicts.filter((v) => v.matchesProduct !== true).map((v) => `<p class="meta">Zdjęcie ${esc(v.imageId)}: ${esc(v.note || String(v.matchesProduct))}</p>`).join("")}
+    </section>
+    <section class="panel issues">
+      <div><h3>Haiku ${pill(counts(it.models.haiku))} <span class="meta">${esc((counts(it.models.haiku) || {}).verdict || "")} ${vg("haiku")}</span></h3>${issueList("haiku")}</div>
+      <div><h3>Sonnet ${pill(counts(it.models.sonnet))} <span class="meta">${esc((counts(it.models.sonnet) || {}).verdict || "")} ${vg("sonnet")}</span></h3>${issueList("sonnet")}</div>
+    </section>
+    <section class="panel">
+      <div class="tabs" role="group" aria-label="Kolumna">${head.map((h) => `<button type="button" data-col-btn="${h}" aria-pressed="${h === active}">${label[h]}</button>`).join("")}</div>
+      <div class="grid">
+        <div class="colhead"></div>${head.map((h) => `<div class="colhead" data-col="${h}">${label[h]}</div>`).join("")}
+        ${FIELDS.map(([f, name]) => `<div class="field">${name}</div>${head.map((h) => `<div data-col="${h}" class="${bad[h] && bad[h].has(f) ? "flagged" : ""}">${cols[h] ? show(cols[h][f], f) : '<span class="empty">brak wyniku</span>'}</div>`).join("")}`).join("")}
+      </div>
+    </section>`;
+  applyCol();
+}
+function applyCol() {
+  const narrow = matchMedia("(max-width: 900px)").matches;
+  document.querySelectorAll("[data-col]").forEach((el) => el.classList.toggle("hide-col", narrow && el.dataset.col !== active));
+  document.querySelectorAll("[data-col-btn]").forEach((b) => b.setAttribute("aria-pressed", String(b.dataset.colBtn === active)));
+}
+document.getElementById("list").addEventListener("click", (e) => { const b = e.target.closest("button[data-i]"); if (!b) return; current = +b.dataset.i; renderList(); renderItem(); });
+document.getElementById("main").addEventListener("click", (e) => { const b = e.target.closest("[data-col-btn]"); if (b) { active = b.dataset.colBtn; applyCol(); } });
+matchMedia("(max-width: 900px)").addEventListener("change", applyCol);
+renderList(); renderItem();
+</script>

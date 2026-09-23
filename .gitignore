@@ -66,3 +66,6 @@ public/supplier-images/
 scripts/_tmp-*
 ui-audit/
 MISSING_DESCRIPTIONS.md
+
+# Catalog content pass work files (see docs/catalog-content-pass-plan.md)
+data/content-pass/
