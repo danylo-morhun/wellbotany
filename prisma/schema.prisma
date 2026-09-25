@@ -104,7 +104,14 @@ model Category {
   // H1 + meta title base when it differs from the menu label
   // ("Na stawy i kości" → "Suplementy na stawy i kości")
   headingPl     String?
+  // Intro under the H1
   descriptionPl String?
+  // SEO: meta overrides, a buying guide under the product grid (HTML, same
+  // allow-list as product descriptions) and FAQ rows [{ q, a }]
+  metaTitlePl   String?
+  metaDescPl    String?
+  contentPl     String?           @db.Text
+  faqPl         Json?
   image         String?
   icon          String?
   group         CategoryGroup     @default(TYPE)
