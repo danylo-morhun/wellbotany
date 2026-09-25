@@ -15,8 +15,14 @@ const cookieTypes = [
   },
   {
     name: "Funkcjonalne",
-    purpose: "Zapamiętywanie preferencji, np. języka.",
+    purpose: "Zapamiętywanie preferencji, np. motywu i Twojej decyzji w sprawie cookies.",
     duration: "Do 12 miesięcy",
+  },
+  {
+    name: "Analityczne (tylko za zgodą)",
+    purpose:
+      "Google Analytics 4 (Google Ireland Ltd.): statystyki odwiedzin i zakupów, pliki _ga i _ga_*. Bez zgody nie są zapisywane.",
+    duration: "Do 2 lat",
   },
 ];
 
@@ -30,8 +36,9 @@ export default function CookiesPage() {
           <h2 className="mb-3 text-xl">Czym są pliki cookies</h2>
           <p className="text-muted-foreground">
             Pliki cookies to niewielkie pliki tekstowe zapisywane na Twoim urządzeniu podczas
-            korzystania ze sklepu. Używamy ich wyłącznie do zapewnienia prawidłowego działania
-            sklepu — przede wszystkim do utrzymania koszyka i sesji logowania.
+            korzystania ze sklepu. Niezbędne cookies utrzymują koszyk i sesję logowania. Cookies
+            analityczne zapisujemy wyłącznie po wyrażeniu zgody w banerze — zgodę możesz w każdej
+            chwili zmienić lub wycofać przyciskiem „Ustawienia cookies” w stopce strony.
           </p>
         </section>
 

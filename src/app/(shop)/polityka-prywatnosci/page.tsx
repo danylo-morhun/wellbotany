@@ -42,6 +42,14 @@ const purposes = [
     consequence: "nie będziemy mieli możliwości udzielenia odpowiedzi na Twoje zapytanie",
   },
   {
+    title: "Statystyki korzystania ze Sklepu",
+    goal: "analiza ruchu i zakupów w Sklepie za pomocą Google Analytics (identyfikatory pseudonimowe, bez celów reklamowych)",
+    basis: ["Twoja zgoda wyrażona w banerze cookies (art. 6 ust. 1 lit. a RODO)"],
+    duration:
+      "do wycofania zgody (przycisk „Ustawienia cookies” w stopce), nie dłużej niż 14 miesięcy w Google Analytics.",
+    consequence: "brak — sklep działa w pełni bez tej zgody",
+  },
+  {
     title: "Ustalenie, dochodzenie lub obrona roszczeń",
     goal: "ustalenie, dochodzenie lub obrona roszczeń związanych z zawartą umową lub usługami",
     basis: ["nasz prawnie uzasadniony interes (art. 6 ust. 1 lit. f RODO)"],
@@ -64,6 +72,10 @@ const recipients = [
     action: "dostawa zamówienia",
     recipient:
       "pośrednik w nadawaniu przesyłek oraz przewoźnik wybrany przez Ciebie w koszyku (np. InPost, Orlen Paczka)",
+  },
+  {
+    action: "statystyki korzystania ze Sklepu (tylko po wyrażeniu zgody na cookies analityczne)",
+    recipient: "Google Ireland Ltd. (Google Analytics)",
   },
   {
     action: "prowadzenie księgowości",
