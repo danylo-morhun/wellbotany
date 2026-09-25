@@ -565,12 +565,17 @@ export const getCategoryBySlug = unstable_cache(
         namePl: true,
         headingPl: true,
         descriptionPl: true,
+        metaTitlePl: true,
+        metaDescPl: true,
+        contentPl: true,
+        faqPl: true,
         image: true,
         parentId: true,
         parent: { select: { namePl: true, slug: true } },
+        children: { select: { namePl: true, slug: true }, orderBy: { sortOrder: "asc" } },
       },
     }),
-  ["category-by-slug-v2"],
+  ["category-by-slug-v3"],
   { tags: ["categories"] },
 );
 
