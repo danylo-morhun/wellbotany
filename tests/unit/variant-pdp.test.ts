@@ -53,6 +53,7 @@ describe("buildProductJsonLd", () => {
       brandName: "Kenay",
       variants,
       slug: "magnez",
+      freeShippingThresholdPln: 20000,
     }) as Record<string, any>;
     expect(ld["@type"]).toBe("ProductGroup");
     expect(ld.description).toBe("Opis magnezu");
@@ -64,6 +65,8 @@ describe("buildProductJsonLd", () => {
         price: "49.90",
         availability: "https://schema.org/InStock",
         url: "https://wellbotany.pl/produkt/magnez?wariant=v60",
+        shippingDetails: { shippingRate: { value: "14.99", currency: "PLN" } },
+        hasMerchantReturnPolicy: { merchantReturnDays: 14 },
       },
     });
     // tracked and out of stock
@@ -77,8 +80,11 @@ describe("buildProductJsonLd", () => {
       images,
       variants: [variants[1]],
       slug: "cynk",
+      freeShippingThresholdPln: 1000,
     }) as Record<string, any>;
     expect(ld["@type"]).toBe("Product");
     expect(ld.url).toBe("https://wellbotany.pl/produkt/cynk");
+    // Above the free-shipping threshold
+    expect(ld.offers.shippingDetails.shippingRate.value).toBe("0.00");
   });
 });

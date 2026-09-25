@@ -8,6 +8,7 @@ import { ProductCard } from "@/features/catalog/components/ProductCard";
 import { ProductGallery } from "@/features/catalog/components/ProductGallery";
 import { VariantSelectionProvider } from "@/features/catalog/components/VariantSelection";
 import { readNutritionFacts } from "@/features/products/lib/nutrition-facts";
+import { getShopSettings } from "@/features/settings/lib/shop-settings";
 import { WishlistButton } from "@/features/wishlist/components/WishlistButton";
 import { prisma } from "@/lib/prisma";
 import { sanitizeRichText } from "@/lib/sanitize";
@@ -84,6 +85,7 @@ export default async function ProduktPage({ params }: Props) {
     brandName: product.brand?.name ?? null,
   });
 
+  const { freeShippingThresholdPln } = await getShopSettings();
   const jsonLd = buildProductJsonLd({
     name: product.namePl,
     description: product.descriptionPl,
@@ -91,6 +93,7 @@ export default async function ProduktPage({ params }: Props) {
     brandName: displayBrand?.name,
     variants: product.variants,
     slug: product.slug,
+    freeShippingThresholdPln,
   });
 
   const breadcrumbs = [

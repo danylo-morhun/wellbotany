@@ -3,6 +3,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { getShopSettings } from "@/features/settings/lib/shop-settings";
 import { formatPriceCompact } from "@/lib/format";
+import { buildStationaryStoresJsonLd, toJsonLdScript } from "@/lib/seo";
 
 export const metadata: Metadata = {
   title: "O nas",
@@ -34,6 +35,11 @@ export default async function ONasPage() {
 
   return (
     <div className="container mx-auto max-w-prose px-4 py-12">
+      <script
+        type="application/ld+json"
+        // biome-ignore lint/security/noDangerouslySetInnerHtml: sanitized by toJsonLdScript
+        dangerouslySetInnerHTML={{ __html: toJsonLdScript(buildStationaryStoresJsonLd()) }}
+      />
       <h1 className="mb-8 text-3xl">O nas</h1>
 
       <div className="space-y-10 text-sm leading-relaxed">

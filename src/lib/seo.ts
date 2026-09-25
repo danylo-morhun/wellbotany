@@ -1,3 +1,7 @@
+import { SHIPPING_COSTS } from "@/features/checkout/lib/shipping";
+
+const CHEAPEST_SHIPPING_PLN = Math.min(...Object.values(SHIPPING_COSTS).filter((cost) => cost > 0));
+
 export const DEFAULT_OG_IMAGE = {
   url: "/og-image.jpg",
   width: 1200,
@@ -61,53 +65,115 @@ export function buildListingSeo(path: string, searchParams: SearchParams) {
   };
 }
 
-// Every listing query param except `strona` — see buildCatalogUrl
-const LISTING_FILTER_PARAMS = [
-  "kategoria",
-  "marka",
-  "tagi",
-  "cenaMin",
-  "cenaMax",
-  "szukaj",
-  "promocje",
-  "nowosci",
-  "polecane",
-  "dostepne",
-  "sortuj",
-];
-
-type SearchParams = Record<string, string | string[] | undefined>;
-
-/**
- * Indexing rules for a product listing (katalog, kategoria, marka): each
- * page of the plain listing is its own canonical (pointing page 2+ at page 1
- * tells Google to drop the products only linked from later pages); any
- * filter, sort or search combination is a near-duplicate → noindex, follow.
- */
-export function buildListingSeo(path: string, searchParams: SearchParams) {
-  const page = Math.max(1, Math.floor(Number(searchParams.strona)) || 1);
-  const filtered = LISTING_FILTER_PARAMS.some((key) => searchParams[key] !== undefined);
-  return {
-    page,
-    canonical: page > 1 ? `${path}?strona=${page}` : path,
-    noindex: filtered,
-    titleSuffix: page > 1 ? ` – strona ${page}` : "",
-  };
-}
-
 export type BreadcrumbItem = {
   name: string;
   href: string;
 };
 
+const SHOP_ADDRESS = {
+  "@type": "PostalAddress",
+  streetAddress: "ul. Polna 102",
+  postalCode: "62-800",
+  addressLocality: "Kalisz",
+  addressCountry: "PL",
+};
+
+const STATIONARY_STORES = [
+  { id: "sklep-polna", streetAddress: "ul. Polna 102" },
+  { id: "sklep-mlynarska", streetAddress: "ul. Młynarska 69" },
+];
+
+function organizationId(siteUrl: string) {
+  return `${siteUrl}/#organization`;
+}
+
 export function buildOrganizationJsonLd() {
   const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "https://wellbotany.pl";
   return {
     "@context": "https://schema.org",
-    "@type": "Organization",
+    "@type": "OnlineStore",
+    "@id": organizationId(siteUrl),
     name: "Well Botany",
+    legalName: "Zielarnia Kaliska II Sp. z o.o.",
     url: siteUrl,
     logo: `${siteUrl}/branding/logo-horizontal.svg`,
+    email: "kontakt@wellbotany.pl",
+    telephone: "+48797771703",
+    vatID: "PL6182203142",
+    taxID: "6182203142",
+    address: SHOP_ADDRESS,
+    contactPoint: {
+      "@type": "ContactPoint",
+      contactType: "customer service",
+      email: "kontakt@wellbotany.pl",
+      telephone: "+48797771703",
+      availableLanguage: "pl",
+      hoursAvailable: [
+        {
+          "@type": "OpeningHoursSpecification",
+          dayOfWeek: ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday"],
+          opens: "09:00",
+          closes: "18:00",
+        },
+        {
+          "@type": "OpeningHoursSpecification",
+          dayOfWeek: "Saturday",
+          opens: "09:00",
+          closes: "14:00",
+        },
+      ],
+    },
+    hasMerchantReturnPolicy: buildReturnPolicy(),
+  };
+}
+
+/** The two stationary herbal shops in Kalisz ("Zielarnia Twoje Zdrowie"). */
+export function buildStationaryStoresJsonLd() {
+  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "https://wellbotany.pl";
+  return STATIONARY_STORES.map((store) => ({
+    "@context": "https://schema.org",
+    "@type": "Store",
+    "@id": `${siteUrl}/o-nas#${store.id}`,
+    name: "Zielarnia Twoje Zdrowie",
+    url: `${siteUrl}/o-nas`,
+    image: `${siteUrl}/og-image.jpg`,
+    address: { ...SHOP_ADDRESS, streetAddress: store.streetAddress },
+    parentOrganization: { "@id": organizationId(siteUrl) },
+  }));
+}
+
+/** 14-day withdrawal right (ustawa o prawach konsumenta), return by mail at the buyer's cost. */
+function buildReturnPolicy() {
+  return {
+    "@type": "MerchantReturnPolicy",
+    applicableCountry: "PL",
+    returnPolicyCountry: "PL",
+    returnPolicyCategory: "https://schema.org/MerchantReturnFiniteReturnWindow",
+    merchantReturnDays: 14,
+    returnMethod: "https://schema.org/ReturnByMail",
+    returnFees: "https://schema.org/ReturnShippingFees",
+  };
+}
+
+/**
+ * Cheapest home-delivery option (Orlen Paczka), free from the shop's free
+ * shipping threshold; ships within 2 business days, 1–2 days in transit.
+ */
+function buildShippingDetails(pricePln: number, freeShippingThresholdPln: number | null) {
+  const free = freeShippingThresholdPln !== null && pricePln >= freeShippingThresholdPln;
+  return {
+    "@type": "OfferShippingDetails",
+    shippingRate: {
+      "@type": "MonetaryAmount",
+      value: free ? "0.00" : (CHEAPEST_SHIPPING_PLN / 100).toFixed(2),
+      currency: "PLN",
+    },
+    shippingDestination: { "@type": "DefinedRegion", addressCountry: "PL" },
+    deliveryTime: {
+      "@type": "ShippingDeliveryTime",
+      handlingTime: { "@type": "QuantitativeValue", minValue: 0, maxValue: 2, unitCode: "DAY" },
+      transitTime: { "@type": "QuantitativeValue", minValue: 1, maxValue: 2, unitCode: "DAY" },
+    },
   };
 }
 
@@ -142,6 +208,7 @@ export function buildFaqJsonLd(items: Array<{ q: string; a: string }>) {
 }
 
 export function buildBreadcrumbJsonLd(items: BreadcrumbItem[]) {
+  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "https://wellbotany.pl";
   return {
     "@context": "https://schema.org",
     "@type": "BreadcrumbList",
@@ -149,7 +216,7 @@ export function buildBreadcrumbJsonLd(items: BreadcrumbItem[]) {
       "@type": "ListItem",
       position: index + 1,
       name: item.name,
-      item: item.href,
+      item: new URL(item.href, siteUrl).toString(),
     })),
   };
 }
@@ -185,6 +252,7 @@ export function buildProductJsonLd(product: {
   brandName?: string | null;
   variants: JsonLdVariant[];
   slug: string;
+  freeShippingThresholdPln: number | null;
 }) {
   if (product.variants.length === 0) return null;
   const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "https://wellbotany.pl";
@@ -222,6 +290,8 @@ export function buildProductJsonLd(product: {
           !v.trackStock || v.stock > 0
             ? "https://schema.org/InStock"
             : "https://schema.org/OutOfStock",
+        shippingDetails: buildShippingDetails(v.pricePln, product.freeShippingThresholdPln),
+        hasMerchantReturnPolicy: buildReturnPolicy(),
       },
     };
   };
