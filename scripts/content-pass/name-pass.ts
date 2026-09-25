@@ -98,7 +98,7 @@ Format: "{termin, którego szuka klient} {forma składnika} {dawka} – {ilość
 "{krótka nazwa z dawką} {Marka}", maks. 45 znaków. Bez "Well Botany".
 
 # metaDescPl
-120–155 znaków, rzeczowo, po polsku: co to jest, kluczowy składnik i dawka, postać/opakowanie, marka. ZAKAZ jakichkolwiek obietnic zdrowotnych i czasowników typu wspiera, wspomaga, poprawia, pomaga, chroni, wzmacnia, działa, przyczynia się. Zakończ: "Wysyłka w 24–48 h."
+100–135 znaków, rzeczowo, po polsku: co to jest, kluczowy składnik i dawka, postać/opakowanie, marka. ZAKAZ jakichkolwiek obietnic zdrowotnych i czasowników typu wspiera, wspomaga, poprawia, pomaga, chroni, wzmacnia, działa, przyczynia się. Bez informacji o wysyłce (sklep dopisuje ją sam)."
 
 # Kategorie
 ${categoryList}

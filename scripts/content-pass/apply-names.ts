@@ -10,6 +10,9 @@ import { connect } from "./db";
 const DIR = path.join(__dirname, "../../data/content-pass/names");
 const apply = process.argv.includes("--apply");
 const APPLICABLE = new Set(["ok", "approved"]);
+// Early runs wrote the shipping note into each description — the shop now
+// appends it from ShopSettings.productMetaSuffixPl, so it's stripped here
+const SHIPPING_NOTE = /\s*Wysyłka w 24[–-]48 h\.?\s*$/;
 
 type Rec = {
   id: string;
@@ -74,7 +77,7 @@ async function main() {
         data: {
           namePl: r.after.namePl.trim(),
           metaTitlePl: r.after.metaTitlePl.trim(),
-          metaDescPl: r.after.metaDescPl.trim(),
+          metaDescPl: r.after.metaDescPl.replace(SHIPPING_NOTE, "").trim(),
           categoryId: primaryId,
         },
       }),

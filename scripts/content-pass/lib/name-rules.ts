@@ -368,7 +368,9 @@ export function checkNameOut(
   if (ctx.brandName && !containsWord(title, ctx.brandName)) add("metaTitlePl", "no-brand", title);
   const desc = out.metaDescPl.trim();
   // Google shows ~155 chars; a short but factual one beats a padded one
-  if (desc.length < 80 || desc.length > 165) add("metaDescPl", "length", String(desc.length));
+  // The shop appends a short suffix (ShopSettings.productMetaSuffixPl) — the
+  // product part stays under ~140 so the whole fits Google's ~160
+  if (desc.length < 70 || desc.length > 140) add("metaDescPl", "length", String(desc.length));
   const lowerDesc = desc.toLowerCase();
   for (const w of CLAIM_WORDS) if (containsWord(lowerDesc, w)) add("metaDescPl", "claim", w);
 
