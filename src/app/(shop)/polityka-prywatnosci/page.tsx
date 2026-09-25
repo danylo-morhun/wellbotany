@@ -60,7 +60,11 @@ const recipients = [
     action: "złożenie zamówienia w Sklepie",
     recipient: "operator płatności Przelewy24 (PayPro S.A.)",
   },
-  { action: "dostawa zamówienia", recipient: "InPost, Orlen Paczka, DHL, DPD" },
+  {
+    action: "dostawa zamówienia",
+    recipient:
+      "pośrednik w nadawaniu przesyłek oraz przewoźnik wybrany przez Ciebie w koszyku (np. InPost, Orlen Paczka)",
+  },
   {
     action: "prowadzenie księgowości",
     recipient: "biuro rachunkowe, dostawca oprogramowania księgowego",
