@@ -2,9 +2,11 @@
 
 import { Prisma } from "@prisma/client";
 import { revalidatePath, revalidateTag } from "next/cache";
+import { after } from "next/server";
 import { rankBySearchRelevance } from "@/features/catalog/lib/search-relevance";
 import { ActionError } from "@/lib/action-error";
 import { syncProductToBaselinker, syncStockToBaselinker } from "@/lib/baselinker/inventory";
+import { pushOffersToMerchant, syncProductsToMerchant } from "@/lib/merchant";
 import { prisma } from "@/lib/prisma";
 import { adminActionClient } from "@/lib/safe-action";
 import { categoryLinkIds } from "./lib/category-links";
@@ -278,6 +280,7 @@ export const saveProduct = adminActionClient
     revalidatePath("/produkt/[slug]", "page");
     revalidateTag("products", "max");
     if (savedId) void syncProductToBaselinker(savedId).catch(console.error);
+    if (savedId) after(() => syncProductsToMerchant([savedId as string]).catch(console.error));
     return { success: true, id: savedId };
   });
 
@@ -290,7 +293,17 @@ export const deleteProduct = adminActionClient
     if (hasOrders) {
       throw new ActionError("Nie można usunąć produktu z przypisanymi zamówieniami");
     }
+    const variants = await prisma.productVariant.findMany({
+      where: { productId: id },
+      select: { id: true, pricePln: true },
+    });
     await prisma.product.delete({ where: { id } });
+    // Stays in Merchant Center until the next feed fetch — not buyable meanwhile
+    after(() =>
+      pushOffersToMerchant(
+        variants.map((v) => ({ variantId: v.id, pricePln: v.pricePln, inStock: false })),
+      ).catch(console.error),
+    );
     revalidatePath("/admin/produkty");
     revalidatePath("/katalog", "layout");
     revalidatePath("/produkt/[slug]", "page");
@@ -332,6 +345,7 @@ export const saveVariant = adminActionClient
     revalidatePath("/produkt/[slug]", "page");
     revalidateTag("products", "max");
     void syncProductToBaselinker(input.productId).catch(console.error);
+    after(() => syncProductsToMerchant([input.productId]).catch(console.error));
     return { success: true };
   });
 
@@ -342,7 +356,15 @@ export const deleteVariant = adminActionClient
     if (hasOrders) {
       throw new ActionError("Nie można usunąć wariantu z przypisanymi zamówieniami");
     }
-    await prisma.productVariant.delete({ where: { id } });
+    const deleted = await prisma.productVariant.delete({
+      where: { id },
+      select: { pricePln: true },
+    });
+    after(() =>
+      pushOffersToMerchant([{ variantId: id, pricePln: deleted.pricePln, inStock: false }]).catch(
+        console.error,
+      ),
+    );
     revalidatePath("/admin/produkty");
     revalidatePath("/produkt/[slug]", "page");
     revalidateTag("products", "max");
@@ -362,6 +384,7 @@ export const quickUpdateVariant = adminActionClient
     revalidatePath("/produkt/[slug]", "page");
     revalidateTag("products", "max");
     void syncProductToBaselinker(variant.productId).catch(console.error);
+    after(() => syncProductsToMerchant([variant.productId]).catch(console.error));
     return { success: true };
   });
 
@@ -388,6 +411,13 @@ export const bulkUpdateStock = adminActionClient
       ).catch(console.error);
     }
 
+    const productIds = await prisma.productVariant.findMany({
+      where: { id: { in: variantIds } },
+      select: { productId: true },
+      distinct: ["productId"],
+    });
+    after(() => syncProductsToMerchant(productIds.map((v) => v.productId)).catch(console.error));
+
     revalidatePath("/admin/magazyn");
     return { success: true };
   });
@@ -402,6 +432,7 @@ export const bulkUpdateProductStatus = adminActionClient
       where: { id: { in: ids } },
       data: { status },
     });
+    after(() => syncProductsToMerchant(ids).catch(console.error));
     revalidatePath("/admin/produkty");
     revalidatePath("/katalog", "layout");
     revalidatePath("/produkt/[slug]", "page");
