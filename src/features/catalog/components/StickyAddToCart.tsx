@@ -6,6 +6,7 @@ import { useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
 import { addToCart } from "@/features/cart/actions";
 import { useRefreshStorefront } from "@/features/session/components/StorefrontSessionProvider";
+import { trackItems } from "@/lib/analytics";
 import { formatPrice } from "@/lib/format";
 
 type Props = {
@@ -29,7 +30,8 @@ export function StickyAddToCart({
   const refresh = useRefreshStorefront();
 
   const { execute, isExecuting } = useAction(addToCart, {
-    onSuccess: () => {
+    onSuccess: ({ data, input }) => {
+      if (data?.item) trackItems("add_to_cart", [{ ...data.item, quantity: input.quantity }]);
       void refresh();
       if (successTimer.current) clearTimeout(successTimer.current);
       setSucceeded(true);

@@ -15,14 +15,33 @@ export const addToCart = actionClient
   .schema(addToCartSchema)
   .action(async ({ parsedInput: { variantId, quantity } }) => {
     const cartId = await ensureCartId();
-    await prisma.cartItem.upsert({
+    const { variant } = await prisma.cartItem.upsert({
       where: {
         cartId_variantId_giftSetGroupId: { cartId, variantId, giftSetGroupId: "" },
       },
       update: { quantity: { increment: quantity } },
       create: { cartId, variantId, quantity },
+      select: {
+        variant: {
+          select: {
+            pricePln: true,
+            optionValue: true,
+            product: { select: { id: true, namePl: true, brand: { select: { name: true } } } },
+          },
+        },
+      },
     });
-    return { success: true };
+    // Item data for the GA4 add_to_cart event
+    return {
+      success: true,
+      item: {
+        itemId: variant.product.id,
+        itemName: variant.product.namePl,
+        itemBrand: variant.product.brand?.name ?? null,
+        itemVariant: variant.optionValue,
+        pricePln: variant.pricePln,
+      },
+    };
   });
 
 export const removeFromCart = actionClient

@@ -5,6 +5,7 @@ import { useAction } from "next-safe-action/hooks";
 import { useState } from "react";
 import { toast } from "sonner";
 import { useRefreshStorefront } from "@/features/session/components/StorefrontSessionProvider";
+import { trackItems } from "@/lib/analytics";
 import { addToCart } from "../actions";
 
 type Props = {
@@ -17,7 +18,8 @@ export function QuickAddButton({ variantId, disabled = false }: Props) {
   const [succeeded, setSucceeded] = useState(false);
 
   const { execute, isExecuting } = useAction(addToCart, {
-    onSuccess: () => {
+    onSuccess: ({ data, input }) => {
+      if (data?.item) trackItems("add_to_cart", [{ ...data.item, quantity: input.quantity }]);
       void refresh();
       setSucceeded(true);
       setTimeout(() => setSucceeded(false), 1500);

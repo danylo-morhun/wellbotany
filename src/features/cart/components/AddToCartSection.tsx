@@ -6,6 +6,7 @@ import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { useVariantSelection } from "@/features/catalog/components/VariantSelection";
 import { useRefreshStorefront } from "@/features/session/components/StorefrontSessionProvider";
+import { trackItems } from "@/lib/analytics";
 import { formatPrice } from "@/lib/format";
 import { addToCart } from "../actions";
 
@@ -35,7 +36,8 @@ export function AddToCartSection({ variants }: Props) {
   const [succeeded, setSucceeded] = useState(false);
 
   const { execute, isExecuting } = useAction(addToCart, {
-    onSuccess: () => {
+    onSuccess: ({ data, input }) => {
+      if (data?.item) trackItems("add_to_cart", [{ ...data.item, quantity: input.quantity }]);
       void refresh();
       setSucceeded(true);
       setTimeout(() => setSucceeded(false), 1500);

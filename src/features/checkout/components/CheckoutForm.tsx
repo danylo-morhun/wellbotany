@@ -2,9 +2,10 @@
 
 import { useRouter } from "next/navigation";
 import { useAction } from "next-safe-action/hooks";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import type { CartItem } from "@/features/cart/lib/session";
+import { trackItems } from "@/lib/analytics";
 import type { PickupLocationKey } from "@/lib/pickup-locations";
 import { placeOrder } from "../actions";
 import { requiresAddress, type ShippingMethodKey } from "../lib/shipping";
@@ -102,6 +103,20 @@ export function CheckoutForm({
   initialContact,
 }: Props) {
   const router = useRouter();
+
+  // biome-ignore lint/correctness/useExhaustiveDependencies: once per checkout visit
+  useEffect(() => {
+    trackItems(
+      "begin_checkout",
+      items.map((item) => ({
+        itemId: item.variant.product.id,
+        itemName: item.variant.product.namePl,
+        itemVariant: item.variant.optionValue,
+        pricePln: item.unitPriceOverridePln ?? item.variant.pricePln,
+        quantity: item.quantity,
+      })),
+    );
+  }, []);
   const [step, setStep] = useState(1);
   const [formData, setFormData] = useState<CheckoutFormData>({
     ...INITIAL_DATA,

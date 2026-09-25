@@ -3,6 +3,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { BankTransferDetails } from "@/features/checkout/components/BankTransferDetails";
+import { TrackPurchase } from "@/features/checkout/components/TrackPurchase";
 import { hasOrderAccess } from "@/features/checkout/lib/order-access";
 import { isOfflinePayment, PAYMENT_LABELS } from "@/features/checkout/lib/payment";
 import { shippingLabel } from "@/features/checkout/lib/shipping";
@@ -40,10 +41,13 @@ export default async function PotwierdzeniePage({ params }: Props) {
       shippingPln: true,
       discountPln: true,
       totalPln: true,
+      couponCode: true,
       createdAt: true,
       items: {
         select: {
           id: true,
+          sku: true,
+          variant: { select: { productId: true } },
           productName: true,
           variantOpt: true,
           quantity: true,
@@ -67,6 +71,19 @@ export default async function PotwierdzeniePage({ params }: Props) {
 
   return (
     <div className="mx-auto max-w-2xl px-4 py-8 sm:px-6 lg:px-8">
+      <TrackPurchase
+        orderNumber={order.orderNumber}
+        totalPln={order.totalPln}
+        shippingPln={order.shippingPln}
+        coupon={order.couponCode}
+        items={order.items.map((item) => ({
+          itemId: item.variant?.productId ?? item.sku,
+          itemName: item.productName,
+          itemVariant: item.variantOpt,
+          pricePln: item.unitPricePln,
+          quantity: item.quantity,
+        }))}
+      />
       <div className="mb-8 flex flex-col items-center gap-3 text-center">
         {order.paymentStatus === "CAPTURED" ? (
           <CheckCircle className="size-12 text-green-500" />

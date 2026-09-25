@@ -7,6 +7,7 @@ import { Breadcrumbs } from "@/features/catalog/components/Breadcrumbs";
 import { ProductActionsClient } from "@/features/catalog/components/ProductActionsClient";
 import { ProductCard } from "@/features/catalog/components/ProductCard";
 import { ProductGallery } from "@/features/catalog/components/ProductGallery";
+import { TrackViewItem } from "@/features/catalog/components/TrackViewItem";
 import { VariantSelectionProvider } from "@/features/catalog/components/VariantSelection";
 import { findIngredientSlug, getIngredientLinkIndex } from "@/features/glossary/lib/queries";
 import { readNutritionFacts } from "@/features/products/lib/nutrition-facts";
@@ -161,6 +162,15 @@ export default async function ProduktPage({ params }: Props) {
 
       <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
         <Breadcrumbs items={breadcrumbs} />
+        <TrackViewItem
+          item={{
+            itemId: product.id,
+            itemName: product.namePl,
+            itemBrand: product.brand?.name,
+            pricePln:
+              (product.variants.find((v) => v.isDefault) ?? product.variants[0])?.pricePln ?? 0,
+          }}
+        />
 
         <VariantSelectionProvider variants={product.variants}>
           <div className="mt-8 grid gap-8 lg:grid-cols-2">
