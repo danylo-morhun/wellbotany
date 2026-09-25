@@ -21,6 +21,8 @@ const jakarta = Plus_Jakarta_Sans({
 const geistMono = Geist_Mono({
   variable: "--font-mono",
   subsets: ["latin"],
+  // Admin-only (SKUs, tables) — don't preload it on every storefront page
+  preload: false,
 });
 
 const onest = Onest({
