@@ -13,6 +13,27 @@ const APPLICABLE = new Set(["ok", "approved"]);
 // appends it from ShopSettings.productMetaSuffixPl, so it's stripped here
 const SHIPPING_NOTE = /\s*Wysyłka w 24[–-]48 h\.?\s*$/;
 
+/** Deterministic clean-up the model gets wrong now and then. */
+export function finalName(name: string): string {
+  let out = name
+    .trim()
+    // "60 żel." — gummies abbreviated despite the prompt
+    .replace(/(\d+)\s*żel\.(?=\s|$)/, "$1 żelek")
+    .replace(/(\d)\s*mcg\b/g, "$1 µg")
+    .replace(/\s{2,}/g, " ");
+  // "Podagrycznik – ekstrakt – 90 kaps." → "Podagrycznik – ekstrakt, 90 kaps."
+  const dashes = out.split(" – ");
+  if (dashes.length > 2) out = `${dashes.slice(0, -1).join(" – ")}, ${dashes.at(-1)}`;
+  return out;
+}
+
+/** "For women" + "for men" on one product says nothing — drop both. */
+function finalExtras(slugs: string[]): string[] {
+  return slugs.includes("dla-kobiet") && slugs.includes("dla-mezczyzn")
+    ? slugs.filter((s) => s !== "dla-kobiet" && s !== "dla-mezczyzn")
+    : slugs;
+}
+
 type Rec = {
   id: string;
   status: string;
@@ -45,7 +66,7 @@ async function main() {
   for (const r of recs) {
     if (!APPLICABLE.has(r.status)) continue;
     const primaryId = categories.get(r.after.primaryCategory);
-    const extraIds = r.after.extraCategories
+    const extraIds = finalExtras(r.after.extraCategories)
       .map((s) => categories.get(s))
       .filter((id): id is string => !!id);
     if (!primaryId) {
@@ -71,8 +92,7 @@ async function main() {
       prisma.product.update({
         where: { id: r.id },
         data: {
-          // The model abbreviates gummies ("60 żel.") despite the prompt
-          namePl: r.after.namePl.trim().replace(/(\d+)\s*żel\.(?=\s|$)/, "$1 żelek"),
+          namePl: finalName(r.after.namePl),
           metaTitlePl: r.after.metaTitlePl.trim(),
           metaDescPl: r.after.metaDescPl.replace(SHIPPING_NOTE, "").trim(),
           categoryId: primaryId,
