@@ -39,8 +39,8 @@ export function HeroSection({ product = null }: Props) {
               className="mb-8 max-w-[52ch] animate-fade-up text-lg text-muted-foreground motion-reduce:animate-none"
               style={{ animationDelay: "80ms" }}
             >
-              Od ponad 20 lat prowadzimy zielarnię w Kaliszu – teraz te same sprawdzone suplementy,
-              witaminy i produkty bio kupisz online.
+              Ponad 1300 suplementów diety, witamin, ziół i produktów bio od sprawdzonych
+              producentów – z pełnym składem i dawką przy każdym produkcie.
             </p>
             <div
               className="flex animate-fade-up flex-wrap gap-3 motion-reduce:animate-none"

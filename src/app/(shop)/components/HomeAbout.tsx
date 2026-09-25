@@ -21,16 +21,20 @@ export function HomeAbout() {
     <section aria-labelledby="home-about-heading" className="grid gap-8 md:grid-cols-2">
       <div className="max-w-prose">
         <h2 id="home-about-heading" className="font-heading text-2xl text-foreground md:text-3xl">
-          Sklep zielarski online z Kalisza
+          Sklep z suplementami i ziołami online
         </h2>
         <p className="mt-4 text-muted-foreground">
-          Well Botany to internetowa odsłona zielarni Twoje Zdrowie, którą od ponad 20 lat
-          prowadzimy w Kaliszu. W ofercie mamy ponad 1300 suplementów diety, witamin, minerałów,
-          ekstraktów ziołowych, kosmetyków naturalnych i produktów bio od sprawdzonych producentów.
+          Well Botany to sklep internetowy z suplementami diety, witaminami i ziołami. W ofercie
+          mamy ponad 1300 suplementów, witamin, minerałów, ekstraktów ziołowych, kosmetyków
+          naturalnych i produktów bio od sprawdzonych producentów.
         </p>
         <p className="mt-3 text-muted-foreground">
-          Przy każdym produkcie podajemy pełny skład, dawkę w porcji i sposób użycia. Zamówienia
-          wysyłamy przez InPost, Orlen Paczkę i kuriera, a w Kaliszu możesz odebrać je osobiście.
+          Przy każdym produkcie podajemy pełny skład, dawkę w porcji i sposób użycia, a w{" "}
+          <Link href="/poradnik" className="text-primary hover:underline">
+            poradniku
+          </Link>{" "}
+          wyjaśniamy, jak wybierać suplementy. Zamówienia wysyłamy w ciągu 24–48 h do paczkomatu,
+          punktu odbioru lub kurierem.
         </p>
       </div>
       <div>
