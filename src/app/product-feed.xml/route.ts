@@ -23,6 +23,7 @@ export async function GET() {
   const products = await prisma.product.findMany({
     where: { status: "ACTIVE" },
     select: {
+      id: true,
       slug: true,
       namePl: true,
       shortDescPl: true,
@@ -39,11 +40,11 @@ export async function GET() {
         where: { isActive: true },
         select: {
           id: true,
-          sku: true,
           ean: true,
           optionValue: true,
           pricePln: true,
           stock: true,
+          trackStock: true,
         },
       },
     },
@@ -58,25 +59,33 @@ export async function GET() {
     const link = `${SITE_URL}/produkt/${product.slug}`;
     const displayBrand = product.brand ? resolveDisplayBrand(product.brand) : null;
 
+    const multiVariant = product.variants.length > 1;
     return product.variants.map((variant) => {
-      const title =
+      const name =
         variant.optionValue && !product.namePl.endsWith(variant.optionValue)
           ? `${product.namePl} – ${variant.optionValue}`
           : product.namePl;
+      // Brand first, as Google recommends for Shopping titles (names carry no brand)
+      const title =
+        displayBrand && !name.toLowerCase().includes(displayBrand.name.toLowerCase())
+          ? `${displayBrand.name} ${name}`
+          : name;
+      // Each variant's own URL, so the landing page shows the feed price
+      const variantLink = multiVariant ? `${link}?wariant=${variant.id}` : link;
+      const inStock = !variant.trackStock || variant.stock > 0;
 
       return `    <item>
       <g:id>${escapeXml(variant.id)}</g:id>
       <g:title>${escapeXml(title)}</g:title>
       <g:description>${escapeXml(description)}</g:description>
-      <g:link>${escapeXml(link)}</g:link>
+      <g:link>${escapeXml(variantLink)}</g:link>
       <g:image_link>${escapeXml(image)}</g:image_link>
-      <g:availability>${variant.stock > 0 ? "in_stock" : "out_of_stock"}</g:availability>
+      <g:availability>${inStock ? "in_stock" : "out_of_stock"}</g:availability>
       <g:price>${(variant.pricePln / 100).toFixed(2)} PLN</g:price>
       <g:condition>new</g:condition>
-      <g:item_group_id>${escapeXml(product.slug)}</g:item_group_id>
-      <g:mpn>${escapeXml(variant.sku)}</g:mpn>
-      ${variant.ean ? `<g:gtin>${escapeXml(variant.ean)}</g:gtin>` : ""}
-      ${displayBrand ? `<g:brand>${escapeXml(displayBrand.name)}</g:brand>` : "<g:identifier_exists>no</g:identifier_exists>"}
+      ${multiVariant ? `<g:item_group_id>${escapeXml(product.id)}</g:item_group_id>` : ""}
+      ${variant.ean ? `<g:gtin>${escapeXml(variant.ean)}</g:gtin>` : "<g:identifier_exists>no</g:identifier_exists>"}
+      ${displayBrand ? `<g:brand>${escapeXml(displayBrand.name)}</g:brand>` : ""}
     </item>`;
     });
   });
