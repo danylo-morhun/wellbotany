@@ -26,6 +26,7 @@ export const loginLimiter = makeLimiter("login", 10, "1 m");
 export const registerLimiter = makeLimiter("register", 5, "1 h");
 export const checkoutLimiter = makeLimiter("checkout", 20, "1 m");
 export const couponLimiter = makeLimiter("coupon", 20, "1 m");
+export const reviewLimiter = makeLimiter("review", 10, "1 h");
 
 export async function getClientIp(): Promise<string> {
   const h = await headers();
