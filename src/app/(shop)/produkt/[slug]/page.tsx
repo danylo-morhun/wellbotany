@@ -50,7 +50,12 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     (brandName && !product.namePl.toLowerCase().includes(brandName.toLowerCase())
       ? `${product.namePl} – ${brandName}`
       : product.namePl);
-  const description = product.metaDescPl ?? product.shortDescPl ?? undefined;
+  const { productMetaSuffixPl } = await getShopSettings();
+  const baseDescription = product.metaDescPl ?? product.shortDescPl ?? undefined;
+  const description =
+    baseDescription && productMetaSuffixPl && !baseDescription.includes(productMetaSuffixPl)
+      ? `${baseDescription.trim()} ${productMetaSuffixPl}`
+      : baseDescription;
   const mainImage = (product.images.find((img) => img.isMain) ?? product.images[0])?.url;
 
   return {
