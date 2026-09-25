@@ -21,6 +21,9 @@ async function chatJsonOnce<T>(opts: {
   user: string;
   schema: object;
   images?: string[]; // base64, no data: prefix
+  // Reasoning before answering: slower, but noticeably better at picking one
+  // option out of a long list (category classification)
+  think?: boolean;
 }): Promise<T> {
   const res = await fetch(`${OLLAMA_URL}/api/chat`, {
     method: "POST",
@@ -28,15 +31,15 @@ async function chatJsonOnce<T>(opts: {
     body: JSON.stringify({
       model: opts.model,
       stream: false,
-      // Thinking would put the JSON in a separate field and slow things down
-      think: false,
+      // Thinking goes to a separate field, the JSON answer stays in content
+      think: opts.think ?? false,
       format: opts.schema,
       // Fixed per model: a different num_ctx makes Ollama reload the model
       // num_predict caps runaway output (a model looping on a label)
       options: {
         temperature: 0,
         num_ctx: opts.images ? 8192 : 32768,
-        num_predict: opts.images ? 300 : 6000,
+        num_predict: opts.images ? 300 : opts.think ? 12000 : 6000,
       },
       messages: [
         { role: "system", content: opts.system },
