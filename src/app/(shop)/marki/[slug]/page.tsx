@@ -7,6 +7,7 @@ import { CategoryProductResults } from "@/features/catalog/components/CategoryPr
 import { FilterSidebarData } from "@/features/catalog/components/FilterSidebarData";
 import { ProductGridSkeleton } from "@/features/catalog/components/ProductGridSkeleton";
 import { prisma } from "@/lib/prisma";
+import { buildListingSeo } from "@/lib/seo";
 import { getBrandBySlug } from "../../../../features/catalog/actions";
 
 type Props = {
@@ -19,15 +20,19 @@ export async function generateStaticParams() {
   return brands.map((b) => ({ slug: b.slug }));
 }
 
-export async function generateMetadata({ params }: Props): Promise<Metadata> {
+export async function generateMetadata({ params, searchParams }: Props): Promise<Metadata> {
   const { slug } = await params;
   const brand = await getBrandBySlug(slug);
   if (!brand) return {};
+  const seo = buildListingSeo(`/marki/${brand.slug}`, await searchParams);
 
   return {
-    title: brand.name,
-    description: brand.description ?? `Produkty marki ${brand.name}`,
-    alternates: { canonical: `/marki/${brand.slug}` },
+    title: `${brand.name} – suplementy i produkty marki${seo.titleSuffix}`,
+    description:
+      brand.description ??
+      `${brand.name} w sklepie Well Botany: suplementy diety i produkty marki ${brand.name}. Sprawdź skład, dawkowanie i ceny. Wysyłka InPost, DPD i DHL.`,
+    alternates: { canonical: seo.canonical },
+    ...(seo.noindex && { robots: { index: false, follow: true } }),
   };
 }
 

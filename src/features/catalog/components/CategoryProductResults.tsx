@@ -1,3 +1,4 @@
+import { pluralizeProducts } from "@/lib/format";
 import { getProducts } from "../actions";
 import { parseCatalogFilters } from "../lib/filters";
 import { Pagination } from "./Pagination";
@@ -24,7 +25,7 @@ export async function CategoryProductResults({ searchParams, extraFilters, baseP
     <>
       <div className="flex items-center justify-between gap-4">
         <p className="text-sm text-muted-foreground">
-          {total} {total === 1 ? "produkt" : total < 5 ? "produkty" : "produktów"}
+          {total} {pluralizeProducts(total)}
         </p>
         <SortSelect basePath={basePath} />
       </div>

@@ -7,18 +7,24 @@ import { FilterDrawerButtonData } from "@/features/catalog/components/FilterDraw
 import { FilterSidebarData } from "@/features/catalog/components/FilterSidebarData";
 import { ProductGridSkeleton } from "@/features/catalog/components/ProductGridSkeleton";
 import { SearchInput } from "@/features/catalog/components/SearchInput";
+import { buildListingSeo } from "@/lib/seo";
 import { getBrands, getCategories, getTags } from "../../../features/catalog/actions";
-
-export const metadata: Metadata = {
-  title: "Katalog produktów",
-  description:
-    "Przeglądaj nasz szeroki wybór suplementów diety, witamin i produktów bio. Filtruj według kategorii, marki i cech.",
-  alternates: { canonical: "/katalog" },
-};
 
 type Props = {
   searchParams: Promise<Record<string, string | string[] | undefined>>;
 };
+
+export async function generateMetadata({ searchParams }: Props): Promise<Metadata> {
+  const seo = buildListingSeo("/katalog", await searchParams);
+  return {
+    title: `Katalog produktów${seo.titleSuffix}`,
+    description:
+      "Przeglądaj nasz szeroki wybór suplementów diety, witamin i produktów bio. Filtruj według kategorii, marki i cech.",
+    alternates: { canonical: seo.canonical },
+    // Filtered views and internal search results are near-duplicates
+    ...(seo.noindex && { robots: { index: false, follow: true } }),
+  };
+}
 
 export default async function KatalogPage({ searchParams }: Props) {
   const [categories, brands, tags] = await Promise.all([getCategories(), getBrands(), getTags()]);

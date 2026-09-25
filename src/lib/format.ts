@@ -21,3 +21,12 @@ export function formatPriceCompact(grosz: number): string {
 export function formatPriceRaw(grosz: number): string {
   return (grosz / 100).toFixed(2);
 }
+
+/** Polish plural of "produkt": 1 produkt, 2–4 / 22–24 produkty, 5–21 / 25+ produktów. */
+export function pluralizeProducts(count: number): string {
+  if (count === 1) return "produkt";
+  const lastDigit = count % 10;
+  const lastTwo = count % 100;
+  if (lastDigit >= 2 && lastDigit <= 4 && (lastTwo < 12 || lastTwo > 14)) return "produkty";
+  return "produktów";
+}
