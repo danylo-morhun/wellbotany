@@ -1,6 +1,7 @@
 import { Clock, Mail } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
+import { CookieSettingsButton } from "@/components/CookieSettingsButton";
 
 const footerLinks = {
   sklep: [
@@ -75,6 +76,11 @@ export function Footer() {
                     </Link>
                   </li>
                 ))}
+                {title === "Firma" && (
+                  <li>
+                    <CookieSettingsButton className="text-sm text-band-foreground/75 transition-colors hover:text-band-foreground" />
+                  </li>
+                )}
               </ul>
             </div>
           ))}
