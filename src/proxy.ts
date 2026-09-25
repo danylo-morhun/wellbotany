@@ -40,6 +40,10 @@ const IMG_SRC_HOSTS = [
 // data from api.furgonetka.pl, and runs maplibre's worker from a blob: URL.
 // Scripts need no host entries — they're injected by our nonce'd bundle, which
 // 'strict-dynamic' trusts.
+// Google Analytics 4 — loaded only after cookie consent (GoogleAnalytics.tsx)
+const GA_CONNECT =
+  "https://*.google-analytics.com https://*.analytics.google.com https://www.googletagmanager.com";
+
 const POINT_MAP_CSP = {
   img: "https://furgonetka.pl https://c.furgonetka.pl",
   style: "https://unpkg.com https://cdn.jsdelivr.net https://fonts.googleapis.com",
@@ -60,7 +64,7 @@ function buildStrictCsp(nonce: string, withPointMap: boolean): string {
     // here is a deliberate, lower-severity tradeoff.
     `style-src 'self' 'unsafe-inline'${map(POINT_MAP_CSP.style)}`,
     `font-src 'self'${map(POINT_MAP_CSP.font)}`,
-    `connect-src 'self' https://api.cloudinary.com https://res.cloudinary.com https://*.ingest.de.sentry.io https://*.ingest.sentry.io${map(POINT_MAP_CSP.connect)}`,
+    `connect-src 'self' https://api.cloudinary.com https://res.cloudinary.com https://*.ingest.de.sentry.io https://*.ingest.sentry.io ${GA_CONNECT}${map(POINT_MAP_CSP.connect)}`,
     ...(withPointMap ? ["worker-src 'self' blob:"] : []),
     "object-src 'none'",
     "base-uri 'self'",
@@ -79,12 +83,12 @@ function buildRelaxedCsp(): string {
   return [
     "default-src 'self'",
     `img-src 'self' data: blob: ${IMG_SRC_HOSTS}`,
-    "script-src 'self' 'unsafe-inline'",
+    "script-src 'self' 'unsafe-inline' https://www.googletagmanager.com",
     "style-src 'self' 'unsafe-inline'",
     "font-src 'self'",
     // Cloudinary too: a client-side nav from the storefront into /admin keeps
     // this document's CSP, so the admin image upload runs under it.
-    "connect-src 'self' https://api.cloudinary.com https://res.cloudinary.com https://*.ingest.de.sentry.io https://*.ingest.sentry.io",
+    `connect-src 'self' https://api.cloudinary.com https://res.cloudinary.com https://*.ingest.de.sentry.io https://*.ingest.sentry.io ${GA_CONNECT}`,
     "object-src 'none'",
     "base-uri 'self'",
     "form-action 'self'",
