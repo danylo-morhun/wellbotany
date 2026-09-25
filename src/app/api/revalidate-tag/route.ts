@@ -1,12 +1,21 @@
 import { revalidateTag } from "next/cache";
 import { type NextRequest, NextResponse } from "next/server";
+import { GLOSSARY_TAG } from "@/features/glossary/lib/queries";
 import { SHOP_SETTINGS_TAG } from "@/features/settings/lib/shop-settings";
 import { auth } from "@/lib/auth";
 import { safeCompare } from "@/lib/timing-safe-equal";
 
 // Every catalog cache tag — used after bulk DB changes made outside the admin
 // (imports, content scripts), which don't revalidate on their own
-const TAGS = ["products", "categories", "brands", "tags", "redirects", SHOP_SETTINGS_TAG];
+const TAGS = [
+  "products",
+  "categories",
+  "brands",
+  "tags",
+  "redirects",
+  SHOP_SETTINGS_TAG,
+  GLOSSARY_TAG,
+];
 
 // An open endpoint would let anyone force every cached page to rebuild.
 // Accepted: the cron secret, a dedicated REVALIDATE_SECRET (scripts), or a

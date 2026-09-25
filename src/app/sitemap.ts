@@ -27,7 +27,14 @@ export const revalidate = 3600;
 
 // One file per page type so Search Console reports indexing per type;
 // served at /sitemap/<id>.xml, listed by the index in sitemap_index.xml/route.ts
-export const SITEMAP_IDS = ["static", "products", "categories", "brands", "gift-sets"] as const;
+export const SITEMAP_IDS = [
+  "static",
+  "products",
+  "categories",
+  "brands",
+  "gift-sets",
+  "ingredients",
+] as const;
 type SitemapId = (typeof SITEMAP_IDS)[number];
 
 export async function generateSitemaps() {
@@ -94,6 +101,20 @@ export default async function sitemap(props: {
         url: `${SITE_URL}/zestawy-prezentowe/${g.slug}`,
         lastModified: g.updatedAt,
       }));
+    }
+
+    case "ingredients": {
+      const ingredients = await prisma.ingredient.findMany({
+        where: { isPublished: true },
+        select: { slug: true, updatedAt: true },
+      });
+      return [
+        { url: `${SITE_URL}/skladniki` },
+        ...ingredients.map((i) => ({
+          url: `${SITE_URL}/skladniki/${i.slug}`,
+          lastModified: i.updatedAt,
+        })),
+      ];
     }
 
     default:
