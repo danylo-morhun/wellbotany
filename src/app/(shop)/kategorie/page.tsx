@@ -18,7 +18,7 @@ export default async function KategoriePage() {
     .sort((a, b) => a.sortOrder - b.sortOrder || a.namePl.localeCompare(b.namePl, "pl"));
 
   return (
-    <main className="container mx-auto max-w-6xl px-4 py-12">
+    <div className="container mx-auto max-w-6xl px-4 py-12">
       <div className="mb-10">
         <h1 className="text-4xl font-bold tracking-tight">Kategorie</h1>
         <p className="mt-2 text-muted-foreground">Znajdź produkty dopasowane do Twoich potrzeb</p>
@@ -105,6 +105,6 @@ export default async function KategoriePage() {
           })}
         </div>
       )}
-    </main>
+    </div>
   );
 }

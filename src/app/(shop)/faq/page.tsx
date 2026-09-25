@@ -44,7 +44,7 @@ export default function FaqPage() {
   const jsonLd = buildFaqJsonLd(faqs.map((faq) => ({ q: faq.q, a: faq.a })));
 
   return (
-    <main className="container mx-auto max-w-prose px-4 py-12">
+    <div className="container mx-auto max-w-prose px-4 py-12">
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: toJsonLdScript(jsonLd) }}
@@ -80,6 +80,6 @@ export default function FaqPage() {
           Napisz do nas
         </a>
       </div>
-    </main>
+    </div>
   );
 }

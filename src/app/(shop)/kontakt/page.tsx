@@ -10,7 +10,7 @@ export const metadata: Metadata = {
 
 export default function KontaktPage() {
   return (
-    <main className="container mx-auto max-w-3xl px-4 py-12">
+    <div className="container mx-auto max-w-3xl px-4 py-12">
       <h1 className="mb-8 text-3xl">Kontakt</h1>
 
       <div className="space-y-8">
@@ -82,6 +82,6 @@ export default function KontaktPage() {
           <ContactForm />
         </section>
       </div>
-    </main>
+    </div>
   );
 }

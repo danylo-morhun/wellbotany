@@ -26,7 +26,7 @@ export default function KontoLayout({ children }: { children: React.ReactNode })
             </nav>
           </div>
         </aside>
-        <main className="min-w-0 flex-1">{children}</main>
+        <div className="min-w-0 flex-1">{children}</div>
       </div>
     </div>
   );

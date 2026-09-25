@@ -73,7 +73,7 @@ const recipients = [
 
 export default function PolitykaPrywatnosciPage() {
   return (
-    <main className="container mx-auto max-w-3xl px-4 py-12">
+    <div className="container mx-auto max-w-3xl px-4 py-12">
       <h1 className="mb-2 text-3xl">Polityka prywatności</h1>
       <p className="mb-8 text-sm text-muted-foreground">
         Poniżej znajdziesz najważniejsze informacje o zasadach przetwarzania Twoich danych osobowych
@@ -213,6 +213,6 @@ export default function PolitykaPrywatnosciPage() {
           .
         </p>
       </div>
-    </main>
+    </div>
   );
 }

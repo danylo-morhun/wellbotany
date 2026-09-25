@@ -38,7 +38,7 @@ const definitions = [
 
 export default function RegulaminPage() {
   return (
-    <main className="container mx-auto max-w-3xl px-4 py-12">
+    <div className="container mx-auto max-w-3xl px-4 py-12">
       <h1 className="mb-2 text-3xl">Regulamin sklepu internetowego</h1>
       <p className="mb-8 text-sm text-muted-foreground">
         Określa m.in. zasady zawierania umów sprzedaży poprzez Sklep oraz najważniejsze informacje o
@@ -375,6 +375,6 @@ export default function RegulaminPage() {
           </Link>
         </p>
       </div>
-    </main>
+    </div>
   );
 }

@@ -33,7 +33,7 @@ export default async function DostawaPage() {
   );
 
   return (
-    <main className="container mx-auto max-w-prose px-4 py-12">
+    <div className="container mx-auto max-w-prose px-4 py-12">
       <h1 className="mb-8 text-3xl">Dostawa i płatność</h1>
 
       <div className="space-y-10 text-sm leading-relaxed text-foreground">
@@ -164,6 +164,6 @@ export default async function DostawaPage() {
           </ul>
         </section>
       </div>
-    </main>
+    </div>
   );
 }

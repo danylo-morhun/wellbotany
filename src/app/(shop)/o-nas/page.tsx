@@ -33,7 +33,7 @@ export default async function ONasPage() {
   const { freeShippingThresholdPln } = await getShopSettings();
 
   return (
-    <main className="container mx-auto max-w-prose px-4 py-12">
+    <div className="container mx-auto max-w-prose px-4 py-12">
       <h1 className="mb-8 text-3xl">O nas</h1>
 
       <div className="space-y-10 text-sm leading-relaxed">
@@ -108,6 +108,6 @@ export default async function ONasPage() {
           </p>
         </section>
       </div>
-    </main>
+    </div>
   );
 }

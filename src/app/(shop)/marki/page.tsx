@@ -27,7 +27,7 @@ export default async function MarkiPage() {
   }
 
   return (
-    <main className="container mx-auto max-w-3xl px-4 py-12 md:py-16">
+    <div className="container mx-auto max-w-3xl px-4 py-12 md:py-16">
       <div className="mb-10 md:mb-14">
         <h1 className="font-heading text-3xl text-foreground md:text-4xl">Marki</h1>
         <p className="mt-2 text-sm text-muted-foreground">
@@ -53,6 +53,6 @@ export default async function MarkiPage() {
           ))}
         </div>
       )}
-    </main>
+    </div>
   );
 }
