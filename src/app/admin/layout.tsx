@@ -4,14 +4,16 @@ import { SideNav } from "@/components/layout/SideNav";
 import { prisma } from "@/lib/prisma";
 
 export default async function AdminLayout({ children }: { children: React.ReactNode }) {
-  const lowStockCount = await prisma.productVariant.count({
-    where: { stock: { lte: 5, gt: 0 }, trackStock: true },
-  });
+  const [lowStockCount, pendingReviews] = await Promise.all([
+    prisma.productVariant.count({ where: { stock: { lte: 5, gt: 0 }, trackStock: true } }),
+    prisma.review.count({ where: { status: "PENDING" } }),
+  ]);
 
   const navItems = [
     { href: "/admin/zamowienia", label: "Zamówienia", badge: null },
     { href: "/admin/produkty", label: "Produkty", badge: null },
     { href: "/admin/zestawy-prezentowe", label: "Zestawy prezentowe", badge: null },
+    { href: "/admin/opinie", label: "Opinie", badge: pendingReviews > 0 ? pendingReviews : null },
     { href: "/admin/magazyn", label: "Magazyn", badge: lowStockCount > 0 ? lowStockCount : null },
     { href: "/admin/kategorie", label: "Kategorie", badge: null },
     { href: "/admin/marki", label: "Marki", badge: null },

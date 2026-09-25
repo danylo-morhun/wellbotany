@@ -3,6 +3,7 @@ import { PAYMENT_LABELS } from "@/features/checkout/lib/payment";
 import { shippingLabel } from "@/features/checkout/lib/shipping";
 import { MarkPaidButton } from "@/features/orders/components/MarkPaidButton";
 import { StatusForm } from "@/features/orders/components/StatusForm";
+import { RequestReviewButton } from "@/features/reviews/components/RequestReviewButton";
 import { pickupLocation } from "@/lib/pickup-locations";
 import { prisma } from "@/lib/prisma";
 
@@ -223,6 +224,13 @@ export default async function AdminOrderDetailPage({
           currentTrackingNumber={order.trackingNumber}
         />
       </section>
+
+      {(order.status === "SHIPPED" || order.status === "DELIVERED") && (
+        <section className="rounded-2xl bg-card p-5 shadow-card">
+          <h2 className="mb-3 font-semibold">Opinie</h2>
+          <RequestReviewButton orderId={order.id} requestedAt={order.reviewRequestedAt} />
+        </section>
+      )}
     </div>
   );
 }
