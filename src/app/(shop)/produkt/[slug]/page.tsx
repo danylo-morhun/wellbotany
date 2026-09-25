@@ -54,7 +54,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const baseDescription = product.metaDescPl ?? product.shortDescPl ?? undefined;
   const description =
     baseDescription && productMetaSuffixPl && !baseDescription.includes(productMetaSuffixPl)
-      ? `${baseDescription.trim()} ${productMetaSuffixPl}`
+      ? `${baseDescription.trim().replace(/([^.!?…])$/, "$1.")} ${productMetaSuffixPl}`
       : baseDescription;
   const mainImage = (product.images.find((img) => img.isMain) ?? product.images[0])?.url;
 
