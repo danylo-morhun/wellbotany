@@ -33,14 +33,14 @@ export function HeroSection({ product = null }: Props) {
               id="hero-heading"
               className="mb-4 text-balance text-4xl font-extrabold leading-[1.1] tracking-tight text-foreground md:text-5xl"
             >
-              Twoje zdrowie zaczyna się <span className="text-primary">tutaj</span>
+              Suplementy diety, witaminy i <span className="text-primary">zioła</span>
             </h1>
             <p
               className="mb-8 max-w-[52ch] animate-fade-up text-lg text-muted-foreground motion-reduce:animate-none"
               style={{ animationDelay: "80ms" }}
             >
-              Certyfikowane suplementy diety, witaminy i produkty bio. Sprawdzona jakość, uczciwe
-              ceny.
+              Od ponad 20 lat prowadzimy zielarnię w Kaliszu – teraz te same sprawdzone suplementy,
+              witaminy i produkty bio kupisz online.
             </p>
             <div
               className="flex animate-fade-up flex-wrap gap-3 motion-reduce:animate-none"
@@ -54,10 +54,10 @@ export function HeroSection({ product = null }: Props) {
                 <ArrowRight className="ml-1.5 inline size-4 transition-transform duration-200 group-hover:translate-x-0.5 motion-reduce:group-hover:translate-x-0" />
               </Link>
               <Link
-                href="/katalog?kategoria=witaminy"
+                href="/kategoria/witaminy"
                 className="rounded-full bg-card px-7 py-3 text-sm font-semibold text-foreground shadow-card transition-[box-shadow,transform] duration-200 hover:shadow-card-hover active:scale-[0.97] motion-reduce:transition-none motion-reduce:active:scale-100"
               >
-                Witaminy i minerały
+                Witaminy
               </Link>
             </div>
           </div>

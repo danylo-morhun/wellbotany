@@ -3,6 +3,7 @@ import { BestsellerRow } from "@/app/(shop)/components/BestsellerRow";
 import { CategoryGrid } from "@/app/(shop)/components/CategoryGrid";
 import { FadeInView } from "@/app/(shop)/components/FadeInView";
 import { HeroSection } from "@/app/(shop)/components/HeroSection";
+import { HomeAbout } from "@/app/(shop)/components/HomeAbout";
 import { NewsletterSection } from "@/app/(shop)/components/NewsletterSection";
 import { TrustStrip } from "@/app/(shop)/components/TrustStrip";
 import { getHomepageData } from "@/features/catalog/lib/homepage";
@@ -43,6 +44,9 @@ export default async function HomePage() {
             href="/katalog?nowosci=1"
             variant="scroll"
           />
+        </FadeInView>
+        <FadeInView>
+          <HomeAbout />
         </FadeInView>
         <FadeInView>
           <NewsletterSection />
