@@ -2,6 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { buildTrackingUrl } from "@/features/orders/lib/tracking-url";
+import { requestOrderReview } from "@/features/reviews/lib/request";
 import { ActionError } from "@/lib/action-error";
 import { sendPickupReadyEmail, sendTrackingEmail } from "@/lib/email/order-emails";
 import { prisma } from "@/lib/prisma";
@@ -54,6 +55,10 @@ export const updateOrderStatus = adminActionClient
     }
     if (shouldSendPickupEmail) {
       await sendPickupReadyEmail(input.orderId).catch(console.error);
+    }
+    // Delivered (or collected in store) → ask once for a product review
+    if (input.status === "DELIVERED" && existing.status !== "DELIVERED") {
+      await requestOrderReview(input.orderId).catch(console.error);
     }
 
     return { success: true };

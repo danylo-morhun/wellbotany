@@ -152,3 +152,49 @@ export async function sendPickupReadyEmail(orderId: string): Promise<void> {
     html: layout("Gotowe do odbioru", body),
   });
 }
+
+function escapeHtml(value: string): string {
+  return value
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;");
+}
+
+/** "Jak Ci się podobają produkty?" — link to /opinia/[token] (verified-buyer reviews). */
+export async function sendReviewRequestEmail(orderId: string): Promise<void> {
+  const resend = resendClient();
+  if (!resend) return;
+
+  const order = await prisma.order.findUnique({
+    where: { id: orderId },
+    select: {
+      orderNumber: true,
+      customerEmail: true,
+      customerName: true,
+      reviewToken: true,
+      items: { select: { productName: true }, take: 10 },
+    },
+  });
+  if (!order?.reviewToken) return;
+
+  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "https://wellbotany.pl";
+  const link = `${siteUrl}/opinia/${order.reviewToken}`;
+  const products = [...new Set(order.items.map((i) => i.productName))]
+    .map((name) => `<li>${escapeHtml(name)}</li>`)
+    .join("");
+  const body = `
+    <p>Cześć ${escapeHtml(order.customerName)}, dziękujemy za zakupy w Well Botany!</p>
+    <p>Jak sprawdzają się produkty z zamówienia <strong>${escapeHtml(order.orderNumber)}</strong>? Twoja opinia pomoże innym klientom w wyborze.</p>
+    <ul>${products}</ul>
+    <p><a href="${link}" style="display:inline-block;padding:10px 18px;background:#07674A;color:#fff;border-radius:999px;text-decoration:none">Wystaw opinię</a></p>
+    <p style="font-size:12px;color:#767676">Opinie publikujemy po weryfikacji. Link jest ważny przez 120 dni.</p>
+  `;
+
+  await resend.emails.send({
+    from: EMAIL_FROM,
+    to: order.customerEmail,
+    subject: `Jak oceniasz zamówienie ${order.orderNumber}?`,
+    html: layout("Podziel się opinią", body),
+  });
+}
