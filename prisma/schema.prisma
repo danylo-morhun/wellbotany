@@ -45,6 +45,12 @@ enum OrderStatus {
   REFUNDED
 }
 
+enum ReviewStatus {
+  PENDING // awaiting moderation
+  APPROVED
+  REJECTED
+}
+
 enum ShippingMethod {
   INPOST_PACZKOMAT // requires inpostMachineId
   INPOST_KURIER
@@ -193,6 +199,7 @@ model Product {
   categoryId    String?
   category      Category?         @relation(fields: [categoryId], references: [id])
   categoryLinks ProductCategory[]
+  reviews       Review[]
   brandId       String?
   brand         Brand?            @relation(fields: [brandId], references: [id])
 
@@ -629,6 +636,11 @@ model Order {
   customerPhone String?
   customerName  String
 
+  // Review request (post-delivery email) — the token opens /opinia/[token]
+  reviewToken       String?   @unique
+  reviewRequestedAt DateTime?
+  reviews           Review[]
+
   // ── SHIPPING ──
   shippingMethod  ShippingMethod
   shippingCostPln Int // in grosz
@@ -810,4 +822,26 @@ model Ingredient {
   isPublished  Boolean  @default(true)
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
+}
+
+// Product reviews from verified buyers only: written through the link in the
+// post-delivery email (Order.reviewToken), shown after moderation in
+// /admin/opinie. One review per product per order.
+model Review {
+  id         String       @id @default(cuid())
+  productId  String
+  product    Product      @relation(fields: [productId], references: [id], onDelete: Cascade)
+  orderId    String
+  order      Order        @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  // Shown publicly, e.g. "Anna K."
+  authorName String
+  rating     Int // 1–5
+  content    String       @db.Text
+  status     ReviewStatus @default(PENDING)
+  createdAt  DateTime     @default(now())
+  updatedAt  DateTime     @updatedAt
+
+  @@unique([orderId, productId])
+  @@index([productId, status])
+  @@index([status, createdAt])
 }
