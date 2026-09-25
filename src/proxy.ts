@@ -1,4 +1,4 @@
-import { NextResponse } from "next/server";
+import { type NextFetchEvent, type NextRequest, NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { THEME_INIT_SCRIPT_HASH } from "@/lib/theme-script";
 
@@ -92,23 +92,7 @@ function buildRelaxedCsp(): string {
   ].join("; ");
 }
 
-export default auth((req) => {
-  const isLoggedIn = !!req.auth;
-  const isKonto = req.nextUrl.pathname.startsWith("/konto");
-  const isAdmin = req.nextUrl.pathname.startsWith("/admin");
-
-  if (isKonto && !isLoggedIn) {
-    const loginUrl = new URL("/logowanie", req.url);
-    loginUrl.searchParams.set("callbackUrl", req.nextUrl.pathname);
-    return NextResponse.redirect(loginUrl);
-  }
-
-  if (isAdmin && req.auth?.user?.role !== "ADMIN") {
-    const loginUrl = new URL("/logowanie", req.url);
-    loginUrl.searchParams.set("callbackUrl", req.nextUrl.pathname);
-    return NextResponse.redirect(loginUrl);
-  }
-
+function withCsp(req: NextRequest): NextResponse {
   // Dev's Fast Refresh needs eval() and doesn't need CSP enforced locally.
   if (process.env.NODE_ENV !== "production") return NextResponse.next();
 
@@ -128,7 +112,40 @@ export default auth((req) => {
   const response = NextResponse.next({ request: { headers: requestHeaders } });
   response.headers.set("Content-Security-Policy", csp);
   return response;
+}
+
+const guardedProxy = auth((req) => {
+  const isLoggedIn = !!req.auth;
+  const isKonto = req.nextUrl.pathname.startsWith("/konto");
+  const isAdmin = req.nextUrl.pathname.startsWith("/admin");
+
+  if (isKonto && !isLoggedIn) {
+    const loginUrl = new URL("/logowanie", req.url);
+    loginUrl.searchParams.set("callbackUrl", req.nextUrl.pathname);
+    return NextResponse.redirect(loginUrl);
+  }
+
+  if (isAdmin && req.auth?.user?.role !== "ADMIN") {
+    const loginUrl = new URL("/logowanie", req.url);
+    loginUrl.searchParams.set("callbackUrl", req.nextUrl.pathname);
+    return NextResponse.redirect(loginUrl);
+  }
+
+  return withCsp(req);
 });
+
+// The auth wrapper sets Auth.js cookies on every response it handles, which
+// makes CDNs skip caching — so only the guarded sections go through it and
+// public storefront pages stay cacheable.
+export default function proxy(req: NextRequest, event: NextFetchEvent) {
+  const { pathname } = req.nextUrl;
+  if (pathname.startsWith("/konto") || pathname.startsWith("/admin")) {
+    // Auth.js types the 2nd arg for route handlers; here it only forwards it
+    // to the callback above, which doesn't use it.
+    return guardedProxy(req, event as never);
+  }
+  return withCsp(req);
+}
 
 export const config = {
   matcher: ["/((?!_next/static|_next/image|favicon.ico).*)"],
