@@ -8,7 +8,7 @@ import path from "node:path";
 import { connect } from "./db";
 
 type Tree = {
-  categories: { slug: string }[];
+  categories: { slug: string; group: string }[];
   oldSlugRedirect: Record<string, string>;
 };
 
@@ -24,6 +24,10 @@ const CATALOG = "katalog";
 async function main() {
   const prisma = connect();
   const treeSlugs = new Set(tree.categories.map((c) => c.slug));
+  // What a product IS comes from the name pass; old links only carry over
+  // into need/audience categories ("witaminy-i-mineraly" → "witaminy" would
+  // otherwise list every mineral under vitamins)
+  const typeSlugs = new Set(tree.categories.filter((c) => c.group === "TYPE").map((c) => c.slug));
 
   const badTargets = Object.entries(tree.oldSlugRedirect).filter(
     ([, to]) => to !== CATALOG && !treeSlugs.has(to),
@@ -43,7 +47,9 @@ async function main() {
   const old = categories.filter((c) => !treeSlugs.has(c.slug));
 
   const unmapped = old.filter((c) => !tree.oldSlugRedirect[c.slug]);
-  const unmappedWithProducts = unmapped.filter((c) => c._count.productLinks + c._count.products > 0);
+  const unmappedWithProducts = unmapped.filter(
+    (c) => c._count.productLinks + c._count.products > 0,
+  );
   if (unmappedWithProducts.length > 0) {
     console.log("Unmapped categories that still hold products — add them to oldSlugRedirect:");
     for (const c of unmappedWithProducts) console.log(`  ${c.slug} (${c._count.productLinks})`);
@@ -70,10 +76,12 @@ async function main() {
           where: { categoryId: c.id },
           select: { productId: true },
         });
-        await tx.productCategory.createMany({
-          data: links.map((l) => ({ productId: l.productId, categoryId: targetId })),
-          skipDuplicates: true,
-        });
+        if (!typeSlugs.has(targetSlug as string)) {
+          await tx.productCategory.createMany({
+            data: links.map((l) => ({ productId: l.productId, categoryId: targetId })),
+            skipDuplicates: true,
+          });
+        }
         await tx.product.updateMany({
           where: { categoryId: c.id },
           data: { categoryId: targetId },
@@ -120,18 +128,19 @@ async function main() {
 }
 
 /**
- * Tree rule: the primary category (breadcrumbs, canonical, feed) is a TYPE
- * category when the product has one — the most specific (subcategory) first;
- * otherwise any linked tree category. Keeps the primary linked too.
+ * Products left without a primary (theirs was folded into /katalog) get
+ * one from their links: a TYPE subcategory first, then any tree category.
  */
 async function fixPrimaries(prisma: ReturnType<typeof connect>) {
   const products = await prisma.product.findMany({
     select: {
       id: true,
       categoryId: true,
-      category: { select: { group: true } },
+      category: { select: { id: true } },
       categoryLinks: {
-        select: { category: { select: { id: true, group: true, parentId: true, sortOrder: true } } },
+        select: {
+          category: { select: { id: true, group: true, parentId: true, sortOrder: true } },
+        },
       },
     },
   });
@@ -146,7 +155,8 @@ async function fixPrimaries(prisma: ReturnType<typeof connect>) {
       withoutCategory++;
       continue;
     }
-    const keep = p.categoryId && p.category?.group === "TYPE";
+    // A primary set by the name pass (TYPE, or NEED for formulas) stays
+    const keep = !!p.categoryId && !!p.category;
     const primaryId = keep ? p.categoryId : best.id;
     if (primaryId === p.categoryId) continue;
     await prisma.product.update({ where: { id: p.id }, data: { categoryId: primaryId } });
