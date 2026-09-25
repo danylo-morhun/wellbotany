@@ -24,8 +24,10 @@ export function ShopSettingsForm({ settings }: Props) {
     const threshold = Number.parseFloat(
       String(fd.get("freeShippingThreshold") ?? "").replace(",", "."),
     );
+    const metaSuffix = String(fd.get("productMetaSuffix") ?? "").trim();
     execute({
       freeShippingThresholdPln: freeShippingEnabled ? Math.round(threshold * 100) : null,
+      productMetaSuffixPl: metaSuffix || null,
     });
   }
 
@@ -69,6 +71,29 @@ export function ShopSettingsForm({ settings }: Props) {
           </p>
         </div>
       )}
+
+      <h2 className="pt-2 font-semibold">SEO</h2>
+      <div>
+        <label
+          htmlFor="productMetaSuffix"
+          className="mb-1 block text-xs font-medium text-muted-foreground"
+        >
+          Dopisek do opisu produktów w Google
+        </label>
+        <input
+          id="productMetaSuffix"
+          name="productMetaSuffix"
+          type="text"
+          maxLength={40}
+          defaultValue={settings.productMetaSuffixPl ?? ""}
+          placeholder="np. Wysyłka w 24–48 h."
+          className="w-full rounded-lg border border-border px-2 py-1.5 text-sm"
+        />
+        <p className="mt-1 text-xs text-muted-foreground">
+          Dodawany na końcu opisu każdego produktu w wynikach wyszukiwania (meta description). Puste
+          pole — bez dopisku.
+        </p>
+      </div>
 
       <button
         type="submit"
