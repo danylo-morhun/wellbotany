@@ -784,3 +784,30 @@ model ShoperSyncState {
   lastSuccessAt DateTime?
   lastError     String?   @db.Text
 }
+
+// ─── CONTENT ──────────────────────────────────────────────────────────────────
+
+// Ingredient glossary (/skladniki/[slug]): a guide page per ingredient that
+// lists the products containing it — matched by terms in the product name,
+// so new products appear without manual linking.
+model Ingredient {
+  id           String   @id @default(cuid())
+  slug         String   @unique
+  namePl       String
+  // Lower-case fragments matched against product names ("magnez", "cytrynian magnezu")
+  matchTerms   String[]
+  // A product whose name contains one of these is left out even on a match
+  excludeTerms String[] @default([])
+  // One-sentence summary: index page + meta description fallback
+  shortPl      String
+  metaTitlePl  String?
+  metaDescPl   String?
+  // Guide HTML (same allow-list as product descriptions) and FAQ rows [{ q, a }]
+  contentPl    String   @db.Text
+  faqPl        Json?
+  // Category to point readers to ("Zobacz wszystkie: …")
+  categorySlug String?
+  isPublished  Boolean  @default(true)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+}
