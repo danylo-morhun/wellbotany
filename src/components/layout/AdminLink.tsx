@@ -1,9 +1,11 @@
-import Link from "next/link";
-import { auth } from "@/lib/auth";
+"use client";
 
-export async function AdminLink() {
-  const session = await auth();
-  if (session?.user?.role !== "ADMIN") return null;
+import Link from "next/link";
+import { useStorefrontSession } from "@/features/session/components/StorefrontSessionProvider";
+
+export function AdminLink() {
+  const { isAdmin } = useStorefrontSession();
+  if (!isAdmin) return null;
 
   return (
     <Link

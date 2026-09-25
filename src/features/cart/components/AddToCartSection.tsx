@@ -1,11 +1,11 @@
 "use client";
 
 import { Minus, Plus, ShoppingCart, Truck } from "lucide-react";
-import { useRouter } from "next/navigation";
 import { useAction } from "next-safe-action/hooks";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { useVariantSelection } from "@/features/catalog/components/VariantSelection";
+import { useRefreshStorefront } from "@/features/session/components/StorefrontSessionProvider";
 import { formatPrice } from "@/lib/format";
 import { addToCart } from "../actions";
 
@@ -24,7 +24,7 @@ type Props = {
 };
 
 export function AddToCartSection({ variants }: Props) {
-  const router = useRouter();
+  const refresh = useRefreshStorefront();
   const defaultVariant = variants.find((v) => v.isDefault) ?? variants[0];
   const [localId, setLocalId] = useState(defaultVariant?.id ?? "");
   // On the PDP the choice is shared with the gallery (and the URL)
@@ -36,7 +36,7 @@ export function AddToCartSection({ variants }: Props) {
 
   const { execute, isExecuting } = useAction(addToCart, {
     onSuccess: () => {
-      router.refresh();
+      void refresh();
       setSucceeded(true);
       setTimeout(() => setSucceeded(false), 1500);
       toast.success("Dodano do koszyka", {

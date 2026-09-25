@@ -3,10 +3,10 @@
 import { ShoppingCart, Trash2 } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
 import { useAction } from "next-safe-action/hooks";
 import { toast } from "sonner";
 import { addToCart } from "@/features/cart/actions";
+import { useRefreshStorefront } from "@/features/session/components/StorefrontSessionProvider";
 import { formatPrice } from "@/lib/format";
 import { removeFromWishlist } from "../actions";
 import type { WishlistItem } from "../lib/session";
@@ -16,11 +16,11 @@ type Props = {
 };
 
 export function WishlistItemCard({ item }: Props) {
-  const router = useRouter();
+  const refresh = useRefreshStorefront();
 
   const { execute: doRemove, isExecuting: removing } = useAction(removeFromWishlist, {
     onSuccess: () => {
-      router.refresh();
+      void refresh();
       toast("Usunięto z ulubionych");
     },
     onError: () => toast.error("Błąd", { description: "Nie udało się usunąć z ulubionych" }),
@@ -28,7 +28,7 @@ export function WishlistItemCard({ item }: Props) {
 
   const { execute: doAddToCart, isExecuting: adding } = useAction(addToCart, {
     onSuccess: () => {
-      router.refresh();
+      void refresh();
       toast.success("Dodano do koszyka");
     },
     onError: () => toast.error("Błąd", { description: "Nie udało się dodać do koszyka" }),

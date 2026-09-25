@@ -11,15 +11,12 @@ import {
   SheetHeader,
   SheetTitle,
 } from "@/components/ui/sheet";
-import type { WishlistWithItems } from "../lib/session";
+import { useStorefrontSession } from "@/features/session/components/StorefrontSessionProvider";
 import { WishlistItemCard } from "./WishlistItemCard";
 
-type Props = {
-  itemCount: number;
-  items: WishlistWithItems["items"];
-};
-
-export function WishlistIconClient({ itemCount, items }: Props) {
+export function WishlistIconClient() {
+  const { wishlistItems: items } = useStorefrontSession();
+  const itemCount = items.length;
   const [open, setOpen] = useState(false);
 
   return (

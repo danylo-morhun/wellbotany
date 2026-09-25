@@ -1,10 +1,10 @@
 "use client";
 
 import { ShoppingCart } from "lucide-react";
-import { useRouter } from "next/navigation";
 import { useAction } from "next-safe-action/hooks";
 import { useState } from "react";
 import { toast } from "sonner";
+import { useRefreshStorefront } from "@/features/session/components/StorefrontSessionProvider";
 import { addToCart } from "../actions";
 
 type Props = {
@@ -13,12 +13,12 @@ type Props = {
 };
 
 export function QuickAddButton({ variantId, disabled = false }: Props) {
-  const router = useRouter();
+  const refresh = useRefreshStorefront();
   const [succeeded, setSucceeded] = useState(false);
 
   const { execute, isExecuting } = useAction(addToCart, {
     onSuccess: () => {
-      router.refresh();
+      void refresh();
       setSucceeded(true);
       setTimeout(() => setSucceeded(false), 1500);
       toast.success("Dodano do koszyka", {

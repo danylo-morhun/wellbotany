@@ -1,7 +1,6 @@
 import { AlertTriangle, Check, ShieldCheck } from "lucide-react";
 import type { Metadata } from "next";
 import { notFound, permanentRedirect } from "next/navigation";
-import { Suspense } from "react";
 import { AdminEditBar } from "@/features/catalog/components/AdminEditBar";
 import { Breadcrumbs } from "@/features/catalog/components/Breadcrumbs";
 import { ProductActionsClient } from "@/features/catalog/components/ProductActionsClient";
@@ -9,10 +8,7 @@ import { ProductCard } from "@/features/catalog/components/ProductCard";
 import { ProductGallery } from "@/features/catalog/components/ProductGallery";
 import { VariantSelectionProvider } from "@/features/catalog/components/VariantSelection";
 import { readNutritionFacts } from "@/features/products/lib/nutrition-facts";
-import {
-  ProductWishlistButton,
-  ProductWishlistButtonFallback,
-} from "@/features/wishlist/components/ProductWishlistButton";
+import { WishlistButton } from "@/features/wishlist/components/WishlistButton";
 import { prisma } from "@/lib/prisma";
 import { sanitizeRichText } from "@/lib/sanitize";
 import { buildProductJsonLd, DEFAULT_OG_IMAGE, toJsonLdScript } from "@/lib/seo";
@@ -129,9 +125,7 @@ export default async function ProduktPage({ params }: Props) {
 
   return (
     <>
-      <Suspense fallback={null}>
-        <AdminEditBar productId={product.id} />
-      </Suspense>
+      <AdminEditBar productId={product.id} />
 
       {jsonLd && (
         <script
@@ -201,9 +195,7 @@ export default async function ProduktPage({ params }: Props) {
                   <ProductActionsClient variants={product.variants} productName={product.namePl} />
                 </div>
                 <div className="flex items-end pb-0.5">
-                  <Suspense fallback={<ProductWishlistButtonFallback />}>
-                    <ProductWishlistButton productId={product.id} />
-                  </Suspense>
+                  <WishlistButton productId={product.id} />
                 </div>
               </div>
 

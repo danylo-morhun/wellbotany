@@ -5,6 +5,7 @@ import type { RefObject } from "react";
 import { useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
 import { addToCart } from "@/features/cart/actions";
+import { useRefreshStorefront } from "@/features/session/components/StorefrontSessionProvider";
 import { formatPrice } from "@/lib/format";
 
 type Props = {
@@ -25,9 +26,11 @@ export function StickyAddToCart({
   const [visible, setVisible] = useState(false);
   const [succeeded, setSucceeded] = useState(false);
   const successTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const refresh = useRefreshStorefront();
 
   const { execute, isExecuting } = useAction(addToCart, {
     onSuccess: () => {
+      void refresh();
       if (successTimer.current) clearTimeout(successTimer.current);
       setSucceeded(true);
       successTimer.current = setTimeout(() => setSucceeded(false), 1500);

@@ -1,9 +1,9 @@
 "use client";
 
-import { useRouter } from "next/navigation";
 import { useAction } from "next-safe-action/hooks";
 import { useState } from "react";
 import { toast } from "sonner";
+import { useRefreshStorefront } from "@/features/session/components/StorefrontSessionProvider";
 import { addToCart } from "../actions";
 import { groupCartItems } from "../lib/grouping";
 import type { CartItem } from "../lib/session";
@@ -13,11 +13,11 @@ import { GiftSetCartRow } from "./GiftSetCartRow";
 type Props = { items: CartItem[] };
 
 export function CartList({ items: initialItems }: Props) {
-  const router = useRouter();
+  const refresh = useRefreshStorefront();
   const [items, setItems] = useState(initialItems);
 
   const { execute: restoreItem } = useAction(addToCart, {
-    onSuccess: () => router.refresh(),
+    onSuccess: () => void refresh(),
     onError: ({ error }) => toast.error(error?.serverError ?? "Nie udało się przywrócić produktu"),
   });
 

@@ -2,9 +2,9 @@
 
 import { Minus, Plus, Trash2 } from "lucide-react";
 import Image from "next/image";
-import { useRouter } from "next/navigation";
 import { useAction } from "next-safe-action/hooks";
 import { toast } from "sonner";
+import { useRefreshStorefront } from "@/features/session/components/StorefrontSessionProvider";
 import { formatPrice } from "@/lib/format";
 import { removeFromCart, updateQuantity } from "../actions";
 import { effectiveUnitPricePln } from "../lib/pricing";
@@ -16,10 +16,10 @@ type Props = {
 };
 
 export function CartItemRow({ item, onRemove }: Props) {
-  const router = useRouter();
+  const refresh = useRefreshStorefront();
   const { execute: doRemove, isExecuting: removing } = useAction(removeFromCart, {
     onSuccess: () => {
-      router.refresh();
+      void refresh();
       if (!onRemove) toast.success("Usunięto z koszyka");
     },
     onError: () => {
@@ -27,7 +27,7 @@ export function CartItemRow({ item, onRemove }: Props) {
     },
   });
   const { execute: doUpdate, isExecuting: updating } = useAction(updateQuantity, {
-    onSuccess: () => router.refresh(),
+    onSuccess: () => void refresh(),
     onError: () => {
       toast.error("Błąd", { description: "Nie udało się zaktualizować ilości" });
     },

@@ -1,15 +1,17 @@
+"use client";
+
 import { SquarePen } from "lucide-react";
 import Link from "next/link";
-import { auth } from "@/lib/auth";
+import { useStorefrontSession } from "@/features/session/components/StorefrontSessionProvider";
 
 type Props = {
   productId: string;
 };
 
 /** Floating "Edytuj" shortcut shown only to logged-in admins viewing the storefront PDP. */
-export async function AdminEditBar({ productId }: Props) {
-  const session = await auth();
-  if (session?.user?.role !== "ADMIN") return null;
+export function AdminEditBar({ productId }: Props) {
+  const { isAdmin } = useStorefrontSession();
+  if (!isAdmin) return null;
 
   return (
     <Link

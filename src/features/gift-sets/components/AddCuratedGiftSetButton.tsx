@@ -1,21 +1,21 @@
 "use client";
 
 import { Gift } from "lucide-react";
-import { useRouter } from "next/navigation";
 import { useAction } from "next-safe-action/hooks";
 import { useState } from "react";
 import { toast } from "sonner";
+import { useRefreshStorefront } from "@/features/session/components/StorefrontSessionProvider";
 import { addCuratedGiftSetToCart } from "../actions";
 
 type Props = { giftSetId: string; disabled?: boolean };
 
 export function AddCuratedGiftSetButton({ giftSetId, disabled = false }: Props) {
-  const router = useRouter();
+  const refresh = useRefreshStorefront();
   const [succeeded, setSucceeded] = useState(false);
 
   const { execute, isExecuting } = useAction(addCuratedGiftSetToCart, {
     onSuccess: () => {
-      router.refresh();
+      void refresh();
       setSucceeded(true);
       setTimeout(() => setSucceeded(false), 1500);
       toast.success("Zestaw dodany do koszyka", {

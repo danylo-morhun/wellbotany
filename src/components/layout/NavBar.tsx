@@ -1,17 +1,16 @@
-import { ShoppingCart, Truck, User } from "lucide-react";
+import { Truck, User } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
-import { Suspense } from "react";
 import { AdminLink } from "@/components/layout/AdminLink";
 import { MegaMenu } from "@/components/layout/MegaMenu";
 import { MobileMenu } from "@/components/layout/MobileMenu";
 import { ThemeToggle } from "@/components/layout/ThemeToggle";
-import { CartIcon } from "@/features/cart/components/CartIcon";
+import { CartIconClient } from "@/features/cart/components/CartIconClient";
 import { getCategories } from "@/features/catalog/actions";
 import { HeaderSearch } from "@/features/catalog/components/HeaderSearch";
 import { buildCategoryNav } from "@/features/catalog/lib/nav";
 import { getShopSettings } from "@/features/settings/lib/shop-settings";
-import { WishlistIcon, WishlistIconFallback } from "@/features/wishlist/components/WishlistIcon";
+import { WishlistIconClient } from "@/features/wishlist/components/WishlistIconClient";
 import { formatPriceCompact } from "@/lib/format";
 
 const navLinks = [
@@ -89,21 +88,9 @@ export async function NavBar() {
 
           <div className="ml-auto flex shrink-0 items-center gap-0.5 md:ml-0">
             <ThemeToggle />
-            <Suspense fallback={<WishlistIconFallback />}>
-              <WishlistIcon />
-            </Suspense>
-            <Suspense
-              fallback={
-                <span className="rounded-full p-2.5 text-muted-foreground">
-                  <ShoppingCart className="size-5" />
-                </span>
-              }
-            >
-              <CartIcon />
-            </Suspense>
-            <Suspense fallback={null}>
-              <AdminLink />
-            </Suspense>
+            <WishlistIconClient />
+            <CartIconClient />
+            <AdminLink />
             <Link
               href="/konto"
               aria-label="Moje konto"

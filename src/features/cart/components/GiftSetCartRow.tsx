@@ -1,9 +1,9 @@
 "use client";
 
 import { Gift, MessageSquareText, Package, Trash2 } from "lucide-react";
-import { useRouter } from "next/navigation";
 import { useAction } from "next-safe-action/hooks";
 import { toast } from "sonner";
+import { useRefreshStorefront } from "@/features/session/components/StorefrontSessionProvider";
 import { formatPrice } from "@/lib/format";
 import { removeGiftSetFromCart } from "../actions";
 import { effectiveUnitPricePln } from "../lib/pricing";
@@ -26,10 +26,10 @@ export function GiftSetCartRow({
   packagingLabel,
   giftMessage,
 }: Props) {
-  const router = useRouter();
+  const refresh = useRefreshStorefront();
   const { execute: doRemove, isExecuting: removing } = useAction(removeGiftSetFromCart, {
     onSuccess: () => {
-      router.refresh();
+      void refresh();
       toast.success("Zestaw usunięty z koszyka");
     },
     onError: () => {

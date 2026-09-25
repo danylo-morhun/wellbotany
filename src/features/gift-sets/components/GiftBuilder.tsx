@@ -3,10 +3,10 @@
 import type { GiftBuilderSettings } from "@prisma/client";
 import { Check, Gift } from "lucide-react";
 import Image from "next/image";
-import { useRouter } from "next/navigation";
 import { useAction } from "next-safe-action/hooks";
 import { useMemo, useState } from "react";
 import { toast } from "sonner";
+import { useRefreshStorefront } from "@/features/session/components/StorefrontSessionProvider";
 import { formatPrice } from "@/lib/format";
 import { addCustomGiftSetToCart } from "../actions";
 import { allocateGiftBoxPrice, giftBuilderTargetTotalPln } from "../lib/pricing";
@@ -39,14 +39,14 @@ type Props = {
 };
 
 export function GiftBuilder({ settings, pool, packagings }: Props) {
-  const router = useRouter();
+  const refresh = useRefreshStorefront();
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [packagingId, setPackagingId] = useState(packagings[0]?.id ?? "");
   const [giftMessage, setGiftMessage] = useState("");
 
   const { execute, isExecuting } = useAction(addCustomGiftSetToCart, {
     onSuccess: () => {
-      router.refresh();
+      void refresh();
       setSelectedIds([]);
       setGiftMessage("");
       toast.success("Zestaw dodany do koszyka", {

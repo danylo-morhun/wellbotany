@@ -12,19 +12,16 @@ import {
   SheetHeader,
   SheetTitle,
 } from "@/components/ui/sheet";
+import { useStorefrontSession } from "@/features/session/components/StorefrontSessionProvider";
 import { formatPrice } from "@/lib/format";
 import { groupCartItems } from "../lib/grouping";
 import { effectiveUnitPricePln } from "../lib/pricing";
-import type { CartWithItems } from "../lib/session";
 import { CartItemRow } from "./CartItemRow";
 import { GiftSetCartRow } from "./GiftSetCartRow";
 
-type Props = {
-  itemCount: number;
-  items: CartWithItems["items"];
-};
-
-export function CartIconClient({ itemCount, items }: Props) {
+export function CartIconClient() {
+  const { cartItems: items } = useStorefrontSession();
+  const itemCount = items.reduce((sum, item) => sum + item.quantity, 0);
   const [open, setOpen] = useState(false);
 
   useEffect(() => {

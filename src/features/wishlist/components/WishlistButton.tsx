@@ -1,31 +1,37 @@
 "use client";
 
 import { Heart } from "lucide-react";
-import { useRouter } from "next/navigation";
 import { useAction } from "next-safe-action/hooks";
 import { useState } from "react";
 import { toast } from "sonner";
+import {
+  useRefreshStorefront,
+  useStorefrontSession,
+} from "@/features/session/components/StorefrontSessionProvider";
 import { toggleWishlist } from "../actions";
 
 type Props = {
   productId: string;
-  initialInWishlist: boolean;
 };
 
-export function WishlistButton({ productId, initialInWishlist }: Props) {
-  const router = useRouter();
-  const [inWishlist, setInWishlist] = useState(initialInWishlist);
+export function WishlistButton({ productId }: Props) {
+  const refresh = useRefreshStorefront();
+  const { wishlistItems } = useStorefrontSession();
+  // Optimistic value until the refreshed wishlist arrives
+  const [optimistic, setOptimistic] = useState<boolean | null>(null);
+  const inWishlist = optimistic ?? wishlistItems.some((item) => item.productId === productId);
 
   const { execute, isExecuting } = useAction(toggleWishlist, {
-    onSuccess: ({ data }) => {
+    onSuccess: async ({ data }) => {
       if (data) {
         if (data.added) toast.success("Dodano do ulubionych");
         else toast("Usunięto z ulubionych");
       }
-      router.refresh();
+      await refresh();
+      setOptimistic(null);
     },
     onError: () => {
-      setInWishlist((prev) => !prev); // revert optimistic update
+      setOptimistic(null);
       toast.error("Błąd", { description: "Nie udało się zaktualizować ulubionych" });
     },
   });
@@ -35,7 +41,7 @@ export function WishlistButton({ productId, initialInWishlist }: Props) {
       type="button"
       disabled={isExecuting}
       onClick={() => {
-        setInWishlist((prev) => !prev); // optimistic
+        setOptimistic(!inWishlist);
         execute({ productId });
       }}
       aria-label={inWishlist ? "Usuń z ulubionych" : "Dodaj do ulubionych"}
