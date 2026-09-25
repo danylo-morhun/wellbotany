@@ -158,9 +158,9 @@ export default function RegulaminPage() {
             </li>
             <li>Towar dostarczany jest wyłącznie na terytorium Rzeczypospolitej Polskiej.</li>
             <li>
-              Dostawa realizowana jest za pośrednictwem Paczkomatów InPost, kuriera InPost, Orlen
-              Paczki, DPD (kurier i punkty odbioru) oraz DHL (kurier i punkty odbioru). Kupujący
-              może również odebrać zamówienie osobiście w sklepie Sprzedawcy w Kaliszu — szczegóły
+              Dostawa realizowana jest przez przewoźników dostępnych do wyboru w koszyku podczas
+              składania zamówienia. Kupujący może również odebrać zamówienie osobiście w punkcie
+              odbioru Sprzedawcy w Kaliszu. Aktualna lista metod dostawy, koszty i terminy są podane
               na stronie{" "}
               <Link href="/dostawa" className="text-primary underline-offset-4 hover:underline">
                 Dostawa i płatność
