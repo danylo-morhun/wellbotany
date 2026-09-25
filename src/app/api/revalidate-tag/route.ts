@@ -1,5 +1,6 @@
 import { revalidateTag } from "next/cache";
 import { type NextRequest, NextResponse } from "next/server";
+import { POSTS_TAG } from "@/features/blog/lib/queries";
 import { GLOSSARY_TAG } from "@/features/glossary/lib/queries";
 import { SHOP_SETTINGS_TAG } from "@/features/settings/lib/shop-settings";
 import { auth } from "@/lib/auth";
@@ -15,6 +16,7 @@ const TAGS = [
   "redirects",
   SHOP_SETTINGS_TAG,
   GLOSSARY_TAG,
+  POSTS_TAG,
 ];
 
 // An open endpoint would let anyone force every cached page to rebuild.
