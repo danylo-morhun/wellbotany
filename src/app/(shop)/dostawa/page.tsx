@@ -114,8 +114,8 @@ export default async function DostawaPage() {
         <section>
           <h2 className="mb-3 text-xl">Odbiór osobisty w Kaliszu</h2>
           <p className="text-muted-foreground">
-            Zamówienie możesz odebrać bezpłatnie w jednym z naszych sklepów stacjonarnych. Gdy
-            będzie gotowe, wyślemy Ci e-mail. Zamówienie czeka na odbiór {PICKUP_HOLD_DAYS} dni.
+            Zamówienie możesz odebrać bezpłatnie w jednym z punktów odbioru. Gdy będzie gotowe,
+            wyślemy Ci e-mail. Zamówienie czeka na odbiór {PICKUP_HOLD_DAYS} dni.
           </p>
           <ul className="mt-3 space-y-3">
             {Object.entries(PICKUP_LOCATIONS).map(([key, location]) => (
