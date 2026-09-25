@@ -6,6 +6,7 @@ import { useState } from "react";
 import { toast } from "sonner";
 import { ConfirmDialog } from "@/components/ConfirmDialog";
 import { getCategoryIcon } from "@/lib/category-icons";
+import { faqToText, textToFaq } from "@/lib/faq-text";
 import { slugify } from "@/lib/slugify";
 import { deleteCategory, saveCategory } from "../actions";
 import { CategoryIconPicker } from "./CategoryIconPicker";
@@ -22,22 +23,6 @@ const GROUP_OPTIONS: { value: CategoryGroup; label: string }[] = [
 ];
 
 const fieldClass = "rounded-lg border border-border px-2 py-1 text-sm";
-
-type FaqRow = { q: string; a: string };
-
-/** FAQ textarea format: blocks separated by a blank line, first line = question. */
-function faqToText(value: unknown): string {
-  if (!Array.isArray(value)) return "";
-  return (value as FaqRow[]).map((row) => `${row.q}\n${row.a}`).join("\n\n");
-}
-
-function textToFaq(text: string): FaqRow[] {
-  return text
-    .split(/\n\s*\n/)
-    .map((block) => block.trim().split("\n"))
-    .filter((lines) => lines.length >= 2)
-    .map(([q, ...a]) => ({ q: q.trim(), a: a.join(" ").trim() }));
-}
 
 export function CategoryForm({ categories }: Props) {
   const [editing, setEditing] = useState<Category | null>(null);
