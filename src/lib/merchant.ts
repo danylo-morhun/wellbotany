@@ -63,10 +63,10 @@ export async function pushOffersToMerchant(offers: MerchantOffer[]): Promise<num
   const token = await accessToken(cfg.sa);
   const url = `https://merchantapi.googleapis.com/products/v1/accounts/${cfg.account}/productInputs:insert?dataSource=${encodeURIComponent(cfg.dataSource)}`;
   let failed = 0;
-  // A few requests in parallel: a full resync is ~1.5k variants
-  for (let i = 0; i < offers.length; i += 10) {
+  // Batches in parallel: a full resync is ~1.5k variants (~1.5 min)
+  for (let i = 0; i < offers.length; i += 25) {
     const results = await Promise.allSettled(
-      offers.slice(i, i + 10).map(async (offer) => {
+      offers.slice(i, i + 25).map(async (offer) => {
         const res = await fetch(url, {
           method: "POST",
           headers: { authorization: `Bearer ${token}`, "content-type": "application/json" },
@@ -80,7 +80,9 @@ export async function pushOffersToMerchant(offers: MerchantOffer[]): Promise<num
             },
           }),
         });
-        if (!res.ok) throw new Error(`${offer.variantId}: ${res.status} ${await res.text()}`);
+        // 404: not in the feed (e.g. no photo yet) — nothing to update
+        if (!res.ok && res.status !== 404)
+          throw new Error(`${offer.variantId}: ${res.status} ${await res.text()}`);
       }),
     );
     for (const r of results) {
