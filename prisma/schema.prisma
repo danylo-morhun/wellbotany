@@ -553,6 +553,10 @@ model ShopSettings {
   // Subtotal after discounts (grosz) from which delivery is free; null = no free delivery
   freeShippingThresholdPln Int? @default(20000)
 
+  // Appended to every product's meta description ("Wysyłka w 24–48 h.") —
+  // kept here so a delivery-time change is one edit, not 1400; null = none
+  productMetaSuffixPl String? @default("Wysyłka w 24–48 h.")
+
   updatedAt DateTime @updatedAt
 }
 
