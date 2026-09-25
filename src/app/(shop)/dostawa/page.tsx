@@ -96,10 +96,10 @@ export default async function DostawaPage() {
         <section>
           <h2 className="mb-3 text-xl">Odbiór w paczkomacie lub punkcie</h2>
           <p className="text-muted-foreground">
-            Wybierając dostawę do paczkomatu lub punktu odbioru (InPost, Orlen Paczka, DPD, DHL),
-            wskazujesz wygodne miejsce na mapie podczas składania zamówienia. Gdy paczka dotrze na
-            miejsce, przewoźnik wyśle Ci SMS lub e-mail z informacją o odbiorze. Czas oczekiwania
-            paczki w punkcie określa regulamin danego przewoźnika.
+            Wybierając dostawę do paczkomatu lub punktu odbioru (InPost, Orlen Paczka), wskazujesz
+            wygodne miejsce na mapie podczas składania zamówienia. Gdy paczka dotrze na miejsce,
+            przewoźnik wyśle Ci SMS lub e-mail z informacją o odbiorze. Czas oczekiwania paczki w
+            punkcie określa regulamin danego przewoźnika.
           </p>
         </section>
 

@@ -20,7 +20,7 @@ const faqs = [
   },
   {
     q: "Ile trwa realizacja i dostawa zamówienia?",
-    a: "Zamówienia wysyłamy w ciągu 2 dni roboczych od zaksięgowania płatności. Doręczenie przez przewoźnika (InPost, Orlen Paczka, DPD, DHL) trwa zwykle 1–2 dni robocze. Po nadaniu przesyłki otrzymasz e-mail z numerem śledzenia. Szczegóły i ceny znajdziesz na stronie Dostawa i płatność.",
+    a: "Zamówienia wysyłamy w ciągu 2 dni roboczych od zaksięgowania płatności. Doręczenie przez przewoźnika (InPost, Orlen Paczka) trwa zwykle 1–2 dni robocze. Po nadaniu przesyłki otrzymasz e-mail z numerem śledzenia. Szczegóły i ceny znajdziesz na stronie Dostawa i płatność.",
   },
   {
     q: "Czy muszę mieć konto, żeby złożyć zamówienie?",

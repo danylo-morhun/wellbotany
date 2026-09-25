@@ -30,7 +30,7 @@ export async function generateMetadata({ params, searchParams }: Props): Promise
     title: `${brand.name} – suplementy i produkty marki${seo.titleSuffix}`,
     description:
       brand.description ??
-      `${brand.name} w sklepie Well Botany: suplementy diety i produkty marki ${brand.name}. Sprawdź skład, dawkowanie i ceny. Wysyłka InPost, DPD i DHL.`,
+      `${brand.name} w sklepie Well Botany: suplementy diety i produkty marki ${brand.name}. Sprawdź skład, dawkowanie i ceny. Wysyłka InPost i Orlen Paczka.`,
     alternates: { canonical: seo.canonical },
     ...(seo.noindex && { robots: { index: false, follow: true } }),
   };

@@ -26,7 +26,7 @@ const values = [
   {
     icon: Truck,
     title: "Szybka dostawa",
-    text: "Wysyłamy w 24h przez InPost Paczkomaty, DHL i DPD.",
+    text: "Wysyłamy w 24–48 h przez InPost i Orlen Paczkę.",
   },
 ];
 

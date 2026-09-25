@@ -122,7 +122,7 @@ export function AddToCartSection({ variants }: Props) {
         {selected.stock > 0 && (
           <p className="flex items-center gap-1.5 text-xs text-muted-foreground">
             <Truck className="size-3.5 shrink-0" aria-hidden />
-            Wysyłka w 24h · InPost, DHL, DPD
+            Wysyłka w 24–48 h · InPost, Orlen Paczka
           </p>
         )}
       </div>
