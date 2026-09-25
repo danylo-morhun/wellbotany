@@ -1,13 +1,12 @@
 // Applies name-pass results (data/content-pass/names/*.json with status
 // "ok" or "approved") to the DB: namePl, metaTitlePl, metaDescPl, primary
-// category + category links. Old category links stay — fold-old-categories.ts
+// category + category links (manual overrides from names-overrides.json
+// win, see lib/name-results.ts). Old category links stay — fold-old-categories.ts
 // removes those afterwards. Dry run by default.
 //   DATABASE_URL=… npx tsx scripts/content-pass/apply-names.ts [--apply] [--prod]
-import fs from "node:fs";
-import path from "node:path";
 import { connect } from "./db";
+import { loadNameResults } from "./lib/name-results";
 
-const DIR = path.join(__dirname, "../../data/content-pass/names");
 const apply = process.argv.includes("--apply");
 const APPLICABLE = new Set(["ok", "approved"]);
 // Early runs wrote the shipping note into each description — the shop now
@@ -36,10 +35,7 @@ async function main() {
     ]),
   );
 
-  const recs = fs
-    .readdirSync(DIR)
-    .filter((f) => f.endsWith(".json"))
-    .map((f) => JSON.parse(fs.readFileSync(path.join(DIR, f), "utf8")) as Rec);
+  const recs = loadNameResults().filter((r): r is Rec => r.after !== null);
   const counts: Record<string, number> = {};
   for (const r of recs) counts[r.status] = (counts[r.status] ?? 0) + 1;
   console.log("Status counts:", counts);
@@ -75,7 +71,8 @@ async function main() {
       prisma.product.update({
         where: { id: r.id },
         data: {
-          namePl: r.after.namePl.trim(),
+          // The model abbreviates gummies ("60 żel.") despite the prompt
+          namePl: r.after.namePl.trim().replace(/(\d+)\s*żel\.(?=\s|$)/, "$1 żelek"),
           metaTitlePl: r.after.metaTitlePl.trim(),
           metaDescPl: r.after.metaDescPl.replace(SHIPPING_NOTE, "").trim(),
           categoryId: primaryId,
