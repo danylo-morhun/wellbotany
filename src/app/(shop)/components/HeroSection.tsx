@@ -31,7 +31,7 @@ export function HeroSection({ product = null }: Props) {
           <div className="max-w-xl">
             <h1
               id="hero-heading"
-              className="mb-4 animate-fade-up text-balance text-4xl font-extrabold leading-[1.1] tracking-tight text-foreground motion-reduce:animate-none md:text-5xl"
+              className="mb-4 text-balance text-4xl font-extrabold leading-[1.1] tracking-tight text-foreground md:text-5xl"
             >
               Twoje zdrowie zaczyna się <span className="text-primary">tutaj</span>
             </h1>
