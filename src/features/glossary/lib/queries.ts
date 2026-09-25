@@ -24,11 +24,23 @@ export const getIngredients = unstable_cache(
   { tags: [GLOSSARY_TAG] },
 );
 
-export const getIngredientBySlug = unstable_cache(
+const cachedIngredientBySlug = unstable_cache(
   async (slug: string) => prisma.ingredient.findFirst({ where: { slug, isPublished: true } }),
   ["ingredient-by-slug"],
   { tags: [GLOSSARY_TAG] },
 );
+
+// unstable_cache stores results as JSON — Dates come back as strings on a hit
+export async function getIngredientBySlug(slug: string) {
+  const ingredient = await cachedIngredientBySlug(slug);
+  return (
+    ingredient && {
+      ...ingredient,
+      createdAt: new Date(ingredient.createdAt),
+      updatedAt: new Date(ingredient.updatedAt),
+    }
+  );
+}
 
 const PRODUCTS_PER_INGREDIENT = 12;
 
