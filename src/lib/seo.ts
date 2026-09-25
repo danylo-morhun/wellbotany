@@ -192,6 +192,29 @@ export function buildWebsiteJsonLd() {
   };
 }
 
+/** Guide/glossary page. Publisher = the shop until named reviewers exist. */
+export function buildArticleJsonLd(article: {
+  headline: string;
+  description: string;
+  path: string;
+  datePublished: Date;
+  dateModified: Date;
+}) {
+  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "https://wellbotany.pl";
+  return {
+    "@context": "https://schema.org",
+    "@type": "Article",
+    headline: article.headline,
+    description: article.description,
+    mainEntityOfPage: `${siteUrl}${article.path}`,
+    datePublished: article.datePublished.toISOString(),
+    dateModified: article.dateModified.toISOString(),
+    inLanguage: "pl-PL",
+    author: { "@id": organizationId(siteUrl) },
+    publisher: { "@id": organizationId(siteUrl) },
+  };
+}
+
 export function buildFaqJsonLd(items: Array<{ q: string; a: string }>) {
   return {
     "@context": "https://schema.org",
