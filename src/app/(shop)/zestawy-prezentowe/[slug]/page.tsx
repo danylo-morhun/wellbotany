@@ -31,7 +31,11 @@ async function getGiftSet(slug: string) {
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { slug } = await params;
   const giftSet = await getGiftSet(slug);
-  return { title: giftSet ? `${giftSet.namePl} — Well Botany` : "Zestaw prezentowy" };
+  if (!giftSet) return { title: "Zestaw prezentowy" };
+  return {
+    title: `${giftSet.namePl} – zestaw prezentowy`,
+    alternates: { canonical: `/zestawy-prezentowe/${giftSet.slug}` },
+  };
 }
 
 export default async function GiftSetDetailPage({ params }: Props) {
