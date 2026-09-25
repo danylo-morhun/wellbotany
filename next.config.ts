@@ -38,6 +38,9 @@ const nextConfig: NextConfig = {
     if (process.env.NODE_ENV !== "production") return [];
     return [{ source: "/:path*", headers: securityHeaders }];
   },
+  async redirects() {
+    return [{ source: "/sitemap.xml", destination: "/sitemap_index.xml", permanent: true }];
+  },
 };
 
 export default nextConfig;

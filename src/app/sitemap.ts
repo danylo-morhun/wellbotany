@@ -1,5 +1,6 @@
 import type { MetadataRoute } from "next";
 import { getCategories } from "@/features/catalog/actions";
+import { MAIN_IMAGE_FIRST } from "@/features/catalog/lib/main-image";
 import { MIN_LISTED_PRODUCTS } from "@/features/catalog/lib/nav";
 import { prisma } from "@/lib/prisma";
 
@@ -21,64 +22,81 @@ const STATIC_ROUTES = [
   "/cookies",
 ];
 
-export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
-  const staticEntries: MetadataRoute.Sitemap = STATIC_ROUTES.map((path) => ({
-    url: `${SITE_URL}${path}`,
-    changeFrequency: path === "" ? "daily" : "weekly",
-    priority: path === "" ? 1 : 0.5,
-  }));
+// New products/categories show up without a redeploy
+export const revalidate = 3600;
 
-  try {
-    const [products, categories, brands, giftSets] = await Promise.all([
-      prisma.product.findMany({
+// One file per page type so Search Console reports indexing per type;
+// served at /sitemap/<id>.xml, listed by the index in sitemap_index.xml/route.ts
+export const SITEMAP_IDS = ["static", "products", "categories", "brands", "gift-sets"] as const;
+type SitemapId = (typeof SITEMAP_IDS)[number];
+
+export async function generateSitemaps() {
+  return SITEMAP_IDS.map((id) => ({ id }));
+}
+
+export default async function sitemap(props: {
+  id: Promise<string>;
+}): Promise<MetadataRoute.Sitemap> {
+  const id = (await props.id) as SitemapId;
+
+  switch (id) {
+    case "static":
+      return STATIC_ROUTES.map((path) => ({ url: `${SITE_URL}${path}` }));
+
+    case "products": {
+      const products = await prisma.product.findMany({
         where: { status: "ACTIVE" },
-        select: { slug: true, updatedAt: true },
-      }),
-      getCategories(),
-      prisma.brand.findMany({ select: { slug: true } }),
-      prisma.giftSet.findMany({
-        where: { status: "ACTIVE" },
-        select: { slug: true, updatedAt: true },
-      }),
-    ]);
-
-    const productEntries: MetadataRoute.Sitemap = products.map((p) => ({
-      url: `${SITE_URL}/produkt/${p.slug}`,
-      lastModified: p.updatedAt,
-      changeFrequency: "weekly",
-      priority: 0.8,
-    }));
-
-    // Near-empty categories are noindex (see kategoria/[slug]) — keep them out
-    const categoryEntries: MetadataRoute.Sitemap = categories
-      .filter((c) => c.productCount >= MIN_LISTED_PRODUCTS)
-      .map((c) => ({
-        url: `${SITE_URL}/kategoria/${c.slug}`,
-        changeFrequency: "weekly",
-        priority: 0.6,
+        select: {
+          slug: true,
+          updatedAt: true,
+          images: { select: { url: true }, orderBy: MAIN_IMAGE_FIRST },
+        },
+      });
+      return products.map((p) => ({
+        url: `${SITE_URL}/produkt/${p.slug}`,
+        lastModified: p.updatedAt,
+        images: p.images.map((i) => i.url),
       }));
+    }
 
-    const brandEntries: MetadataRoute.Sitemap = brands.map((b) => ({
-      url: `${SITE_URL}/marki/${b.slug}`,
-      changeFrequency: "weekly",
-      priority: 0.5,
-    }));
+    case "categories": {
+      const [categories, rows] = await Promise.all([
+        getCategories(),
+        prisma.category.findMany({ select: { id: true, updatedAt: true } }),
+      ]);
+      const updatedAt = new Map(rows.map((r) => [r.id, r.updatedAt]));
+      // Near-empty categories are noindex (see kategoria/[slug]) — keep them out
+      return categories
+        .filter((c) => c.productCount >= MIN_LISTED_PRODUCTS)
+        .map((c) => ({
+          url: `${SITE_URL}/kategoria/${c.slug}`,
+          lastModified: updatedAt.get(c.id),
+        }));
+    }
 
-    const giftSetEntries: MetadataRoute.Sitemap = giftSets.map((g) => ({
-      url: `${SITE_URL}/zestawy-prezentowe/${g.slug}`,
-      lastModified: g.updatedAt,
-      changeFrequency: "weekly",
-      priority: 0.6,
-    }));
+    case "brands": {
+      const brands = await prisma.brand.findMany({
+        where: { products: { some: { status: "ACTIVE" } } },
+        select: { slug: true, updatedAt: true },
+      });
+      return brands.map((b) => ({
+        url: `${SITE_URL}/marki/${b.slug}`,
+        lastModified: b.updatedAt,
+      }));
+    }
 
-    return [
-      ...staticEntries,
-      ...productEntries,
-      ...categoryEntries,
-      ...brandEntries,
-      ...giftSetEntries,
-    ];
-  } catch {
-    return staticEntries;
+    case "gift-sets": {
+      const giftSets = await prisma.giftSet.findMany({
+        where: { status: "ACTIVE" },
+        select: { slug: true, updatedAt: true },
+      });
+      return giftSets.map((g) => ({
+        url: `${SITE_URL}/zestawy-prezentowe/${g.slug}`,
+        lastModified: g.updatedAt,
+      }));
+    }
+
+    default:
+      return [];
   }
 }
