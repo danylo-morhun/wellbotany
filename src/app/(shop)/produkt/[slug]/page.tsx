@@ -32,7 +32,7 @@ export async function generateStaticParams() {
     where: { status: "ACTIVE" },
     select: { slug: true },
     orderBy: { updatedAt: "desc" },
-    take: 500,
+    take: 200,
   });
   return products.map((p) => ({ slug: p.slug }));
 }
