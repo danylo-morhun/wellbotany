@@ -3,7 +3,6 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { getShopSettings } from "@/features/settings/lib/shop-settings";
 import { formatPriceCompact } from "@/lib/format";
-import { buildStationaryStoresJsonLd, toJsonLdScript } from "@/lib/seo";
 
 export const metadata: Metadata = {
   title: "O nas",
@@ -16,7 +15,7 @@ const values = [
   {
     icon: ShieldCheck,
     title: "Certyfikowana jakość",
-    text: "Każdy produkt w naszej ofercie posiada atest GIS/Sanepid i pochodzi od sprawdzonych producentów.",
+    text: "Suplementy diety w naszej ofercie są zgłoszone do Głównego Inspektoratu Sanitarnego, a wszystkie produkty pochodzą od sprawdzonych producentów.",
   },
   {
     icon: Leaf,
@@ -26,7 +25,7 @@ const values = [
   {
     icon: Truck,
     title: "Szybka dostawa",
-    text: "Wysyłamy w 24–48 h przez InPost i Orlen Paczkę.",
+    text: "Wysyłamy w 24–48 h do paczkomatu, punktu odbioru lub kurierem.",
   },
 ];
 
@@ -35,45 +34,22 @@ export default async function ONasPage() {
 
   return (
     <div className="container mx-auto max-w-prose px-4 py-12">
-      <script
-        type="application/ld+json"
-        // biome-ignore lint/security/noDangerouslySetInnerHtml: sanitized by toJsonLdScript
-        dangerouslySetInnerHTML={{ __html: toJsonLdScript(buildStationaryStoresJsonLd()) }}
-      />
       <h1 className="mb-8 text-3xl">O nas</h1>
 
       <div className="space-y-10 text-sm leading-relaxed">
         <section className="space-y-3 text-muted-foreground">
           <p>
-            Well Botany to internetowa odsłona zielarni Twoje Zdrowie — od ponad 20 lat prowadzimy
-            stacjonarną zielarnię w Kaliszu, a od teraz te same certyfikowane suplementy diety,
-            witaminy i produkty bio dostępne są też online.
+            Well Botany to polski sklep internetowy z suplementami diety, witaminami, ziołami i
+            produktami bio. Stawiamy na przejrzysty skład, rzetelne opisy i poradniki, które
+            pomagają świadomie wybierać.
           </p>
           <p>
             W ofercie znajdziesz m.in. ekologiczne zioła, certyfikowane herbaty, przyprawy, zdrową
             żywność, suplementy diety, kosmetyki naturalne i olejki eteryczne. Współpracujemy ze
             sprawdzonymi producentami, stawiając na jakość, uczciwy skład i rzetelne informacje o
             każdym produkcie — od dawkowania po kraj pochodzenia. Sprzedajemy wyłącznie produkty
-            dopuszczone do obrotu w Polsce i oznaczone zgodnie z wymogami GIS.
+            wprowadzone do obrotu w Polsce zgodnie z przepisami.
           </p>
-        </section>
-
-        <section>
-          <h2 className="mb-3 text-xl">Nasze sklepy stacjonarne</h2>
-          <p className="mb-4 text-muted-foreground">
-            Poza sklepem internetowym zapraszamy do dwóch punktów stacjonarnych zielarni Twoje
-            Zdrowie w Kaliszu — tam też pomożemy dobrać produkty do Twoich potrzeb.
-          </p>
-          <div className="grid gap-3 sm:grid-cols-2">
-            <div className="rounded-2xl bg-card p-5 shadow-card">
-              <p className="font-semibold text-foreground">Zielarnia Twoje Zdrowie</p>
-              <p className="text-muted-foreground">ul. Polna 102, 62-800 Kalisz</p>
-            </div>
-            <div className="rounded-2xl bg-card p-5 shadow-card">
-              <p className="font-semibold text-foreground">Zielarnia Twoje Zdrowie</p>
-              <p className="text-muted-foreground">ul. Młynarska 69, 62-800 Kalisz</p>
-            </div>
-          </div>
         </section>
 
         <section>

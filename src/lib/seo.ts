@@ -78,11 +78,6 @@ const SHOP_ADDRESS = {
   addressCountry: "PL",
 };
 
-const STATIONARY_STORES = [
-  { id: "sklep-polna", streetAddress: "ul. Polna 102" },
-  { id: "sklep-mlynarska", streetAddress: "ul. Młynarska 69" },
-];
-
 function organizationId(siteUrl: string) {
   return `${siteUrl}/#organization`;
 }
@@ -125,21 +120,6 @@ export function buildOrganizationJsonLd() {
     },
     hasMerchantReturnPolicy: buildReturnPolicy(),
   };
-}
-
-/** The two stationary herbal shops in Kalisz ("Zielarnia Twoje Zdrowie"). */
-export function buildStationaryStoresJsonLd() {
-  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "https://wellbotany.pl";
-  return STATIONARY_STORES.map((store) => ({
-    "@context": "https://schema.org",
-    "@type": "Store",
-    "@id": `${siteUrl}/o-nas#${store.id}`,
-    name: "Zielarnia Twoje Zdrowie",
-    url: `${siteUrl}/o-nas`,
-    image: `${siteUrl}/og-image.jpg`,
-    address: { ...SHOP_ADDRESS, streetAddress: store.streetAddress },
-    parentOrganization: { "@id": organizationId(siteUrl) },
-  }));
 }
 
 /** 14-day withdrawal right (ustawa o prawach konsumenta), return by mail at the buyer's cost. */
