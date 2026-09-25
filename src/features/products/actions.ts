@@ -1,5 +1,6 @@
 "use server";
 
+import { Prisma } from "@prisma/client";
 import { revalidatePath, revalidateTag } from "next/cache";
 import { rankBySearchRelevance } from "@/features/catalog/lib/search-relevance";
 import { ActionError } from "@/lib/action-error";
@@ -58,10 +59,28 @@ async function resolveProductIds(selection: ProductSelectionInput): Promise<stri
 export const saveCategory = adminActionClient
   .schema(categorySchema)
   .action(async ({ parsedInput: input }) => {
-    const { id, image, icon, nameEn, nameUk, headingPl, descriptionPl, parentId, ...data } = input;
+    const {
+      id,
+      image,
+      icon,
+      nameEn,
+      nameUk,
+      headingPl,
+      descriptionPl,
+      metaTitlePl,
+      metaDescPl,
+      contentPl,
+      faqPl,
+      parentId,
+      ...data
+    } = input;
     const payload = {
       ...data,
       headingPl: headingPl || null,
+      metaTitlePl: metaTitlePl || null,
+      metaDescPl: metaDescPl || null,
+      contentPl: contentPl || null,
+      faqPl: faqPl?.length ? faqPl : Prisma.DbNull,
       image: image || null,
       icon: icon || null,
       nameEn: nameEn || null,

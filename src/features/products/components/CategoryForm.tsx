@@ -23,6 +23,22 @@ const GROUP_OPTIONS: { value: CategoryGroup; label: string }[] = [
 
 const fieldClass = "rounded-lg border border-border px-2 py-1 text-sm";
 
+type FaqRow = { q: string; a: string };
+
+/** FAQ textarea format: blocks separated by a blank line, first line = question. */
+function faqToText(value: unknown): string {
+  if (!Array.isArray(value)) return "";
+  return (value as FaqRow[]).map((row) => `${row.q}\n${row.a}`).join("\n\n");
+}
+
+function textToFaq(text: string): FaqRow[] {
+  return text
+    .split(/\n\s*\n/)
+    .map((block) => block.trim().split("\n"))
+    .filter((lines) => lines.length >= 2)
+    .map(([q, ...a]) => ({ q: q.trim(), a: a.join(" ").trim() }));
+}
+
 export function CategoryForm({ categories }: Props) {
   const [editing, setEditing] = useState<Category | null>(null);
   const [showNew, setShowNew] = useState(false);
@@ -88,6 +104,10 @@ export function CategoryForm({ categories }: Props) {
       nameEn: (fd.get("nameEn") as string) || undefined,
       headingPl: (fd.get("headingPl") as string) || undefined,
       descriptionPl: (fd.get("descriptionPl") as string) || undefined,
+      metaTitlePl: (fd.get("metaTitlePl") as string) || undefined,
+      metaDescPl: (fd.get("metaDescPl") as string) || undefined,
+      contentPl: (fd.get("contentPl") as string) || undefined,
+      faqPl: textToFaq((fd.get("faqPl") as string) ?? ""),
       group: fd.get("group") as CategoryGroup,
       // Sent every time: the action writes null for a missing parent/description,
       // which used to detach a category from its parent on any edit.
@@ -179,6 +199,37 @@ export function CategoryForm({ categories }: Props) {
           defaultValue={item?.descriptionPl ?? ""}
           placeholder="Opis kategorii (pod nagłówkiem)"
           rows={3}
+          className={`${fieldClass} col-span-2`}
+        />
+        <input
+          name="metaTitlePl"
+          defaultValue={item?.metaTitlePl ?? ""}
+          maxLength={70}
+          placeholder="Meta title (Google) — puste = nagłówek H1"
+          className={`${fieldClass} col-span-2`}
+        />
+        <textarea
+          name="metaDescPl"
+          defaultValue={item?.metaDescPl ?? ""}
+          maxLength={170}
+          rows={2}
+          placeholder="Meta description (Google), do ~155 znaków"
+          className={`${fieldClass} col-span-2`}
+        />
+        <textarea
+          name="contentPl"
+          defaultValue={item?.contentPl ?? ""}
+          rows={8}
+          placeholder="Poradnik pod listą produktów (HTML: h2, h3, p, ul, li, strong, a)"
+          className={`${fieldClass} col-span-2 font-mono text-xs`}
+        />
+        <textarea
+          name="faqPl"
+          defaultValue={faqToText(item?.faqPl)}
+          rows={6}
+          placeholder={
+            "FAQ — pytanie w pierwszej linii, odpowiedź poniżej,\nkolejne pytania oddzielone pustą linią"
+          }
           className={`${fieldClass} col-span-2`}
         />
       </div>

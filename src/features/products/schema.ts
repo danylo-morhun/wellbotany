@@ -11,6 +11,13 @@ export const categorySchema = z.object({
   nameUk: z.string().max(200).optional(),
   headingPl: z.string().max(200).optional(),
   descriptionPl: z.string().max(4000).optional(),
+  metaTitlePl: z.string().max(70).optional(),
+  metaDescPl: z.string().max(170).optional(),
+  contentPl: z.string().max(20000).optional(),
+  faqPl: z
+    .array(z.object({ q: z.string().min(1).max(300), a: z.string().min(1).max(2000) }))
+    .max(20)
+    .optional(),
   group: z.enum(["TYPE", "NEED", "AUDIENCE", "OTHER"]).default("TYPE"),
   image: z.string().url().optional().or(z.literal("")),
   icon: z.string().max(50).optional(),
