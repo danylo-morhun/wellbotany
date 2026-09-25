@@ -276,6 +276,11 @@ export function buildProductJsonLd(product: {
   variants: JsonLdVariant[];
   slug: string;
   freeShippingThresholdPln: number | null;
+  reviews?: {
+    average: number | null;
+    count: number;
+    items: { authorName: string; rating: number; content: string; createdAt: Date }[];
+  };
 }) {
   if (product.variants.length === 0) return null;
   const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "https://wellbotany.pl";
@@ -285,6 +290,26 @@ export function buildProductJsonLd(product: {
     : undefined;
   const brand = product.brandName ? { "@type": "Brand", name: product.brandName } : undefined;
   const sharedImages = product.images.filter((i) => i.variantId === null).map((i) => i.url);
+  // Only real, approved reviews — never an empty or invented rating
+  const reviewData =
+    product.reviews && product.reviews.count > 0 && product.reviews.average
+      ? {
+          aggregateRating: {
+            "@type": "AggregateRating",
+            ratingValue: product.reviews.average.toFixed(1),
+            reviewCount: product.reviews.count,
+            bestRating: 5,
+            worstRating: 1,
+          },
+          review: product.reviews.items.slice(0, 5).map((r) => ({
+            "@type": "Review",
+            author: { "@type": "Person", name: r.authorName },
+            datePublished: r.createdAt.toISOString().slice(0, 10),
+            reviewBody: r.content,
+            reviewRating: { "@type": "Rating", ratingValue: r.rating, bestRating: 5 },
+          })),
+        }
+      : {};
 
   const variantProduct = (v: JsonLdVariant, variantUrl: string) => {
     const own = product.images.filter((i) => i.variantId === v.id).map((i) => i.url);
@@ -326,6 +351,7 @@ export function buildProductJsonLd(product: {
       description,
       url,
       ...(brand && { brand }),
+      ...reviewData,
     };
   }
 
@@ -338,6 +364,7 @@ export function buildProductJsonLd(product: {
     productGroupID: product.slug,
     variesBy: ["https://schema.org/size"],
     ...(brand && { brand }),
+    ...reviewData,
     hasVariant: product.variants.map((v) => ({
       ...variantProduct(v, `${url}?wariant=${v.id}`),
       ...(brand && { brand }),

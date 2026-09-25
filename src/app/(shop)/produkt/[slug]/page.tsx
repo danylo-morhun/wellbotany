@@ -10,6 +10,8 @@ import { ProductGallery } from "@/features/catalog/components/ProductGallery";
 import { VariantSelectionProvider } from "@/features/catalog/components/VariantSelection";
 import { findIngredientSlug, getIngredientLinkIndex } from "@/features/glossary/lib/queries";
 import { readNutritionFacts } from "@/features/products/lib/nutrition-facts";
+import { ProductReviews } from "@/features/reviews/components/ProductReviews";
+import { getProductReviews } from "@/features/reviews/lib/queries";
 import { getShopSettings } from "@/features/settings/lib/shop-settings";
 import { WishlistButton } from "@/features/wishlist/components/WishlistButton";
 import { prisma } from "@/lib/prisma";
@@ -92,7 +94,10 @@ export default async function ProduktPage({ params }: Props) {
     brandName: product.brand?.name ?? null,
   });
 
-  const { freeShippingThresholdPln } = await getShopSettings();
+  const [{ freeShippingThresholdPln }, reviews] = await Promise.all([
+    getShopSettings(),
+    getProductReviews(product.id),
+  ]);
   const jsonLd = buildProductJsonLd({
     name: product.namePl,
     description: product.descriptionPl,
@@ -101,6 +106,7 @@ export default async function ProduktPage({ params }: Props) {
     variants: product.variants,
     slug: product.slug,
     freeShippingThresholdPln,
+    reviews,
   });
 
   const breadcrumbs = [
@@ -385,6 +391,8 @@ export default async function ProduktPage({ params }: Props) {
               Podmiot odpowiedzialny: {product.responsibleEntity}
             </p>
           )}
+
+          <ProductReviews {...reviews} />
         </div>
 
         {related.length > 0 && (
