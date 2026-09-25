@@ -12,6 +12,12 @@ const securityHeaders = [
 ];
 
 const nextConfig: NextConfig = {
+  // Dynamic pages (katalog, kategoria) otherwise stream <title>, description
+  // and canonical into <body> for every client not on Next's bot list —
+  // Bing and SEO tools included. Their metadata is cached data, so waiting
+  // for it costs nothing noticeable.
+  htmlLimitedBots: /.*/,
+  poweredByHeader: false,
   images: {
     // Resized/converted by Cloudinary (src/lib/image-loader.ts), not Vercel's
     // optimizer — its Hobby-plan source-image quota ran out on supplier photos.
@@ -32,14 +38,14 @@ const nextConfig: NextConfig = {
       { protocol: "https", hostname: "kenay.com.pl" },
     ],
   },
+  async redirects() {
+    return [{ source: "/sitemap.xml", destination: "/sitemap_index.xml", permanent: true }];
+  },
   async headers() {
     // Next dev's Fast Refresh relies on eval() and an HMR websocket that a
     // strict CSP would break — only enforce these headers in production.
     if (process.env.NODE_ENV !== "production") return [];
     return [{ source: "/:path*", headers: securityHeaders }];
-  },
-  async redirects() {
-    return [{ source: "/sitemap.xml", destination: "/sitemap_index.xml", permanent: true }];
   },
 };
 
