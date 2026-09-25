@@ -16,7 +16,7 @@ import { computeSubtreeCounts } from "./lib/nav";
 import { ingredientTokens, type RelatedSeed, rankRelated } from "./lib/related";
 import { rankBySearchRelevance } from "./lib/search-relevance";
 
-const PRODUCT_LIST_SELECT = {
+export const PRODUCT_LIST_SELECT = {
   id: true,
   slug: true,
   namePl: true,
