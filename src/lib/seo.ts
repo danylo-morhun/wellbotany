@@ -199,6 +199,8 @@ export function buildArticleJsonLd(article: {
   path: string;
   datePublished: Date;
   dateModified: Date;
+  image?: string | null;
+  reviewedBy?: string | null;
 }) {
   const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "https://wellbotany.pl";
   return {
@@ -212,6 +214,10 @@ export function buildArticleJsonLd(article: {
     inLanguage: "pl-PL",
     author: { "@id": organizationId(siteUrl) },
     publisher: { "@id": organizationId(siteUrl) },
+    ...(article.image && { image: article.image }),
+    ...(article.reviewedBy && {
+      reviewedBy: { "@type": "Person", name: article.reviewedBy },
+    }),
   };
 }
 
