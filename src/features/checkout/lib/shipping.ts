@@ -1,4 +1,6 @@
-// Grosz, at cost (Furgonetka price list, rounded up to ,99) — approved 2026-09-17
+// Grosz, at cost (Furgonetka price list, rounded up to ,99) — approved 2026-09-17.
+// Mirrored outside the code: Google Merchant Center shipping settings (cheapest
+// rate, free threshold, handling time) — change them too, or MC flags a mismatch.
 export const SHIPPING_COSTS = {
   INPOST_PACZKOMAT: 1699,
   INPOST_KURIER: 1999,

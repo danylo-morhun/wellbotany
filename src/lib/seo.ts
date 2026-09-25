@@ -122,6 +122,9 @@ export function buildOrganizationJsonLd() {
   };
 }
 
+/* Shipping, returns and company data below are mirrored in Google Merchant
+ * Center (shipping settings, return policy, business info) — keep them in sync. */
+
 /** 14-day withdrawal right (ustawa o prawach konsumenta), return by mail at the buyer's cost. */
 function buildReturnPolicy() {
   return {
