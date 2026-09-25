@@ -36,7 +36,7 @@ const faqs = [
   },
   {
     q: "Gdzie znajdę szczegółowe informacje o składnikach produktu?",
-    a: "Pełen skład, wartości odżywcze i sposób użycia znajdziesz na stronie każdego produktu w zakładce Skład i dawkowanie. W razie pytań o interakcje z lekami lub schorzenia skonsultuj się z lekarzem lub farmaceutą.",
+    a: "Pełen skład, wartości odżywcze i sposób użycia znajdziesz na stronie każdego produktu w sekcjach Skład i Sposób użycia. W razie pytań o interakcje z lekami lub schorzenia skonsultuj się z lekarzem lub farmaceutą.",
   },
 ];
 
