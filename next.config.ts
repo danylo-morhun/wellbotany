@@ -18,6 +18,13 @@ const nextConfig: NextConfig = {
   // for it costs nothing noticeable.
   htmlLimitedBots: /.*/,
   poweredByHeader: false,
+  experimental: {
+    // Storefront pages are static now, so the build prerenders hundreds of
+    // them — at the default concurrency each build worker's Prisma pool
+    // times out (P2024). Fewer pages in flight + a retry keeps it reliable.
+    staticGenerationMaxConcurrency: 2,
+    staticGenerationRetryCount: 3,
+  },
   images: {
     // Resized/converted by Cloudinary (src/lib/image-loader.ts), not Vercel's
     // optimizer — its Hobby-plan source-image quota ran out on supplier photos.
