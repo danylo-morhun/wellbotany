@@ -34,6 +34,7 @@ export const SITEMAP_IDS = [
   "brands",
   "gift-sets",
   "ingredients",
+  "posts",
 ] as const;
 type SitemapId = (typeof SITEMAP_IDS)[number];
 
@@ -113,6 +114,21 @@ export default async function sitemap(props: {
         ...ingredients.map((i) => ({
           url: `${SITE_URL}/skladniki/${i.slug}`,
           lastModified: i.updatedAt,
+        })),
+      ];
+    }
+
+    case "posts": {
+      const posts = await prisma.post.findMany({
+        where: { isPublished: true },
+        select: { slug: true, updatedAt: true, coverImage: true },
+      });
+      return [
+        { url: `${SITE_URL}/poradnik` },
+        ...posts.map((p) => ({
+          url: `${SITE_URL}/poradnik/${p.slug}`,
+          lastModified: p.updatedAt,
+          ...(p.coverImage && { images: [p.coverImage] }),
         })),
       ];
     }
