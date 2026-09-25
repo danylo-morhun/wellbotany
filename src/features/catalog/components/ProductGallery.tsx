@@ -64,7 +64,7 @@ function VariantGallery({ images, productName, variantId }: Props & { variantId:
           src={current.url}
           alt={current.altPl ?? productName}
           fill
-          sizes="(max-width: 768px) 100vw, 50vw"
+          sizes="(max-width: 1023px) 100vw, 600px"
           className="object-contain"
           priority
         />

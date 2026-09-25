@@ -30,7 +30,9 @@ export function ProductCard({ product, priority = false }: Props) {
           {mainImage ? (
             <Image
               src={mainImage.url}
-              alt={mainImage.altPl ?? product.namePl}
+              alt={
+                mainImage.altPl ?? [displayBrand?.name, product.namePl].filter(Boolean).join(" ")
+              }
               fill
               priority={priority}
               sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"

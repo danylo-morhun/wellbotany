@@ -13,11 +13,13 @@ const securityHeaders = [
 
 const nextConfig: NextConfig = {
   images: {
-    // Vercel's optimizer 402s once its Hobby-plan source-image quota is
-    // exhausted — most product images come from external supplier CDNs, so
-    // that quota fills fast. Unoptimized serves the source URL directly
-    // (no resize/format conversion) until the plan moves to Pro.
-    unoptimized: true,
+    // Resized/converted by Cloudinary (src/lib/image-loader.ts), not Vercel's
+    // optimizer — its Hobby-plan source-image quota ran out on supplier photos.
+    loader: "custom",
+    loaderFile: "./src/lib/image-loader.ts",
+    // Fewer srcset widths → fewer Cloudinary derivatives (free-tier credits)
+    deviceSizes: [640, 828, 1080, 1920],
+    imageSizes: [96, 256, 384],
     remotePatterns: [
       { protocol: "https", hostname: "res.cloudinary.com" },
       { protocol: "https", hostname: "dcu4fybzavbhk0mv.public.blob.vercel-storage.com" },

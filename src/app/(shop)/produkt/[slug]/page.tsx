@@ -149,7 +149,10 @@ export default async function ProduktPage({ params }: Props) {
 
         <VariantSelectionProvider variants={product.variants}>
           <div className="mt-8 grid gap-8 lg:grid-cols-2">
-            <ProductGallery images={product.images} productName={product.namePl} />
+            <ProductGallery
+              images={product.images}
+              productName={[displayBrand?.name, product.namePl].filter(Boolean).join(" ")}
+            />
 
             <div className="space-y-6">
               {displayBrand && (
