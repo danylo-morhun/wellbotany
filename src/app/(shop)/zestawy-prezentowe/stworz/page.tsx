@@ -5,7 +5,8 @@ import { DEFAULT_GIFT_BUILDER_POLICY } from "@/features/gift-sets/lib/pricing";
 import { prisma } from "@/lib/prisma";
 
 export const metadata: Metadata = {
-  title: "Złóż własny zestaw prezentowy — Well Botany",
+  title: "Złóż własny zestaw prezentowy",
+  alternates: { canonical: "/zestawy-prezentowe/stworz" },
 };
 
 export default async function GiftBuilderPage() {

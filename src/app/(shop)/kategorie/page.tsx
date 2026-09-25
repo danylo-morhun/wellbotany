@@ -6,6 +6,7 @@ import { getCategoryIcon } from "@/lib/category-icons";
 
 export const metadata = {
   title: "Kategorie",
+  alternates: { canonical: "/kategorie" },
   description: "Przeglądaj produkty według kategorii — suplementy, witaminy i produkty bio.",
 };
 

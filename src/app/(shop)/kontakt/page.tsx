@@ -3,7 +3,8 @@ import type { Metadata } from "next";
 import { ContactForm } from "@/features/contact/components/ContactForm";
 
 export const metadata: Metadata = {
-  title: "Kontakt — Well Botany",
+  title: "Kontakt",
+  alternates: { canonical: "/kontakt" },
   description: "Skontaktuj się z nami — e-mail, telefon, godziny obsługi.",
 };
 

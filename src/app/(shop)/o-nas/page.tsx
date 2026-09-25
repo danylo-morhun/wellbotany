@@ -5,7 +5,8 @@ import { getShopSettings } from "@/features/settings/lib/shop-settings";
 import { formatPriceCompact } from "@/lib/format";
 
 export const metadata: Metadata = {
-  title: "O nas — Well Botany",
+  title: "O nas",
+  alternates: { canonical: "/o-nas" },
   description:
     "Poznaj Well Botany — polski sklep z certyfikowanymi suplementami diety, witaminami i produktami bio.",
 };

@@ -4,7 +4,8 @@ import { buildFaqJsonLd, toJsonLdScript } from "@/lib/seo";
 export const dynamic = "force-static";
 
 export const metadata: Metadata = {
-  title: "FAQ — Well Botany",
+  title: "Najczęściej zadawane pytania (FAQ)",
+  alternates: { canonical: "/faq" },
   description: "Najczęściej zadawane pytania dotyczące zamówień, płatności i produktów.",
 };
 

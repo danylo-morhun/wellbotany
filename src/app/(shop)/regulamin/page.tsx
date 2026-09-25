@@ -4,7 +4,8 @@ import Link from "next/link";
 export const dynamic = "force-static";
 
 export const metadata: Metadata = {
-  title: "Regulamin — Well Botany",
+  title: "Regulamin",
+  alternates: { canonical: "/regulamin" },
   description: "Regulamin sklepu internetowego Well Botany.",
 };
 

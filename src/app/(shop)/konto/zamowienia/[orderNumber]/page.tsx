@@ -8,7 +8,7 @@ import { formatPrice } from "@/lib/format";
 import { PICKUP_HOLD_DAYS, pickupLocation } from "@/lib/pickup-locations";
 import { prisma } from "@/lib/prisma";
 
-export const metadata = { title: "Szczegóły zamówienia — Well Botany" };
+export const metadata = { title: "Szczegóły zamówienia", robots: { index: false, follow: false } };
 
 export default async function OrderDetailPage({
   params,

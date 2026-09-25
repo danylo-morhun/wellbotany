@@ -4,7 +4,8 @@ import { PrintButton } from "@/components/PrintButton";
 export const dynamic = "force-static";
 
 export const metadata: Metadata = {
-  title: "Zwroty i reklamacje — Well Botany",
+  title: "Zwroty i reklamacje",
+  alternates: { canonical: "/zwroty" },
   description: "Informacje o prawie odstąpienia od umowy, zwrotach i reklamacjach.",
 };
 

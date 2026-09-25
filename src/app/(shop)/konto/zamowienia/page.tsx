@@ -6,7 +6,7 @@ import { auth } from "@/lib/auth";
 import { formatPrice } from "@/lib/format";
 import { prisma } from "@/lib/prisma";
 
-export const metadata = { title: "Zamówienia — Well Botany" };
+export const metadata = { title: "Zamówienia", robots: { index: false, follow: false } };
 
 export default async function ZamowieniaPage() {
   const session = await auth();

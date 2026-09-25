@@ -14,6 +14,53 @@ export function toJsonLdScript(data: unknown): string {
   return JSON.stringify(data).replace(/</g, "\\u003c");
 }
 
+const SITE_TITLE_SUFFIX = " | Well Botany"; // root layout title.template
+const MAX_TITLE_LENGTH = 60;
+
+/**
+ * Page title that keeps the site suffix only while the whole title fits in
+ * ~60 chars (Google truncates beyond that). Strips a suffix already typed
+ * into a stored meta title so it never shows twice.
+ */
+export function buildPageTitle(title: string): string | { absolute: string } {
+  const clean = title.replace(/\s*[|–—-]\s*Well Botany\s*$/i, "").trim();
+  return clean.length + SITE_TITLE_SUFFIX.length <= MAX_TITLE_LENGTH ? clean : { absolute: clean };
+}
+
+// Every listing query param except `strona` — see buildCatalogUrl
+const LISTING_FILTER_PARAMS = [
+  "kategoria",
+  "marka",
+  "tagi",
+  "cenaMin",
+  "cenaMax",
+  "szukaj",
+  "promocje",
+  "nowosci",
+  "polecane",
+  "dostepne",
+  "sortuj",
+];
+
+type SearchParams = Record<string, string | string[] | undefined>;
+
+/**
+ * Indexing rules for a product listing (katalog, kategoria, marka): each
+ * page of the plain listing is its own canonical (pointing page 2+ at page 1
+ * tells Google to drop the products only linked from later pages); any
+ * filter, sort or search combination is a near-duplicate → noindex, follow.
+ */
+export function buildListingSeo(path: string, searchParams: SearchParams) {
+  const page = Math.max(1, Math.floor(Number(searchParams.strona)) || 1);
+  const filtered = LISTING_FILTER_PARAMS.some((key) => searchParams[key] !== undefined);
+  return {
+    page,
+    canonical: page > 1 ? `${path}?strona=${page}` : path,
+    noindex: filtered,
+    titleSuffix: page > 1 ? ` – strona ${page}` : "",
+  };
+}
+
 // Every listing query param except `strona` — see buildCatalogUrl
 const LISTING_FILTER_PARAMS = [
   "kategoria",

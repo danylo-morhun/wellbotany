@@ -6,7 +6,8 @@ import { WishlistItemCard } from "@/features/wishlist/components/WishlistItemCar
 import { getWishlist, WISHLIST_COOKIE_NAME } from "@/features/wishlist/lib/session";
 
 export const metadata: Metadata = {
-  title: "Ulubione — Well Botany",
+  title: "Ulubione",
+  robots: { index: false, follow: false },
 };
 
 export default async function UlubinonePage() {

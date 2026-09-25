@@ -2,7 +2,8 @@ import type { Metadata } from "next";
 import Link from "next/link";
 
 export const metadata: Metadata = {
-  title: "Polityka cookies — Well Botany",
+  title: "Polityka cookies",
+  alternates: { canonical: "/cookies" },
   description: "Informacje o plikach cookies używanych w sklepie Well Botany.",
 };
 

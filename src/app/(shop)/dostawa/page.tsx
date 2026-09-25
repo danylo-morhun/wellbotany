@@ -11,7 +11,8 @@ import { PICKUP_HOLD_DAYS, PICKUP_LOCATIONS } from "@/lib/pickup-locations";
 export const dynamic = "force-static";
 
 export const metadata: Metadata = {
-  title: "Dostawa i płatność — Well Botany",
+  title: "Dostawa i płatność",
+  alternates: { canonical: "/dostawa" },
   description: "Informacje o metodach dostawy, kosztach i czasie realizacji zamówień.",
 };
 

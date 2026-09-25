@@ -11,7 +11,8 @@ import { getShopSettings } from "@/features/settings/lib/shop-settings";
 import { auth } from "@/lib/auth";
 
 export const metadata: Metadata = {
-  title: "Koszyk — Well Botany",
+  title: "Koszyk",
+  robots: { index: false, follow: false },
 };
 
 export default async function KoszykPage() {

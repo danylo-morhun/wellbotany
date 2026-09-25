@@ -9,7 +9,8 @@ import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 
 export const metadata: Metadata = {
-  title: "Zamówienie — Well Botany",
+  title: "Zamówienie",
+  robots: { index: false, follow: false },
 };
 
 export default async function ZamowieniePage() {

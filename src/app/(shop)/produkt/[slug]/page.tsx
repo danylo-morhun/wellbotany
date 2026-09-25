@@ -11,7 +11,7 @@ import { readNutritionFacts } from "@/features/products/lib/nutrition-facts";
 import { WishlistButton } from "@/features/wishlist/components/WishlistButton";
 import { prisma } from "@/lib/prisma";
 import { sanitizeRichText } from "@/lib/sanitize";
-import { buildProductJsonLd, DEFAULT_OG_IMAGE, toJsonLdScript } from "@/lib/seo";
+import { buildPageTitle, buildProductJsonLd, DEFAULT_OG_IMAGE, toJsonLdScript } from "@/lib/seo";
 import {
   getProduct,
   getRedirectTarget,
@@ -41,12 +41,19 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const product = await getProduct(slug);
   if (!product) return {};
 
-  const title = product.metaTitlePl ?? product.namePl;
+  const brandName = product.brand ? resolveDisplayBrand(product.brand).name : null;
+  // Brand + product queries ("kenay magnez") are the easiest wins — keep the
+  // brand in the title even when the stored name leaves it out
+  const title =
+    product.metaTitlePl ??
+    (brandName && !product.namePl.toLowerCase().includes(brandName.toLowerCase())
+      ? `${product.namePl} – ${brandName}`
+      : product.namePl);
   const description = product.metaDescPl ?? product.shortDescPl ?? undefined;
   const mainImage = (product.images.find((img) => img.isMain) ?? product.images[0])?.url;
 
   return {
-    title,
+    title: buildPageTitle(title),
     description,
     alternates: { canonical: `/produkt/${product.slug}` },
     openGraph: {
