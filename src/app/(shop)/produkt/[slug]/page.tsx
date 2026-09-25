@@ -1,5 +1,6 @@
 import { AlertTriangle, Check, ShieldCheck } from "lucide-react";
 import type { Metadata } from "next";
+import Link from "next/link";
 import { notFound, permanentRedirect } from "next/navigation";
 import { AdminEditBar } from "@/features/catalog/components/AdminEditBar";
 import { Breadcrumbs } from "@/features/catalog/components/Breadcrumbs";
@@ -7,6 +8,7 @@ import { ProductActionsClient } from "@/features/catalog/components/ProductActio
 import { ProductCard } from "@/features/catalog/components/ProductCard";
 import { ProductGallery } from "@/features/catalog/components/ProductGallery";
 import { VariantSelectionProvider } from "@/features/catalog/components/VariantSelection";
+import { findIngredientSlug, getIngredientLinkIndex } from "@/features/glossary/lib/queries";
 import { readNutritionFacts } from "@/features/products/lib/nutrition-facts";
 import { getShopSettings } from "@/features/settings/lib/shop-settings";
 import { WishlistButton } from "@/features/wishlist/components/WishlistButton";
@@ -129,6 +131,8 @@ export default async function ProduktPage({ params }: Props) {
     en?: string;
   } | null;
   const { rows: nutritionFacts, text: nutritionText } = readNutritionFacts(product.nutritionFacts);
+  // Links each nutrition row to its glossary guide (internal linking both ways)
+  const ingredientIndex = nutritionFacts.length > 0 ? await getIngredientLinkIndex() : [];
   const allergenInfo = product.allergenInfo as {
     contains?: string[];
     mayContain?: string[];
@@ -303,7 +307,21 @@ export default async function ProduktPage({ params }: Props) {
                     <tbody>
                       {nutritionFacts.map((row) => (
                         <tr key={row.name} className="border-b border-border/60 last:border-0">
-                          <td className="py-2 text-foreground">{row.name}</td>
+                          <td className="py-2 text-foreground">
+                            {(() => {
+                              const slug = findIngredientSlug(row.name, ingredientIndex);
+                              return slug ? (
+                                <Link
+                                  href={`/skladniki/${slug}`}
+                                  className="underline decoration-border underline-offset-2 hover:text-primary hover:decoration-primary"
+                                >
+                                  {row.name}
+                                </Link>
+                              ) : (
+                                row.name
+                              );
+                            })()}
+                          </td>
                           <td className="py-2 text-muted-foreground">{row.amount}</td>
                           <td className="py-2 text-muted-foreground">{row.rws ?? "—"}</td>
                         </tr>

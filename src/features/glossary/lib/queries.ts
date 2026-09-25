@@ -68,3 +68,15 @@ export const getIngredientLinkIndex = unstable_cache(
   ["ingredient-link-index"],
   { tags: [GLOSSARY_TAG] },
 );
+
+type LinkIndex = Awaited<ReturnType<typeof getIngredientLinkIndex>>;
+
+/** Glossary slug for a nutrition-table row name ("Magnez (cytrynian)" → "magnez"). */
+export function findIngredientSlug(rowName: string, index: LinkIndex): string | null {
+  const name = rowName.toLowerCase();
+  for (const entry of index) {
+    if (entry.exclude.some((t) => name.includes(t))) continue;
+    if (entry.terms.some((t) => name.includes(t.trim()))) return entry.slug;
+  }
+  return null;
+}
