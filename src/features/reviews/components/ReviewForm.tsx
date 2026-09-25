@@ -100,24 +100,29 @@ export function ReviewForm({ token, suggestedName, products, existing }: Props) 
               <p className="mt-3 text-sm text-muted-foreground">Ten produkt został już oceniony.</p>
             ) : (
               <>
-                <div className="mt-4 flex gap-1" role="radiogroup" aria-label="Ocena">
+                <fieldset className="mt-4 flex gap-1">
+                  <legend className="sr-only">Ocena</legend>
                   {[1, 2, 3, 4, 5].map((value) => (
-                    <button
+                    <label
                       key={value}
-                      type="button"
-                      role="radio"
-                      aria-checked={draft.rating === value}
-                      aria-label={`${value} na 5`}
-                      onClick={() => setDraft(product.id, { rating: value })}
-                      className="rounded p-1 focus-visible:outline-2 focus-visible:outline-primary"
+                      className="cursor-pointer rounded p-1 has-focus-visible:outline-2 has-focus-visible:outline-primary"
                     >
+                      <input
+                        type="radio"
+                        name={`rating-${product.id}`}
+                        value={value}
+                        checked={draft.rating === value}
+                        onChange={() => setDraft(product.id, { rating: value })}
+                        className="sr-only"
+                      />
+                      <span className="sr-only">{value} na 5</span>
                       <Star
                         aria-hidden
                         className={`size-7 ${value <= draft.rating ? "fill-accent text-accent" : "text-border"}`}
                       />
-                    </button>
+                    </label>
                   ))}
-                </div>
+                </fieldset>
                 <textarea
                   value={draft.content}
                   onChange={(e) => setDraft(product.id, { content: e.target.value })}
