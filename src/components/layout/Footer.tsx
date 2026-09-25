@@ -7,6 +7,7 @@ const footerLinks = {
     { label: "Katalog produktów", href: "/katalog" },
     { label: "Marki", href: "/marki" },
     { label: "Składniki A–Z", href: "/skladniki" },
+    { label: "Poradnik", href: "/poradnik" },
     { label: "Nowości", href: "/katalog?nowosci=1" },
     { label: "Promocje", href: "/katalog?promocje=1" },
   ],

@@ -113,9 +113,14 @@ export function MobileMenu({ navLinks, utilityLinks, nav }: Props) {
           ))}
 
           {nav && (
-            <Link href="/marki" className={linkClass}>
-              Marki
-            </Link>
+            <>
+              <Link href="/marki" className={linkClass}>
+                Marki
+              </Link>
+              <Link href="/poradnik" className={linkClass}>
+                Poradnik
+              </Link>
+            </>
           )}
 
           <div className="my-2 border-t border-border" />
