@@ -1,6 +1,11 @@
-import { describe, expect, it } from "vitest";
+import { beforeAll, describe, expect, it, vi } from "vitest";
 import { imagesForVariant, resolveVariantId } from "@/features/catalog/lib/variant-images";
 import { buildProductJsonLd } from "@/lib/seo";
+
+// CI sets NEXT_PUBLIC_SITE_URL to localhost; the expectations use the real domain
+beforeAll(() => {
+  vi.stubEnv("NEXT_PUBLIC_SITE_URL", "https://wellbotany.pl");
+});
 
 const images = [
   { url: "shared.jpg", variantId: null },

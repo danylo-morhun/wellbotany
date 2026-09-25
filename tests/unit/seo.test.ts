@@ -1,6 +1,11 @@
-import { describe, expect, it } from "vitest";
+import { beforeAll, describe, expect, it, vi } from "vitest";
 import { pluralizeProducts } from "@/lib/format";
 import { buildBreadcrumbJsonLd, buildListingSeo, buildPageTitle } from "@/lib/seo";
+
+// CI sets NEXT_PUBLIC_SITE_URL to localhost; the expectations use the real domain
+beforeAll(() => {
+  vi.stubEnv("NEXT_PUBLIC_SITE_URL", "https://wellbotany.pl");
+});
 
 describe("buildListingSeo", () => {
   it("keeps page 1 on the clean URL", () => {
