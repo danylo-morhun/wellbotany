@@ -10,6 +10,11 @@ import { prisma } from "@/lib/prisma";
 import { buildListingSeo } from "@/lib/seo";
 import { getBrandBySlug } from "../../../../features/catalog/actions";
 
+function firstSentence(text: string): string {
+  const sentence = text.match(/^.+?[.!?](?=\s|$)/)?.[0] ?? text;
+  return sentence.length <= 160 ? sentence : `${sentence.slice(0, 157).trimEnd()}…`;
+}
+
 type Props = {
   params: Promise<{ slug: string }>;
   searchParams: Promise<Record<string, string | string[] | undefined>>;
@@ -28,8 +33,9 @@ export async function generateMetadata({ params, searchParams }: Props): Promise
 
   return {
     title: `${brand.name} – suplementy i produkty marki${seo.titleSuffix}`,
+    // The full description is a paragraph; Google shows ~155 chars
     description:
-      brand.description ??
+      (brand.description && firstSentence(brand.description)) ??
       `${brand.name} w sklepie Well Botany: suplementy diety i produkty marki ${brand.name}. Sprawdź skład, dawkowanie i ceny. Wysyłka InPost i Orlen Paczka.`,
     alternates: { canonical: seo.canonical },
     ...(seo.noindex && { robots: { index: false, follow: true } }),
