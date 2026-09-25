@@ -29,7 +29,7 @@ Odpowiedz TYLKO JSON, bez dodatkowego tekstu.`;
     const msg = await client.messages.create({
       model: "claude-3-5-haiku-20241022",
       max_tokens: 1500,
-      messages: [{ role: "user", content: prompt }]
+      messages: [{ role: "user", content: prompt }],
     });
 
     const text = msg.content[0].type === "text" ? msg.content[0].text : "";
@@ -46,7 +46,7 @@ async function main() {
 
   const products = await prisma.product.findMany({
     where: { brand: { slug: "singularis" } },
-    select: { id: true, namePl: true, descriptionPl: true }
+    select: { id: true, namePl: true, descriptionPl: true },
   });
 
   let done = 0;
@@ -57,7 +57,7 @@ async function main() {
 
     const data = await generateDesc(p.namePl, p.descriptionPl || "");
     if (!data) {
-      await new Promise(r => setTimeout(r, 200));
+      await new Promise((r) => setTimeout(r, 200));
       continue;
     }
 
@@ -67,15 +67,17 @@ async function main() {
         descriptionPl: data.description,
         benefitsPl: data.benefits || [],
         healthWarnings: data.warnings || [],
-        storageInfo: data.storage
-      }
+        storageInfo: data.storage,
+      },
     });
 
     done++;
-    await new Promise(r => setTimeout(r, 300));
+    await new Promise((r) => setTimeout(r, 300));
   }
 
   console.log(`\n✅ Gotowe: ${done}/${products.length}`);
 }
 
-main().catch(console.error).finally(() => process.exit(0));
+main()
+  .catch(console.error)
+  .finally(() => process.exit(0));

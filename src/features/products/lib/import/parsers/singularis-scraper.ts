@@ -17,7 +17,7 @@ async function downloadImageAsync(url: string, filename: string): Promise<string
         return;
       }
 
-      const protocol = url.startsWith("https") ? require("https") : require("http");
+      const protocol = url.startsWith("https") ? require("node:https") : require("node:http");
       const file = fs.createWriteStream(filePath);
 
       protocol
@@ -143,7 +143,7 @@ async function scrapeProductDetails(page: any, productUrl: string): Promise<Prod
     });
 
     return details;
-  } catch (error) {
+  } catch (_error) {
     return {};
   }
 }
@@ -162,7 +162,9 @@ export async function scrapeSingularis(source: SupplierSource): Promise<Supplier
   // Scrape listing pages to get all product URLs
   while (hasMore) {
     const url =
-      pageNum === 1 ? "https://singularis.com.pl/sklep/" : `https://singularis.com.pl/sklep/page/${pageNum}/`;
+      pageNum === 1
+        ? "https://singularis.com.pl/sklep/"
+        : `https://singularis.com.pl/sklep/page/${pageNum}/`;
 
     console.log(`  Listing page ${pageNum}...`);
     const page = await browser.newPage();
@@ -199,7 +201,8 @@ export async function scrapeSingularis(source: SupplierSource): Promise<Supplier
         const name = (imgEl as HTMLImageElement)?.alt?.trim();
         const price = priceEl?.textContent?.trim();
         const url = (linkEl as HTMLAnchorElement)?.href;
-        const imageUrl = (imgEl as HTMLImageElement)?.src || (imgEl as HTMLImageElement)?.dataset.src;
+        const imageUrl =
+          (imgEl as HTMLImageElement)?.src || (imgEl as HTMLImageElement)?.dataset.src;
 
         if (name && price && url) {
           items.push({ name, price, url, imageUrl });

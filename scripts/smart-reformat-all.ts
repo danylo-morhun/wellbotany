@@ -1,5 +1,5 @@
+import fs from "node:fs/promises";
 import { PrismaClient } from "@prisma/client";
-import fs from "fs/promises";
 
 const prisma = new PrismaClient();
 
@@ -16,24 +16,26 @@ interface ProductData {
 
 function normalize(text: string | null | undefined): string {
   if (!text) return "";
-  return text
-    .replace(/\n+/g, " ")
-    // Remove all superscript numbers and citations (including ones embedded in words)
-    .replace(/[¹²³⁴⁵⁶⁷⁸⁹⁰]/g, "")
-    .replace(/(\D)[\d](?=[A-ZŁŚŹż])/g, "$1 ")
-    .replace(/[\^]?[\d]+(?=\s+[A-ZŁŚŹż])/g, "")
-    // Remove common junk patterns
-    .replace(/\(DE-ÖKO-[0-9]+\)/g, "")
-    .replace(/Butelka o pojemności[^.]*\./gi, "")
-    .replace(/Pojemność[^.]*\./gi, "")
-    .replace(/\d+\s+porcj[ei]+/gi, "")
-    .replace(/\(\d+\s+porcj[ei]+\)/gi, "")
-    .replace(/porcji\)\./gi, "")
-    .replace(/Produkt objęty systemem kaucyjnym\.?/gi, "")
-    .replace(/Do ceny będzie doliczone[^.]*\./gi, "")
-    .replace(/Czysta siła roślin dla twojego zdrowia\.?/gi, "")
-    .replace(/\s+/g, " ")
-    .trim();
+  return (
+    text
+      .replace(/\n+/g, " ")
+      // Remove all superscript numbers and citations (including ones embedded in words)
+      .replace(/[¹²³⁴⁵⁶⁷⁸⁹⁰]/g, "")
+      .replace(/(\D)[\d](?=[A-ZŁŚŹż])/g, "$1 ")
+      .replace(/[\^]?[\d]+(?=\s+[A-ZŁŚŹż])/g, "")
+      // Remove common junk patterns
+      .replace(/\(DE-ÖKO-[0-9]+\)/g, "")
+      .replace(/Butelka o pojemności[^.]*\./gi, "")
+      .replace(/Pojemność[^.]*\./gi, "")
+      .replace(/\d+\s+porcj[ei]+/gi, "")
+      .replace(/\(\d+\s+porcj[ei]+\)/gi, "")
+      .replace(/porcji\)\./gi, "")
+      .replace(/Produkt objęty systemem kaucyjnym\.?/gi, "")
+      .replace(/Do ceny będzie doliczone[^.]*\./gi, "")
+      .replace(/Czysta siła roślin dla twojego zdrowia\.?/gi, "")
+      .replace(/\s+/g, " ")
+      .trim()
+  );
 }
 
 // Extract key sentences from messy description
@@ -48,7 +50,7 @@ function extractSentences(text: string): string[] {
 
 function generateSmartShortDesc(product: ProductData): string {
   const sentences = extractSentences(
-    product.shortDescPl || product.descriptionPl || product.namePl
+    product.shortDescPl || product.descriptionPl || product.namePl,
   );
   if (sentences.length === 0) return product.namePl;
 
@@ -71,7 +73,7 @@ function generateSmartShortDesc(product: ProductData): string {
   }
 
   // Ensure ends with period
-  short = short.replace(/[\.,!?]*$/, "") + ".";
+  short = `${short.replace(/[.,!?]*$/, "")}.`;
 
   return short.length > 20 ? short : product.namePl;
 }
@@ -163,7 +165,7 @@ async function reformatAll() {
   // Save for review
   await fs.writeFile(
     "/tmp/reformatted-smart.json",
-    JSON.stringify(reformatted.slice(0, 10), null, 2)
+    JSON.stringify(reformatted.slice(0, 10), null, 2),
   );
 
   console.log(`\n✓ Generated ${reformatted.length} reformats`);
@@ -171,10 +173,7 @@ async function reformatAll() {
   console.log("\nSample #1:");
   console.log(JSON.stringify(reformatted[0], null, 2));
 
-  await fs.writeFile(
-    "/tmp/reformatted-smart-all.json",
-    JSON.stringify(reformatted, null, 2)
-  );
+  await fs.writeFile("/tmp/reformatted-smart-all.json", JSON.stringify(reformatted, null, 2));
 
   console.log(`\nAll ${reformatted.length} saved to /tmp/reformatted-smart-all.json`);
 

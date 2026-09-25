@@ -1,8 +1,8 @@
 #!/usr/bin/env npx tsx
+import fs from "node:fs";
+import path from "node:path";
 import { put } from "@vercel/blob";
 import { prisma } from "@/lib/prisma";
-import fs from "fs";
-import path from "path";
 
 async function main() {
   console.log("📤 Uploading Singularis images to Vercel Blob...\n");
@@ -21,9 +21,9 @@ async function main() {
     select: {
       id: true,
       images: {
-        select: { id: true, url: true }
-      }
-    }
+        select: { id: true, url: true },
+      },
+    },
   });
 
   let uploaded = 0;
@@ -47,13 +47,13 @@ async function main() {
 
         const blob = await put(blobFileName, fileBuffer, {
           access: "public",
-          token: blobToken
+          token: blobToken,
         });
 
         // Update database with blob URL
         await prisma.productImage.update({
           where: { id: img.id },
-          data: { url: blob.url }
+          data: { url: blob.url },
         });
 
         uploaded++;
@@ -70,4 +70,6 @@ async function main() {
   console.log(`📍 Images now accessible from production`);
 }
 
-main().catch(console.error).finally(() => process.exit(0));
+main()
+  .catch(console.error)
+  .finally(() => process.exit(0));

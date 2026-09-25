@@ -1,9 +1,9 @@
 #!/usr/bin/env npx tsx
+import fs from "node:fs";
+import path from "node:path";
+import { put } from "@vercel/blob";
 import { chromium } from "playwright";
 import { prisma } from "@/lib/prisma";
-import { put } from "@vercel/blob";
-import fs from "fs";
-import path from "path";
 
 const DEST = path.join(process.cwd(), "public/supplier-images-v2");
 
@@ -22,7 +22,7 @@ function slugifyForUrl(name: string): string {
 async function downloadImage(url: string, filepath: string): Promise<boolean> {
   return new Promise((resolve) => {
     try {
-      const https = require("https");
+      const https = require("node:https");
       const file = fs.createWriteStream(filepath);
 
       https
@@ -59,7 +59,7 @@ async function main() {
 
   const products = await prisma.product.findMany({
     where: { brand: { slug: "singularis" } },
-    select: { id: true, namePl: true, images: { select: { id: true } } }
+    select: { id: true, namePl: true, images: { select: { id: true } } },
   });
 
   console.log(`Products to process: ${products.length}\n`);
@@ -71,14 +71,17 @@ async function main() {
   for (let i = 0; i < products.length; i++) {
     const p = products[i];
 
-    if ((i + 1) % 20 === 0) console.log(`  ${i + 1}/${products.length}... (fixed: ${fixed}, failed: ${failed})`);
+    if ((i + 1) % 20 === 0)
+      console.log(`  ${i + 1}/${products.length}... (fixed: ${fixed}, failed: ${failed})`);
 
     try {
       const slug = slugifyForUrl(p.namePl);
       const productUrl = `https://singularis.com.pl/produkt/${slug}/`;
 
       const page = await browser.newPage();
-      const resp = await page.goto(productUrl, { waitUntil: "domcontentloaded", timeout: 20000 }).catch(() => null);
+      const resp = await page
+        .goto(productUrl, { waitUntil: "domcontentloaded", timeout: 20000 })
+        .catch(() => null);
 
       if (!resp || resp.status() === 404) {
         // Try alternate URL pattern
@@ -129,10 +132,10 @@ async function main() {
           const blob = await put(`singularis-v2/${filename}`, buffer, {
             access: "public",
             token: blobToken,
-            allowOverwrite: true
+            allowOverwrite: true,
           });
           finalUrl = blob.url;
-        } catch (e) {
+        } catch (_e) {
           // fall back to local path
         }
       }
@@ -140,7 +143,7 @@ async function main() {
       // Delete old wrong images
       if (p.images.length > 0) {
         await prisma.productImage.deleteMany({
-          where: { productId: p.id }
+          where: { productId: p.id },
         });
       }
 
@@ -151,13 +154,13 @@ async function main() {
           url: finalUrl,
           altPl: p.namePl,
           isMain: true,
-          sortOrder: 0
-        }
+          sortOrder: 0,
+        },
       });
 
       fixed++;
       await new Promise((r) => setTimeout(r, 300));
-    } catch (e) {
+    } catch (_e) {
       failed++;
     }
   }
@@ -168,4 +171,6 @@ async function main() {
   console.log(`❌ Failed: ${failed}/${products.length}`);
 }
 
-main().catch(console.error).finally(() => process.exit(0));
+main()
+  .catch(console.error)
+  .finally(() => process.exit(0));

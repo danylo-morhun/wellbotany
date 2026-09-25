@@ -14,10 +14,14 @@ async function main() {
   console.log(`✅ Total Singularis products: ${total}`);
   console.log(`\nSample (5 shown):`);
   products.forEach((p) => {
-    const price = p.variants[0]?.pricePln ? `${(p.variants[0].pricePln / 100).toFixed(2)} PLN` : "no price";
+    const price = p.variants[0]?.pricePln
+      ? `${(p.variants[0].pricePln / 100).toFixed(2)} PLN`
+      : "no price";
     const img = p.images.length ? "✓ image" : "no image";
     console.log(`  • ${p.namePl} (${price}) ${img}`);
   });
 }
 
-main().catch(console.error).finally(() => process.exit(0));
+main()
+  .catch(console.error)
+  .finally(() => process.exit(0));

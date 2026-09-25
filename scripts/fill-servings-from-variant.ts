@@ -45,4 +45,6 @@ async function main() {
   console.log(`✅ Fixed: ${fixed}/${products.length}`);
 }
 
-main().catch(console.error).finally(() => process.exit(0));
+main()
+  .catch(console.error)
+  .finally(() => process.exit(0));

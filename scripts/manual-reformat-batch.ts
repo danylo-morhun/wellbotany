@@ -1,5 +1,5 @@
+import fs from "node:fs/promises";
 import { PrismaClient } from "@prisma/client";
-import fs from "fs/promises";
 
 const prisma = new PrismaClient();
 
@@ -115,14 +115,12 @@ async function applyManualReformats() {
     applied++;
   }
 
-  console.log(
-    `\nApplied: ${applied}, Skipped: ${skipped}\n`
-  );
+  console.log(`\nApplied: ${applied}, Skipped: ${skipped}\n`);
 
   // Save mapping for reference
   await fs.writeFile(
     "/tmp/reformatted-count.txt",
-    `Applied: ${applied}\nRemaining: ${167 - applied}\n`
+    `Applied: ${applied}\nRemaining: ${167 - applied}\n`,
   );
 
   await prisma.$disconnect();

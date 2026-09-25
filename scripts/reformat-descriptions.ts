@@ -1,5 +1,5 @@
+import fs from "node:fs/promises";
 import { PrismaClient } from "@prisma/client";
-import fs from "fs/promises";
 
 const prisma = new PrismaClient();
 
@@ -34,9 +34,7 @@ function generateShortDesc(text: string, namePl: string): string {
   const cleaned = cleanText(text);
 
   // Remove superscript numbers (1, 2, etc. used as footnote markers)
-  let result = cleaned
-    .replace(/[¹²³⁴⁵⁶⁷⁸⁹⁰]/g, "")
-    .replace(/[\^]?\d+\s+(?=[A-Z])/g, "");
+  let result = cleaned.replace(/[¹²³⁴⁵⁶⁷⁸⁹⁰]/g, "").replace(/[\^]?\d+\s+(?=[A-Z])/g, "");
 
   // Get first sentence
   const match = result.match(/[^.!?]+[.!?]+/);
@@ -61,9 +59,9 @@ function generateShortDesc(text: string, namePl: string): string {
 }
 
 // Extract key claims/benefits from description text
-function extractKeyPoints(text: string): string[] {
+function _extractKeyPoints(text: string): string[] {
   const cleaned = cleanText(text);
-  const lines = cleaned.split(/\n{2,}|(?:^|\s)[•\-]\s*/);
+  const lines = cleaned.split(/\n{2,}|(?:^|\s)[•-]\s*/);
 
   return lines
     .filter(
@@ -72,7 +70,7 @@ function extractKeyPoints(text: string): string[] {
         !line.startsWith("Produkt") &&
         !line.startsWith("Przechowywać") &&
         !line.startsWith("Nie należy") &&
-        !line.startsWith("Suplement")
+        !line.startsWith("Suplement"),
     )
     .slice(0, 4)
     .map((line) => line.trim());
@@ -81,9 +79,9 @@ function extractKeyPoints(text: string): string[] {
 // Build rich HTML description based on pattern
 function generateDescription(
   name: string,
-  originalShort: string,
+  _originalShort: string,
   originalDesc: string,
-  benefits: string[] | null
+  benefits: string[] | null,
 ): string {
   const cleaned = cleanText(originalDesc);
 
@@ -145,14 +143,16 @@ async function reformatProduct(product: Product): Promise<{
   benefitsPl: string[] | null;
   usageInstructionsPl: string | null;
 }> {
-  const shortDescPl =
-    generateShortDesc(product.shortDescPl || product.descriptionPl || product.namePl, product.namePl);
+  const shortDescPl = generateShortDesc(
+    product.shortDescPl || product.descriptionPl || product.namePl,
+    product.namePl,
+  );
 
   const descriptionPl = generateDescription(
     product.namePl,
     product.shortDescPl || "",
     product.descriptionPl || "",
-    product.benefitsPl
+    product.benefitsPl,
   );
 
   const benefitsPl = cleanBenefits(product.benefitsPl);
@@ -210,10 +210,7 @@ async function main() {
   }
 
   // Save to file for review before applying
-  await fs.writeFile(
-    "/tmp/reformatted-products.json",
-    JSON.stringify(reformatted, null, 2)
-  );
+  await fs.writeFile("/tmp/reformatted-products.json", JSON.stringify(reformatted, null, 2));
 
   console.log(`\nReformatted: ${Object.keys(reformatted).length}`);
   console.log(`Errors: ${errors.length}`);

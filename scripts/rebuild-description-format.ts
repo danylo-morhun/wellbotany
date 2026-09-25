@@ -4,7 +4,11 @@ import { prisma } from "@/lib/prisma";
 /** Split a real marketing paragraph into standalone claim-sentences usable as
  * bullet points — no new wording invented, just re-segmented existing text. */
 function extractBenefitSentences(text: string): string[] {
-  const plain = text.replace(/<[^>]+>/g, " ").replace(/&nbsp;/g, " ").replace(/\s+/g, " ").trim();
+  const plain = text
+    .replace(/<[^>]+>/g, " ")
+    .replace(/&nbsp;/g, " ")
+    .replace(/\s+/g, " ")
+    .trim();
   const sentences = plain
     .split(/(?<=[.!])\s+(?=[A-ZŚŻŹĆŃŁÓĄĘ])/)
     .map((s) => s.trim())
@@ -52,7 +56,11 @@ async function main() {
       html += `<h3>Kluczowe korzyści</h3><ul>${benefits.map((b) => `<li>${b}</li>`).join("")}</ul>`;
     }
 
-    if (ingredientsText && ingredientsText.length > 15 && !ingredientsText.includes("nie dostępne")) {
+    if (
+      ingredientsText &&
+      ingredientsText.length > 15 &&
+      !ingredientsText.includes("nie dostępne")
+    ) {
       html += `<h3>Skład</h3><p>${ingredientsText}</p>`;
     }
 
@@ -80,4 +88,6 @@ async function main() {
   console.log(`\n✅ Rebuilt: ${fixed}/${products.length}`);
 }
 
-main().catch(console.error).finally(() => process.exit(0));
+main()
+  .catch(console.error)
+  .finally(() => process.exit(0));

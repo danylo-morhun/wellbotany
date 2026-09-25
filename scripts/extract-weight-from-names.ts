@@ -76,7 +76,7 @@ async function main() {
 
   const products = await prisma.product.findMany({
     where: { brand: { slug: "singularis" } },
-    select: { id: true, namePl: true, netWeight: true, servingSize: true }
+    select: { id: true, namePl: true, netWeight: true, servingSize: true },
   });
 
   let weightFixed = 0;
@@ -106,7 +106,7 @@ async function main() {
     if (Object.keys(updates).length > 0) {
       await prisma.product.update({
         where: { id: p.id },
-        data: updates
+        data: updates,
       });
     }
 
@@ -119,4 +119,6 @@ async function main() {
   console.log(`✅ Serving size extracted: ${servingFixed}/171`);
 }
 
-main().catch(console.error).finally(() => process.exit(0));
+main()
+  .catch(console.error)
+  .finally(() => process.exit(0));

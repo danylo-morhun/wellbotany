@@ -150,4 +150,6 @@ async function main() {
   console.log(`ℹ️  Still generic: ${products.length - reassigned}`);
 }
 
-main().catch(console.error).finally(() => process.exit(0));
+main()
+  .catch(console.error)
+  .finally(() => process.exit(0));

@@ -13,8 +13,10 @@ const CATEGORY_FIXES: Record<string, string> = {
   "baton-energia-i-odpornosc-baton-orzechowy-z-karobem-dr-jacob-s-12-szt": "batonniki",
   "baton-reichi-cafe-figa-kokos-kawa": "batonniki",
   "baton-reichi-cafe-figa-kokos-kawa-12-szt": "batonniki",
-  "baton-spokoj-i-harmonia-baton-orzechowo-bakaliowy-z-adaptogenami-grzybowymi-dr-jacob-s": "batonniki",
-  "baton-spokoj-i-harmonia-baton-orzechowo-bakaliowy-z-adaptogenami-grzybowymi-dr-jacob-s-12-szt": "batonniki",
+  "baton-spokoj-i-harmonia-baton-orzechowo-bakaliowy-z-adaptogenami-grzybowymi-dr-jacob-s":
+    "batonniki",
+  "baton-spokoj-i-harmonia-baton-orzechowo-bakaliowy-z-adaptogenami-grzybowymi-dr-jacob-s-12-szt":
+    "batonniki",
   "baton-witalnosc-baton-bakaliowy-z-karobem-dr-jacob-s": "batonniki",
   "baton-witalnosc-baton-bakaliowy-z-karobem-dr-jacob-s-wyprzedaz": "batonniki",
   "baton-witalnosc-baton-bakaliowy-z-karobem-dr-jacob-s-12-szt": "batonniki",
@@ -93,7 +95,7 @@ async function fixCategories() {
   for (const [slug, newCatSlug] of Object.entries(CATEGORY_FIXES)) {
     // Find category
     const category = await prisma.category.findUnique({
-      where: { slug: newCatSlug }
+      where: { slug: newCatSlug },
     });
 
     if (!category) {
@@ -103,7 +105,7 @@ async function fixCategories() {
 
     // Update product
     const product = await prisma.product.findUnique({
-      where: { slug }
+      where: { slug },
     });
 
     if (!product) {
@@ -114,7 +116,7 @@ async function fixCategories() {
 
     await prisma.product.update({
       where: { id: product.id },
-      data: { categoryId: category.id }
+      data: { categoryId: category.id },
     });
 
     console.log(`✓ ${product.namePl} → ${category.namePl}`);

@@ -5,12 +5,12 @@ const prisma = new PrismaClient();
 async function audit() {
   const products = await prisma.product.findMany({
     where: {
-      brand: { slug: { in: ["dr-jacobs", "omni-biotic"] } }
+      brand: { slug: { in: ["dr-jacobs", "omni-biotic"] } },
     },
     include: {
-      images: { select: { url: true } }
+      images: { select: { url: true } },
     },
-    orderBy: [{ brand: { slug: "asc" } }, { namePl: "asc" }]
+    orderBy: [{ brand: { slug: "asc" } }, { namePl: "asc" }],
   });
 
   interface Issue {
@@ -46,9 +46,11 @@ async function audit() {
     }
 
     // Check images
-    const uniqueUrls = new Set(p.images.map(img => img.url));
+    const uniqueUrls = new Set(p.images.map((img) => img.url));
     if (uniqueUrls.size < p.images.length) {
-      productIssues.push(`${p.images.length} images, ${uniqueUrls.size} unique (${p.images.length - uniqueUrls.size} duplicates)`);
+      productIssues.push(
+        `${p.images.length} images, ${uniqueUrls.size} unique (${p.images.length - uniqueUrls.size} duplicates)`,
+      );
     } else if (p.images.length > 5) {
       productIssues.push(`${p.images.length} images (too many)`);
     }
@@ -57,7 +59,7 @@ async function audit() {
       issues.push({
         slug: p.slug,
         name: p.namePl,
-        issues: productIssues
+        issues: productIssues,
       });
     }
   }
@@ -75,14 +77,18 @@ async function audit() {
   }
 
   console.log("Issue breakdown:");
-  Object.entries(issueTypes).sort((a, b) => b[1] - a[1]).forEach(([type, count]) => {
-    console.log(`  ${type}: ${count}`);
-  });
+  Object.entries(issueTypes)
+    .sort((a, b) => b[1] - a[1])
+    .forEach(([type, count]) => {
+      console.log(`  ${type}: ${count}`);
+    });
 
   console.log(`\n\nProblem products (top 30):`);
-  issues.slice(0, 30).forEach(item => {
+  issues.slice(0, 30).forEach((item) => {
     console.log(`\n${item.name} (${item.slug})`);
-    item.issues.forEach(i => console.log(`  ❌ ${i}`));
+    item.issues.forEach((i) => {
+      console.log(`  ❌ ${i}`);
+    });
   });
 
   await prisma.$disconnect();

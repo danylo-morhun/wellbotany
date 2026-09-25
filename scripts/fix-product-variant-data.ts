@@ -44,10 +44,10 @@ async function main() {
       variants: {
         select: {
           id: true,
-          optionValue: true
-        }
-      }
-    }
+          optionValue: true,
+        },
+      },
+    },
   });
 
   let variantFixed = 0;
@@ -85,7 +85,7 @@ async function main() {
     if (Object.keys(updates).length > 0) {
       await prisma.product.update({
         where: { id: p.id },
-        data: updates
+        data: updates,
       });
     }
 
@@ -93,12 +93,14 @@ async function main() {
     if (Object.keys(variantUpdates).length > 0 && p.variants.length > 0) {
       await prisma.productVariant.update({
         where: { id: p.variants[0].id },
-        data: variantUpdates
+        data: variantUpdates,
       });
     }
 
     if ((variantFixed + servingFixed + weightCleared) % 30 === 0) {
-      console.log(`  Progress: ${variantFixed} variants, ${servingFixed} servings, ${weightCleared} weights cleared...`);
+      console.log(
+        `  Progress: ${variantFixed} variants, ${servingFixed} servings, ${weightCleared} weights cleared...`,
+      );
     }
   }
 
@@ -107,4 +109,6 @@ async function main() {
   console.log(`✅ Weight cleared: ${weightCleared}/171`);
 }
 
-main().catch(console.error).finally(() => process.exit(0));
+main()
+  .catch(console.error)
+  .finally(() => process.exit(0));

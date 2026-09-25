@@ -6,7 +6,7 @@ async function main() {
 
   const products = await prisma.product.findMany({
     where: { brand: { slug: "singularis" } },
-    select: { id: true, namePl: true, descriptionPl: true }
+    select: { id: true, namePl: true, descriptionPl: true },
   });
 
   let fixed = 0;
@@ -15,7 +15,7 @@ async function main() {
     const updates: any = {};
 
     // Fix usage instructions (should be Polish, not Ukrainian)
-    const usageUk = "Приймати за вказівками виробника";
+    const _usageUk = "Приймати за вказівками виробника";
     const usagePl = "Przyjmować zgodnie ze wskazówkami producenta.";
     updates.usageInstructionsPl = usagePl;
 
@@ -29,7 +29,7 @@ async function main() {
 
     await prisma.product.update({
       where: { id: p.id },
-      data: updates
+      data: updates,
     });
 
     fixed++;
@@ -39,4 +39,6 @@ async function main() {
   console.log(`\n✅ Fixed: ${fixed}/171`);
 }
 
-main().catch(console.error).finally(() => process.exit(0));
+main()
+  .catch(console.error)
+  .finally(() => process.exit(0));

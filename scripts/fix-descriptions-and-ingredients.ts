@@ -10,8 +10,8 @@ async function main() {
       id: true,
       namePl: true,
       ingredients: true,
-      benefitsPl: true
-    }
+      benefitsPl: true,
+    },
   });
 
   let fixed = 0;
@@ -22,10 +22,12 @@ async function main() {
     // Extract just ingredients part from messy data
     if (p.ingredients) {
       const ing = p.ingredients as any;
-      let ingredientText = ing.pl || "";
+      const ingredientText = ing.pl || "";
 
       // Extract only "Składniki:" section
-      const match = ingredientText.match(/Składniki:([\s\S]*?)(?:Sposób użycia|Ostrzeżenia|ODZYSKAJ|$)/);
+      const match = ingredientText.match(
+        /Składniki:([\s\S]*?)(?:Sposób użycia|Ostrzeżenia|ODZYSKAJ|$)/,
+      );
       if (match) {
         const cleaned = match[1]
           .trim()
@@ -39,7 +41,7 @@ async function main() {
 
     // Generate full description based on benefits
     if (p.benefitsPl && Array.isArray(p.benefitsPl)) {
-      const benefits = (p.benefitsPl as string[]).filter(b => b && b.length > 3);
+      const benefits = (p.benefitsPl as string[]).filter((b) => b && b.length > 3);
 
       let desc = `<h3>${p.namePl}</h3>`;
       desc += `<p>Suplement diety ${p.namePl} to wysoko skoncentrowany preparat zawierający naturalne, bezpieczne składniki. `;
@@ -47,7 +49,7 @@ async function main() {
 
       if (benefits.length > 0) {
         desc += `<h3>Główne korzyści</h3><ul>`;
-        benefits.forEach(b => {
+        benefits.forEach((b) => {
           desc += `<li>${b}</li>`;
         });
         desc += `</ul>`;
@@ -66,7 +68,7 @@ async function main() {
     if (Object.keys(updates).length > 0) {
       await prisma.product.update({
         where: { id: p.id },
-        data: updates
+        data: updates,
       });
       fixed++;
     }
@@ -77,4 +79,6 @@ async function main() {
   console.log(`\n✅ Fixed: ${fixed}/171`);
 }
 
-main().catch(console.error).finally(() => process.exit(0));
+main()
+  .catch(console.error)
+  .finally(() => process.exit(0));

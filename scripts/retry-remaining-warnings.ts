@@ -3,10 +3,16 @@ import { chromium } from "playwright";
 import { prisma } from "@/lib/prisma";
 
 function stripHtml(html: string): string {
-  return html.replace(/<[^>]+>/g, " ").replace(/&nbsp;/g, " ").replace(/&amp;/g, "&").replace(/\s+/g, " ").trim();
+  return html
+    .replace(/<[^>]+>/g, " ")
+    .replace(/&nbsp;/g, " ")
+    .replace(/&amp;/g, "&")
+    .replace(/\s+/g, " ")
+    .trim();
 }
 
-const WARNING_KEYWORDS = /nadwrażliwości|substytut|zamiennik|zróżnicowanej diety|przekraczać.*porcj/i;
+const WARNING_KEYWORDS =
+  /nadwrażliwości|substytut|zamiennik|zróżnicowanej diety|przekraczać.*porcj/i;
 const STORAGE_MARKER = /^Przechowywa/i;
 
 const STILL_BAD_NAMES = [
@@ -32,11 +38,13 @@ async function main() {
   // Find each product's real URL directly by exact alt-text match, one search per name.
   await page.goto("https://singularis.com.pl/sklep/", { waitUntil: "networkidle", timeout: 30000 });
   await page.waitForTimeout(1000);
-  await page.evaluate(() => {
-    const btns = Array.from(document.querySelectorAll("button"));
-    const decline = btns.find((b) => /odrzuć|decline|akceptuj/i.test(b.textContent || ""));
-    if (decline) (decline as HTMLElement).click();
-  }).catch(() => {});
+  await page
+    .evaluate(() => {
+      const btns = Array.from(document.querySelectorAll("button"));
+      const decline = btns.find((b) => /odrzuć|decline|akceptuj/i.test(b.textContent || ""));
+      if (decline) (decline as HTMLElement).click();
+    })
+    .catch(() => {});
   await page.waitForTimeout(500);
 
   const listing: { name: string; url: string }[] = await page.evaluate(() => {
@@ -53,7 +61,9 @@ async function main() {
     // Fuzzy contains-match since exact DB name vs. site alt text can differ slightly.
     const norm = (s: string) => s.toLowerCase().replace(/[^a-ząćęłńóśźż0-9]+/g, "");
     const match = listing.find(
-      (l) => norm(l.name).includes(norm(targetName).slice(0, 20)) || norm(targetName).includes(norm(l.name).slice(0, 20)),
+      (l) =>
+        norm(l.name).includes(norm(targetName).slice(0, 20)) ||
+        norm(targetName).includes(norm(l.name).slice(0, 20)),
     );
 
     if (!match) {
@@ -87,7 +97,10 @@ async function main() {
         continue;
       }
 
-      await prisma.product.update({ where: { id: product.id }, data: { healthWarnings: warnings } });
+      await prisma.product.update({
+        where: { id: product.id },
+        data: { healthWarnings: warnings },
+      });
       console.log(`✅ Fixed: ${targetName}`);
       fixed++;
     } catch (e) {
@@ -101,4 +114,6 @@ async function main() {
   console.log(`\n✅ Total fixed: ${fixed}/${STILL_BAD_NAMES.length}`);
 }
 
-main().catch(console.error).finally(() => process.exit(0));
+main()
+  .catch(console.error)
+  .finally(() => process.exit(0));

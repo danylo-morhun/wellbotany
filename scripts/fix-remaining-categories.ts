@@ -14,7 +14,7 @@ async function main() {
     "ksiazka-cyfrowa-metoda-dr-jacob-a-w-praktyce-simply-eat",
     "ksiazka-cyfrowa-rownowaga-kwasow-zasad-i-mineralow-paradoks-wapniowy",
     "ksiazka-cyfrowa-simply-eat",
-    "ksiazka-cyfrowa-stres-metabolizm-kortyzol"
+    "ksiazka-cyfrowa-stres-metabolizm-kortyzol",
   ];
 
   console.log("Moving remaining books...\n");
@@ -23,7 +23,7 @@ async function main() {
     if (p) {
       await prisma.product.update({
         where: { id: p.id },
-        data: { categoryId: brochureCat!.id }
+        data: { categoryId: brochureCat?.id },
       });
       console.log(`✓ ${p.namePl} → Broszury i materiały`);
     }
@@ -36,7 +36,7 @@ async function main() {
     "kawa-chi-cafe-balans-saszetka-10g",
     "kawa-chi-cafe-proactive-saszetka-10g",
     "kawa-reichi-cafe-saszetka-10g",
-    "kawa-bezkofeinowa-chi-cafe-free-saszetka-10g"
+    "kawa-bezkofeinowa-chi-cafe-free-saszetka-10g",
   ];
 
   console.log("\nMoving coffee samples...\n");
@@ -45,7 +45,7 @@ async function main() {
     if (p) {
       await prisma.product.update({
         where: { id: p.id },
-        data: { categoryId: coffeeCat!.id }
+        data: { categoryId: coffeeCat?.id },
       });
       console.log(`✓ ${p.namePl} → Kawy`);
     }

@@ -6,7 +6,7 @@ async function main() {
 
   const products = await prisma.product.findMany({
     where: { brand: { slug: "singularis" } },
-    select: { id: true, namePl: true, ingredients: true }
+    select: { id: true, namePl: true, ingredients: true },
   });
 
   let fixed = 0;
@@ -26,8 +26,8 @@ async function main() {
       await prisma.product.update({
         where: { id: p.id },
         data: {
-          ingredients: { pl: fallback }
-        }
+          ingredients: { pl: fallback },
+        },
       });
       fixed++;
     }
@@ -38,4 +38,6 @@ async function main() {
   console.log(`\n✅ Generated fallbacks: ${fixed}/171`);
 }
 
-main().catch(console.error).finally(() => process.exit(0));
+main()
+  .catch(console.error)
+  .finally(() => process.exit(0));

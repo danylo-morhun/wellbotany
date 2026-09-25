@@ -1,4 +1,4 @@
-import { PrismaClient } from '@prisma/client';
+import { PrismaClient } from "@prisma/client";
 
 const prisma = new PrismaClient();
 
@@ -7,9 +7,9 @@ async function main() {
     where: {
       brand: {
         name: {
-          in: ['Dr. Jacobs', 'Omni-Biotic']
-        }
-      }
+          in: ["Dr. Jacobs", "Omni-Biotic"],
+        },
+      },
     },
     select: {
       slug: true,
@@ -19,13 +19,13 @@ async function main() {
       benefitsPl: true,
       ingredients: true,
       usageInstructionsPl: true,
-      brand: { select: { name: true } }
+      brand: { select: { name: true } },
     },
-    orderBy: { brand: { name: 'asc' } }
+    orderBy: { brand: { name: "asc" } },
   });
-  
+
   console.log(`Found ${products.length} products\n`);
-  products.forEach(p => {
+  products.forEach((p) => {
     console.log(`\n─── ${p.brand.name} ───`);
     console.log(`Slug: ${p.slug}`);
     console.log(`Name: ${p.namePl}`);
@@ -34,9 +34,9 @@ async function main() {
     console.log(`Benefits:\n${JSON.stringify(p.benefitsPl, null, 2)}\n`);
     console.log(`Ingredients:\n${JSON.stringify(p.ingredients, null, 2)}\n`);
     console.log(`Usage:\n${p.usageInstructionsPl}\n`);
-    console.log('---');
+    console.log("---");
   });
-  
+
   await prisma.$disconnect();
 }
 

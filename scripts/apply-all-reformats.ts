@@ -1,29 +1,19 @@
+import fs from "node:fs/promises";
 import { PrismaClient } from "@prisma/client";
-import fs from "fs/promises";
 
 const prisma = new PrismaClient();
-
-interface Reformat {
-  id: string;
-  slug: string;
-  shortDescPl: string;
-  descriptionPl: string;
-  benefitsPl: string[] | null;
-}
 
 async function applyReformats() {
   console.log("Loading reformats...");
 
   // Load manually done (3)
-  const manualFile = await fs.readFile(
+  const _manualFile = await fs.readFile(
     "/Users/danylomorhun/Projects/zielarnia/scripts/manual-reformat-batch.ts",
-    "utf-8"
+    "utf-8",
   );
 
   // Load smart-generated (164)
-  const smartJson = JSON.parse(
-    await fs.readFile("/tmp/reformatted-smart-all.json", "utf-8")
-  );
+  const smartJson = JSON.parse(await fs.readFile("/tmp/reformatted-smart-all.json", "utf-8"));
 
   console.log(`Applying ${smartJson.length} smart reformats + 3 manual...`);
 

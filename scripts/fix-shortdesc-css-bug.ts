@@ -3,18 +3,24 @@ import { chromium } from "playwright";
 import { prisma } from "@/lib/prisma";
 
 function stripHtml(html: string): string {
-  return html.replace(/<[^>]+>/g, " ").replace(/&nbsp;/g, " ").replace(/\s+/g, " ").trim();
+  return html
+    .replace(/<[^>]+>/g, " ")
+    .replace(/&nbsp;/g, " ")
+    .replace(/\s+/g, " ")
+    .trim();
 }
 
 async function scrapeListing(page: any): Promise<Map<string, string>> {
   const map = new Map<string, string>();
   await page.goto("https://singularis.com.pl/sklep/", { waitUntil: "networkidle", timeout: 30000 });
   await page.waitForTimeout(1000);
-  await page.evaluate(() => {
-    const btns = Array.from(document.querySelectorAll("button"));
-    const decline = btns.find((b) => /odrzuć|decline|akceptuj/i.test(b.textContent || ""));
-    if (decline) (decline as HTMLElement).click();
-  }).catch(() => {});
+  await page
+    .evaluate(() => {
+      const btns = Array.from(document.querySelectorAll("button"));
+      const decline = btns.find((b) => /odrzuć|decline|akceptuj/i.test(b.textContent || ""));
+      if (decline) (decline as HTMLElement).click();
+    })
+    .catch(() => {});
   await page.waitForTimeout(500);
 
   const items: { name: string; url: string }[] = await page.evaluate(() => {
@@ -25,7 +31,7 @@ async function scrapeListing(page: any): Promise<Map<string, string>> {
         const img = item.querySelector("img") as HTMLImageElement;
         return { name: img?.alt?.trim() || "", url: link?.href || "" };
       })
-      .filter((x) => x.name && x.url && x.url.includes("/sklep/"));
+      .filter((x) => x.name && x.url?.includes("/sklep/"));
   });
 
   for (const item of items) {
@@ -110,4 +116,6 @@ async function main() {
   console.log(`❌ Failed: ${failed}`);
 }
 
-main().catch(console.error).finally(() => process.exit(0));
+main()
+  .catch(console.error)
+  .finally(() => process.exit(0));

@@ -1,7 +1,6 @@
 #!/usr/bin/env npx tsx
 import Anthropic from "@anthropic-ai/sdk";
 import { prisma } from "@/lib/prisma";
-import * as fs from "fs";
 
 const client = new Anthropic({
   apiKey: process.env.ANTHROPIC_API_KEY,
@@ -41,7 +40,7 @@ JSON:
     if (!jsonMatch) throw new Error("No JSON");
 
     return JSON.parse(jsonMatch[0]);
-  } catch (e) {
+  } catch (_e) {
     return {
       fullDesc: currentDesc,
       benefits: ["Підтримує здоров'я", "Натуральний склад"],
@@ -83,7 +82,7 @@ async function main() {
 
       improved++;
       await new Promise((r) => setTimeout(r, 400));
-    } catch (e) {
+    } catch (_e) {
       console.error(`  ❌ ${p.namePl}`);
     }
   }
@@ -91,4 +90,6 @@ async function main() {
   console.log(`\n✅ Поліпшено ${improved}/${products.length} описів`);
 }
 
-main().catch(console.error).finally(() => process.exit(0));
+main()
+  .catch(console.error)
+  .finally(() => process.exit(0));

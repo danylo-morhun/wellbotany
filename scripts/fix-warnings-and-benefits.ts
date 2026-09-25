@@ -23,11 +23,13 @@ async function scrapeListing(page: any): Promise<Map<string, string>> {
   const map = new Map<string, string>();
   await page.goto("https://singularis.com.pl/sklep/", { waitUntil: "networkidle", timeout: 30000 });
   await page.waitForTimeout(1000);
-  await page.evaluate(() => {
-    const btns = Array.from(document.querySelectorAll("button"));
-    const decline = btns.find((b) => /odrzuć|decline|akceptuj/i.test(b.textContent || ""));
-    if (decline) (decline as HTMLElement).click();
-  }).catch(() => {});
+  await page
+    .evaluate(() => {
+      const btns = Array.from(document.querySelectorAll("button"));
+      const decline = btns.find((b) => /odrzuć|decline|akceptuj/i.test(b.textContent || ""));
+      if (decline) (decline as HTMLElement).click();
+    })
+    .catch(() => {});
   await page.waitForTimeout(500);
 
   const items: { name: string; url: string }[] = await page.evaluate(() => {
@@ -38,7 +40,7 @@ async function scrapeListing(page: any): Promise<Map<string, string>> {
         const img = item.querySelector("img") as HTMLImageElement;
         return { name: img?.alt?.trim() || "", url: link?.href || "" };
       })
-      .filter((x) => x.name && x.url && x.url.includes("/sklep/"));
+      .filter((x) => x.name && x.url?.includes("/sklep/"));
   });
   for (const item of items) {
     map.set(item.name.toLowerCase().replace(/\s+/g, " ").trim(), item.url);
@@ -80,7 +82,11 @@ function splitSentences(text: string): string[] {
 }
 
 function extractCleanBenefits(fullText: string): string[] {
-  const plain = fullText.replace(/<[^>]+>/g, " ").replace(/&nbsp;/g, " ").replace(/\s+/g, " ").trim();
+  const plain = fullText
+    .replace(/<[^>]+>/g, " ")
+    .replace(/&nbsp;/g, " ")
+    .replace(/\s+/g, " ")
+    .trim();
   const sentences = splitSentences(plain).filter((s) => s.length >= 30 && s.length <= 220);
 
   const actionSentences = sentences.filter((s) =>
@@ -89,12 +95,15 @@ function extractCleanBenefits(fullText: string): string[] {
     ),
   );
 
-  const pool = actionSentences.length >= 2 ? actionSentences : sentences.length >= 2 ? sentences : [];
+  const pool =
+    actionSentences.length >= 2 ? actionSentences : sentences.length >= 2 ? sentences : [];
   return pool.slice(0, 5);
 }
 
 async function main() {
-  console.log("🔧 Fixing healthWarnings (real disclaimer, not RWS footnote) and benefitsPl (clean sentences)...\n");
+  console.log(
+    "🔧 Fixing healthWarnings (real disclaimer, not RWS footnote) and benefitsPl (clean sentences)...\n",
+  );
 
   const browser = await chromium.launch();
   const page = await browser.newPage();
@@ -111,7 +120,10 @@ async function main() {
   // re-scraping 171 pages when just re-running to catch stragglers.
   const isBadWarning = (w: unknown) => {
     const arr = (w as string[]) || [];
-    return arr.length === 0 || arr.some((x) => /^Przechowywa/i.test(x.trim()) || /realizacji|RWS/i.test(x));
+    return (
+      arr.length === 0 ||
+      arr.some((x) => /^Przechowywa/i.test(x.trim()) || /realizacji|RWS/i.test(x))
+    );
   };
   const isBadBenefit = (b: unknown) => {
     const arr = (b as string[]) || [];
@@ -128,7 +140,9 @@ async function main() {
   for (let i = 0; i < products.length; i++) {
     const p = products[i];
     if ((i + 1) % 20 === 0) {
-      console.log(`  ${i + 1}/${products.length}... (warnings: ${warningsFixed}, benefits: ${benefitsFixed})`);
+      console.log(
+        `  ${i + 1}/${products.length}... (warnings: ${warningsFixed}, benefits: ${benefitsFixed})`,
+      );
     }
 
     // benefitsPl can be derived from the already-clean descriptionPl in DB — no re-fetch needed.
@@ -171,4 +185,6 @@ async function main() {
   console.log(`✅ benefitsPl fixed: ${benefitsFixed}/${products.length}`);
 }
 
-main().catch(console.error).finally(() => process.exit(0));
+main()
+  .catch(console.error)
+  .finally(() => process.exit(0));

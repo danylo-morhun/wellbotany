@@ -8,18 +8,22 @@ async function main() {
   // Create missing categories
   const categoriesToCreate = [
     { slug: "batonniki", namePl: "Batonniki", nameEn: "Bars" },
-    { slug: "broszury-i-materialy", namePl: "Broszury i materiały", nameEn: "Brochures & materials" },
-    { slug: "kawy", namePl: "Kawy", nameEn: "Coffees" }
+    {
+      slug: "broszury-i-materialy",
+      namePl: "Broszury i materiały",
+      nameEn: "Brochures & materials",
+    },
+    { slug: "kawy", namePl: "Kawy", nameEn: "Coffees" },
   ];
 
   for (const cat of categoriesToCreate) {
     const existing = await prisma.category.findUnique({
-      where: { slug: cat.slug }
+      where: { slug: cat.slug },
     });
 
     if (!existing) {
       await prisma.category.create({
-        data: cat
+        data: cat,
       });
       console.log(`✓ Created: ${cat.namePl}`);
     } else {
@@ -46,7 +50,7 @@ async function main() {
     "baton-witalnosc-baton-bakaliowy-z-karobem-dr-jacob-s-12-szt",
     "baton-zasadowy",
     "baton-zasadowy-pakiet-12-szt",
-    "baton-zasadowy-pakiet-6-szt"
+    "baton-zasadowy-pakiet-6-szt",
   ];
 
   const batonCat = await prisma.category.findUnique({ where: { slug: "batonniki" } });
@@ -55,7 +59,7 @@ async function main() {
     if (p) {
       await prisma.product.update({
         where: { id: p.id },
-        data: { categoryId: batonCat!.id }
+        data: { categoryId: batonCat?.id },
       });
       console.log(`✓ ${p.namePl} → Batonniki`);
     }
@@ -77,7 +81,7 @@ async function main() {
     "ksiazka-simply-eat",
     "ksiazka-stres-metabolizm-kortyzol",
     "ksiazka-witaminy-a-d-e-k",
-    "ksiazka-cyfrowa-koronawirus-poradnik-samopomocy"
+    "ksiazka-cyfrowa-koronawirus-poradnik-samopomocy",
   ];
 
   const brochureCat = await prisma.category.findUnique({ where: { slug: "broszury-i-materialy" } });
@@ -86,7 +90,7 @@ async function main() {
     if (p) {
       await prisma.product.update({
         where: { id: p.id },
-        data: { categoryId: brochureCat!.id }
+        data: { categoryId: brochureCat?.id },
       });
       console.log(`✓ ${p.namePl} → Broszury i materiały`);
     }
@@ -101,7 +105,7 @@ async function main() {
     "kawa-chi-cafe-proactive-360g",
     "kawa-reichi-cafe-180g",
     "kawa-reichi-cafe-400g",
-    "kawa-bezkofeinowa-chi-cafe-free-250g"
+    "kawa-bezkofeinowa-chi-cafe-free-250g",
   ];
 
   const coffeeCat = await prisma.category.findUnique({ where: { slug: "kawy" } });
@@ -110,7 +114,7 @@ async function main() {
     if (p) {
       await prisma.product.update({
         where: { id: p.id },
-        data: { categoryId: coffeeCat!.id }
+        data: { categoryId: coffeeCat?.id },
       });
       console.log(`✓ ${p.namePl} → Kawy`);
     }

@@ -1,10 +1,10 @@
-import { PrismaClient } from '@prisma/client';
+import { PrismaClient } from "@prisma/client";
 
 const prisma = new PrismaClient();
 
 async function main() {
   const product = await prisma.product.findUnique({
-    where: { slug: 'kurkumina-95-suplement-60-kaps' },
+    where: { slug: "kurkumina-95-suplement-60-kaps" },
     select: {
       slug: true,
       namePl: true,
@@ -18,9 +18,9 @@ async function main() {
       usageInstructionsPl: true,
     },
   });
-  
+
   console.log(JSON.stringify(product, null, 2));
-  
+
   await prisma.$disconnect();
 }
 

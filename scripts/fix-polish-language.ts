@@ -7,13 +7,13 @@ async function main() {
   // Fix benefits in Ukrainian to Polish
   const products = await prisma.product.findMany({
     where: { brand: { slug: "singularis" } },
-    select: { id: true, benefitsPl: true, healthWarnings: true }
+    select: { id: true, benefitsPl: true, healthWarnings: true },
   });
 
   let fixed = 0;
 
   for (const p of products) {
-    let updates: any = {};
+    const updates: any = {};
 
     // Fix Ukrainian to Polish for benefits
     if (p.benefitsPl && p.benefitsPl.length > 0) {
@@ -46,7 +46,7 @@ async function main() {
     if (Object.keys(updates).length > 0) {
       await prisma.product.update({
         where: { id: p.id },
-        data: updates
+        data: updates,
       });
       fixed++;
     }
@@ -55,4 +55,6 @@ async function main() {
   console.log(`✅ Fixed: ${fixed}/171`);
 }
 
-main().catch(console.error).finally(() => process.exit(0));
+main()
+  .catch(console.error)
+  .finally(() => process.exit(0));

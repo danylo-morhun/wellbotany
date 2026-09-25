@@ -11,8 +11,8 @@ async function main() {
       namePl: true,
       servingSize: true,
       countryOfOrigin: true,
-      netWeight: true
-    }
+      netWeight: true,
+    },
   });
 
   let servingFixed = 0;
@@ -31,7 +31,10 @@ async function main() {
         serving = "1-2 żelki dziennie";
       } else if (p.namePl.toLowerCase().includes("powder")) {
         serving = "1-2 łyżeczki dziennie";
-      } else if (p.namePl.toLowerCase().includes("kroplach") || p.namePl.toLowerCase().includes("ml")) {
+      } else if (
+        p.namePl.toLowerCase().includes("kroplach") ||
+        p.namePl.toLowerCase().includes("ml")
+      ) {
         serving = "10-15 kropli dziennie";
       }
 
@@ -48,7 +51,7 @@ async function main() {
     if (Object.keys(updates).length > 0) {
       await prisma.product.update({
         where: { id: p.id },
-        data: updates
+        data: updates,
       });
     }
 
@@ -72,20 +75,24 @@ async function main() {
       healthWarnings: true,
       usageInstructionsPl: true,
       storageInfo: true,
-      ingredients: true
-    }
+      ingredients: true,
+    },
   });
 
   console.log("\n📋 FINAL COMPLETENESS:");
-  console.log(`✅ Weight: ${final.filter(p => p.netWeight).length}/171`);
-  console.log(`✅ Serving size: ${final.filter(p => p.servingSize).length}/171`);
-  console.log(`✅ Country: ${final.filter(p => p.countryOfOrigin).length}/171`);
-  console.log(`✅ Description: ${final.filter(p => p.descriptionPl).length}/171`);
-  console.log(`✅ Benefits: ${final.filter(p => p.benefitsPl?.length).length}/171`);
-  console.log(`✅ Warnings: ${final.filter(p => p.healthWarnings?.length).length}/171`);
-  console.log(`✅ Usage: ${final.filter(p => p.usageInstructionsPl).length}/171`);
-  console.log(`✅ Storage: ${final.filter(p => p.storageInfo).length}/171`);
-  console.log(`✅ Ingredients: ${final.filter(p => (p.ingredients as any)?.pl?.length > 10).length}/171`);
+  console.log(`✅ Weight: ${final.filter((p) => p.netWeight).length}/171`);
+  console.log(`✅ Serving size: ${final.filter((p) => p.servingSize).length}/171`);
+  console.log(`✅ Country: ${final.filter((p) => p.countryOfOrigin).length}/171`);
+  console.log(`✅ Description: ${final.filter((p) => p.descriptionPl).length}/171`);
+  console.log(`✅ Benefits: ${final.filter((p) => p.benefitsPl?.length).length}/171`);
+  console.log(`✅ Warnings: ${final.filter((p) => p.healthWarnings?.length).length}/171`);
+  console.log(`✅ Usage: ${final.filter((p) => p.usageInstructionsPl).length}/171`);
+  console.log(`✅ Storage: ${final.filter((p) => p.storageInfo).length}/171`);
+  console.log(
+    `✅ Ingredients: ${final.filter((p) => (p.ingredients as any)?.pl?.length > 10).length}/171`,
+  );
 }
 
-main().catch(console.error).finally(() => process.exit(0));
+main()
+  .catch(console.error)
+  .finally(() => process.exit(0));

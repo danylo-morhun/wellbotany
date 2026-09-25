@@ -1,5 +1,5 @@
+import fs from "node:fs/promises";
 import { PrismaClient } from "@prisma/client";
-import fs from "fs/promises";
 
 const prisma = new PrismaClient();
 
@@ -119,10 +119,7 @@ ${facts.map((f) => `<li>${f}</li>`).join("\n")}
   }
 
   // Save for review
-  await fs.writeFile(
-    "/tmp/reformatted-batch.json",
-    JSON.stringify(updates, null, 2)
-  );
+  await fs.writeFile("/tmp/reformatted-batch.json", JSON.stringify(updates, null, 2));
 
   console.log(`\n✓ Prepared ${updates.length} updates`);
   console.log("Sample:");

@@ -5,14 +5,14 @@ const prisma = new PrismaClient();
 async function fixProduct(slug: string) {
   const product = await prisma.product.findUnique({
     where: { slug },
-    include: { images: true }
+    include: { images: true },
   });
 
   if (!product) return null;
 
   // Fix duplicates — keep only main image (isMain=true) + max 1 extra
-  const mainImages = product.images.filter(img => img.isMain);
-  const otherImages = product.images.filter(img => !img.isMain);
+  const _mainImages = product.images.filter((img) => img.isMain);
+  const otherImages = product.images.filter((img) => !img.isMain);
 
   if (otherImages.length > 1) {
     const toDelete = otherImages.slice(1);
@@ -22,21 +22,24 @@ async function fixProduct(slug: string) {
   }
 
   // Extract benefits from description if missing
-  if (!product.benefitsPl || (Array.isArray(product.benefitsPl) && product.benefitsPl.length === 0)) {
+  if (
+    !product.benefitsPl ||
+    (Array.isArray(product.benefitsPl) && product.benefitsPl.length === 0)
+  ) {
     const descText = product.descriptionPl || "";
-    
+
     // Try to extract from <li> tags in HTML
     const liMatches = descText.match(/<li>([^<]+)<\/li>/g);
     if (liMatches && liMatches.length > 0) {
       const benefits = liMatches
-        .map(li => li.replace(/<\/?li>/g, "").trim())
-        .filter(b => b.length > 10)
+        .map((li) => li.replace(/<\/?li>/g, "").trim())
+        .filter((b) => b.length > 10)
         .slice(0, 6);
 
       if (benefits.length > 0) {
         await prisma.product.update({
           where: { id: product.id },
-          data: { benefitsPl: benefits }
+          data: { benefitsPl: benefits },
         });
 
         return { fixed: true, benefits: benefits.length };
@@ -52,10 +55,10 @@ async function main() {
 
   const issues = await prisma.product.findMany({
     where: {
-      brand: { slug: { in: ["dr-jacobs", "omni-biotic"] } }
+      brand: { slug: { in: ["dr-jacobs", "omni-biotic"] } },
     },
     include: { images: true },
-    orderBy: { namePl: "asc" }
+    orderBy: { namePl: "asc" },
   });
 
   let fixedImages = 0;
@@ -63,7 +66,7 @@ async function main() {
 
   for (const p of issues) {
     // Fix images
-    const mainCount = p.images.filter(img => img.isMain).length;
+    const _mainCount = p.images.filter((img) => img.isMain).length;
     const totalCount = p.images.length;
 
     if (totalCount > 2) {

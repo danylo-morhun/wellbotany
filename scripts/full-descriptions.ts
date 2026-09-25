@@ -21,12 +21,12 @@ async function enhance(name: string, currentDesc: string): Promise<any> {
     const resp = await client.messages.create({
       model: "claude-3-5-haiku-20241022",
       max_tokens: 1500,
-      messages: [{ role: "user", content: prompt }]
+      messages: [{ role: "user", content: prompt }],
     });
     const text = resp.content[0].type === "text" ? resp.content[0].text : "";
     const match = text.match(/\{[\s\S]*\}/);
     return match ? JSON.parse(match[0]) : null;
-  } catch (e) {
+  } catch (_e) {
     console.error(`  ❌ API fail: ${name}`);
     return null;
   }
@@ -37,7 +37,7 @@ async function main() {
 
   const products = await prisma.product.findMany({
     where: { brand: { slug: "singularis" } },
-    select: { id: true, namePl: true, descriptionPl: true }
+    select: { id: true, namePl: true, descriptionPl: true },
   });
 
   let done = 0;
@@ -47,7 +47,7 @@ async function main() {
 
     const enhanced = await enhance(p.namePl, p.descriptionPl || "");
     if (!enhanced) {
-      await new Promise(r => setTimeout(r, 300));
+      await new Promise((r) => setTimeout(r, 300));
       continue;
     }
 
@@ -58,14 +58,16 @@ async function main() {
         benefitsPl: enhanced.benefits || [],
         healthWarnings: enhanced.warnings || [],
         usageInstructionsPl: enhanced.usage,
-        storageInfo: enhanced.storage
-      }
+        storageInfo: enhanced.storage,
+      },
     });
     done++;
-    await new Promise(r => setTimeout(r, 300));
+    await new Promise((r) => setTimeout(r, 300));
   }
 
   console.log(`\n✅ Готово: ${done}/${products.length}`);
 }
 
-main().catch(console.error).finally(() => process.exit(0));
+main()
+  .catch(console.error)
+  .finally(() => process.exit(0));

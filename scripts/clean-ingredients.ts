@@ -56,8 +56,8 @@ async function main() {
     where: { brand: { slug: "singularis" } },
     select: {
       id: true,
-      ingredients: true
-    }
+      ingredients: true,
+    },
   });
 
   let fixed = 0;
@@ -71,8 +71,8 @@ async function main() {
     await prisma.product.update({
       where: { id: p.id },
       data: {
-        ingredients: { pl: cleaned }
-      }
+        ingredients: { pl: cleaned },
+      },
     });
 
     fixed++;
@@ -82,4 +82,6 @@ async function main() {
   console.log(`\n✅ Cleaned: ${fixed}/171`);
 }
 
-main().catch(console.error).finally(() => process.exit(0));
+main()
+  .catch(console.error)
+  .finally(() => process.exit(0));

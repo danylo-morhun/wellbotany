@@ -1,10 +1,10 @@
 #!/usr/bin/env npx tsx
+import fs from "node:fs";
+import https from "node:https";
+import path from "node:path";
+import { put } from "@vercel/blob";
 import { chromium } from "playwright";
 import { prisma } from "@/lib/prisma";
-import { put } from "@vercel/blob";
-import https from "https";
-import fs from "fs";
-import path from "path";
 
 const DEST = path.join(process.cwd(), "public/supplier-images-hq");
 if (!fs.existsSync(DEST)) fs.mkdirSync(DEST, { recursive: true });
@@ -56,19 +56,26 @@ async function scrapeAllListings(): Promise<ScrapedItem[]> {
   const results: ScrapedItem[] = [];
 
   for (let pageNum = 1; pageNum <= 30; pageNum++) {
-    const url = pageNum === 1 ? "https://singularis.com.pl/sklep/" : `https://singularis.com.pl/sklep/page/${pageNum}/`;
+    const url =
+      pageNum === 1
+        ? "https://singularis.com.pl/sklep/"
+        : `https://singularis.com.pl/sklep/page/${pageNum}/`;
 
-    const resp = await page.goto(url, { waitUntil: "networkidle", timeout: 30000 }).catch(() => null);
+    const resp = await page
+      .goto(url, { waitUntil: "networkidle", timeout: 30000 })
+      .catch(() => null);
     if (!resp || resp.status() === 404) break;
 
     await page.waitForTimeout(600);
 
     if (pageNum === 1) {
-      await page.evaluate(() => {
-        const btns = Array.from(document.querySelectorAll("button"));
-        const decline = btns.find((b) => /odrzuć|decline|akceptuj/i.test(b.textContent || ""));
-        if (decline) (decline as HTMLElement).click();
-      }).catch(() => {});
+      await page
+        .evaluate(() => {
+          const btns = Array.from(document.querySelectorAll("button"));
+          const decline = btns.find((b) => /odrzuć|decline|akceptuj/i.test(b.textContent || ""));
+          if (decline) (decline as HTMLElement).click();
+        })
+        .catch(() => {});
       await page.waitForTimeout(500);
     }
 
@@ -115,7 +122,7 @@ async function main() {
   const blobToken = process.env.BLOB_READ_WRITE_TOKEN;
   const products = await prisma.product.findMany({
     where: { brand: { slug: "singularis" } },
-    select: { id: true, namePl: true }
+    select: { id: true, namePl: true },
   });
 
   let fixed = 0;
@@ -149,7 +156,7 @@ async function main() {
         const blob = await put(`singularis-hq/${filename}`, buffer, {
           access: "public",
           token: blobToken,
-          allowOverwrite: true
+          allowOverwrite: true,
         });
         finalUrl = blob.url;
       } catch {
@@ -167,8 +174,8 @@ async function main() {
         url: finalUrl,
         altPl: p.namePl,
         isMain: true,
-        sortOrder: 0
-      }
+        sortOrder: 0,
+      },
     });
 
     fixed++;
@@ -180,4 +187,6 @@ async function main() {
   console.log(`❌ Download failed: ${downloadFailed}`);
 }
 
-main().catch(console.error).finally(() => process.exit(0));
+main()
+  .catch(console.error)
+  .finally(() => process.exit(0));

@@ -1,9 +1,7 @@
 #!/usr/bin/env tsx
-import fs from "node:fs";
-import path from "node:path";
 import { PrismaClient } from "@prisma/client";
-import { scrapeSingularis } from "../src/features/products/lib/import/parsers/singularis-scraper";
 import { importSupplierProducts } from "../src/features/products/lib/import/import-products";
+import { scrapeSingularis } from "../src/features/products/lib/import/parsers/singularis-scraper";
 
 const SUPPLIER_SOURCES = [
   {

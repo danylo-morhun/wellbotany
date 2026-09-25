@@ -1,18 +1,15 @@
 #!/usr/bin/env npx tsx
+import fs from "node:fs";
+import path from "node:path";
 import { chromium } from "playwright";
 import { prisma } from "@/lib/prisma";
-import fs from "fs";
-import path from "path";
 
 const DEST_DIR = path.join(process.cwd(), "public/supplier-images");
 
-async function downloadImageFile(
-  url: string,
-  filename: string,
-): Promise<string | null> {
+async function downloadImageFile(url: string, filename: string): Promise<string | null> {
   return new Promise((resolve) => {
     try {
-      const protocol = url.startsWith("https") ? require("https") : require("http");
+      const protocol = url.startsWith("https") ? require("node:https") : require("node:http");
       const filePath = path.join(DEST_DIR, filename);
 
       if (fs.existsSync(filePath) && fs.statSync(filePath).size > 5000) {
@@ -88,9 +85,9 @@ async function main() {
         .replace(/[^a-z0-9]+/g, "-")
         .replace(/^-|-$/g, "")}/`;
 
-      await page.goto(productUrl, { waitUntil: "domcontentloaded", timeout: 30000 }).catch(
-        () => {},
-      );
+      await page
+        .goto(productUrl, { waitUntil: "domcontentloaded", timeout: 30000 })
+        .catch(() => {});
       await page.waitForTimeout(1000);
 
       const imageUrl: string | null = await page.evaluate(() => {
@@ -128,7 +125,7 @@ async function main() {
       }
 
       await new Promise((r) => setTimeout(r, 300));
-    } catch (e) {
+    } catch (_e) {
       // continue
     }
   }
@@ -145,4 +142,6 @@ async function main() {
   console.log(`\nУсього з картинками: ${withImages}/171`);
 }
 
-main().catch(console.error).finally(() => process.exit(0));
+main()
+  .catch(console.error)
+  .finally(() => process.exit(0));

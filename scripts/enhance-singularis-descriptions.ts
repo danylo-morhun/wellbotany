@@ -3,7 +3,10 @@ import { prisma } from "@/lib/prisma";
 
 const client = new Anthropic();
 
-async function enhanceDescription(productName: string, rawDesc: string): Promise<{
+async function enhanceDescription(
+  productName: string,
+  rawDesc: string,
+): Promise<{
   description: string;
   benefits: string[];
   healthWarnings: string[];
@@ -34,8 +37,7 @@ Odpowiedź w JSON:
     messages: [{ role: "user", content: prompt }],
   });
 
-  const text =
-    response.content[0].type === "text" ? response.content[0].text : "";
+  const text = response.content[0].type === "text" ? response.content[0].text : "";
 
   try {
     // Extract JSON from response (may be wrapped in markdown)
@@ -43,12 +45,14 @@ Odpowiedź w JSON:
     if (!jsonMatch) throw new Error("No JSON found");
 
     return JSON.parse(jsonMatch[0]);
-  } catch (e) {
+  } catch (_e) {
     console.error(`Failed to parse response for ${productName}`);
     return {
       description: rawDesc,
       benefits: [],
-      healthWarnings: ["Suplement diety nie może być stosowany jako substytut zróżnicowanej diety."],
+      healthWarnings: [
+        "Suplement diety nie może być stosowany jako substytut zróżnicowanej diety.",
+      ],
       usageInstructions: "Stosować zgodnie z zaleceniami producenta.",
     };
   }
@@ -86,11 +90,16 @@ async function main() {
       // Rate limit: 0.5s between requests
       await new Promise((r) => setTimeout(r, 500));
     } catch (error) {
-      console.error(`❌ Error processing ${p.namePl}:`, error instanceof Error ? error.message : error);
+      console.error(
+        `❌ Error processing ${p.namePl}:`,
+        error instanceof Error ? error.message : error,
+      );
     }
   }
 
   console.log("\n✅ All descriptions enhanced!");
 }
 
-main().catch(console.error).finally(() => process.exit(0));
+main()
+  .catch(console.error)
+  .finally(() => process.exit(0));

@@ -122,7 +122,7 @@ function safeHtml(html) {
     for (const el of [...node.children]) {
       walk(el);
       if (!ALLOWED.has(el.tagName)) el.replaceWith(...el.childNodes);
-      else [...el.attributes].forEach((a) => el.removeAttribute(a.name));
+      else [...el.attributes].forEach((a) => { el.removeAttribute(a.name); });
     }
   };
   walk(tpl.content); return tpl.innerHTML;
@@ -200,8 +200,8 @@ function renderItem() {
 }
 function applyCol() {
   const narrow = matchMedia("(max-width: 900px)").matches;
-  document.querySelectorAll("[data-col]").forEach((el) => el.classList.toggle("hide-col", narrow && el.dataset.col !== active));
-  document.querySelectorAll("[data-col-btn]").forEach((b) => b.setAttribute("aria-pressed", String(b.dataset.colBtn === active)));
+  document.querySelectorAll("[data-col]").forEach((el) => { el.classList.toggle("hide-col", narrow && el.dataset.col !== active); });
+  document.querySelectorAll("[data-col-btn]").forEach((b) => { b.setAttribute("aria-pressed", String(b.dataset.colBtn === active)); });
 }
 document.getElementById("list").addEventListener("click", (e) => { const b = e.target.closest("button[data-i]"); if (!b) return; current = +b.dataset.i; renderList(); renderItem(); });
 document.getElementById("main").addEventListener("click", (e) => { const b = e.target.closest("[data-col-btn]"); if (b) { active = b.dataset.colBtn; applyCol(); } });
