@@ -30,6 +30,8 @@ const onest = Onest({
   variable: "--font-display",
   subsets: ["latin", "latin-ext"],
   weight: ["500", "600", "700"],
+  // Headings only — a preload competes with CSS and the LCP image; swap is fine
+  preload: false,
 });
 
 export const metadata: Metadata = {
