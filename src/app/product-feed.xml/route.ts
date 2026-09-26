@@ -5,6 +5,7 @@ import { resolveDisplayBrand } from "@/features/catalog/lib/brand-tree";
 import { MAIN_IMAGE_FIRST } from "@/features/catalog/lib/main-image";
 import { prisma } from "@/lib/prisma";
 import { stripHtml } from "@/lib/seo";
+import { feedUnitPricing, variantPackQuantity } from "@/lib/unit-price";
 
 export const revalidate = 3600;
 
@@ -28,6 +29,7 @@ export async function GET() {
       namePl: true,
       shortDescPl: true,
       descriptionPl: true,
+      netWeight: true,
       brand: {
         select: { name: true, slug: true, parentBrand: { select: { name: true, slug: true } } },
       },
@@ -73,6 +75,9 @@ export async function GET() {
       // Each variant's own URL, so the landing page shows the feed price
       const variantLink = multiVariant ? `${link}?wariant=${variant.id}` : link;
       const inStock = !variant.trackStock || variant.stock > 0;
+      const unitPricing = feedUnitPricing(
+        variantPackQuantity(variant.optionValue, product.netWeight, !multiVariant, product.namePl),
+      );
 
       return `    <item>
       <g:id>${escapeXml(variant.id)}</g:id>
@@ -83,6 +88,7 @@ export async function GET() {
       <g:availability>${inStock ? "in_stock" : "out_of_stock"}</g:availability>
       <g:price>${(variant.pricePln / 100).toFixed(2)} PLN</g:price>
       <g:condition>new</g:condition>
+      ${unitPricing ? `<g:unit_pricing_measure>${unitPricing.measure}</g:unit_pricing_measure>\n      <g:unit_pricing_base_measure>${unitPricing.base}</g:unit_pricing_base_measure>` : ""}
       ${multiVariant ? `<g:item_group_id>${escapeXml(product.id)}</g:item_group_id>` : ""}
       ${variant.ean ? `<g:gtin>${escapeXml(variant.ean)}</g:gtin>` : "<g:identifier_exists>no</g:identifier_exists>"}
       ${displayBrand ? `<g:brand>${escapeXml(displayBrand.name)}</g:brand>` : ""}
