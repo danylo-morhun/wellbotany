@@ -1,36 +1,9 @@
 import { unstable_cache } from "next/cache";
-import { MAIN_IMAGE_FIRST } from "@/features/catalog/lib/main-image";
 import { prisma } from "@/lib/prisma";
-import { getCategories } from "../actions";
+import { getCategories, PRODUCT_LIST_SELECT } from "../actions";
 
-const productSelect = {
-  id: true,
-  slug: true,
-  namePl: true,
-  shortDescPl: true,
-  isNewArrival: true,
-  isFeatured: true,
-  brand: {
-    select: { name: true, slug: true, parentBrand: { select: { name: true, slug: true } } },
-  },
-  category: { select: { namePl: true, slug: true } },
-  images: {
-    select: { url: true, altPl: true },
-    orderBy: MAIN_IMAGE_FIRST,
-    take: 1,
-  },
-  variants: {
-    where: { isActive: true },
-    select: { id: true, pricePln: true, comparePricePln: true, stock: true, isDefault: true },
-    orderBy: { isDefault: "desc" as const },
-    take: 1,
-  },
-  tags: {
-    select: {
-      tag: { select: { namePl: true, slug: true, iconUrl: true, type: true } },
-    },
-  },
-} as const;
+// Same shape as listings, so ProductCard gets everything it needs
+const productSelect = PRODUCT_LIST_SELECT;
 
 export const getHomepageData = unstable_cache(
   async () => {
