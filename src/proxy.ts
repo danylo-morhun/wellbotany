@@ -1,5 +1,6 @@
 import { type NextFetchEvent, type NextRequest, NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
+import { COOKIE_CONSENT_SCRIPT_HASH } from "@/lib/cookie-consent-script";
 import { THEME_INIT_SCRIPT_HASH } from "@/lib/theme-script";
 
 // Routes that are already per-request dynamic (session, cart, checkout) — a
@@ -49,7 +50,7 @@ function buildStrictCsp(nonce: string, withPointMap: boolean): string {
     `img-src 'self' data: blob: ${IMG_SRC_HOSTS}${withPointMap ? ` ${POINT_MAP_IMG}` : ""}`,
     // 'strict-dynamic' trusts scripts loaded by an already-nonce'd script
     // (e.g. Google Analytics' gtag.js pulling in further tag scripts).
-    `script-src 'self' 'nonce-${nonce}' '${THEME_INIT_SCRIPT_HASH}' 'strict-dynamic'`,
+    `script-src 'self' 'nonce-${nonce}' '${THEME_INIT_SCRIPT_HASH}' '${COOKIE_CONSENT_SCRIPT_HASH}' 'strict-dynamic'`,
     // No nonce equivalent exists for inline style="..." attributes (only <style>
     // blocks), and Radix/base-ui set inline styles for positioning — unsafe-inline
     // here is a deliberate, lower-severity tradeoff.

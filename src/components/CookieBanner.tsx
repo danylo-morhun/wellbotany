@@ -4,18 +4,11 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
 import {
-  CONSENT_STORAGE_KEY,
   type ConsentChoice,
   OPEN_COOKIE_SETTINGS_EVENT,
   readConsent,
   saveConsent,
 } from "@/lib/analytics";
-
-/**
- * Runs before first paint (inline in <body>): marks <html> when a choice is
- * already stored, so CSS hides the server-rendered banner without a flash.
- */
-export const COOKIE_CONSENT_BOOT_SCRIPT = `try{var c=localStorage.getItem("${CONSENT_STORAGE_KEY}");if(c==="accepted"||c==="rejected")document.documentElement.dataset.cookieConsent=c}catch(e){}`;
 
 export function CookieBanner() {
   const pathname = usePathname();

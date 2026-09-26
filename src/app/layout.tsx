@@ -1,9 +1,10 @@
 import type { Metadata, Viewport } from "next";
 import { Geist_Mono, Onest, Plus_Jakarta_Sans } from "next/font/google";
 import { ThemeProvider } from "next-themes";
-import { COOKIE_CONSENT_BOOT_SCRIPT, CookieBanner } from "@/components/CookieBanner";
+import { CookieBanner } from "@/components/CookieBanner";
 import { GoogleAnalytics } from "@/components/GoogleAnalytics";
 import { Toaster } from "@/components/ui/sonner";
+import { COOKIE_CONSENT_BOOT_SCRIPT } from "@/lib/cookie-consent-script";
 import {
   buildOrganizationJsonLd,
   buildWebsiteJsonLd,
