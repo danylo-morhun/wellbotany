@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { isP24Enabled } from "@/features/przelewy24/lib/config";
 import { getShopSettings } from "@/features/settings/lib/shop-settings";
 import { formatPriceCompact } from "@/lib/format";
 import { PICKUP_HOLD_DAYS } from "@/lib/pickup-locations";
@@ -16,7 +17,10 @@ export const metadata: Metadata = {
 
 type Faq = { q: string; a: string };
 
-function buildGroups(freeShipping: string | null): { title: string; items: Faq[] }[] {
+function buildGroups(
+  freeShipping: string | null,
+  onlinePayments: boolean,
+): { title: string; items: Faq[] }[] {
   return [
     {
       title: "Zamówienia",
@@ -75,22 +79,35 @@ function buildGroups(freeShipping: string | null): { title: string; items: Faq[]
     {
       title: "Płatności",
       items: [
-        {
-          q: "Jakie są formy płatności?",
-          a: "Online przez Przelewy24: BLIK, karty płatnicze (Visa, Mastercard), Apple Pay, Google Pay i szybkie przelewy. Możesz też zapłacić tradycyjnym przelewem, a przy odbiorze osobistym – na miejscu.",
-        },
-        {
-          q: "Czy płatności online są bezpieczne?",
-          a: "Tak. Płatności obsługuje licencjonowany operator Przelewy24 (PayPro S.A.). Nie przechowujemy danych Twojej karty.",
-        },
+        onlinePayments
+          ? {
+              q: "Jakie są formy płatności?",
+              a: "Online przez Przelewy24: BLIK, karty płatnicze (Visa, Mastercard), Apple Pay, Google Pay i szybkie przelewy. Możesz też zapłacić tradycyjnym przelewem, a przy odbiorze osobistym – na miejscu.",
+            }
+          : {
+              q: "Jakie są formy płatności?",
+              a: "Przelew tradycyjny na nasz rachunek bankowy – dane do przelewu otrzymasz po złożeniu zamówienia i w e-mailu. Przy odbiorze osobistym możesz też zapłacić na miejscu, gotówką lub kartą.",
+            },
+        ...(onlinePayments
+          ? [
+              {
+                q: "Czy płatności online są bezpieczne?",
+                a: "Tak. Płatności obsługuje licencjonowany operator Przelewy24 (PayPro S.A.). Nie przechowujemy danych Twojej karty.",
+              },
+            ]
+          : []),
         {
           q: "Ile mam czasu na opłacenie zamówienia przelewem tradycyjnym?",
           a: "Prosimy o wpłatę w ciągu 3 dni roboczych. Dane do przelewu otrzymasz po złożeniu zamówienia i w e-mailu. Zamówienie realizujemy po zaksięgowaniu wpłaty.",
         },
-        {
-          q: "Płatność się nie powiodła – co teraz?",
-          a: "Zamówienie zostaje zapisane. Napisz do nas z numerem zamówienia – pomożemy dokończyć płatność lub zmienić ją na przelew tradycyjny.",
-        },
+        ...(onlinePayments
+          ? [
+              {
+                q: "Płatność się nie powiodła – co teraz?",
+                a: "Zamówienie zostaje zapisane. Napisz do nas z numerem zamówienia – pomożemy dokończyć płatność lub zmienić ją na przelew tradycyjny.",
+              },
+            ]
+          : []),
       ],
     },
     {
@@ -171,6 +188,7 @@ export default async function FaqPage() {
   const { freeShippingThresholdPln } = await getShopSettings();
   const groups = buildGroups(
     freeShippingThresholdPln !== null ? formatPriceCompact(freeShippingThresholdPln) : null,
+    isP24Enabled(),
   );
   const jsonLd = buildFaqJsonLd(groups.flatMap((group) => group.items));
 

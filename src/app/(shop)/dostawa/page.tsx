@@ -4,6 +4,7 @@ import {
   SHIPPING_METHODS_BY_PRICE,
   shippingLabel,
 } from "@/features/checkout/lib/shipping";
+import { isP24Enabled } from "@/features/przelewy24/lib/config";
 import { getShopSettings } from "@/features/settings/lib/shop-settings";
 import { formatPriceCompact } from "@/lib/format";
 import { PICKUP_HOLD_DAYS, PICKUP_LOCATIONS } from "@/lib/pickup-locations";
@@ -25,6 +26,7 @@ const DEFAULT_DELIVERY_TIME = "1–2 dni robocze od nadania";
 
 export default async function DostawaPage() {
   const { freeShippingThresholdPln } = await getShopSettings();
+  const onlinePayments = isP24Enabled();
   const threshold =
     freeShippingThresholdPln !== null ? formatPriceCompact(freeShippingThresholdPln) : null;
 
@@ -86,10 +88,11 @@ export default async function DostawaPage() {
         <section>
           <h2 className="mb-3 text-xl">Czas realizacji</h2>
           <p className="text-muted-foreground">
-            Zamówienia wysyłamy w ciągu 2 dni roboczych od zaksięgowania płatności. Przy płatności
-            online (BLIK, karta, szybki przelew) płatność księgowana jest od razu, przy przelewie
-            tradycyjnym — zwykle w ciągu 1 dnia roboczego. Czas doręczenia przez przewoźnika to
-            najczęściej 1–2 dni robocze od nadania.
+            Zamówienia wysyłamy w ciągu 2 dni roboczych od zaksięgowania płatności.{" "}
+            {onlinePayments
+              ? "Przy płatności online (BLIK, karta, szybki przelew) płatność księgowana jest od razu, przy przelewie tradycyjnym — zwykle w ciągu 1 dnia roboczego."
+              : "Przelew tradycyjny księgujemy zwykle w ciągu 1 dnia roboczego."}{" "}
+            Czas doręczenia przez przewoźnika to najczęściej 1–2 dni robocze od nadania.
           </p>
         </section>
 
@@ -147,11 +150,13 @@ export default async function DostawaPage() {
         <section>
           <h2 className="mb-3 text-xl">Formy płatności</h2>
           <ul className="list-inside list-disc space-y-1 text-muted-foreground">
-            <li>
-              Płatność online przez Przelewy24 — BLIK, karty płatnicze (Visa, Mastercard), Apple
-              Pay, Google Pay, szybkie przelewy bankowe. Zamówienie realizujemy od razu po
-              potwierdzeniu płatności.
-            </li>
+            {onlinePayments && (
+              <li>
+                Płatność online przez Przelewy24 — BLIK, karty płatnicze (Visa, Mastercard), Apple
+                Pay, Google Pay, szybkie przelewy bankowe. Zamówienie realizujemy od razu po
+                potwierdzeniu płatności.
+              </li>
+            )}
             <li>
               Przelew tradycyjny na nasz rachunek bankowy — dane do przelewu otrzymasz po złożeniu
               zamówienia i w e-mailu. Prosimy o wpłatę w ciągu 3 dni roboczych; zamówienie

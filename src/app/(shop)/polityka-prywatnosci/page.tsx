@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { isP24Enabled } from "@/features/przelewy24/lib/config";
 
 export const dynamic = "force-static";
 
@@ -67,6 +68,7 @@ const recipients = [
   {
     action: "złożenie zamówienia w Sklepie",
     recipient: "operator płatności Przelewy24 (PayPro S.A.)",
+    onlinePaymentsOnly: true,
   },
   {
     action: "dostawa zamówienia",
@@ -204,12 +206,14 @@ export default function PolitykaPrywatnosciPage() {
                 </tr>
               </thead>
               <tbody>
-                {recipients.map((r) => (
-                  <tr key={r.action} className="border-b border-border last:border-0">
-                    <td className="px-4 py-3 font-medium">{r.action}</td>
-                    <td className="px-4 py-3 text-muted-foreground">{r.recipient}</td>
-                  </tr>
-                ))}
+                {recipients
+                  .filter((r) => !r.onlinePaymentsOnly || isP24Enabled())
+                  .map((r) => (
+                    <tr key={r.action} className="border-b border-border last:border-0">
+                      <td className="px-4 py-3 font-medium">{r.action}</td>
+                      <td className="px-4 py-3 text-muted-foreground">{r.recipient}</td>
+                    </tr>
+                  ))}
               </tbody>
             </table>
           </div>

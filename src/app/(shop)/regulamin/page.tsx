@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { isP24Enabled } from "@/features/przelewy24/lib/config";
 
 export const dynamic = "force-static";
 
@@ -37,6 +38,7 @@ const definitions = [
 ];
 
 export default function RegulaminPage() {
+  const onlinePayments = isP24Enabled();
   return (
     <div className="container mx-auto max-w-3xl px-4 py-12">
       <h1 className="mb-2 text-3xl">Regulamin sklepu internetowego</h1>
@@ -122,10 +124,12 @@ export default function RegulaminPage() {
           <h2 className="mb-3 text-xl">§5 Płatności</h2>
           <p className="mb-2 text-muted-foreground">Za złożone zamówienie można zapłacić:</p>
           <ul className="list-inside list-disc space-y-1 text-muted-foreground">
-            <li>
-              online za pośrednictwem operatora Przelewy24 (PayPro S.A.) — BLIK, kartą płatniczą
-              (Visa, Mastercard), Apple Pay, Google Pay lub szybkim przelewem online,
-            </li>
+            {onlinePayments && (
+              <li>
+                online za pośrednictwem operatora Przelewy24 (PayPro S.A.) — BLIK, kartą płatniczą
+                (Visa, Mastercard), Apple Pay, Google Pay lub szybkim przelewem online,
+              </li>
+            )}
             <li>zwykłym przelewem na rachunek bankowy Sprzedawcy,</li>
             <li>
               gotówką lub kartą przy odbiorze osobistym w sklepie Sprzedawcy — wyłącznie przy
