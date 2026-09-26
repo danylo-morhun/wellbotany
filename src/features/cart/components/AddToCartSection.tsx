@@ -18,6 +18,8 @@ export type Variant = {
   comparePricePln: number | null;
   stock: number;
   isDefault: boolean;
+  /** Cena jednostkowa, e.g. "0,83 zł / szt." — null when not required or unknown */
+  unitPrice?: string | null;
 };
 
 type Props = {
@@ -112,6 +114,9 @@ export function AddToCartSection({ variants }: Props) {
           </>
         )}
       </div>
+      {selected.unitPrice && (
+        <p className="-mt-3 text-sm text-muted-foreground">{selected.unitPrice}</p>
+      )}
 
       <div className="space-y-1">
         <p className={`text-sm ${selected.stock > 0 ? "text-success" : "text-muted-foreground"}`}>

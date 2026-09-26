@@ -18,6 +18,7 @@ import { WishlistButton } from "@/features/wishlist/components/WishlistButton";
 import { prisma } from "@/lib/prisma";
 import { sanitizeRichText } from "@/lib/sanitize";
 import { buildPageTitle, buildProductJsonLd, DEFAULT_OG_IMAGE, toJsonLdScript } from "@/lib/seo";
+import { formatUnitPrice, variantPackQuantity } from "@/lib/unit-price";
 import {
   getProduct,
   getRedirectTarget,
@@ -84,6 +85,18 @@ export default async function ProduktPage({ params }: Props) {
     notFound();
   }
   const displayBrand = product.brand ? resolveDisplayBrand(product.brand) : null;
+  const variantsWithUnitPrice = product.variants.map((v) => ({
+    ...v,
+    unitPrice: formatUnitPrice(
+      v.pricePln,
+      variantPackQuantity(
+        v.optionValue,
+        product.netWeight,
+        product.variants.length === 1,
+        product.namePl,
+      ),
+    ),
+  }));
 
   const related = await getRelatedProducts({
     id: product.id,
@@ -230,7 +243,10 @@ export default async function ProduktPage({ params }: Props) {
 
               <div className="flex gap-3">
                 <div className="flex-1">
-                  <ProductActionsClient variants={product.variants} productName={product.namePl} />
+                  <ProductActionsClient
+                    variants={variantsWithUnitPrice}
+                    productName={product.namePl}
+                  />
                 </div>
                 <div className="flex items-end pb-0.5">
                   <WishlistButton productId={product.id} />
