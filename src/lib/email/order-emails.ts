@@ -1,3 +1,4 @@
+import { PAYMENT_LABELS } from "@/features/checkout/lib/payment";
 import { shippingLabel } from "@/features/checkout/lib/shipping";
 import { formatPrice } from "@/lib/format";
 import { PICKUP_HOLD_DAYS, pickupLocation } from "@/lib/pickup-locations";
@@ -199,3 +200,97 @@ export async function sendReviewRequestEmail(orderId: string): Promise<void> {
   });
 }
 
+const SHOP_NOTIFY_FALLBACK = "kontakt@wellbotany.pl";
+
+/** "Nowe zamówienie" for the shop inbox (SHOP_NOTIFY_EMAIL) — everything needed to pack and ship. */
+export async function sendShopOrderNotification(orderNumber: string): Promise<void> {
+  const resend = resendClient();
+  if (!resend) return;
+
+  const order = await prisma.order.findUnique({
+    where: { orderNumber },
+    select: {
+      id: true,
+      orderNumber: true,
+      customerEmail: true,
+      customerName: true,
+      customerPhone: true,
+      shippingMethod: true,
+      inpostMachineId: true,
+      inpostMachineName: true,
+      pickupLocation: true,
+      shipFirstName: true,
+      shipLastName: true,
+      shipStreet: true,
+      shipApartment: true,
+      shipPostalCode: true,
+      shipCity: true,
+      wantsFaktura: true,
+      billCompany: true,
+      billNip: true,
+      billStreet: true,
+      billPostalCode: true,
+      billCity: true,
+      paymentMethod: true,
+      paymentStatus: true,
+      shippingPln: true,
+      discountPln: true,
+      totalPln: true,
+      items: {
+        select: { productName: true, variantOpt: true, quantity: true, totalPln: true },
+      },
+    },
+  });
+  if (!order) return;
+
+  const e = (value: string | null | undefined) => escapeHtml(value ?? "");
+  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "https://wellbotany.pl";
+
+  let destination: string;
+  if (order.inpostMachineId) {
+    destination = `Punkt: <strong>${e(order.inpostMachineId)}</strong>${
+      order.inpostMachineName ? `<br>${e(order.inpostMachineName)}` : ""
+    }`;
+  } else if (order.pickupLocation) {
+    const location = pickupLocation(order.pickupLocation);
+    destination = `Odbiór osobisty: <strong>${e(location?.address ?? order.pickupLocation)}</strong>`;
+  } else {
+    destination = `${e(order.shipFirstName)} ${e(order.shipLastName)}<br>${e(order.shipStreet)}${
+      order.shipApartment ? ` / ${e(order.shipApartment)}` : ""
+    }<br>${e(order.shipPostalCode)} ${e(order.shipCity)}`;
+  }
+
+  const itemRows = order.items
+    .map(
+      (item) =>
+        `<tr><td style="padding:4px 0">${item.quantity} × ${e(item.productName)}${item.variantOpt ? ` (${e(item.variantOpt)})` : ""}</td><td style="padding:4px 0;text-align:right">${formatPrice(item.totalPln)}</td></tr>`,
+    )
+    .join("");
+
+  const body = `
+    <p><strong>${formatPrice(order.totalPln)}</strong> · ${e(PAYMENT_LABELS[order.paymentMethod] ?? order.paymentMethod)} (${order.paymentStatus === "CAPTURED" ? "opłacone" : "nieopłacone"})</p>
+    <h2 style="font-size:16px;margin-top:24px">Dostawa: ${e(shippingLabel(order.shippingMethod))} (${formatPrice(order.shippingPln)})</h2>
+    <p>${destination}</p>
+    <h2 style="font-size:16px;margin-top:24px">Klient</h2>
+    <p>${e(order.customerName)}<br>${e(order.customerEmail)}${order.customerPhone ? `<br>${e(order.customerPhone)}` : ""}</p>
+    ${
+      order.wantsFaktura
+        ? `<h2 style="font-size:16px;margin-top:24px">Faktura VAT</h2>
+    <p>${e(order.billCompany)}<br>NIP: <strong>${e(order.billNip)}</strong><br>${e(order.billStreet)}<br>${e(order.billPostalCode)} ${e(order.billCity)}</p>`
+        : ""
+    }
+    <table style="width:100%;border-collapse:collapse;margin-top:16px">
+      ${itemRows}
+      ${order.discountPln > 0 ? `<tr><td>Rabat</td><td style="text-align:right">-${formatPrice(order.discountPln)}</td></tr>` : ""}
+    </table>
+    <p style="margin-top:24px"><a href="${siteUrl}/admin/zamowienia/${order.id}">Otwórz zamówienie w panelu</a></p>
+  `;
+
+  await resend.emails.send({
+    from: EMAIL_FROM,
+    to: process.env.SHOP_NOTIFY_EMAIL || SHOP_NOTIFY_FALLBACK,
+    replyTo: order.customerEmail,
+    subject: `Nowe zamówienie ${order.orderNumber} — ${formatPrice(order.totalPln)}`,
+    html: layout(`Nowe zamówienie ${e(order.orderNumber)}`, body),
+  });
+}

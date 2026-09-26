@@ -1,6 +1,7 @@
 "use server";
 
 import { cookies, headers } from "next/headers";
+import { after } from "next/server";
 import { z } from "zod";
 import { CART_COOKIE_NAME } from "@/features/cart/lib/session";
 import { paymentUrl, registerTransaction } from "@/features/przelewy24/lib/client";
@@ -8,7 +9,7 @@ import { isP24Enabled } from "@/features/przelewy24/lib/config";
 import { getShopSettings } from "@/features/settings/lib/shop-settings";
 import { ActionError } from "@/lib/action-error";
 import { auth } from "@/lib/auth";
-import { sendOrderConfirmationEmail } from "@/lib/email/order-emails";
+import { sendOrderConfirmationEmail, sendShopOrderNotification } from "@/lib/email/order-emails";
 import { formatPrice } from "@/lib/format";
 import { prisma } from "@/lib/prisma";
 import {
@@ -280,8 +281,16 @@ export const placeOrder = actionClient
     cookieStore.delete(CART_COOKIE_NAME);
     await grantOrderAccess(order.orderNumber);
 
-    sendOrderConfirmationEmail(order.orderNumber).catch((err) => {
-      console.error(`[email] confirmation failed for ${order.orderNumber}:`, err);
+    // after(): sent once the response is out, and the function stays alive until they finish
+    after(async () => {
+      await Promise.all([
+        sendOrderConfirmationEmail(order.orderNumber).catch((err) => {
+          console.error(`[email] confirmation failed for ${order.orderNumber}:`, err);
+        }),
+        sendShopOrderNotification(order.orderNumber).catch((err) => {
+          console.error(`[email] shop notification failed for ${order.orderNumber}:`, err);
+        }),
+      ]);
     });
 
     if (
