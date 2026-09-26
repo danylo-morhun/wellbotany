@@ -4,6 +4,7 @@ import { cookies, headers } from "next/headers";
 import { z } from "zod";
 import { CART_COOKIE_NAME } from "@/features/cart/lib/session";
 import { paymentUrl, registerTransaction } from "@/features/przelewy24/lib/client";
+import { isP24Enabled } from "@/features/przelewy24/lib/config";
 import { getShopSettings } from "@/features/settings/lib/shop-settings";
 import { ActionError } from "@/lib/action-error";
 import { auth } from "@/lib/auth";
@@ -69,8 +70,19 @@ export const verifyCoupon = actionClient
     return { valid: true as const, discountPln, message: null };
   });
 
+// Online methods stay in the shared enum; the server rejects them while P24 is off.
+const placeOrderSchema = checkoutSchema.superRefine((data, ctx) => {
+  if (!isP24Enabled() && !isOfflinePayment(data.paymentMethod)) {
+    ctx.addIssue({
+      code: z.ZodIssueCode.custom,
+      message: "Płatności online są chwilowo niedostępne — wybierz przelew tradycyjny",
+      path: ["paymentMethod"],
+    });
+  }
+});
+
 export const placeOrder = actionClient
-  .schema(checkoutSchema)
+  .schema(placeOrderSchema)
   .action(async ({ parsedInput: input }) => {
     await assertNotRateLimited(checkoutLimiter, await getClientIp());
 

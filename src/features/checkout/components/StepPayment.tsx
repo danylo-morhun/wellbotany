@@ -20,6 +20,7 @@ type Props = {
   items: CartItem[];
   subtotal: number;
   freeShippingThresholdPln: number | null;
+  onlinePaymentsEnabled: boolean;
   pending: boolean;
   error: string | null;
 };
@@ -41,6 +42,7 @@ export function StepPayment({
   items,
   subtotal,
   freeShippingThresholdPln,
+  onlinePaymentsEnabled,
   pending,
   error,
 }: Props) {
@@ -175,7 +177,9 @@ export function StepPayment({
         <p className="mb-3 text-sm font-medium">Metoda płatności</p>
         <div className="space-y-2">
           {PAYMENT_OPTIONS.filter(
-            (opt) => opt.value !== "CASH_ON_DELIVERY" || data.shippingMethod === "PICKUP",
+            (opt) =>
+              (opt.value !== "CASH_ON_DELIVERY" || data.shippingMethod === "PICKUP") &&
+              (onlinePaymentsEnabled || isOfflinePayment(opt.value)),
           ).map((opt) => (
             <label
               key={opt.value}

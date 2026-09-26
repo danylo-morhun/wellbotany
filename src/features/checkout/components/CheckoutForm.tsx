@@ -92,6 +92,7 @@ type Props = {
   items: CartItem[];
   subtotal: number;
   freeShippingThresholdPln: number | null;
+  onlinePaymentsEnabled: boolean;
   initialContact?: InitialContact;
 };
 
@@ -100,6 +101,7 @@ export function CheckoutForm({
   items,
   subtotal,
   freeShippingThresholdPln,
+  onlinePaymentsEnabled,
   initialContact,
 }: Props) {
   const router = useRouter();
@@ -234,6 +236,7 @@ export function CheckoutForm({
           items={items}
           subtotal={subtotal}
           freeShippingThresholdPln={freeShippingThresholdPln}
+          onlinePaymentsEnabled={onlinePaymentsEnabled}
           pending={isPending || redirecting}
           error={error}
         />
