@@ -64,7 +64,8 @@ function VariantGallery({ images, productName, variantId }: Props & { variantId:
           src={current.url}
           alt={current.altPl ?? productName}
           fill
-          sizes="(max-width: 1023px) 100vw, 600px"
+          // Page gutter is 1rem per side below sm — at DPR 3 this picks 1080 w instead of 1920 w
+          sizes="(max-width: 639px) calc(100vw - 2rem), (max-width: 1023px) calc(100vw - 3rem), 600px"
           className="object-contain"
           // LCP element on mobile: preload + high fetch priority (`priority` alone no longer sets it)
           preload
