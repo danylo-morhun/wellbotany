@@ -5,7 +5,7 @@ import { formatPriceCompact } from "@/lib/format";
 const staticItems = [
   { icon: ShieldCheck, title: "Certyfikowana jakość", sub: "atestowane GIS/Sanepid" },
   { icon: Leaf, title: "Naturalne składniki", sub: "bez sztucznych dodatków" },
-  { icon: Phone, title: "Wsparcie eksperta", sub: "pon–pt 9:00–17:00" },
+  { icon: Phone, title: "Wsparcie eksperta", sub: "pon–pt 9–18, sob 9–14" },
 ];
 
 export async function TrustStrip() {
