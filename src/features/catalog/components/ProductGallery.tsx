@@ -66,7 +66,9 @@ function VariantGallery({ images, productName, variantId }: Props & { variantId:
           fill
           sizes="(max-width: 1023px) 100vw, 600px"
           className="object-contain"
-          priority
+          // LCP element on mobile: preload + high fetch priority (`priority` alone no longer sets it)
+          preload
+          fetchPriority="high"
         />
       </div>
 
