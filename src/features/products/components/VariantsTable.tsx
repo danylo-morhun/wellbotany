@@ -333,6 +333,16 @@ export function VariantsTable({ productId, variants }: Props) {
                         currency: "PLN",
                       })}
                     </span>
+                  )}
+                  {v.lowestPrice30dPln != null && (
+                    <span className="ml-1">
+                      (najniższa z 30 dni:{" "}
+                      {(v.lowestPrice30dPln / 100).toLocaleString("pl-PL", {
+                        style: "currency",
+                        currency: "PLN",
+                      })}
+                      )
+                    </span>
                   )}{" "}
                   · stock: {v.stock}
                   {v.isDefault && " · domyślny"}
