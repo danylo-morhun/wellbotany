@@ -35,37 +35,27 @@ const IMG_SRC_HOSTS = [
   "https://kenay.com.pl",
 ].join(" ");
 
-// Furgonetka pickup-point map on checkout: its script pulls maplibre + a scrollbar
-// lib from CDNs, Google Fonts, vector tiles/glyphs from c.furgonetka.pl, point
-// data from api.furgonetka.pl, and runs maplibre's worker from a blob: URL.
-// Scripts need no host entries — they're injected by our nonce'd bundle, which
-// 'strict-dynamic' trusts.
 // Google Analytics 4 — loaded only after cookie consent (GoogleAnalytics.tsx)
 const GA_CONNECT =
   "https://*.google-analytics.com https://*.analytics.google.com https://www.googletagmanager.com";
 
-const POINT_MAP_CSP = {
-  img: "https://furgonetka.pl https://c.furgonetka.pl",
-  style: "https://unpkg.com https://cdn.jsdelivr.net https://fonts.googleapis.com",
-  font: "https://fonts.gstatic.com",
-  connect: "https://furgonetka.pl https://api.furgonetka.pl https://c.furgonetka.pl",
-};
+// Pickup-point map on checkout: OpenStreetMap raster tiles. Point data comes
+// from our own /api/points (proxy to epaka), so no extra connect-src.
+const POINT_MAP_IMG = "https://tile.openstreetmap.org";
 
 function buildStrictCsp(nonce: string, withPointMap: boolean): string {
-  const map = (hosts: string) => (withPointMap ? ` ${hosts}` : "");
   return [
     "default-src 'self'",
-    `img-src 'self' data: blob: ${IMG_SRC_HOSTS}${map(POINT_MAP_CSP.img)}`,
+    `img-src 'self' data: blob: ${IMG_SRC_HOSTS}${withPointMap ? ` ${POINT_MAP_IMG}` : ""}`,
     // 'strict-dynamic' trusts scripts loaded by an already-nonce'd script
     // (e.g. Google Analytics' gtag.js pulling in further tag scripts).
     `script-src 'self' 'nonce-${nonce}' '${THEME_INIT_SCRIPT_HASH}' 'strict-dynamic'`,
     // No nonce equivalent exists for inline style="..." attributes (only <style>
     // blocks), and Radix/base-ui set inline styles for positioning — unsafe-inline
     // here is a deliberate, lower-severity tradeoff.
-    `style-src 'self' 'unsafe-inline'${map(POINT_MAP_CSP.style)}`,
-    `font-src 'self'${map(POINT_MAP_CSP.font)}`,
-    `connect-src 'self' https://api.cloudinary.com https://res.cloudinary.com https://*.ingest.de.sentry.io https://*.ingest.sentry.io ${GA_CONNECT}${map(POINT_MAP_CSP.connect)}`,
-    ...(withPointMap ? ["worker-src 'self' blob:"] : []),
+    "style-src 'self' 'unsafe-inline'",
+    "font-src 'self'",
+    `connect-src 'self' https://api.cloudinary.com https://res.cloudinary.com https://*.ingest.de.sentry.io https://*.ingest.sentry.io ${GA_CONNECT}`,
     "object-src 'none'",
     "base-uri 'self'",
     "form-action 'self'",

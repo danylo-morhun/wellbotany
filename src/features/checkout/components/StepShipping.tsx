@@ -12,7 +12,7 @@ import {
   shippingCostFor,
 } from "../lib/shipping";
 import type { CheckoutFormData } from "./CheckoutForm";
-import { PointMapPicker } from "./PointMapPicker";
+import { PointPicker } from "./PointPicker";
 
 type Props = {
   data: CheckoutFormData;
@@ -252,15 +252,12 @@ export function StepShipping({
             <>
               <p className="mb-3 text-sm font-medium">Wybierz {pointMethod.pointName}</p>
               <div className="mb-3">
-                <PointMapPicker
+                <PointPicker
                   key={pointMethod.service}
                   service={pointMethod.service}
+                  pointName={pointMethod.pointName}
                   onSelect={(code, name) =>
-                    onChange({
-                      inpostMachineId: code,
-                      // Carrier names usually already contain the code — don't repeat it
-                      inpostMachineName: name.includes(code) ? name : `${name} (${code})`,
-                    })
+                    onChange({ inpostMachineId: code, inpostMachineName: name })
                   }
                 />
               </div>

@@ -1,0 +1,12 @@
+/* Pickup-point markers (Leaflet circleMarker SVG paths) */
+.point-marker {
+  stroke: var(--primary-deep);
+  fill: var(--primary);
+  fill-opacity: 0.8;
+}
+
+.point-marker-selected {
+  stroke: var(--foreground);
+  stroke-width: 3;
+  fill-opacity: 1;
+}
