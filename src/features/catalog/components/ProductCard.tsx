@@ -2,6 +2,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { QuickAddButton } from "@/features/cart/components/QuickAddButton";
 import { formatPrice } from "@/lib/format";
+import { formatUnitPrice, variantPackQuantity } from "@/lib/unit-price";
 import type { ProductListItem } from "../actions";
 import { resolveDisplayBrand } from "../lib/brand-tree";
 
@@ -22,6 +23,18 @@ export function ProductCard({ product, priority = false }: Props) {
     hasDiscount && comparePrice != null
       ? Math.round(((comparePrice - defaultVariant.pricePln) / comparePrice) * 100)
       : 0;
+  const unitPrice = defaultVariant
+    ? formatUnitPrice(
+        defaultVariant.pricePln,
+        variantPackQuantity(
+          defaultVariant.optionValue,
+          product.netWeight,
+          // Optional: entries cached before _count joined the select lack it
+          product._count?.variants === 1,
+          product.namePl,
+        ),
+      )
+    : null;
 
   return (
     <article className="group relative flex flex-col overflow-hidden rounded-2xl bg-card shadow-card transition-[box-shadow,transform] duration-200 ease-out hover:-translate-y-0.5 hover:shadow-card-hover motion-reduce:transition-none motion-reduce:hover:translate-y-0">
@@ -114,6 +127,7 @@ export function ProductCard({ product, priority = false }: Props) {
             <span className="text-sm text-muted-foreground">Cena niedostępna</span>
           )}
         </div>
+        {unitPrice && <p className="mt-0.5 text-xs text-muted-foreground">{unitPrice}</p>}
 
         {defaultVariant && (
           <div className="mt-3">

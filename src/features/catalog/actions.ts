@@ -23,6 +23,7 @@ export const PRODUCT_LIST_SELECT = {
   shortDescPl: true,
   isNewArrival: true,
   isFeatured: true,
+  netWeight: true,
   brand: {
     select: { name: true, slug: true, parentBrand: { select: { name: true, slug: true } } },
   },
@@ -34,10 +35,19 @@ export const PRODUCT_LIST_SELECT = {
   },
   variants: {
     where: { isActive: true },
-    select: { id: true, pricePln: true, comparePricePln: true, stock: true, isDefault: true },
+    select: {
+      id: true,
+      pricePln: true,
+      comparePricePln: true,
+      stock: true,
+      isDefault: true,
+      optionValue: true,
+    },
     orderBy: { isDefault: "desc" },
     take: 1,
   },
+  // Unit price falls back to product-level quantity only for single-variant products
+  _count: { select: { variants: { where: { isActive: true } } } },
   tags: {
     select: {
       tag: { select: { namePl: true, slug: true, iconUrl: true, type: true } },
