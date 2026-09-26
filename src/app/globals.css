@@ -1,9 +1,38 @@
 @import "tailwindcss";
 @import "tw-animate-css";
 @import "shadcn/tailwind.css";
+@import "./theme.css";
 @plugin "@tailwindcss/typography";
 
-@custom-variant dark (&:is(.dark *));
+/* Admin-only markup is compiled into admin/admin.css, not the storefront bundle */
+@source not "./admin";
+@source not "../components/ui/cloudinary-dropzone.tsx";
+@source not "../components/ui/rich-text-editor.tsx";
+@source not "../components/ui/tabs.tsx";
+@source not "../features/blog/components/PostForm.tsx";
+@source not "../features/gift-sets/components/GiftBuilderSettingsForm.tsx";
+@source not "../features/gift-sets/components/GiftPackagingAdmin.tsx";
+@source not "../features/gift-sets/components/GiftSetsAdmin.tsx";
+@source not "../features/gift-sets/components/VariantSearchPicker.tsx";
+@source not "../features/orders/components/MarkPaidButton.tsx";
+@source not "../features/orders/components/StatusForm.tsx";
+@source not "../features/products/components/BrandForm.tsx";
+@source not "../features/products/components/BulkActionsToolbar.tsx";
+@source not "../features/products/components/CategoryForm.tsx";
+@source not "../features/products/components/CategoryIconPicker.tsx";
+@source not "../features/products/components/DeleteProductButton.tsx";
+@source not "../features/products/components/ExtraCategoriesPicker.tsx";
+@source not "../features/products/components/ImagesSection.tsx";
+@source not "../features/products/components/ImportProductsClient.tsx";
+@source not "../features/products/components/InlineVariantEditor.tsx";
+@source not "../features/products/components/ProductForm.tsx";
+@source not "../features/products/components/ProductsTable.tsx";
+@source not "../features/products/components/StockTable.tsx";
+@source not "../features/products/components/TagForm.tsx";
+@source not "../features/products/components/VariantsTable.tsx";
+@source not "../features/reviews/components/ModerationButtons.tsx";
+@source not "../features/reviews/components/RequestReviewButton.tsx";
+@source not "../features/settings/components/ShopSettingsForm.tsx";
 
 @keyframes fade-up {
   from {
@@ -60,65 +89,6 @@
     opacity: 1;
     transform: scale(1);
   }
-}
-
-@theme inline {
-  --animate-fade-up: fade-up 600ms cubic-bezier(0.22, 1, 0.36, 1) both;
-  --animate-float-soft: float-soft 5s ease-in-out infinite;
-  --animate-pop-in: pop-in 350ms cubic-bezier(0.22, 1, 0.36, 1) both;
-  --shadow-card: var(--elevation-card);
-  --shadow-card-hover: var(--elevation-card-hover);
-  --shadow-float: var(--elevation-float);
-  --color-primary-deep: var(--primary-deep);
-  --color-band: var(--band);
-  --color-band-foreground: var(--band-foreground);
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-sans);
-  --font-mono: var(--font-geist-mono);
-  --font-heading: var(--font-display);
-  --color-success: var(--success);
-  --color-success-foreground: var(--success-foreground);
-  --color-warning: var(--warning);
-  --color-warning-foreground: var(--warning-foreground);
-  --color-info: var(--info);
-  --color-info-foreground: var(--info-foreground);
-  --color-sidebar-ring: var(--sidebar-ring);
-  --color-sidebar-border: var(--sidebar-border);
-  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
-  --color-sidebar-accent: var(--sidebar-accent);
-  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
-  --color-sidebar-primary: var(--sidebar-primary);
-  --color-sidebar-foreground: var(--sidebar-foreground);
-  --color-sidebar: var(--sidebar);
-  --color-chart-5: var(--chart-5);
-  --color-chart-4: var(--chart-4);
-  --color-chart-3: var(--chart-3);
-  --color-chart-2: var(--chart-2);
-  --color-chart-1: var(--chart-1);
-  --color-ring: var(--ring);
-  --color-input: var(--input);
-  --color-border: var(--border);
-  --color-destructive: var(--destructive);
-  --color-accent-foreground: var(--accent-foreground);
-  --color-accent: var(--accent);
-  --color-muted-foreground: var(--muted-foreground);
-  --color-muted: var(--muted);
-  --color-secondary-foreground: var(--secondary-foreground);
-  --color-secondary: var(--secondary);
-  --color-primary-foreground: var(--primary-foreground);
-  --color-primary: var(--primary);
-  --color-popover-foreground: var(--popover-foreground);
-  --color-popover: var(--popover);
-  --color-card-foreground: var(--card-foreground);
-  --color-card: var(--card);
-  --radius-sm: calc(var(--radius) * 0.6);
-  --radius-md: calc(var(--radius) * 0.8);
-  --radius-lg: var(--radius);
-  --radius-xl: calc(var(--radius) * 1.4);
-  --radius-2xl: calc(var(--radius) * 1.8);
-  --radius-3xl: calc(var(--radius) * 2.2);
-  --radius-4xl: calc(var(--radius) * 2.6);
 }
 
 :root {

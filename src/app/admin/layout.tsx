@@ -2,6 +2,7 @@ import { ArrowLeft } from "lucide-react";
 import Link from "next/link";
 import { SideNav } from "@/components/layout/SideNav";
 import { prisma } from "@/lib/prisma";
+import "./admin.css";
 
 export default async function AdminLayout({ children }: { children: React.ReactNode }) {
   const [lowStockCount, pendingReviews] = await Promise.all([

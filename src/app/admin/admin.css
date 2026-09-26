@@ -1,0 +1,37 @@
+/* Utilities used only by the admin panel (globals.css skips these files via
+   @source not). Tokens come from theme.css; base styles from globals.css. */
+@import "tailwindcss/theme" layer(theme) reference;
+@import "tw-animate-css" reference;
+@import "shadcn/tailwind.css" reference;
+@import "../theme.css" reference;
+@import "tailwindcss/utilities" layer(utilities) source(none);
+@plugin "@tailwindcss/typography";
+
+@source "./";
+@source "../../components/ui/cloudinary-dropzone.tsx";
+@source "../../components/ui/rich-text-editor.tsx";
+@source "../../components/ui/tabs.tsx";
+@source "../../features/blog/components/PostForm.tsx";
+@source "../../features/gift-sets/components/GiftBuilderSettingsForm.tsx";
+@source "../../features/gift-sets/components/GiftPackagingAdmin.tsx";
+@source "../../features/gift-sets/components/GiftSetsAdmin.tsx";
+@source "../../features/gift-sets/components/VariantSearchPicker.tsx";
+@source "../../features/orders/components/MarkPaidButton.tsx";
+@source "../../features/orders/components/StatusForm.tsx";
+@source "../../features/products/components/BrandForm.tsx";
+@source "../../features/products/components/BulkActionsToolbar.tsx";
+@source "../../features/products/components/CategoryForm.tsx";
+@source "../../features/products/components/CategoryIconPicker.tsx";
+@source "../../features/products/components/DeleteProductButton.tsx";
+@source "../../features/products/components/ExtraCategoriesPicker.tsx";
+@source "../../features/products/components/ImagesSection.tsx";
+@source "../../features/products/components/ImportProductsClient.tsx";
+@source "../../features/products/components/InlineVariantEditor.tsx";
+@source "../../features/products/components/ProductForm.tsx";
+@source "../../features/products/components/ProductsTable.tsx";
+@source "../../features/products/components/StockTable.tsx";
+@source "../../features/products/components/TagForm.tsx";
+@source "../../features/products/components/VariantsTable.tsx";
+@source "../../features/reviews/components/ModerationButtons.tsx";
+@source "../../features/reviews/components/RequestReviewButton.tsx";
+@source "../../features/settings/components/ShopSettingsForm.tsx";
