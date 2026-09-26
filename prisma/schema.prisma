@@ -279,12 +279,16 @@ model ProductVariant {
   optionValue String? // e.g. "60 kaps."
 
   // Pricing (Int PLN grosz: 4990 = 49.90 PLN)
-  pricePln        Int
-  comparePricePln Int? // strikethrough "was" price
-  costPricePln    Int? // purchase cost (not shown to customers)
+  pricePln          Int
+  comparePricePln   Int? // strikethrough "was" price
+  // Omnibus: lowest price in the 30 days before the current reduction started.
+  // Written only by the DB trigger record_variant_price (see migration
+  // 20260926120000_price_history) — never set it from app code.
+  lowestPrice30dPln Int?
+  costPricePln      Int? // purchase cost (not shown to customers)
   // vatRate: tax rate in percent (Decimal for display)
   // 5.00 = 5% (food supplements), 23.00 = 23% (cosmetics), 8.00 = 8%
-  vatRate         Decimal @default(5.00) @db.Decimal(5, 2)
+  vatRate           Decimal @default(5.00) @db.Decimal(5, 2)
 
   // Inventory
   stock             Int     @default(0)
@@ -309,6 +313,7 @@ model ProductVariant {
   orderItems   OrderItem[]
   cartItems    CartItem[]
   giftSetItems GiftSetItem[]
+  priceHistory PriceHistory[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -316,6 +321,20 @@ model ProductVariant {
   @@index([productId])
   @@index([sku])
   @@index([isActive])
+}
+
+// Every price of a variant, appended by the DB trigger record_variant_price on
+// insert and on each pricePln/comparePricePln change (admin, imports, scripts).
+// Source for the Omnibus "lowest price in 30 days before the reduction".
+model PriceHistory {
+  id              String         @id @default(cuid())
+  variantId       String
+  variant         ProductVariant @relation(fields: [variantId], references: [id], onDelete: Cascade)
+  pricePln        Int
+  comparePricePln Int?
+  validFrom       DateTime       @default(now())
+
+  @@index([variantId, validFrom])
 }
 
 model ProductCategory {
