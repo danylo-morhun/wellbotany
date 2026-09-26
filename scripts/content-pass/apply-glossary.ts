@@ -2,13 +2,17 @@
 // ([{ slug, namePl, matchTerms, excludeTerms?, shortPl, metaTitlePl?, metaDescPl?,
 // contentPl, faqPl, categorySlug? }]) after the same banned-claim and link
 // checks as category content. Dry run by default.
-//   DATABASE_URL=… npx tsx scripts/content-pass/apply-glossary.ts [--apply] [--prod]
+//   DATABASE_URL=… npx tsx scripts/content-pass/apply-glossary.ts [--apply] [--prod] [--file 03-x.json]
+// --file limits the run to one data file, so entries edited in the admin since
+// their file was applied are not overwritten.
 import fs from "node:fs";
 import path from "node:path";
 import { connect } from "./db";
 
 const DIR = path.join(__dirname, "../../data/content-pass/glossary");
 const apply = process.argv.includes("--apply");
+const fileArg = process.argv.indexOf("--file");
+const onlyFile = fileArg >= 0 ? process.argv[fileArg + 1] : null;
 
 type Entry = {
   slug: string;
@@ -46,9 +50,13 @@ async function main() {
   );
   const entries = fs
     .readdirSync(DIR)
-    .filter((f) => f.endsWith(".json"))
+    .filter((f) => f.endsWith(".json") && (!onlyFile || f === onlyFile))
     .flatMap((f) => JSON.parse(fs.readFileSync(path.join(DIR, f), "utf8")) as Entry[]);
-  const slugs = new Set(entries.map((e) => e.slug));
+  // Links may point at pages already in the DB, not only at this run's files
+  const slugs = new Set([
+    ...entries.map((e) => e.slug),
+    ...(await prisma.ingredient.findMany({ select: { slug: true } })).map((i) => i.slug),
+  ]);
 
   const problems: string[] = [];
   for (const e of entries) {

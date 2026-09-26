@@ -4,13 +4,17 @@
 // checks. reviewedBy is never written here — it is set in /admin/poradnik.
 // Dry run by default; prints every claim-like sentence for a manual check
 // against data/content-pass/rules/eu-claims.md.
-//   DATABASE_URL=… npx tsx scripts/content-pass/apply-posts.ts [--apply] [--prod]
+//   DATABASE_URL=… npx tsx scripts/content-pass/apply-posts.ts [--apply] [--prod] [--file 03-x.json]
+// --file limits the run to one data file, so entries edited in the admin since
+// their file was applied are not overwritten.
 import fs from "node:fs";
 import path from "node:path";
 import { connect } from "./db";
 
 const DIR = path.join(__dirname, "../../data/content-pass/posts");
 const apply = process.argv.includes("--apply");
+const fileArg = process.argv.indexOf("--file");
+const onlyFile = fileArg >= 0 ? process.argv[fileArg + 1] : null;
 
 type Entry = {
   slug: string;
@@ -71,7 +75,7 @@ async function main() {
   const ingredientSlugs = new Set(ingredients.map((i) => i.slug));
   const entries = fs
     .readdirSync(DIR)
-    .filter((f) => f.endsWith(".json"))
+    .filter((f) => f.endsWith(".json") && (!onlyFile || f === onlyFile))
     .flatMap((f) => JSON.parse(fs.readFileSync(path.join(DIR, f), "utf8")) as Entry[]);
   const postSlugs = new Set([...existingPosts.map((p) => p.slug), ...entries.map((e) => e.slug)]);
 
