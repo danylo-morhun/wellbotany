@@ -5,6 +5,14 @@ import { prisma } from "@/lib/prisma";
 import { BANK_TRANSFER_DETAILS } from "@/lib/shop-config";
 import { EMAIL_FROM, resendClient } from "./client";
 
+function escapeHtml(value: string): string {
+  return value
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;");
+}
+
 function layout(title: string, body: string): string {
   return `<div style="font-family:-apple-system,Segoe UI,Roboto,sans-serif;max-width:560px;margin:0 auto;color:#1a1a1a">
     <h1 style="font-size:20px;margin-bottom:16px">${title}</h1>
@@ -49,12 +57,12 @@ export async function sendOrderConfirmationEmail(orderNumber: string): Promise<v
   const itemRows = order.items
     .map(
       (item) =>
-        `<tr><td style="padding:6px 0">${item.productName}${item.variantOpt ? ` (${item.variantOpt})` : ""} × ${item.quantity}</td><td style="padding:6px 0;text-align:right">${formatPrice(item.totalPln)}</td></tr>`,
+        `<tr><td style="padding:6px 0">${escapeHtml(item.productName)}${item.variantOpt ? ` (${escapeHtml(item.variantOpt)})` : ""} × ${item.quantity}</td><td style="padding:6px 0;text-align:right">${formatPrice(item.totalPln)}</td></tr>`,
     )
     .join("");
 
   const body = `
-    <p>Dziękujemy za zamówienie, ${order.customerName}!</p>
+    <p>Dziękujemy za zamówienie, ${escapeHtml(order.customerName)}!</p>
     <p>Numer zamówienia: <strong>${order.orderNumber}</strong></p>
     <table style="width:100%;border-collapse:collapse;margin-top:16px">
       ${itemRows}
@@ -106,10 +114,10 @@ export async function sendTrackingEmail(orderId: string): Promise<void> {
   if (!order?.trackingNumber) return;
 
   const body = `
-    <p>Cześć ${order.customerName}, Twoje zamówienie <strong>${order.orderNumber}</strong> zostało nadane.</p>
+    <p>Cześć ${escapeHtml(order.customerName)}, Twoje zamówienie <strong>${order.orderNumber}</strong> zostało nadane.</p>
     <p>Przewoźnik: ${shippingLabel(order.shippingMethod)}</p>
-    <p>Numer przesyłki: <strong>${order.trackingNumber}</strong></p>
-    ${order.trackingUrl ? `<p><a href="${order.trackingUrl}">Śledź przesyłkę</a></p>` : ""}
+    <p>Numer przesyłki: <strong>${escapeHtml(order.trackingNumber)}</strong></p>
+    ${order.trackingUrl ? `<p><a href="${escapeHtml(order.trackingUrl)}">Śledź przesyłkę</a></p>` : ""}
   `;
 
   await resend.emails.send({
@@ -139,7 +147,7 @@ export async function sendPickupReadyEmail(orderId: string): Promise<void> {
   if (!order || !location) return;
 
   const body = `
-    <p>Cześć ${order.customerName}, Twoje zamówienie <strong>${order.orderNumber}</strong> czeka na odbiór.</p>
+    <p>Cześć ${escapeHtml(order.customerName)}, Twoje zamówienie <strong>${order.orderNumber}</strong> czeka na odbiór.</p>
     <p><strong>${location.name}</strong><br>${location.address}<br>${location.hours.join(", ")}</p>
     ${order.paymentStatus !== "CAPTURED" ? `<p>Do zapłaty przy odbiorze: <strong>${formatPrice(order.totalPln)}</strong></p>` : ""}
     <p>Zamówienie będzie czekać ${PICKUP_HOLD_DAYS} dni. Podaj przy odbiorze numer zamówienia.</p>
@@ -151,14 +159,6 @@ export async function sendPickupReadyEmail(orderId: string): Promise<void> {
     subject: `Zamówienie ${order.orderNumber} czeka na odbiór`,
     html: layout("Gotowe do odbioru", body),
   });
-}
-
-function escapeHtml(value: string): string {
-  return value
-    .replace(/&/g, "&amp;")
-    .replace(/</g, "&lt;")
-    .replace(/>/g, "&gt;")
-    .replace(/"/g, "&quot;");
 }
 
 /** "Jak Ci się podobają produkty?" — link to /opinia/[token] (verified-buyer reviews). */
@@ -198,3 +198,4 @@ export async function sendReviewRequestEmail(orderId: string): Promise<void> {
     html: layout("Podziel się opinią", body),
   });
 }
+
