@@ -21,6 +21,8 @@ import { isValidGtin } from "./lib/gtin";
 
 const SITE = "https://wellbotany.pl";
 const OUT = "docs/ean-review.csv";
+// Manual review of "sprawdź" rows: "<variantId>:<EAN>" → { zastosuj: "tak" | "nie", powód }
+const DECISIONS = "data/content-pass/ean/review-decisions.json";
 const BATCHES = "data/content-pass/batches";
 
 type Candidate = {
@@ -36,15 +38,27 @@ type Candidate = {
 const csv = (v: unknown) => `"${String(v ?? "").replace(/"/g, '""')}"`;
 const norm = (s: string) => s.toLowerCase().replace(/[™®©]/g, "").replace(/\s+/g, " ").trim();
 
-/** Pack quantity mentioned anywhere in a source title/size: "(120 kapsułek)", "… 60 kaps.", "30szt". */
-function quantityIn(text: string | undefined): PackQuantity | null {
+/**
+ * Pack quantity mentioned in a source title/size: "(120 kapsułek)", "… 60 kaps.", "30szt".
+ * Thousands grouping ("2 400 tabl.") only in size fields — in titles "Q7 300 kaps."
+ * or "trymestr 2 i 3 150 kapsułek" would glue digits together.
+ */
+function quantityIn(text: string | undefined, isSizeField = false): PackQuantity | null {
   if (!text) return null;
-  const re =
-    /(\d{1,3}(?:[ \u00a0]\d{3})+|\d+(?:[.,]\d+)?)\s*(kaps(?:ułek|ułki|\.)?|tabl(?:etek|etki|\.)?|sasz(?:etek|etki|\.)?|szt\.?|żel(?:ek|ków|ki)|g|kg|ml|l)(?![a-ząćęłńóśźż])/gi;
+  const units =
+    "(kaps(?:ułek|ułki|\\.)?|tabl(?:etek|etki|\\.)?|sasz(?:etek|etki|\\.)?|szt\\.?|żel(?:ek|ków|ki)|g|kg|ml|l)(?![a-ząćęłńóśźż])";
+  const number = isSizeField
+    ? "(\\d{1,3}(?:[ \\u00a0]\\d{3})+|\\d+(?:[.,]\\d+)?)"
+    : "(?<![\\d])(\\d+(?:[.,]\\d+)?)";
+  const re = new RegExp(`${number}\\s*${units}`, "gi");
   const found = [...text.matchAll(re)].map((m) => parsePackQuantity(`${m[1]} ${m[2]}`));
   const counts = found.filter((q) => q?.unit === "ct");
   return counts[0] ?? found[0] ?? null;
 }
+
+/** Size field first, the title as a fallback. */
+const candidateQuantity = (c: Candidate) =>
+  quantityIn(c.sourceSize, true) ?? quantityIn(c.sourceName);
 
 function samePack(a: PackQuantity | null, b: PackQuantity | null): boolean | null {
   if (!a || !b) return null;
@@ -63,12 +77,35 @@ const baseName = (name: string) =>
     .replace(/[^a-ząćęłńóśźż0-9]+/g, " ")
     .trim();
 
+// Dose units and fillers say nothing about which product it is
+const NOISE = new Set([
+  "i",
+  "z",
+  "w",
+  "na",
+  "do",
+  "dla",
+  "mg",
+  "µg",
+  "mcg",
+  "iu",
+  "ml",
+  "g",
+  "kaps",
+  "szt",
+]);
 const tokens = (s: string) =>
   new Set(
     norm(s)
-      .split(/[^a-ząćęłńóśźż0-9]+/)
-      .filter(Boolean),
+      .split(/[^a-ząćęłńóśźżµ0-9]+/)
+      .filter((w) => w && !NOISE.has(w)),
   );
+
+/** Jaccard similarity of two token sets. */
+function similarity(a: Set<string>, b: Set<string>): number {
+  const common = [...a].filter((w) => b.has(w)).length;
+  return common / (a.size + b.size - common || 1);
+}
 
 /**
  * From the content pass: EANs quoted from manufacturer/distributor pages, and
@@ -125,6 +162,9 @@ async function main() {
   );
   const bySourceKey = new Map(sources.map((r) => [`${r.source}:${r.key}`, r]));
   const { facts, urls: pageUrls } = contentPass();
+  const decisions: Record<string, { zastosuj: string; powód: string }> = existsSync(DECISIONS)
+    ? JSON.parse(readFileSync(DECISIONS, "utf8"))
+    : {};
 
   // Yango price list: our SKU is its "Indeks" or "YANGO-<name>"; both lead to the shop product id
   const yangoId = new Map<string, string>();
@@ -195,6 +235,12 @@ async function main() {
           strong,
         });
     };
+    const qty = variantPackQuantity(
+      v.optionValue,
+      v.product.netWeight,
+      v.product._count.variants === 1,
+      v.product.namePl,
+    );
     const sku = v.sku;
     if (isValidGtin(sku)) {
       const kenay = bySourceKey.get(`kenay:${sku}`);
@@ -218,13 +264,26 @@ async function main() {
       // Their "(zestaw 2-miesięczny)" multipacks share the base name
       for (const r of hlBySlug.get(hl) ?? [])
         if (/zestaw/i.test(r.name) === isSet) fromRecord(r, "healthlabs.care");
+    if (hl && cand.length === 0) {
+      // SKU slugs came from the owner's file names, not their uids: best token overlap
+      // with our SKU + name, clearly ahead of the runner-up; weak unless near-identical
+      const ours = new Set([...tokens(hl.replace(/-/g, " ")), ...tokens(v.product.namePl)]);
+      const scored = sources
+        .filter((r) => r.source === "healthlabs" && /zestaw/i.test(r.name) === isSet)
+        .map((r) => ({
+          r,
+          score: similarity(
+            ours,
+            new Set([...tokens(r.key.replace(/-/g, " ")), ...tokens(r.name)]),
+          ),
+        }))
+        .filter((x) => samePack(quantityIn(x.r.size, true), qty) !== false)
+        .sort((a, b) => b.score - a.score);
+      const [best, second] = scored;
+      if (best && best.score >= 0.5 && best.score - (second?.score ?? 0) >= 0.15)
+        fromRecord(best.r, `healthlabs.care (podobna nazwa, ${best.score.toFixed(2)})`, false);
+    }
     for (const c of facts.get(v.product.id) ?? []) cand.push(c);
-    const qty = variantPackQuantity(
-      v.optionValue,
-      v.product.netWeight,
-      v.product._count.variants === 1,
-      v.product.namePl,
-    );
     if (v.product.brand?.name === "Singularis") {
       // The content-pass page is this product; the same name with another pack
       // count is its sibling pack. Pick the page whose pack equals the variant's.
@@ -242,9 +301,7 @@ async function main() {
           );
       if (cand.length === 0) {
         // Weak fallback: all words of our core name on the page, same pack, one page only
-        const core = [...tokens(v.product.namePl.split(" – ")[0])].filter(
-          (w) => !["i", "z", "w"].includes(w),
-        );
+        const core = [...tokens(v.product.namePl.split(" – ")[0])];
         const hits = singularis.filter((r) => {
           const page = tokens(r.name);
           return (
@@ -264,9 +321,7 @@ async function main() {
       }
     }
     // Several pages for one variant: keep those whose pack does not contradict it
-    const fits = cand.filter(
-      (c) => samePack(quantityIn(`${c.sourceName} ${c.sourceSize ?? ""}`), qty) !== false,
-    );
+    const fits = cand.filter((c) => samePack(candidateQuantity(c), qty) !== false);
     rows.push({
       variant: v,
       cand: fits.length > 0 && fits.length < cand.length ? fits : cand,
@@ -297,6 +352,7 @@ async function main() {
     "prefiks marki",
     "opakowanie zgodne",
     "admin",
+    "uwagi",
   ];
   const lines = [header.map(csv).join(",")];
   const stats = { ok: 0, check: 0, conflict: 0, none: 0 };
@@ -326,6 +382,7 @@ async function main() {
           "",
           "",
           admin,
+          "",
         ]
           .map(csv)
           .join(","),
@@ -344,7 +401,7 @@ async function main() {
           ? null
           : prefixes.has(ean.slice(0, 7));
       const packOk = from
-        .map((c) => samePack(quantityIn(`${c.sourceName} ${c.sourceSize ?? ""}`), qty))
+        .map((c) => samePack(candidateQuantity(c), qty))
         .reduce<boolean | null>(
           (acc, x) => (x === false || acc === false ? false : (x ?? acc)),
           null,
@@ -366,7 +423,7 @@ async function main() {
       lines.push(
         [
           status,
-          status === "ok" ? "tak" : "",
+          decisions[`${v.id}:${ean}`]?.zastosuj ?? (status === "ok" ? "tak" : ""),
           v.id,
           brand,
           v.product.namePl,
@@ -381,6 +438,7 @@ async function main() {
           yn(prefixOk),
           yn(packOk),
           admin,
+          decisions[`${v.id}:${ean}`]?.powód ?? "",
         ]
           .map(csv)
           .join(","),
