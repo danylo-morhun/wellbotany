@@ -609,6 +609,7 @@ export const getBrandBySlug = unstable_cache(
         slug: true,
         name: true,
         description: true,
+        contentPl: true,
         logo: true,
         website: true,
         countryCode: true,

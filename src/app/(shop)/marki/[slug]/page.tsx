@@ -7,6 +7,7 @@ import { CategoryProductResults } from "@/features/catalog/components/CategoryPr
 import { FilterSidebarData } from "@/features/catalog/components/FilterSidebarData";
 import { ProductGridSkeleton } from "@/features/catalog/components/ProductGridSkeleton";
 import { prisma } from "@/lib/prisma";
+import { sanitizeRichText } from "@/lib/sanitize";
 import { buildListingSeo } from "@/lib/seo";
 import { getBrandBySlug } from "../../../../features/catalog/actions";
 
@@ -47,6 +48,8 @@ export default async function MarkiSlugPage({ params, searchParams }: Props) {
 
   const brand = await getBrandBySlug(slug);
   if (!brand) notFound();
+  const seo = buildListingSeo(`/marki/${brand.slug}`, await searchParams);
+  const showContent = seo.page === 1 && !seo.noindex && brand.contentPl;
 
   const breadcrumbs = [
     { name: "Strona główna", href: "/" },
@@ -69,7 +72,9 @@ export default async function MarkiSlugPage({ params, searchParams }: Props) {
           />
         )}
         <div>
-          <h1 className="text-balance text-2xl text-foreground">{brand.name}</h1>
+          <h1 className="text-balance text-2xl text-foreground">
+            {brand.name} – suplementy, sklep
+          </h1>
           {brand.description && <p className="mt-1 text-muted-foreground">{brand.description}</p>}
           {brand.website && (
             <a
@@ -105,6 +110,16 @@ export default async function MarkiSlugPage({ params, searchParams }: Props) {
           </Suspense>
         </div>
       </div>
+
+      {showContent && (
+        <section className="mt-16 max-w-3xl">
+          <div
+            className="prose prose-sm max-w-none text-muted-foreground prose-headings:font-heading prose-headings:text-foreground prose-strong:text-foreground prose-a:text-primary prose-li:marker:text-primary"
+            // biome-ignore lint/security/noDangerouslySetInnerHtml: sanitized by sanitizeRichText
+            dangerouslySetInnerHTML={{ __html: sanitizeRichText(brand.contentPl ?? "") }}
+          />
+        </section>
+      )}
     </div>
   );
 }
