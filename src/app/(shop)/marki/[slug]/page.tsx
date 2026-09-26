@@ -36,7 +36,7 @@ export async function generateMetadata({ params, searchParams }: Props): Promise
     // The full description is a paragraph; Google shows ~155 chars
     description:
       (brand.description && firstSentence(brand.description)) ??
-      `${brand.name} w sklepie Well Botany: suplementy diety i produkty marki ${brand.name}. Sprawdź skład, dawkowanie i ceny. Wysyłka InPost i Orlen Paczka.`,
+      `${brand.name} w sklepie Well Botany: suplementy diety i produkty marki ${brand.name}. Sprawdź skład, dawkowanie i ceny. Wysyłka do paczkomatu, punktu odbioru lub kurierem.`,
     alternates: { canonical: seo.canonical },
     ...(seo.noindex && { robots: { index: false, follow: true } }),
   };

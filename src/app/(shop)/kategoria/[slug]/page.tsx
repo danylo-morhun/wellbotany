@@ -49,7 +49,7 @@ export async function generateMetadata({ params, searchParams }: Props): Promise
     description:
       category.metaDescPl ??
       category.descriptionPl ??
-      `${heading} – ${productCount} ${pluralizeProducts(productCount)} w sklepie Well Botany. Sprawdź skład, dawkowanie i ceny. Wysyłka InPost i Orlen Paczka.`,
+      `${heading} – ${productCount} ${pluralizeProducts(productCount)} w sklepie Well Botany. Sprawdź skład, dawkowanie i ceny. Wysyłka do paczkomatu, punktu odbioru lub kurierem.`,
     alternates: { canonical: seo.canonical },
     // A near-empty listing is a thin page; index it once it fills up
     ...((seo.noindex || productCount < MIN_LISTED_PRODUCTS) && {
