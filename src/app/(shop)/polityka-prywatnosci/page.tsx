@@ -70,8 +70,7 @@ const recipients = [
   },
   {
     action: "dostawa zamówienia",
-    recipient:
-      "pośrednik w nadawaniu przesyłek oraz przewoźnik wybrany przez Ciebie w koszyku (np. InPost, Orlen Paczka)",
+    recipient: "pośrednik w nadawaniu przesyłek oraz przewoźnik wybrany przez Ciebie w koszyku",
   },
   {
     action: "statystyki korzystania ze Sklepu (tylko po wyrażeniu zgody na cookies analityczne)",
