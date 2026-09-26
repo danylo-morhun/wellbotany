@@ -70,7 +70,7 @@ describe("buildProductJsonLd", () => {
         price: "49.90",
         availability: "https://schema.org/InStock",
         url: "https://wellbotany.pl/produkt/magnez?wariant=v60",
-        shippingDetails: { shippingRate: { value: "14.99", currency: "PLN" } },
+        shippingDetails: { shippingRate: { value: "11.99", currency: "PLN" } },
         hasMerchantReturnPolicy: { merchantReturnDays: 14 },
       },
     });
