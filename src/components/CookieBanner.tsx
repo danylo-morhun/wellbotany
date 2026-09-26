@@ -4,42 +4,54 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
 import {
+  CONSENT_STORAGE_KEY,
   type ConsentChoice,
   OPEN_COOKIE_SETTINGS_EVENT,
   readConsent,
   saveConsent,
 } from "@/lib/analytics";
 
+/**
+ * Runs before first paint (inline in <body>): marks <html> when a choice is
+ * already stored, so CSS hides the server-rendered banner without a flash.
+ */
+export const COOKIE_CONSENT_BOOT_SCRIPT = `try{var c=localStorage.getItem("${CONSENT_STORAGE_KEY}");if(c==="accepted"||c==="rejected")document.documentElement.dataset.cookieConsent=c}catch(e){}`;
+
 export function CookieBanner() {
   const pathname = usePathname();
   const isAdmin = pathname?.startsWith("/admin") ?? false;
-  const [visible, setVisible] = useState(false);
+  // Rendered on the server so it paints with the page instead of after
+  // hydration (it was the mobile LCP element, ~3.5 s); hidden by CSS when
+  // consent is already stored, and dropped after hydration.
+  const [visible, setVisible] = useState(true);
+  const [reopened, setReopened] = useState(false);
 
   useEffect(() => {
-    if (!isAdmin && !readConsent()) setVisible(true);
-  }, [isAdmin]);
+    if (readConsent()) setVisible(false);
+  }, []);
 
   // "Ustawienia cookies" in the footer reopens the banner to change the choice
   useEffect(() => {
-    const open = () => setVisible(true);
+    const open = () => {
+      setVisible(true);
+      setReopened(true);
+    };
     window.addEventListener(OPEN_COOKIE_SETTINGS_EVENT, open);
     return () => window.removeEventListener(OPEN_COOKIE_SETTINGS_EVENT, open);
   }, []);
 
-  useEffect(() => {
-    document.body.classList.toggle("has-cookie-banner", visible);
-    return () => document.body.classList.remove("has-cookie-banner");
-  }, [visible]);
-
   function respond(choice: ConsentChoice) {
     saveConsent(choice);
     setVisible(false);
+    setReopened(false);
   }
 
   if (isAdmin || !visible) return null;
 
   return (
     <div
+      id="cookie-banner"
+      data-open={reopened ? "" : undefined}
       role="dialog"
       aria-modal="false"
       aria-live="polite"

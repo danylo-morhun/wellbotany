@@ -268,9 +268,16 @@
   }
 }
 
+/* Server-rendered cookie banner: hidden before paint once a choice is stored
+   (data-cookie-consent is set by an inline script), unless reopened */
+html[data-cookie-consent] #cookie-banner:not([data-open]) {
+  display: none;
+}
+
 /* Reserve space so the fixed cookie banner never covers CTAs on short mobile viewports */
 @media (max-width: 640px) {
-  body.has-cookie-banner {
+  html:not([data-cookie-consent]) body:has(#cookie-banner),
+  body:has(#cookie-banner[data-open]) {
     padding-bottom: 7rem;
   }
 }

@@ -1,7 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import { Geist_Mono, Onest, Plus_Jakarta_Sans } from "next/font/google";
 import { ThemeProvider } from "next-themes";
-import { CookieBanner } from "@/components/CookieBanner";
+import { COOKIE_CONSENT_BOOT_SCRIPT, CookieBanner } from "@/components/CookieBanner";
 import { GoogleAnalytics } from "@/components/GoogleAnalytics";
 import { Toaster } from "@/components/ui/sonner";
 import {
@@ -90,6 +90,10 @@ export default function RootLayout({
       suppressHydrationWarning
     >
       <body className="min-h-full flex flex-col">
+        <script
+          // biome-ignore lint/security/noDangerouslySetInnerHtml: static string, no user input
+          dangerouslySetInnerHTML={{ __html: COOKIE_CONSENT_BOOT_SCRIPT }}
+        />
         <script
           type="application/ld+json"
           // biome-ignore lint/security/noDangerouslySetInnerHtml: sanitized by toJsonLdScript
