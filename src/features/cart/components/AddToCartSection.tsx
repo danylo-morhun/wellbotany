@@ -20,6 +20,8 @@ export type Variant = {
   isDefault: boolean;
   /** Cena jednostkowa, e.g. "0,83 zł / szt." — null when not required or unknown */
   unitPrice?: string | null;
+  /** "Najniższa cena z 30 dni przed obniżką: …" — set only while discounted */
+  omnibusNote?: string | null;
 };
 
 type Props = {
@@ -116,6 +118,9 @@ export function AddToCartSection({ variants }: Props) {
       </div>
       {selected.unitPrice && (
         <p className="-mt-3 text-sm text-muted-foreground">{selected.unitPrice}</p>
+      )}
+      {hasDiscount && selected.omnibusNote && (
+        <p className="-mt-3 text-sm text-muted-foreground">{selected.omnibusNote}</p>
       )}
 
       <div className="space-y-1">

@@ -2,6 +2,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { QuickAddButton } from "@/features/cart/components/QuickAddButton";
 import { formatPrice } from "@/lib/format";
+import { omnibusNote } from "@/lib/omnibus";
 import { formatUnitPrice, variantPackQuantity } from "@/lib/unit-price";
 import type { ProductListItem } from "../actions";
 import { resolveDisplayBrand } from "../lib/brand-tree";
@@ -23,6 +24,7 @@ export function ProductCard({ product, priority = false }: Props) {
     hasDiscount && comparePrice != null
       ? Math.round(((comparePrice - defaultVariant.pricePln) / comparePrice) * 100)
       : 0;
+  const lowestNote = defaultVariant ? omnibusNote(defaultVariant) : null;
   const unitPrice = defaultVariant
     ? formatUnitPrice(
         defaultVariant.pricePln,
@@ -128,6 +130,9 @@ export function ProductCard({ product, priority = false }: Props) {
           )}
         </div>
         {unitPrice && <p className="mt-0.5 text-xs text-muted-foreground">{unitPrice}</p>}
+        {hasDiscount && lowestNote && (
+          <p className="mt-0.5 text-xs text-muted-foreground">{lowestNote}</p>
+        )}
 
         {defaultVariant && (
           <div className="mt-3">
