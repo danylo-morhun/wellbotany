@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { connection } from "next/server";
 import { RegisterForm } from "@/features/auth/components/RegisterForm";
 
 export const metadata = {
@@ -6,7 +7,9 @@ export const metadata = {
   robots: { index: false, follow: false },
 };
 
-export default function RegisterPage() {
+export default async function RegisterPage() {
+  // Strict-CSP route: must render per request so its scripts carry the nonce
+  await connection();
   return (
     <div className="mx-auto flex min-h-[70vh] max-w-md flex-col justify-center px-4 py-16">
       <div className="rounded-2xl bg-card p-6 shadow-card sm:p-8">
