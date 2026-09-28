@@ -45,6 +45,10 @@ export const updateOrderStatus = adminActionClient
         ...(input.noteAdmin !== undefined && { noteAdmin: input.noteAdmin }),
         trackingNumber,
         trackingUrl,
+        ...(input.status === "SHIPPED" &&
+          existing.status !== "SHIPPED" && { shippedAt: new Date() }),
+        ...(input.status === "DELIVERED" &&
+          existing.status !== "DELIVERED" && { deliveredAt: new Date() }),
       },
     });
     revalidatePath("/admin/zamowienia");
