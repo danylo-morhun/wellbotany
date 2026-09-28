@@ -4,6 +4,10 @@ import { cleanupCustomerByEmail, RUN_ID } from "./helpers";
 const email = `e2e-user-${RUN_ID}@example.com`;
 const password = "TestPass123!";
 
+test.beforeEach(async ({ page }) => {
+  await page.addInitScript(() => localStorage.setItem("cookie-consent", "rejected"));
+});
+
 test.afterAll(async () => {
   await cleanupCustomerByEmail(email);
 });
@@ -16,8 +20,14 @@ test("register, auto-login, logout, then log back in", async ({ page }) => {
   await page.locator("#reg-email").fill(email);
   await page.locator("#reg-password").fill(password);
   await page.locator("#confirmPassword").fill(password);
-  await page.getByRole("checkbox").check();
-  await page.getByRole("button", { name: "Zarejestruj się" }).click();
+  // A check before hydration flips the DOM but not React state — retry until the button enables
+  const submit = page.getByRole("button", { name: "Zarejestruj się" });
+  await expect(async () => {
+    await page.getByRole("checkbox").setChecked(false);
+    await page.getByRole("checkbox").check();
+    await expect(submit).toBeEnabled({ timeout: 1000 });
+  }).toPass();
+  await submit.click();
 
   await expect(page).toHaveURL(/\/konto/, { timeout: 15_000 });
 
