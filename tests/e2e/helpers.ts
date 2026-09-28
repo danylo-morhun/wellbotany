@@ -53,3 +53,16 @@ export async function findOrderByEmail(email: string) {
 export async function cleanupOrder(orderNumber: string) {
   await prisma.order.delete({ where: { orderNumber } }).catch(() => {});
 }
+
+export async function seedCustomer(password = "CustomerPass123!") {
+  const passwordHash = await bcrypt.hash(password, 12);
+  const customer = await prisma.customer.create({
+    data: {
+      email: `e2e-customer-${RUN_ID}@example.com`,
+      firstName: "Anna",
+      lastName: "Klientka",
+      passwordHash,
+    },
+  });
+  return { customer, password };
+}
