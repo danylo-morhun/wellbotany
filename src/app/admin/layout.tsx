@@ -1,10 +1,14 @@
 import { ArrowLeft } from "lucide-react";
 import Link from "next/link";
+import { connection } from "next/server";
 import { SideNav } from "@/components/layout/SideNav";
 import { prisma } from "@/lib/prisma";
 import "./admin.css";
 
 export default async function AdminLayout({ children }: { children: React.ReactNode }) {
+  // Strict CSP (src/proxy.ts) nonces scripts per request; a prerendered page has
+  // no nonce on its script tags, so the browser blocks them and nothing hydrates
+  await connection();
   const [lowStockCount, pendingReviews] = await Promise.all([
     prisma.productVariant.count({ where: { stock: { lte: 5, gt: 0 }, trackStock: true } }),
     prisma.review.count({ where: { status: "PENDING" } }),
