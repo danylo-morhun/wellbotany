@@ -12,6 +12,12 @@ import { assertNotRateLimited, getClientIp, loginLimiter, registerLimiter } from
 import { actionClient } from "@/lib/safe-action";
 import { loginSchema, registerSchema } from "./schema";
 
+// /konto only redirects to /konto/profil; a sign-in redirect that lands on a
+// second redirect leaves the client on the form showing a generic error.
+const ACCOUNT_HOME = "/konto/profil";
+const afterSignIn = (callbackUrl?: string) =>
+  !callbackUrl || callbackUrl === "/konto" ? ACCOUNT_HOME : callbackUrl;
+
 export const loginCustomer = actionClient
   .schema(loginSchema)
   .action(async ({ parsedInput: input }) => {
@@ -39,7 +45,7 @@ export const loginCustomer = actionClient
       await signIn("credentials", {
         email: input.email,
         password: input.password,
-        redirectTo: input.callbackUrl ?? "/konto",
+        redirectTo: afterSignIn(input.callbackUrl),
       });
     } catch (err) {
       if (err instanceof AuthError) throw new ActionError("Nieprawidłowy e-mail lub hasło");
@@ -73,7 +79,7 @@ export const registerCustomer = actionClient
       await signIn("credentials", {
         email: input.email,
         password: input.password,
-        redirectTo: "/konto",
+        redirectTo: ACCOUNT_HOME,
       });
     } catch (err) {
       if (err instanceof AuthError) throw new ActionError("Błąd logowania po rejestracji");
