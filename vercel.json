@@ -1,4 +1,12 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
-  "crons": [{ "path": "/api/cron/merchant-sync", "schedule": "0 4 * * *" }]
+  "git": {
+    "deploymentEnabled": false
+  },
+  "crons": [
+    {
+      "path": "/api/cron/merchant-sync",
+      "schedule": "0 4 * * *"
+    }
+  ]
 }
