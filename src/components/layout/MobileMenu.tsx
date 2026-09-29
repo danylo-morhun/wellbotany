@@ -5,6 +5,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
+import { ThemeToggle } from "@/components/layout/ThemeToggle";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import { HeaderSearch } from "@/features/catalog/components/HeaderSearch";
 import type { CategoryNav, NavLeaf } from "@/features/catalog/lib/nav";
@@ -135,6 +136,13 @@ export function MobileMenu({ navLinks, utilityLinks, nav }: Props) {
         <div className="mx-5 border-t border-border" />
 
         <nav className="flex flex-col gap-0.5 p-3">
+          {/* The header hides wishlist below 360px, keep it reachable here */}
+          <Link
+            href="/ulubione"
+            className="rounded-xl px-3.5 py-2.5 text-sm font-medium text-muted-foreground transition-colors hover:bg-secondary hover:text-primary min-[360px]:hidden"
+          >
+            Ulubione
+          </Link>
           {utilityLinks.map((link) => (
             <Link
               key={link.href}
@@ -145,6 +153,12 @@ export function MobileMenu({ navLinks, utilityLinks, nav }: Props) {
             </Link>
           ))}
         </nav>
+
+        {/* The header hides the theme toggle below sm, keep it reachable here */}
+        <div className="mx-5 flex items-center justify-between border-t border-border py-3 pl-3.5 sm:hidden">
+          <span className="text-sm font-medium text-muted-foreground">Motyw</span>
+          <ThemeToggle />
+        </div>
       </SheetContent>
     </Sheet>
   );
