@@ -8,7 +8,7 @@ async function applyReformats() {
 
   // Load manually done (3)
   const _manualFile = await fs.readFile(
-    "/Users/danylomorhun/Projects/zielarnia/scripts/manual-reformat-batch.ts",
+    "/Users/danylomorhun/Projects/wellbotany/scripts/manual-reformat-batch.ts",
     "utf-8",
   );
 
