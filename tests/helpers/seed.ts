@@ -1,4 +1,12 @@
+import { CART_COOKIE_NAME } from "@/features/cart/lib/session";
 import { prisma } from "@/lib/prisma";
+import { cookieStore } from "../mocks/next-headers";
+
+// Local .env / .env.local point at production and these tests write orders and
+// carts — require an explicit, non-production DATABASE_URL.
+if (!process.env.DATABASE_URL || process.env.DATABASE_URL.includes("ep-lingering-cake")) {
+  throw new Error("integration tests: pass a non-production DATABASE_URL explicitly");
+}
 
 export const RUN_ID = `${Date.now().toString(36)}${Math.random().toString(36).slice(2, 6)}`;
 
@@ -28,10 +36,13 @@ export async function makeVariant(stock: number, pricePln = 5000) {
   return { product, variant: product.variants[0] };
 }
 
-export async function makeCart(variantId: string, quantity: number) {
-  return prisma.cart.create({
-    data: { items: { create: { variantId, quantity } } },
+/** Guest cart owned by the "current request" (its id in the cart cookie), or a customer's cart. */
+export async function makeCart(variantId: string, quantity: number, customerId?: string) {
+  const cart = await prisma.cart.create({
+    data: { customerId, items: { create: { variantId, quantity } } },
   });
+  if (!customerId) cookieStore.set(CART_COOKIE_NAME, cart.id);
+  return cart;
 }
 
 export const baseCheckoutInput = {
@@ -44,6 +55,7 @@ export const baseCheckoutInput = {
   postalCode: "00-001",
   shippingMethod: "INPOST_KURIER" as const,
   wantsFaktura: false,
-  paymentMethod: "BLIK" as const,
+  // Online methods are rejected while P24_ENABLED is off (the default)
+  paymentMethod: "BANK_TRANSFER" as const,
   acceptedTerms: true,
 };
