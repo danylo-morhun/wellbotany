@@ -1,8 +1,16 @@
-import { afterAll, describe, expect, it } from "vitest";
+import { afterAll, describe, expect, it, vi } from "vitest";
 import { placeOrder, verifyCoupon } from "@/features/checkout/actions";
 import { prisma } from "@/lib/prisma";
 import { baseCheckoutInput, makeCart, makeVariant, RUN_ID } from "../helpers/seed";
 
+// placeOrder only accepts the caller's own cart, and a customer has one cart:
+// the concurrent pair is a guest cart (cookie) + the logged-in customer's cart
+const session = vi.hoisted(() => ({ userId: null as string | null }));
+vi.mock("@/lib/auth", () => ({
+  auth: async () => (session.userId ? { user: { id: session.userId } } : null),
+}));
+
+const customerIds: string[] = [];
 const productIds: string[] = [];
 const cartIds: string[] = [];
 const orderNumbers: string[] = [];
@@ -13,6 +21,7 @@ afterAll(async () => {
   await prisma.cart.deleteMany({ where: { id: { in: cartIds } } });
   await prisma.product.deleteMany({ where: { id: { in: productIds } } });
   await prisma.coupon.deleteMany({ where: { id: { in: couponIds } } });
+  await prisma.customer.deleteMany({ where: { id: { in: customerIds } } });
 });
 
 describe("verifyCoupon", () => {
@@ -66,8 +75,13 @@ describe("placeOrder — coupon usage race", () => {
     const { product: p1, variant: v1 } = await makeVariant(10);
     const { product: p2, variant: v2 } = await makeVariant(10);
     productIds.push(p1.id, p2.id);
+    const customer = await prisma.customer.create({
+      data: { email: `race-${RUN_ID}@example.com`, firstName: "Jan", lastName: "Testowy" },
+    });
+    customerIds.push(customer.id);
+    session.userId = customer.id;
     const cart1 = await makeCart(v1.id, 1);
-    const cart2 = await makeCart(v2.id, 1);
+    const cart2 = await makeCart(v2.id, 1, customer.id);
     cartIds.push(cart1.id, cart2.id);
 
     const [r1, r2] = await Promise.all([
