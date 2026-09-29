@@ -5,6 +5,8 @@ import { getCategoryIcon } from "@/lib/category-icons";
 
 type Props = { categories: CategoryItem[] };
 
+const HOMEPAGE_LIMIT = 12;
+
 function pluralProdukt(n: number): string {
   if (n === 1) return "produkt";
   if (n % 10 >= 2 && n % 10 <= 4 && (n % 100 < 12 || n % 100 > 14)) return "produkty";
@@ -51,12 +53,27 @@ export function CategoryGrid({ categories }: Props) {
 
   const counts = new Map(categories.map((c) => [c.id, c.productCount]));
   const sorted = [...topLevel].sort((a, b) => (counts.get(b.id) ?? 0) - (counts.get(a.id) ?? 0));
+  // Homepage shows the largest categories only; the full list lives on /kategorie
+  const visible = sorted.slice(0, HOMEPAGE_LIMIT);
 
   return (
     <section className="space-y-6">
-      <h2 className="text-balance font-heading text-2xl font-bold tracking-tight">Kategorie</h2>
-      <div className="grid grid-cols-2 gap-x-4 gap-y-8 sm:grid-cols-3 md:grid-flow-col md:auto-cols-fr">
-        {sorted.map((cat) => (
+      <div className="flex items-center justify-between">
+        <h2 className="text-balance font-heading text-2xl font-bold tracking-tight">Kategorie</h2>
+        {sorted.length > visible.length && (
+          <Link
+            href="/kategorie"
+            className="group rounded-full bg-secondary px-4 py-2 text-sm font-semibold text-secondary-foreground transition-colors duration-200 hover:bg-primary hover:text-primary-foreground motion-reduce:transition-none"
+          >
+            Zobacz wszystkie
+            <span className="ml-1 inline-block transition-transform duration-200 group-hover:translate-x-0.5 motion-reduce:group-hover:translate-x-0">
+              →
+            </span>
+          </Link>
+        )}
+      </div>
+      <div className="grid grid-cols-2 gap-x-4 gap-y-8 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6">
+        {visible.map((cat) => (
           <CategoryTile key={cat.id} cat={cat} count={counts.get(cat.id) ?? 0} />
         ))}
       </div>
