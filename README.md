@@ -1,6 +1,6 @@
 # Well Botany — E-Commerce Platform
 
-[![CI Pipeline](https://github.com/danylo-morhun/zielarnia/actions/workflows/ci.yml/badge.svg)](https://github.com/danylo-morhun/zielarnia/actions/workflows/ci.yml)
+[![CI Pipeline](https://github.com/danylo-morhun/wellbotany/actions/workflows/ci.yml/badge.svg)](https://github.com/danylo-morhun/wellbotany/actions/workflows/ci.yml)
 [![Next.js 16](https://img.shields.io/badge/Next.js-16_App_Router-black?logo=next.js)](https://nextjs.org/)
 [![React 19](https://img.shields.io/badge/React-19-blue?logo=react)](https://react.dev/)
 [![Prisma ORM](https://img.shields.io/badge/Prisma-PostgreSQL-2D3748?logo=prisma)](https://www.prisma.io/)
@@ -104,8 +104,8 @@ pnpm lint
 
 ### 1. Clone & Install
 ```bash
-git clone git@github.com:danylo-morhun/zielarnia.git
-cd zielarnia
+git clone git@github.com:danylo-morhun/wellbotany.git
+cd wellbotany
 pnpm install
 ```
 
