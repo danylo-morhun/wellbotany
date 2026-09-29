@@ -61,16 +61,16 @@ export async function NavBar() {
 
       {/* Main row */}
       <div className="border-b border-border">
-        <div className="mx-auto flex h-16 max-w-7xl items-center gap-2 px-4 sm:gap-4 sm:px-6 lg:gap-6 lg:px-8">
+        <div className="mx-auto flex h-16 max-w-7xl items-center gap-1 px-4 sm:gap-4 sm:px-6 lg:gap-6 lg:px-8">
           <MobileMenu navLinks={navLinks} utilityLinks={utilityLinks} nav={nav} />
-          <Link href="/" className="flex shrink-0 items-center">
+          <Link href="/" className="flex min-w-0 shrink items-center">
             <Image
               src="/branding/logo-horizontal.svg"
               alt="Well Botany"
               width={177}
               height={31}
               priority
-              className="h-8 w-auto dark:hidden"
+              className="h-6 w-auto min-[360px]:h-7 sm:h-8 dark:hidden"
             />
             <Image
               src="/branding/logo-horizontal-white.svg"
@@ -78,7 +78,7 @@ export async function NavBar() {
               width={177}
               height={31}
               priority
-              className="hidden h-8 w-auto dark:block"
+              className="hidden h-6 w-auto min-[360px]:h-7 sm:h-8 dark:block"
             />
           </Link>
 
@@ -86,9 +86,14 @@ export async function NavBar() {
             <HeaderSearch className="w-full max-w-lg" />
           </search>
 
+          {/* On narrow phones theme and wishlist move into the mobile menu so the row fits */}
           <div className="ml-auto flex shrink-0 items-center gap-0.5 md:ml-0">
-            <ThemeToggle />
-            <WishlistIconClient />
+            <div className="hidden sm:block">
+              <ThemeToggle />
+            </div>
+            <div className="hidden min-[360px]:block">
+              <WishlistIconClient />
+            </div>
             <CartIconClient />
             <AdminLink />
             <Link
