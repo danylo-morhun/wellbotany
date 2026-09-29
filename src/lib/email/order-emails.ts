@@ -4,7 +4,7 @@ import { formatPrice } from "@/lib/format";
 import { PICKUP_HOLD_DAYS, pickupLocation } from "@/lib/pickup-locations";
 import { prisma } from "@/lib/prisma";
 import { BANK_TRANSFER_DETAILS } from "@/lib/shop-config";
-import { EMAIL_FROM, resendClient } from "./client";
+import { EMAIL_FROM, resendClient, sendEmail } from "./client";
 
 function escapeHtml(value: string): string {
   return value
@@ -89,7 +89,7 @@ export async function sendOrderConfirmationEmail(orderNumber: string): Promise<v
     }
   `;
 
-  await resend.emails.send({
+  await sendEmail(resend, {
     from: EMAIL_FROM,
     to: order.customerEmail,
     subject: `Potwierdzenie zamówienia ${order.orderNumber}`,
@@ -121,7 +121,7 @@ export async function sendTrackingEmail(orderId: string): Promise<void> {
     ${order.trackingUrl ? `<p><a href="${escapeHtml(order.trackingUrl)}">Śledź przesyłkę</a></p>` : ""}
   `;
 
-  await resend.emails.send({
+  await sendEmail(resend, {
     from: EMAIL_FROM,
     to: order.customerEmail,
     subject: `Wysłaliśmy Twoje zamówienie ${order.orderNumber}`,
@@ -154,7 +154,7 @@ export async function sendPickupReadyEmail(orderId: string): Promise<void> {
     <p>Zamówienie będzie czekać ${PICKUP_HOLD_DAYS} dni. Podaj przy odbiorze numer zamówienia.</p>
   `;
 
-  await resend.emails.send({
+  await sendEmail(resend, {
     from: EMAIL_FROM,
     to: order.customerEmail,
     subject: `Zamówienie ${order.orderNumber} czeka na odbiór`,
@@ -192,7 +192,7 @@ export async function sendReviewRequestEmail(orderId: string): Promise<void> {
     <p style="font-size:12px;color:#767676">Opinie publikujemy po weryfikacji. Link jest ważny przez 120 dni.</p>
   `;
 
-  await resend.emails.send({
+  await sendEmail(resend, {
     from: EMAIL_FROM,
     to: order.customerEmail,
     subject: `Jak oceniasz zamówienie ${order.orderNumber}?`,
@@ -286,7 +286,7 @@ export async function sendShopOrderNotification(orderNumber: string): Promise<vo
     <p style="margin-top:24px"><a href="${siteUrl}/admin/zamowienia/${order.id}">Otwórz zamówienie w panelu</a></p>
   `;
 
-  await resend.emails.send({
+  await sendEmail(resend, {
     from: EMAIL_FROM,
     to: process.env.SHOP_NOTIFY_EMAIL || SHOP_NOTIFY_FALLBACK,
     replyTo: order.customerEmail,
