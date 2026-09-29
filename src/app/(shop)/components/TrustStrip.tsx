@@ -27,12 +27,12 @@ export async function TrustStrip() {
         {items.map(({ icon: Icon, title, sub }) => (
           <div
             key={title}
-            className="group flex items-center gap-3 rounded-2xl bg-card px-4 py-4 shadow-card transition-[box-shadow,transform] duration-200 ease-out hover:-translate-y-0.5 hover:shadow-card-hover motion-reduce:transition-none motion-reduce:hover:translate-y-0"
+            className="group flex flex-col items-start gap-3 rounded-2xl bg-card px-4 py-4 shadow-card sm:flex-row sm:items-center transition-[box-shadow,transform] duration-200 ease-out hover:-translate-y-0.5 hover:shadow-card-hover motion-reduce:transition-none motion-reduce:hover:translate-y-0"
           >
             <span className="flex size-11 shrink-0 items-center justify-center rounded-full bg-secondary text-primary transition-transform duration-200 group-hover:scale-110 motion-reduce:group-hover:scale-100">
               <Icon className="size-5" strokeWidth={1.75} />
             </span>
-            <div>
+            <div className="min-w-0">
               <p className="text-sm font-bold leading-snug text-foreground">{title}</p>
               <p className="text-xs text-muted-foreground">{sub}</p>
             </div>
