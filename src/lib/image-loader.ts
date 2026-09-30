@@ -27,9 +27,14 @@ export function publicImageUrl(src: string, width = 1200): string {
   return cloudinaryUrl(src, `f_jpg,q_auto,c_limit,w_${width}`);
 }
 
+// Transformation segments already baked into a stored delivery URL
+// (e.g. "f_auto,q_auto/") — dropped so ours is the only one applied.
+const STORED_TRANSFORMATION = /^(?:[a-z]{1,3}_[^/,]+(?:,[a-z]{1,3}_[^/,]+)*\/)+/;
+
 function cloudinaryUrl(src: string, transformation: string): string {
   if (!CLOUD_NAME) return src;
   const upload = src.match(CLOUDINARY_UPLOAD);
-  if (upload) return `${upload[1]}${transformation}/${upload[2]}`;
+  if (upload)
+    return `${upload[1]}${transformation}/${upload[2].replace(STORED_TRANSFORMATION, "")}`;
   return `https://res.cloudinary.com/${CLOUD_NAME}/image/fetch/${transformation}/${encodeURIComponent(src)}`;
 }
