@@ -2,6 +2,7 @@ import type { MetadataRoute } from "next";
 import { getCategories } from "@/features/catalog/actions";
 import { MAIN_IMAGE_FIRST } from "@/features/catalog/lib/main-image";
 import { MIN_LISTED_PRODUCTS } from "@/features/catalog/lib/nav";
+import { publicImageUrl } from "@/lib/image-loader";
 import { prisma } from "@/lib/prisma";
 
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? "https://wellbotany.pl";
@@ -63,7 +64,7 @@ export default async function sitemap(props: {
       return products.map((p) => ({
         url: `${SITE_URL}/produkt/${p.slug}`,
         lastModified: p.updatedAt,
-        images: p.images.map((i) => i.url),
+        images: p.images.map((i) => publicImageUrl(i.url)),
       }));
     }
 
@@ -128,7 +129,7 @@ export default async function sitemap(props: {
         ...posts.map((p) => ({
           url: `${SITE_URL}/poradnik/${p.slug}`,
           lastModified: p.updatedAt,
-          ...(p.coverImage && { images: [p.coverImage] }),
+          ...(p.coverImage && { images: [publicImageUrl(p.coverImage)] }),
         })),
       ];
     }
