@@ -5,11 +5,10 @@
 [![React 19](https://img.shields.io/badge/React-19-blue?logo=react)](https://react.dev/)
 [![Prisma ORM](https://img.shields.io/badge/Prisma-PostgreSQL-2D3748?logo=prisma)](https://www.prisma.io/)
 [![Przelewy24](https://img.shields.io/badge/Payments-Przelewy24_BLIK_ApplePay-0070BA)](https://www.przelewy24.pl/)
-[![BaseLinker](https://img.shields.io/badge/Integration-BaseLinker_Hub-FF6600)](https://baselinker.com/)
 [![Biome](https://img.shields.io/badge/Biome-Code_Quality-60A5FA?logo=biome)](https://biomejs.dev/)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5-3178C6?logo=typescript)](https://www.typescriptlang.org/)
 
-A production e-commerce platform specializing in bio-products, dietary supplements, and health items. Built with **Next.js 16 (React 19)**, **Prisma ORM**, **Neon Serverless PostgreSQL**, **Przelewy24 Gateway**, and a **BaseLinker Integration Hub**.
+A production e-commerce platform specializing in bio-products, dietary supplements, and health items. Built with **Next.js 16 (React 19)**, **Prisma ORM**, **Neon Serverless PostgreSQL** and the **Przelewy24 Gateway**, deployed on **Vercel** (fra1).
 
 ---
 
@@ -19,35 +18,38 @@ A production e-commerce platform specializing in bio-products, dietary supplemen
 graph TD
     subgraph Client ["Client Layer (Shop Frontend)"]
         UI["shadcn/ui + Tailwind CSS 4"]
-        Geo["InPost Paczkomaty Geowidget"]
+        Map["Pickup-point map (Leaflet + OSM)"]
     end
 
-    subgraph Storefront ["Next.js 16 App Router"]
+    subgraph Storefront ["Next.js 16 App Router (Vercel)"]
         ServerActions["Next-Safe Server Actions"]
         Cart["Cart & Checkout Engine"]
-        Webhook["Przelewy24 Webhook Handler (HMAC-SHA384)"]
+        Points["/api/points (epaka proxy)"]
+        Webhook["Przelewy24 Webhook Handler (SHA-384)"]
+        Cron["Vercel Cron: Merchant Center sync"]
     end
 
     subgraph Infra ["Backend & Storage"]
         DB[(Neon PostgreSQL + Prisma ORM)]
         Redis[(Upstash Redis Rate Limiter)]
+        Images[(Cloudinary + Vercel Blob)]
         Sentry[Sentry Error Tracking]
     end
 
-    subgraph External ["Integrations & Logistics"]
+    subgraph External ["External Services"]
         P24[Przelewy24 Payment Gateway]
-        BL[BaseLinker API Stock & Order Hub]
-        Couriers[InPost / DHL / DPD Labels]
-        Allegro[Allegro Marketplace Sync]
+        Epaka[epaka pickup points]
+        Resend[Resend transactional email]
+        GMC[Google Merchant Center]
     end
 
-    Client --> UI & Geo
     UI --> ServerActions
+    Map --> Points --> Epaka
     ServerActions --> Cart & DB & Redis
-    P24 --> Webhook
-    Webhook --> DB
-    Webhook --> BL
-    BL --> Couriers & Allegro
+    ServerActions --> Resend
+    P24 --> Webhook --> DB
+    Cron --> GMC
+    UI --> Images
     ServerActions --> Sentry
 ```
 
@@ -56,16 +58,17 @@ graph TD
 ## Key Engineering & Security Specs
 
 ### 1. Financial Webhook Integrity & Timing-Safe Security
-- **HMAC-SHA384 Verification**: Przelewy24 payment webhooks are verified using cryptographic SHA-384 signature hashes.
+- **SHA-384 Signature Verification**: Przelewy24 payment notifications are verified against a SHA-384 signature built with the merchant CRC key.
 - **Timing-Safe Comparison**: Webhook signature verification uses constant-time byte comparisons to eliminate side-channel timing attacks.
 - **Idempotent Order Transitions**: State transitions from `PENDING` to `PAID` are wrapped in atomic database transactions, preventing double-processing on network retries.
 
-### 2. Multi-Channel Logistics & Stock Sync (BaseLinker Hub)
-- **Real-Time Stock Sync**: Inventory levels are synced bi-directionally between PostgreSQL, BaseLinker, and marketplace channels (Allegro).
-- **Automated Parcel Labels**: Direct integration with InPost Paczkomaty Geowidget generates shipping labels automatically upon order payment completion.
+### 2. Shipping, Pricing & Feeds
+- **Pickup-Point Checkout**: Paczkomat / Orlen points are picked on an own Leaflet map fed by `/api/points` (server-side proxy to epaka); courier and in-store pickup are also supported. Fulfilment is manual.
+- **Omnibus Price History**: A PostgreSQL trigger records every price change and maintains the 30-day lowest price shown next to promotions (EU Omnibus Directive).
+- **Google Merchant Center Sync**: Product feed plus price/availability pushes after admin edits and a daily Vercel Cron reconciliation.
 
-### 3. Health & Regulatory Compliance (GIS / Sanepid)
-- Dedicated database modeling for dietary supplement labeling, active ingredients, dosage warnings, and Sanepid/GIS regulatory health claim compliance.
+### 3. Health & Regulatory Compliance (GIS / EU 432/2012)
+- Dedicated database modeling for dietary supplement labeling, active ingredients, dosage warnings and unit prices; health claims are restricted to verbatim EU 432/2012 wording.
 - Strict XSS protection using `sanitize-html` for product descriptions and rich-text specifications.
 
 ---
@@ -77,14 +80,14 @@ graph TD
 | **Prisma ORM + Neon** | Drizzle / TypeORM | Selected Prisma for strong type generation across complex e-commerce relational schemas (Orders, Variants, Coupons, Customers, Audit Logs). |
 | **Next-Safe-Action** | Native `useActionState` | Provides type-safe server action inputs/outputs with built-in Zod schema validation and global error handling. |
 | **Upstash Redis** | Self-hosted Redis | Serverless rate limiting (`@upstash/ratelimit`) on checkout endpoints and API routes without managing infrastructure. |
-| **Ephemeral Neon Branches in CI** | Shared Staging DB | GitHub Actions dynamically provisions an isolated Neon Postgres branch per CI run to test migrations and E2E checkout flows safely without race conditions. |
+| **Ephemeral Neon Branches in CI** | Shared Staging DB | GitHub Actions provisions an isolated Neon Postgres branch per CI run to apply migrations, run unit tests and a production build against real data without race conditions. |
 
 ---
 
 ## Testing & Quality Assurance
 
-- **Unit Tests (Vitest)**: Tests financial calculations, Przelewy24 HMAC signatures, timing-safe string comparison, and supplier product import parsers.
-- **Integration & E2E (Playwright)**: End-to-end tests for product filtering, cart management, coupon redemption, and checkout flows.
+- **Unit Tests (Vitest)**: Tests financial calculations, Przelewy24 signatures, timing-safe string comparison, unit prices and catalog logic.
+- **E2E (Playwright)**: Checkout flows across shipping and payment methods, invoices, logged-in customers and admin order handling (desktop + mobile), run against a dev database.
 - **Ephemeral Database Testing**: CI spins up isolated Neon Postgres branches automatically for every PR run.
 
 ### Running Tests Locally
@@ -111,9 +114,13 @@ pnpm install
 
 ### 2. Database Migration & Development Server
 ```bash
-# Generate Prisma Client & Run Migrations
+# Copy env template (Next.js and Prisma CLI both read .env);
+# point DATABASE_URL / DIRECT_URL at a dev Neon branch, never production
+cp .env.example .env
+
+# Generate Prisma Client & apply migrations
 pnpm db:generate
-pnpm db:migrate
+pnpm exec prisma migrate deploy
 
 # Start Next.js dev server
 pnpm dev
