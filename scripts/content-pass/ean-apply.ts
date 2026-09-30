@@ -1,7 +1,7 @@
-// Step 3 of the EAN pass: write reviewed barcodes from docs/ean-review.csv
+// Step 3 of the EAN pass: write reviewed barcodes from docs/catalog/ean-review.csv
 // (rows with zastosuj = "tak") into ProductVariant.ean. Dry run by default.
 //
-//   DATABASE_URL=<dev> npx tsx scripts/content-pass/ean-apply.ts [--write] [--prod] [--csv docs/ean-review.csv]
+//   DATABASE_URL=<dev> npx tsx scripts/content-pass/ean-apply.ts [--write] [--prod] [--csv docs/catalog/ean-review.csv]
 //
 // Re-checks each row against the DB right before writing: the variant still
 // has no EAN, the code passes the GTIN check and no other variant uses it.
@@ -11,7 +11,7 @@ import { isValidGtin } from "./lib/gtin";
 
 const write = process.argv.includes("--write");
 const csvArg = process.argv.indexOf("--csv");
-const file = csvArg > 0 ? process.argv[csvArg + 1] : "docs/ean-review.csv";
+const file = csvArg > 0 ? process.argv[csvArg + 1] : "docs/catalog/ean-review.csv";
 
 /** Minimal RFC 4180 reader (quoted fields, doubled quotes, commas/newlines inside quotes). */
 function parseCsv(text: string): Record<string, string>[] {
