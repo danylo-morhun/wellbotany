@@ -2,7 +2,7 @@
 // expanded with question/intent modifiers. No volumes — autocomplete order is
 // a rough popularity signal; GSC impressions are added later where we rank.
 //
-//   npx tsx scripts/seo/keyword-suggest.ts [--seeds seeds.json] [--out docs/keywords-suggest.json]
+//   npx tsx scripts/seo/keyword-suggest.ts [--seeds seeds.json] [--out docs/seo/keywords-suggest.json]
 import { existsSync, readFileSync, writeFileSync } from "node:fs";
 
 const args = process.argv.slice(2);
@@ -10,7 +10,7 @@ const arg = (name: string, fallback: string) => {
   const i = args.indexOf(name);
   return i >= 0 ? args[i + 1] : fallback;
 };
-const out = arg("--out", "docs/keywords-suggest.json");
+const out = arg("--out", "docs/seo/keywords-suggest.json");
 const seedsFile = arg("--seeds", "");
 
 // cluster → seed terms (Polish, as people type them)
