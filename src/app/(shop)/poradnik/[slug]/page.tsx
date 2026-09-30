@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import Image from "next/image";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { getPostProducts, getPublishedPost, getPublishedPosts } from "@/features/blog/lib/queries";
+import { getPostProducts, getPublishedPost } from "@/features/blog/lib/queries";
 import { Breadcrumbs } from "@/features/catalog/components/Breadcrumbs";
 import { ProductCard } from "@/features/catalog/components/ProductCard";
 import { readFaq } from "@/features/glossary/lib/queries";
@@ -11,8 +11,10 @@ import { buildArticleJsonLd, buildFaqJsonLd, buildPageTitle, toJsonLdScript } fr
 
 type Props = { params: Promise<{ slug: string }> };
 
+// Rendered on first request, then cached until revalidated (ISR) — prerendering
+// every slug at build time made deploys take ~15 min and burned DB compute.
 export async function generateStaticParams() {
-  return (await getPublishedPosts()).map((p) => ({ slug: p.slug }));
+  return [];
 }
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
