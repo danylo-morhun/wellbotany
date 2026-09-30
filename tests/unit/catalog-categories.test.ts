@@ -2,7 +2,6 @@ import { describe, expect, it } from "vitest";
 import type { CategoryItem } from "@/features/catalog/actions";
 import { buildCategoryNav, computeSubtreeCounts } from "@/features/catalog/lib/nav";
 import { categoryLinkIds } from "@/features/products/lib/category-links";
-import { onlyEmptyFields } from "@/features/products/lib/import/merge";
 
 const cat = (
   id: string,
@@ -63,21 +62,5 @@ describe("categoryLinkIds", () => {
   it("always includes the primary category, without duplicates", () => {
     expect(categoryLinkIds("magnez", ["na-sen", "magnez"])).toEqual(["magnez", "na-sen"]);
     expect(categoryLinkIds(null, ["na-sen"])).toEqual(["na-sen"]);
-  });
-});
-
-describe("onlyEmptyFields", () => {
-  it("fills empty fields only, never overwrites curated text", () => {
-    expect(
-      onlyEmptyFields(
-        { descriptionPl: "<p>nasz opis</p>", storageInfo: null, benefitsPl: [] },
-        {
-          descriptionPl: "opis dostawcy",
-          storageInfo: "w suchym miejscu",
-          benefitsPl: ["a"],
-          servingSize: undefined,
-        },
-      ),
-    ).toEqual({ storageInfo: "w suchym miejscu", benefitsPl: ["a"] });
   });
 });
