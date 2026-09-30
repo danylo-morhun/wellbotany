@@ -2,14 +2,14 @@
 // feed) and which don't because their quantity can't be read from
 // optionValue / netWeight. Writes the gaps as CSV for the owner to fill in.
 //
-//   DATABASE_URL=<dev> npx tsx scripts/content-pass/unit-price-report.ts [--out docs/cena-jednostkowa-braki.csv] [--prod]
+//   DATABASE_URL=<dev> npx tsx scripts/content-pass/unit-price-report.ts [--out docs/catalog/cena-jednostkowa-braki.csv] [--prod]
 import { writeFileSync } from "node:fs";
 import { variantPackQuantity } from "../../src/lib/unit-price";
 import { connect } from "./db";
 
 const SITE = "https://wellbotany.pl";
 const outArg = process.argv.indexOf("--out");
-const out = outArg > 0 ? process.argv[outArg + 1] : "docs/cena-jednostkowa-braki.csv";
+const out = outArg > 0 ? process.argv[outArg + 1] : "docs/catalog/cena-jednostkowa-braki.csv";
 
 const csv = (v: unknown) => `"${String(v ?? "").replace(/"/g, '""')}"`;
 
