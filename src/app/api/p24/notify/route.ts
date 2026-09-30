@@ -1,7 +1,6 @@
 import { type NextRequest, NextResponse } from "next/server";
 import { CRC, verifyTransaction } from "@/features/przelewy24/lib/client";
 import { p24Sign } from "@/features/przelewy24/lib/sign";
-import { pushOrderToBaselinker } from "@/lib/baselinker/orders";
 import { prisma } from "@/lib/prisma";
 import { safeCompare } from "@/lib/timing-safe-equal";
 
@@ -71,10 +70,6 @@ export async function POST(req: NextRequest) {
       paymentRef: String(orderId),
       status: "PAID",
     },
-  });
-
-  pushOrderToBaselinker(order.id).catch((err) => {
-    console.error(`[BL] push failed for order ${order.id}:`, err);
   });
 
   return NextResponse.json({ status: 200 });
