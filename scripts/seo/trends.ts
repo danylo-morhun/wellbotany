@@ -3,7 +3,7 @@
 // terms plus the anchor ("magnez"), so all numbers share one scale:
 // interest 100 = as popular as "magnez" on average.
 //
-//   npx tsx scripts/seo/trends.ts [--out docs/trends.json] [term ...]
+//   npx tsx scripts/seo/trends.ts [--out docs/seo/trends.json] [term ...]
 import { writeFileSync } from "node:fs";
 
 const ANCHOR = "magnez";
@@ -40,7 +40,7 @@ const UA =
   "Mozilla/5.0 (Macintosh; Intel Mac OS X 14_0) AppleWebKit/537.36 Chrome/130 Safari/537.36";
 const args = process.argv.slice(2);
 const outIdx = args.indexOf("--out");
-const out = outIdx >= 0 ? args[outIdx + 1] : "docs/trends.json";
+const out = outIdx >= 0 ? args[outIdx + 1] : "docs/seo/trends.json";
 const terms = args.filter((a, i) => !a.startsWith("--") && i !== outIdx + 1);
 
 const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));

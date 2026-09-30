@@ -5,7 +5,7 @@
 //   "na co", "dawkowanie", "skutki uboczne", "niedobór" … → glossary page
 //   "jaki", "najlepszy", "czy warto", "jak wybrać" … → guide article
 //   need phrases ("na sen", "na stawy") → need category
-// Writes docs/keywords-map.json + docs/keywords-map.md (tables per cluster).
+// Writes docs/seo/keywords-map.json + docs/seo/keywords-map.md (tables per cluster).
 //
 //   npx tsx scripts/seo/keyword-map.ts
 import { existsSync, readdirSync, readFileSync, writeFileSync } from "node:fs";
@@ -146,14 +146,14 @@ function topicOf(q: string, known: Set<string>): string | null {
 }
 
 async function main() {
-  const suggest: Suggest[] = JSON.parse(readFileSync("docs/keywords-suggest.json", "utf8"));
+  const suggest: Suggest[] = JSON.parse(readFileSync("docs/seo/keywords-suggest.json", "utf8"));
   const trends: Record<string, { interest: number; peakMonths: number[] }> = existsSync(
-    "docs/trends.json",
+    "docs/seo/trends.json",
   )
-    ? JSON.parse(readFileSync("docs/trends.json", "utf8"))
+    ? JSON.parse(readFileSync("docs/seo/trends.json", "utf8"))
     : {};
-  const gscFile = existsSync("docs/gsc")
-    ? readdirSync("docs/gsc")
+  const gscFile = existsSync("docs/seo/gsc")
+    ? readdirSync("docs/seo/gsc")
         .filter((f) => f.endsWith(".json"))
         .sort()
         .pop()
@@ -161,7 +161,7 @@ async function main() {
   const gsc = new Map<string, { impressions: number; position: number }>(
     gscFile
       ? (
-          JSON.parse(readFileSync(`docs/gsc/${gscFile}`, "utf8")).queries as {
+          JSON.parse(readFileSync(`docs/seo/gsc/${gscFile}`, "utf8")).queries as {
             keys: string[];
             impressions: number;
             position: number;
@@ -244,7 +244,7 @@ async function main() {
     });
   }
   rows.sort((a, b) => b.score - a.score);
-  writeFileSync("docs/keywords-map.json", JSON.stringify(rows, null, 1));
+  writeFileSync("docs/seo/keywords-map.json", JSON.stringify(rows, null, 1));
 
   const clusters = [...new Set(rows.map((r) => r.cluster))];
   const table = (list: typeof rows) =>
@@ -277,8 +277,8 @@ ${clusters
   .map((c) => `## Klaster: ${c}\n\n${table(rows.filter((r) => r.cluster === c).slice(0, 30))}`)
   .join("\n\n")}
 `;
-  writeFileSync("docs/keywords-map.md", md);
-  console.log(`${rows.length} queries → docs/keywords-map.json, docs/keywords-map.md`);
+  writeFileSync("docs/seo/keywords-map.md", md);
+  console.log(`${rows.length} queries → docs/seo/keywords-map.json, docs/seo/keywords-map.md`);
   console.log(`missing pages: ${todo.size}`);
 }
 
