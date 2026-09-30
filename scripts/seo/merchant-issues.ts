@@ -8,8 +8,8 @@ import { connect } from "../content-pass/db";
 import { googleToken, MERCHANT_ACCOUNT, merchantFetch, SCOPES } from "./google-auth";
 
 const SITE = "https://wellbotany.pl";
-const SMALL_PHOTOS_CSV = "docs/mc-male-zdjecia.csv";
-const DISAPPROVED_CSV = "docs/mc-odrzucone.csv";
+const SMALL_PHOTOS_CSV = "docs/seo/merchant-center/mc-male-zdjecia.csv";
+const DISAPPROVED_CSV = "docs/seo/merchant-center/mc-odrzucone.csv";
 
 type Issue = {
   code: string;

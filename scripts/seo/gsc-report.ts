@@ -1,13 +1,13 @@
 // Weekly Search Console check: queries/pages for the last 28 days, queries
 // that are new since the previous snapshot, and index status of key URLs.
-// Snapshots go to docs/gsc/<date>.json, the readable report to stdout + docs/gsc/<date>.md.
+// Snapshots go to docs/seo/gsc/<date>.json, the readable report to stdout + docs/seo/gsc/<date>.md.
 //
 //   npx tsx scripts/seo/gsc-report.ts [--days 28] [--inspect url ...]
 import { existsSync, mkdirSync, readdirSync, readFileSync, writeFileSync } from "node:fs";
 import { googleToken, SCOPES } from "./google-auth";
 
 const SITE = "https://wellbotany.pl/";
-const DIR = "docs/gsc";
+const DIR = "docs/seo/gsc";
 const KEY_URLS = [
   "/",
   "/katalog",

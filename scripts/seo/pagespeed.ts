@@ -1,7 +1,7 @@
 // PageSpeed Insights (lab data, mobile + desktop) for key page types →
 // JSON with scores, Core Web Vitals, the LCP element and top opportunities.
 //
-//   npx tsx scripts/seo/pagespeed.ts [--out docs/pagespeed-YYYY-MM-DD.json] [url ...]
+//   npx tsx scripts/seo/pagespeed.ts [--out docs/seo/pagespeed-YYYY-MM-DD.json] [url ...]
 import { readFileSync, writeFileSync } from "node:fs";
 import { homedir } from "node:os";
 
@@ -33,7 +33,9 @@ type Audit = {
 const args = process.argv.slice(2);
 const outIdx = args.indexOf("--out");
 const out =
-  outIdx >= 0 ? args[outIdx + 1] : `docs/pagespeed-${new Date().toISOString().slice(0, 10)}.json`;
+  outIdx >= 0
+    ? args[outIdx + 1]
+    : `docs/seo/pagespeed-${new Date().toISOString().slice(0, 10)}.json`;
 const urls = args.filter((a, i) => a.startsWith("http") && i !== outIdx + 1);
 const key = readFileSync(`${homedir()}/.config/wellbotany/google-api-key`, "utf8").trim();
 
