@@ -5,7 +5,6 @@ import { revalidatePath, revalidateTag } from "next/cache";
 import { after } from "next/server";
 import { rankBySearchRelevance } from "@/features/catalog/lib/search-relevance";
 import { ActionError } from "@/lib/action-error";
-import { syncProductToBaselinker, syncStockToBaselinker } from "@/lib/baselinker/inventory";
 import { pushOffersToMerchant, syncProductsToMerchant } from "@/lib/merchant";
 import { prisma } from "@/lib/prisma";
 import { adminActionClient } from "@/lib/safe-action";
@@ -279,7 +278,6 @@ export const saveProduct = adminActionClient
     revalidatePath("/katalog", "layout");
     revalidatePath("/produkt/[slug]", "page");
     revalidateTag("products", "max");
-    if (savedId) void syncProductToBaselinker(savedId).catch(console.error);
     if (savedId) after(() => syncProductsToMerchant([savedId as string]).catch(console.error));
     return { success: true, id: savedId };
   });
@@ -344,7 +342,6 @@ export const saveVariant = adminActionClient
     revalidatePath(`/admin/produkty/${input.productId}`);
     revalidatePath("/produkt/[slug]", "page");
     revalidateTag("products", "max");
-    void syncProductToBaselinker(input.productId).catch(console.error);
     after(() => syncProductsToMerchant([input.productId]).catch(console.error));
     return { success: true };
   });
@@ -383,7 +380,6 @@ export const quickUpdateVariant = adminActionClient
     revalidatePath("/admin/produkty");
     revalidatePath("/produkt/[slug]", "page");
     revalidateTag("products", "max");
-    void syncProductToBaselinker(variant.productId).catch(console.error);
     after(() => syncProductsToMerchant([variant.productId]).catch(console.error));
     return { success: true };
   });
@@ -399,18 +395,7 @@ export const bulkUpdateStock = adminActionClient
       ),
     );
 
-    // Push stock to BaseLinker (fire-and-forget)
     const variantIds = updates.map((u) => u.variantId);
-    const variants = await prisma.productVariant.findMany({
-      where: { id: { in: variantIds }, baselinkerVariantId: { not: null } },
-      select: { id: true, baselinkerVariantId: true, stock: true },
-    });
-    if (variants.length > 0) {
-      void syncStockToBaselinker(
-        variants.map((v) => ({ blVariantId: v.baselinkerVariantId!, stock: v.stock })),
-      ).catch(console.error);
-    }
-
     const productIds = await prisma.productVariant.findMany({
       where: { id: { in: variantIds } },
       select: { productId: true },
