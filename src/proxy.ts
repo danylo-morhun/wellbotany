@@ -27,13 +27,8 @@ function isStrictCspPath(pathname: string): boolean {
 const IMG_SRC_HOSTS = [
   "https://res.cloudinary.com",
   "https://dcu4fybzavbhk0mv.public.blob.vercel-storage.com",
-  "https://images.unsplash.com",
-  "https://cdn.baselinker.com",
+  // one gift set image still lives on the old shop
   "https://zielarniakaliska.com.pl",
-  // kenay.com.pl: ~43 products still point here — their catalog pages 404'd
-  // before the Blob migration could fetch them, so the old (dead) URL is
-  // still in the DB. Keep allowed until those are fixed manually.
-  "https://kenay.com.pl",
 ].join(" ");
 
 // Google Analytics 4 — loaded only after cookie consent (GoogleAnalytics.tsx)

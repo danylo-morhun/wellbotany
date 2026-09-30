@@ -27,7 +27,7 @@ const nextConfig: NextConfig = {
   },
   images: {
     // Resized/converted by Cloudinary (src/lib/image-loader.ts), not Vercel's
-    // optimizer — its Hobby-plan source-image quota ran out on supplier photos.
+    // optimizer — its Hobby-plan source-image quota ran out.
     loader: "custom",
     loaderFile: "./src/lib/image-loader.ts",
     // Fewer srcset widths → fewer Cloudinary derivatives (free-tier credits)
@@ -36,13 +36,8 @@ const nextConfig: NextConfig = {
     remotePatterns: [
       { protocol: "https", hostname: "res.cloudinary.com" },
       { protocol: "https", hostname: "dcu4fybzavbhk0mv.public.blob.vercel-storage.com" },
-      { protocol: "https", hostname: "images.unsplash.com" },
-      { protocol: "https", hostname: "cdn.baselinker.com" },
+      // one gift set image still lives on the old shop
       { protocol: "https", hostname: "zielarniakaliska.com.pl" },
-      // kenay.com.pl: ~43 products still point here — their catalog pages 404'd
-      // before the Blob migration could fetch them, so the old (dead) URL is
-      // still in the DB. Keep allowed until those are fixed manually.
-      { protocol: "https", hostname: "kenay.com.pl" },
     ],
   },
   async redirects() {
