@@ -3,6 +3,7 @@
 import { NextResponse } from "next/server";
 import { resolveDisplayBrand } from "@/features/catalog/lib/brand-tree";
 import { MAIN_IMAGE_FIRST } from "@/features/catalog/lib/main-image";
+import { publicImageUrl } from "@/lib/image-loader";
 import { prisma } from "@/lib/prisma";
 import { stripHtml } from "@/lib/seo";
 import { feedUnitPricing, variantPackQuantity } from "@/lib/unit-price";
@@ -84,7 +85,7 @@ export async function GET() {
       <g:title>${escapeXml(title)}</g:title>
       <g:description>${escapeXml(description)}</g:description>
       <g:link>${escapeXml(variantLink)}</g:link>
-      <g:image_link>${escapeXml(image)}</g:image_link>
+      <g:image_link>${escapeXml(publicImageUrl(image))}</g:image_link>
       <g:availability>${inStock ? "in_stock" : "out_of_stock"}</g:availability>
       <g:price>${(variant.pricePln / 100).toFixed(2)} PLN</g:price>
       <g:condition>new</g:condition>
