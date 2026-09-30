@@ -1,5 +1,6 @@
 import { beforeAll, describe, expect, it, vi } from "vitest";
 import { imagesForVariant, resolveVariantId } from "@/features/catalog/lib/variant-images";
+import { publicImageUrl } from "@/lib/image-loader";
 import { buildProductJsonLd } from "@/lib/seo";
 
 // CI sets NEXT_PUBLIC_SITE_URL to localhost; the expectations use the real domain
@@ -65,7 +66,7 @@ describe("buildProductJsonLd", () => {
     expect(ld.hasVariant).toHaveLength(2);
     expect(ld.hasVariant[0]).toMatchObject({
       gtin: "5901234123457",
-      image: ["v60.jpg"],
+      image: [publicImageUrl("v60.jpg")],
       offers: {
         price: "49.90",
         availability: "https://schema.org/InStock",
