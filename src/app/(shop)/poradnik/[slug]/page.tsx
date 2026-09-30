@@ -6,6 +6,7 @@ import { getPostProducts, getPublishedPost } from "@/features/blog/lib/queries";
 import { Breadcrumbs } from "@/features/catalog/components/Breadcrumbs";
 import { ProductCard } from "@/features/catalog/components/ProductCard";
 import { readFaq } from "@/features/glossary/lib/queries";
+import { publicImageUrl } from "@/lib/image-loader";
 import { sanitizeRichText } from "@/lib/sanitize";
 import { buildArticleJsonLd, buildFaqJsonLd, buildPageTitle, toJsonLdScript } from "@/lib/seo";
 
@@ -27,7 +28,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     alternates: { canonical: `/poradnik/${post.slug}` },
     openGraph: {
       type: "article",
-      ...(post.coverImage && { images: [{ url: post.coverImage }] }),
+      ...(post.coverImage && { images: [{ url: publicImageUrl(post.coverImage) }] }),
     },
   };
 }

@@ -1,4 +1,5 @@
 import { SHIPPING_COSTS } from "@/features/checkout/lib/shipping";
+import { publicImageUrl } from "@/lib/image-loader";
 
 const CHEAPEST_SHIPPING_PLN = Math.min(...Object.values(SHIPPING_COSTS).filter((cost) => cost > 0));
 
@@ -197,7 +198,7 @@ export function buildArticleJsonLd(article: {
     inLanguage: "pl-PL",
     author: { "@id": organizationId(siteUrl) },
     publisher: { "@id": organizationId(siteUrl) },
-    ...(article.image && { image: article.image }),
+    ...(article.image && { image: publicImageUrl(article.image) }),
     ...(article.reviewedBy && {
       reviewedBy: { "@type": "Person", name: article.reviewedBy },
     }),
@@ -278,7 +279,9 @@ export function buildProductJsonLd(product: {
     ? stripHtml(product.description).slice(0, 5000)
     : undefined;
   const brand = product.brandName ? { "@type": "Brand", name: product.brandName } : undefined;
-  const sharedImages = product.images.filter((i) => i.variantId === null).map((i) => i.url);
+  const sharedImages = product.images
+    .filter((i) => i.variantId === null)
+    .map((i) => publicImageUrl(i.url));
   // Only real, approved reviews — never an empty or invented rating
   const reviewData =
     product.reviews && product.reviews.count > 0 && product.reviews.average
@@ -301,7 +304,9 @@ export function buildProductJsonLd(product: {
       : {};
 
   const variantProduct = (v: JsonLdVariant, variantUrl: string) => {
-    const own = product.images.filter((i) => i.variantId === v.id).map((i) => i.url);
+    const own = product.images
+      .filter((i) => i.variantId === v.id)
+      .map((i) => publicImageUrl(i.url));
     return {
       "@type": "Product",
       name:
@@ -315,7 +320,7 @@ export function buildProductJsonLd(product: {
           ? own
           : sharedImages.length > 0
             ? sharedImages
-            : product.images.map((i) => i.url),
+            : product.images.map((i) => publicImageUrl(i.url)),
       offers: {
         "@type": "Offer",
         url: variantUrl,
