@@ -16,7 +16,6 @@ import { getProductReviews } from "@/features/reviews/lib/queries";
 import { getShopSettings } from "@/features/settings/lib/shop-settings";
 import { WishlistButton } from "@/features/wishlist/components/WishlistButton";
 import { omnibusNote } from "@/lib/omnibus";
-import { prisma } from "@/lib/prisma";
 import { sanitizeRichText } from "@/lib/sanitize";
 import { buildPageTitle, buildProductJsonLd, DEFAULT_OG_IMAGE, toJsonLdScript } from "@/lib/seo";
 import { formatUnitPrice, variantPackQuantity } from "@/lib/unit-price";
@@ -34,14 +33,10 @@ type Props = {
 // Prebuilds the most relevant slugs so most visitors hit an already-static
 // page; anything outside this set still renders on first visit and is then
 // cached like the rest (default dynamicParams behavior).
+// Rendered on first request, then cached until revalidated (ISR) — prerendering
+// every slug at build time made deploys take ~15 min and burned DB compute.
 export async function generateStaticParams() {
-  const products = await prisma.product.findMany({
-    where: { status: "ACTIVE" },
-    select: { slug: true },
-    orderBy: { updatedAt: "desc" },
-    take: 200,
-  });
-  return products.map((p) => ({ slug: p.slug }));
+  return [];
 }
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
