@@ -6,7 +6,6 @@ import { ProductCard } from "@/features/catalog/components/ProductCard";
 import {
   getIngredientBySlug,
   getIngredientProducts,
-  getIngredients,
   readFaq,
 } from "@/features/glossary/lib/queries";
 import { sanitizeRichText } from "@/lib/sanitize";
@@ -14,8 +13,10 @@ import { buildArticleJsonLd, buildFaqJsonLd, buildPageTitle, toJsonLdScript } fr
 
 type Props = { params: Promise<{ slug: string }> };
 
+// Rendered on first request, then cached until revalidated (ISR) — prerendering
+// every slug at build time made deploys take ~15 min and burned DB compute.
 export async function generateStaticParams() {
-  return (await getIngredients()).map((i) => ({ slug: i.slug }));
+  return [];
 }
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
