@@ -15,6 +15,7 @@ import { ProductReviews } from "@/features/reviews/components/ProductReviews";
 import { getProductReviews } from "@/features/reviews/lib/queries";
 import { getShopSettings } from "@/features/settings/lib/shop-settings";
 import { WishlistButton } from "@/features/wishlist/components/WishlistButton";
+import { publicImageUrl } from "@/lib/image-loader";
 import { omnibusNote } from "@/lib/omnibus";
 import { prisma } from "@/lib/prisma";
 import { sanitizeRichText } from "@/lib/sanitize";
@@ -72,7 +73,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     openGraph: {
       title,
       description,
-      images: mainImage ? [{ url: mainImage }] : [DEFAULT_OG_IMAGE],
+      images: mainImage ? [{ url: publicImageUrl(mainImage) }] : [DEFAULT_OG_IMAGE],
     },
   };
 }
