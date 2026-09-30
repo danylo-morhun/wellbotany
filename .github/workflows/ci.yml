@@ -13,7 +13,7 @@ permissions:
   contents: read
 
 env:
-  AUTH_SECRET: "ci-test-auth-secret-32-chars-long-zielarnia"
+  AUTH_SECRET: "ci-test-auth-secret-32-chars-long-wellbotany"
   NEXT_PUBLIC_SITE_URL: "http://localhost:3000"
 
 jobs:
