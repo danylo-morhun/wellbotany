@@ -8,6 +8,8 @@ export type ProductFilters = {
   noBrand?: boolean;
   noCategory?: boolean;
   noImage?: boolean;
+  noEan?: boolean;
+  noDescription?: boolean;
 };
 
 /**
@@ -30,6 +32,8 @@ export function buildProductWhere(filters: ProductFilters): Prisma.ProductWhereI
   if (filters.noCategory) where.categoryId = null;
   else if (filters.categoryId) where.categoryLinks = { some: { categoryId: filters.categoryId } };
   if (filters.noImage) where.images = { none: {} };
+  if (filters.noEan) where.variants = { some: { ean: null } };
+  if (filters.noDescription) where.OR = [{ descriptionPl: null }, { descriptionPl: "" }];
 
   return where;
 }

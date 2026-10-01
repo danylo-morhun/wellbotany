@@ -1,6 +1,6 @@
 "use client";
 
-import { Trash2 } from "lucide-react";
+import { MoreHorizontal } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useAction } from "next-safe-action/hooks";
 import { useState } from "react";
@@ -15,14 +15,24 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { deleteProduct } from "../actions";
 
 interface Props {
   productId: string;
   productName: string;
+  slug: string;
+  /** Only an active product has a public page */
+  isActive: boolean;
 }
 
-export function DeleteProductButton({ productId, productName }: Props) {
+/** "⋯" menu for a product row: edit, open in shop, delete (with confirmation) */
+export function ProductRowActions({ productId, productName, slug, isActive }: Props) {
   const [open, setOpen] = useState(false);
   const router = useRouter();
 
@@ -32,20 +42,35 @@ export function DeleteProductButton({ productId, productName }: Props) {
       toast.success(`Usunięto: ${productName}`);
     },
     onError: ({ error }) => {
-      const msg = error?.serverError ?? "Błąd usuwania produktu";
-      toast.error(msg);
+      // Close the confirmation — the toast says why nothing was deleted
+      setOpen(false);
+      toast.error(error?.serverError ?? "Błąd usuwania produktu");
     },
   });
 
   return (
     <>
-      <button
-        type="button"
-        onClick={() => setOpen(true)}
-        className="rounded-lg border border-border border-destructive px-2 py-1 text-xs text-destructive hover:bg-destructive/10"
-      >
-        <Trash2 className="size-3.5" />
-      </button>
+      <DropdownMenu>
+        <DropdownMenuTrigger
+          aria-label={`Akcje dla ${productName}`}
+          className="flex size-8 shrink-0 items-center justify-center rounded-lg hover:bg-muted aria-expanded:bg-muted"
+        >
+          <MoreHorizontal className="size-4" />
+        </DropdownMenuTrigger>
+        <DropdownMenuContent>
+          <DropdownMenuItem onClick={() => router.push(`/admin/produkty/${productId}`)}>
+            Edytuj
+          </DropdownMenuItem>
+          {isActive && (
+            <DropdownMenuItem onClick={() => window.open(`/produkt/${slug}`, "_blank", "noopener")}>
+              Zobacz w sklepie
+            </DropdownMenuItem>
+          )}
+          <DropdownMenuItem destructive onClick={() => setOpen(true)}>
+            Usuń
+          </DropdownMenuItem>
+        </DropdownMenuContent>
+      </DropdownMenu>
 
       <AlertDialog open={open} onOpenChange={setOpen}>
         <AlertDialogContent>

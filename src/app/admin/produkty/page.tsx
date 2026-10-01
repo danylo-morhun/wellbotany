@@ -1,14 +1,21 @@
 import type { ProductStatus } from "@prisma/client";
+import { Plus } from "lucide-react";
+import type { Metadata } from "next";
 import Link from "next/link";
 import { Suspense } from "react";
 import { AdminPagination } from "@/app/admin/components/AdminPagination";
 import { AdminProductFilters } from "@/app/admin/components/AdminProductFilters";
 import { AdminSearch } from "@/app/admin/components/AdminSearch";
+import { PageHeader } from "@/app/admin/components/ui";
+import { buttonVariants } from "@/components/ui/button";
 import { toBrandOptions } from "@/features/catalog/lib/brand-tree";
 import { rankBySearchRelevance } from "@/features/catalog/lib/search-relevance";
 import { ProductsTable } from "@/features/products/components/ProductsTable";
+import { productCompleteness } from "@/features/products/lib/completeness";
 import { buildProductWhere, type ProductFilters } from "@/features/products/lib/where";
 import { prisma } from "@/lib/prisma";
+
+export const metadata: Metadata = { title: "Produkty" };
 
 const PAGE_SIZE = 25;
 const NONE_VALUE = "__brak__";
@@ -24,13 +31,24 @@ const ADMIN_PRODUCT_SELECT = {
   status: true,
   category: { select: { namePl: true } },
   brand: { select: { name: true, parentBrand: { select: { name: true } } } },
-  _count: { select: { variants: true } },
   images: { orderBy: { sortOrder: "asc" as const }, take: 1, select: { url: true } },
   variants: {
-    where: { isDefault: true },
-    take: 1,
-    select: { id: true, pricePln: true, stock: true },
+    orderBy: { isDefault: "desc" as const },
+    select: { id: true, pricePln: true, stock: true, ean: true, isDefault: true },
   },
+} as const;
+
+// Long text/JSON columns — fetched for the visible page only, not for every search candidate
+const COMPLETENESS_SELECT = {
+  id: true,
+  descriptionPl: true,
+  shortDescPl: true,
+  categoryId: true,
+  brandId: true,
+  ingredients: true,
+  usageInstructionsPl: true,
+  responsibleEntity: true,
+  metaDescPl: true,
 } as const;
 
 type SearchParams = {
@@ -40,6 +58,7 @@ type SearchParams = {
   marka?: string;
   kategoria?: string;
   zdjecie?: string;
+  brak?: string;
 };
 
 function parseFilters(params: SearchParams): ProductFilters {
@@ -55,6 +74,8 @@ function parseFilters(params: SearchParams): ProductFilters {
     noCategory: params.kategoria === NONE_VALUE,
     categoryId: params.kategoria && params.kategoria !== NONE_VALUE ? params.kategoria : undefined,
     noImage: params.zdjecie === NONE_VALUE,
+    noEan: params.brak === "ean",
+    noDescription: params.brak === "opis",
   };
 }
 
@@ -97,27 +118,30 @@ export default async function AdminProductsPage({
     ]);
   }
 
-  const [brandRows, categories] = await Promise.all([
+  const [brandRows, categories, completenessRows] = await Promise.all([
     prisma.brand.findMany({ select: { id: true, name: true, parentBrandId: true } }),
     prisma.category.findMany({ select: { id: true, namePl: true }, orderBy: { namePl: "asc" } }),
+    prisma.product.findMany({
+      where: { id: { in: products.map((p) => p.id) } },
+      select: COMPLETENESS_SELECT,
+    }),
   ]);
+  const completenessById = new Map(completenessRows.map((r) => [r.id, r]));
 
   const brands = toBrandOptions(brandRows).map((b) => ({ id: b.id, name: b.label }));
   const totalPages = Math.ceil(total / PAGE_SIZE);
 
   return (
     <div>
-      <div className="mb-6 flex flex-wrap items-center justify-between gap-3">
-        <h1 className="text-2xl font-bold">Produkty</h1>
-        <div className="flex flex-wrap gap-2">
-          <Link
-            href="/admin/produkty/nowy"
-            className="rounded-lg bg-primary px-3 py-1.5 text-sm font-medium text-primary-foreground transition-colors duration-200 hover:bg-primary-deep motion-reduce:transition-none"
-          >
-            + Dodaj produkt
+      <PageHeader
+        title="Produkty"
+        actions={
+          <Link href="/admin/produkty/nowy" className={buttonVariants({ size: "lg" })}>
+            <Plus aria-hidden />
+            Dodaj produkt
           </Link>
-        </div>
-      </div>
+        }
+      />
 
       <div className="mb-4 flex flex-wrap items-center gap-3">
         <Suspense>
@@ -129,7 +153,16 @@ export default async function AdminProductsPage({
       </div>
 
       <ProductsTable
-        products={products}
+        products={products.map((p) => ({
+          ...p,
+          // Inline editor works on the default variant only
+          variants: p.variants.filter((v) => v.isDefault).slice(0, 1),
+          _count: { variants: p.variants.length },
+          completeness: (() => {
+            const fields = completenessById.get(p.id);
+            return fields ? productCompleteness({ ...fields, ...p }).score : 0;
+          })(),
+        }))}
         total={total}
         filters={filters}
         brands={brands}

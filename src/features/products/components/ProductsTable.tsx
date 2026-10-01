@@ -5,16 +5,21 @@ import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useMemo } from "react";
+import { Badge } from "@/components/ui/badge";
+import { cn } from "@/lib/utils";
 import { useProductSelection } from "../lib/useProductSelection";
 import type { ProductFilters } from "../lib/where";
 import { BulkActionsToolbar } from "./BulkActionsToolbar";
-import { DeleteProductButton } from "./DeleteProductButton";
 import { InlineVariantEditor } from "./InlineVariantEditor";
+import { ProductRowActions } from "./ProductRowActions";
 
-const STATUS_LABELS: Record<ProductStatus, string> = {
-  DRAFT: "Szkic",
-  ACTIVE: "Aktywny",
-  ARCHIVED: "Zarchiwizowany",
+const STATUS_BADGE: Record<
+  ProductStatus,
+  { tone: "success" | "warning" | "neutral"; label: string }
+> = {
+  DRAFT: { tone: "warning", label: "Szkic" },
+  ACTIVE: { tone: "success", label: "Aktywny" },
+  ARCHIVED: { tone: "neutral", label: "Zarchiwizowany" },
 };
 
 type ProductRow = {
@@ -27,6 +32,7 @@ type ProductRow = {
   _count: { variants: number };
   images: { url: string }[];
   variants: { id: string; pricePln: number; stock: number }[];
+  completeness: number;
 };
 
 type Props = {
@@ -76,8 +82,8 @@ export function ProductsTable({ products, total, filters, brands, categories }: 
 
       <div className="max-h-[70vh] overflow-auto rounded-2xl bg-card shadow-card">
         <table className="w-full text-sm">
-          <thead className="sticky top-0 z-10 bg-muted/80 backdrop-blur-sm">
-            <tr className="border-b text-left">
+          <thead className="sticky top-0 z-10 bg-card text-xs text-muted-foreground">
+            <tr className="border-b border-border text-left">
               <th className="w-10 px-4 py-3">
                 <input
                   type="checkbox"
@@ -96,14 +102,17 @@ export function ProductsTable({ products, total, filters, brands, categories }: 
               <th className="px-4 py-3 font-medium">Marka</th>
               <th className="px-4 py-3 font-medium">Cena / Stan</th>
               <th className="px-4 py-3 font-medium">Warianty</th>
-              <th className="px-4 py-3 font-medium">Akcje</th>
+              <th className="px-4 py-3 font-medium">Karta</th>
+              <th className="w-12 px-4 py-3">
+                <span className="sr-only">Akcje</span>
+              </th>
             </tr>
           </thead>
           <tbody>
             {products.map((product) => (
               <tr
                 key={product.id}
-                className="border-b last:border-0 hover:bg-muted/30 data-[selected=true]:bg-primary/5"
+                className="border-b border-border/70 last:border-0 hover:bg-muted/40 data-[selected=true]:bg-secondary/50"
                 data-selected={selection.isSelected(product.id)}
               >
                 <td className="px-4 py-3">
@@ -137,9 +146,9 @@ export function ProductsTable({ products, total, filters, brands, categories }: 
                   <p className="text-xs text-muted-foreground">{product.slug}</p>
                 </td>
                 <td className="px-4 py-3">
-                  <span className="rounded-full bg-muted px-2 py-0.5 text-xs font-medium">
-                    {STATUS_LABELS[product.status]}
-                  </span>
+                  <Badge tone={STATUS_BADGE[product.status].tone} dot>
+                    {STATUS_BADGE[product.status].label}
+                  </Badge>
                 </td>
                 <td className="px-4 py-3 text-muted-foreground">
                   {product.category?.namePl ?? "—"}
@@ -158,21 +167,41 @@ export function ProductsTable({ products, total, filters, brands, categories }: 
                 </td>
                 <td className="px-4 py-3 text-muted-foreground">{product._count.variants}</td>
                 <td className="px-4 py-3">
-                  <div className="flex gap-2">
-                    <Link
-                      href={`/admin/produkty/${product.id}`}
-                      className="rounded-lg border border-border px-2 py-1 text-xs"
-                    >
-                      Edytuj
-                    </Link>
-                    <DeleteProductButton productId={product.id} productName={product.namePl} />
+                  <div
+                    className="flex items-center gap-2"
+                    title={`Kompletność karty: ${product.completeness}%`}
+                  >
+                    <div className="h-1.5 w-12 rounded-full bg-muted">
+                      <div
+                        className={cn(
+                          "h-full rounded-full",
+                          product.completeness === 100
+                            ? "bg-success"
+                            : product.completeness >= 70
+                              ? "bg-primary"
+                              : "bg-warning",
+                        )}
+                        style={{ width: `${product.completeness}%` }}
+                      />
+                    </div>
+                    <span className="text-xs text-muted-foreground tabular-nums">
+                      {product.completeness}%
+                    </span>
                   </div>
+                </td>
+                <td className="px-4 py-3">
+                  <ProductRowActions
+                    productId={product.id}
+                    productName={product.namePl}
+                    slug={product.slug}
+                    isActive={product.status === "ACTIVE"}
+                  />
                 </td>
               </tr>
             ))}
             {products.length === 0 && (
               <tr>
-                <td colSpan={9} className="px-4 py-8 text-center text-muted-foreground">
+                <td colSpan={10} className="px-4 py-8 text-center text-muted-foreground">
                   Brak produktów
                 </td>
               </tr>
