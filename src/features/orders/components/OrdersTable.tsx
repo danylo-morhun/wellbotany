@@ -195,7 +195,11 @@ export function OrdersTable({ orders }: { orders: OrderRow[] }) {
               if (!status) return;
               if (
                 window.confirm(
-                  `Zmienić status zaznaczonych zamówień (${selected.size}) na „${ORDER_STATUS_LABELS[status]}”? Klienci dostaną odpowiednie e-maile.`,
+                  `Zmienić status zaznaczonych zamówień (${selected.size}) na „${ORDER_STATUS_LABELS[status]}”? ${
+                    status === "CANCELLED"
+                      ? "Produkty wrócą na stan, a kody rabatowe zostaną zwolnione."
+                      : "Klienci dostaną odpowiednie e-maile."
+                  }`,
                 )
               ) {
                 execute({ orderIds: ids, status });
