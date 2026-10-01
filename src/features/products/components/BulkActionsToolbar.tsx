@@ -131,6 +131,7 @@ export function BulkActionsToolbar({
         <div className="mx-2 h-5 w-px bg-background/20" />
 
         <select
+          aria-label="Zmień status zaznaczonych"
           disabled={isPending}
           value=""
           onChange={(e) => {
@@ -151,6 +152,7 @@ export function BulkActionsToolbar({
         </select>
 
         <select
+          aria-label="Przypisz markę zaznaczonym"
           disabled={isPending}
           value=""
           onChange={(e) => {
@@ -178,6 +180,7 @@ export function BulkActionsToolbar({
         </select>
 
         <select
+          aria-label="Przypisz kategorię zaznaczonym"
           disabled={isPending}
           value=""
           onChange={(e) => {

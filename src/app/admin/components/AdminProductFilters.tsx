@@ -30,7 +30,7 @@ export function AdminProductFilters({ brands, categories }: Props) {
   }
 
   const selectClass =
-    "max-w-[42vw] truncate rounded-lg border border-border bg-card px-2 py-1.5 text-sm focus:border-transparent focus:outline-none focus:ring-2 focus:ring-ring/50 sm:max-w-[220px]";
+    "h-9 max-w-[42vw] truncate rounded-lg border border-border bg-card px-2.5 text-sm focus:border-transparent focus:outline-none focus:ring-2 focus:ring-ring/50 sm:max-w-[220px]";
 
   return (
     <div className="flex flex-wrap items-center gap-2">
@@ -76,6 +76,17 @@ export function AdminProductFilters({ brands, categories }: Props) {
             {c.namePl}
           </option>
         ))}
+      </select>
+
+      <select
+        aria-label="Braki w karcie"
+        value={searchParams.get("brak") ?? ""}
+        onChange={(e) => setParam("brak", e.target.value)}
+        className={selectClass}
+      >
+        <option value="">Wszystkie karty</option>
+        <option value="ean">Brak EAN</option>
+        <option value="opis">Brak opisu</option>
       </select>
 
       <label className="flex items-center gap-1.5 text-sm text-muted-foreground">
