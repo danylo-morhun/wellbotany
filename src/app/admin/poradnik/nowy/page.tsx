@@ -1,3 +1,4 @@
+import { PageHeader } from "@/app/admin/components/ui";
 import { PostForm } from "@/features/blog/components/PostForm";
 import { prisma } from "@/lib/prisma";
 
@@ -9,7 +10,7 @@ export default async function AdminNewPostPage() {
 
   return (
     <div>
-      <h1 className="mb-6 text-2xl font-bold">Nowy artykuł</h1>
+      <PageHeader back={{ href: "/admin/poradnik", label: "Poradnik" }} title="Nowy artykuł" />
       <PostForm categories={categories} />
     </div>
   );
