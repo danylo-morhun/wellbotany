@@ -21,7 +21,7 @@ jobs:
           fail=0
           for url in https://wellbotany.pl/ https://wellbotany.pl/regulamin; do
             code=000
-            for attempt in 1 2 3; do
+            for _ in 1 2 3; do
               code=$(curl -s -o /dev/null -w "%{http_code}" --max-time 20 "$url")
               [ "$code" = 200 ] && break
               sleep 20
