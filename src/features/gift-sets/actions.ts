@@ -189,7 +189,6 @@ export const addCuratedGiftSetToCart = actionClient
       })),
     });
 
-    revalidatePath("/", "layout");
     return { success: true };
   });
 
@@ -257,6 +256,5 @@ export const addCustomGiftSetToCart = actionClient
       })),
     });
 
-    revalidatePath("/", "layout");
     return { success: true };
   });
