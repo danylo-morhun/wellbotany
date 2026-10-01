@@ -182,9 +182,14 @@ export const saveTag = adminActionClient
 export const deleteTag = adminActionClient
   .schema(deleteByIdSchema)
   .action(async ({ parsedInput: { id } }) => {
-    await prisma.tag.delete({ where: { id } });
+    // ProductTag → Tag has no cascade, so unlink the products first
+    await prisma.$transaction([
+      prisma.productTag.deleteMany({ where: { tagId: id } }),
+      prisma.tag.delete({ where: { id } }),
+    ]);
     revalidatePath("/admin/tagi");
     revalidateTag("tags", "max");
+    revalidateTag("products", "max");
     return { success: true };
   });
 
