@@ -97,7 +97,30 @@ jobs:
           echo "Live before deploy: ${url:-none}"
           echo "url=$url" >> "$GITHUB_OUTPUT"
       - name: Build and deploy on Vercel
-        run: npx -y vercel@latest deploy --prod --yes --token "$VERCEL_TOKEN"
+        id: deploy
+        run: |
+          set -o pipefail
+          VERCEL_GUIDANCE_DISABLED=1 npx -y vercel@latest deploy --prod --yes --token "$VERCEL_TOKEN" | tee deploy.log
+          # stdout may still carry hints besides the URL — take the last deployment URL
+          url=$(grep -oE 'https://[a-z0-9-]+\.vercel\.app' deploy.log | tail -1)
+          [ -n "$url" ] || { echo "No deployment URL in vercel output"; exit 1; }
+          echo "Deployed: $url"
+          echo "url=$url" >> "$GITHUB_OUTPUT"
+      # After a rollback Vercel stops auto-assigning production domains until a
+      # deployment is promoted explicitly (promoting the current one is a 409).
+      - name: Promote to production domains
+        env:
+          DEPLOY_URL: ${{ steps.deploy.outputs.url }}
+        run: |
+          live=$(curl -fsS -H "Authorization: Bearer $VERCEL_TOKEN" \
+            "https://api.vercel.com/v13/deployments/${SITE_URL#https://}?teamId=$VERCEL_ORG_ID" \
+            | jq -r '.url // empty')
+          if [ "https://$live" = "$DEPLOY_URL" ]; then
+            echo "Domains already on the new deployment"
+          else
+            echo "Domains on ${live:-none} — promoting"
+            npx -y vercel@latest promote "$DEPLOY_URL" --yes --token "$VERCEL_TOKEN"
+          fi
       - name: Smoke test
         id: smoke
         run: |
