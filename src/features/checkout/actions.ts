@@ -242,6 +242,7 @@ export const placeOrder = actionClient
           billCountry: input.wantsFaktura ? "PL" : null,
           paymentMethod: input.paymentMethod,
           paymentStatus: isFree ? "CAPTURED" : "PENDING",
+          paidAt: isFree ? new Date() : null,
           subtotalPln,
           discountPln,
           taxPln,

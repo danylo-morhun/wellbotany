@@ -67,6 +67,7 @@ export async function POST(req: NextRequest) {
     where: { id: order.id },
     data: {
       paymentStatus: "CAPTURED",
+      paidAt: new Date(),
       paymentRef: String(orderId),
       status: "PAID",
     },
