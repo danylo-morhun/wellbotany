@@ -125,12 +125,13 @@ jobs:
         id: smoke
         run: |
           sleep 10
-          product=$(curl -fsS "$SITE_URL/sitemap/products.xml" | grep -oE "$SITE_URL/produkt/[^<]+" | head -1)
+          curl -fsS -o sitemap.xml "$SITE_URL/sitemap/products.xml"
+          product=$(grep -m1 -oE "$SITE_URL/produkt/[^<]+" sitemap.xml)
           fail=0
           for url in "$SITE_URL/" "$SITE_URL/koszyk" "$SITE_URL/zamowienie" "$SITE_URL/logowanie" \
                      "$product" "$SITE_URL/product-feed.xml" "$SITE_URL/sitemap_index.xml" \
                      "$SITE_URL/api/points?service=inpost&q=Kalisz"; do
-            code=$(curl -s -o /dev/null -w "%{http_code}" "$url")
+            code=$(curl -sL -o /dev/null -w "%{http_code}" "$url")
             echo "$code $url"
             [ "$code" = 200 ] || fail=1
           done
