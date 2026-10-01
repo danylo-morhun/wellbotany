@@ -1,0 +1,32 @@
+name: Uptime
+
+# Lightweight availability check. Only CDN-cached pages, so it never wakes the
+# Neon compute (free-plan quota). A failed run emails the repo owner.
+# Note: GitHub pauses scheduled workflows after 60 days without repo activity.
+
+on:
+  schedule:
+    - cron: "*/30 * * * *"
+  workflow_dispatch: {}
+
+permissions: {}
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Check storefront
+        run: |
+          fail=0
+          for url in https://wellbotany.pl/ https://wellbotany.pl/regulamin; do
+            code=000
+            for attempt in 1 2 3; do
+              code=$(curl -s -o /dev/null -w "%{http_code}" --max-time 20 "$url")
+              [ "$code" = 200 ] && break
+              sleep 20
+            done
+            echo "$code $url"
+            [ "$code" = 200 ] || fail=1
+          done
+          exit $fail
