@@ -1,6 +1,7 @@
 "use server";
 
-import { revalidatePath } from "next/cache";
+import { revalidatePath, updateTag } from "next/cache";
+import { syncCancellation } from "@/features/orders/lib/cancellation";
 import { buildTrackingUrl } from "@/features/orders/lib/tracking-url";
 import { requestOrderReview } from "@/features/reviews/lib/request";
 import { ActionError } from "@/lib/action-error";
@@ -42,20 +43,31 @@ async function applyOrderStatus(input: UpdateOrderStatusInput) {
     !!trackingNumber &&
     (existing.status !== "SHIPPED" || trackingNumber !== existing.trackingNumber);
 
-  await prisma.order.update({
-    where: { id: input.orderId },
-    data: {
-      status: input.status,
-      ...(input.noteAdmin !== undefined && { noteAdmin: input.noteAdmin.trim() || null }),
-      trackingNumber,
-      trackingUrl,
-      ...(input.status === "SHIPPED" && existing.status !== "SHIPPED" && { shippedAt: new Date() }),
-      ...(input.status === "DELIVERED" &&
-        existing.status !== "DELIVERED" && { deliveredAt: new Date() }),
-    },
+  const stockChanged = await prisma.$transaction(async (tx) => {
+    await tx.order.update({
+      where: { id: input.orderId },
+      data: {
+        status: input.status,
+        ...(input.noteAdmin !== undefined && { noteAdmin: input.noteAdmin.trim() || null }),
+        trackingNumber,
+        trackingUrl,
+        ...(input.status === "SHIPPED" &&
+          existing.status !== "SHIPPED" && { shippedAt: new Date() }),
+        ...(input.status === "DELIVERED" &&
+          existing.status !== "DELIVERED" && { deliveredAt: new Date() }),
+      },
+    });
+    return syncCancellation(tx, input.orderId, existing.status, input.status);
   });
   revalidatePath("/admin/zamowienia");
   revalidatePath(`/admin/zamowienia/${input.orderId}`);
+  if (stockChanged) {
+    // Stock and coupon use came back (or were taken again)
+    updateTag("products");
+    revalidatePath("/zestawy-prezentowe", "layout");
+    revalidatePath("/admin/magazyn");
+    revalidatePath("/admin/kupony");
+  }
 
   if (shouldSendTrackingEmail) {
     await sendTrackingEmail(input.orderId).catch(console.error);
