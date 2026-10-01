@@ -1,7 +1,9 @@
 #!/usr/bin/env bash
-# Production deploy by hand (git auto-deploy is off in vercel.json).
+# Manual fallback for the Deploy workflow (.github/workflows/deploy.yml).
 # Builds on Vercel from a clean worktree of origin/main, so uncommitted files
-# and local .env* never get uploaded. Usage: scripts/deploy-prod.sh [ref]
+# and local .env* never get uploaded. Does NOT run migrations — apply them
+# first (`prisma migrate deploy` with the prod DIRECT_URL) if any are pending.
+# Usage: scripts/deploy-prod.sh [ref]
 set -euo pipefail
 
 ref="${1:-origin/main}"
