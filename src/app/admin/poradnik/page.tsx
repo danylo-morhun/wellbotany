@@ -1,5 +1,8 @@
+import type { Metadata } from "next";
 import Link from "next/link";
 import { prisma } from "@/lib/prisma";
+
+export const metadata: Metadata = { title: "Poradnik" };
 
 // Posts are also written by scripts/content-pass/apply-posts.ts, which can't
 // revalidate this path — always read fresh
@@ -24,7 +27,7 @@ export default async function AdminPostsPage() {
     <div className="space-y-6">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
-          <h1 className="text-2xl font-bold">Poradnik</h1>
+          <h1 className="font-heading text-2xl font-semibold tracking-tight">Poradnik</h1>
           <p className="text-sm text-muted-foreground">
             Artykuły na /poradnik. Tylko oświadczenia zdrowotne z rejestru UE (rozp. 432/2012).
           </p>
