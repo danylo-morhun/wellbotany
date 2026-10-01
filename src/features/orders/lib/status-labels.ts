@@ -1,3 +1,5 @@
+import type { OrderStatus } from "@prisma/client";
+
 export const ORDER_STATUS_LABELS: Record<string, string> = {
   PENDING: "Oczekujące",
   PAYMENT_PENDING: "Oczekuje na płatność",
@@ -22,3 +24,19 @@ export function orderStatusLabel(status: string, shippingMethod: string): string
     status
   );
 }
+
+/** Paid (or pay-at-pickup) orders waiting to be packed and handed over */
+export const TO_PACK_STATUSES: OrderStatus[] = ["PAID", "PROCESSING"];
+
+export type StatusTone = "neutral" | "info" | "warning" | "success" | "danger" | "primary";
+
+export const ORDER_STATUS_TONE: Record<OrderStatus, StatusTone> = {
+  PENDING: "neutral",
+  PAYMENT_PENDING: "warning",
+  PAID: "primary",
+  PROCESSING: "info",
+  SHIPPED: "success",
+  DELIVERED: "neutral",
+  CANCELLED: "danger",
+  REFUNDED: "danger",
+};
