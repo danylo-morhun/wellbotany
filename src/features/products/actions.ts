@@ -20,11 +20,14 @@ import {
   categorySchema,
   deleteByIdSchema,
   deleteImageSchema,
+  moveImageSchema,
   type ProductSelectionInput,
   productImageSchema,
   productSchema,
   quickUpdateVariantSchema,
+  setImageAltSchema,
   setImageVariantSchema,
+  setMainImageSchema,
   tagSchema,
   variantSchema,
 } from "./schema";
@@ -558,6 +561,57 @@ export const deleteProductImage = adminActionClient
     revalidatePath(`/admin/produkty/${productId}`);
     revalidatePath("/produkt/[slug]", "page");
     revalidateTag("products", "max");
+    return { success: true };
+  });
+
+function revalidateProductImages(productId: string) {
+  revalidatePath("/admin/produkty");
+  revalidatePath(`/admin/produkty/${productId}`);
+  revalidatePath("/produkt/[slug]", "page");
+  revalidateTag("products", "max");
+}
+
+export const setMainImage = adminActionClient
+  .schema(setMainImageSchema)
+  .action(async ({ parsedInput: { imageId, productId } }) => {
+    await prisma.$transaction([
+      prisma.productImage.updateMany({ where: { productId }, data: { isMain: false } }),
+      prisma.productImage.update({ where: { id: imageId, productId }, data: { isMain: true } }),
+    ]);
+    revalidateProductImages(productId);
+    return { success: true };
+  });
+
+/** Swaps an image with its neighbour; renumbers first so legacy duplicate sortOrders still move */
+export const moveImage = adminActionClient
+  .schema(moveImageSchema)
+  .action(async ({ parsedInput: { imageId, productId, direction } }) => {
+    const images = await prisma.productImage.findMany({
+      where: { productId },
+      orderBy: [{ sortOrder: "asc" }, { id: "asc" }],
+      select: { id: true },
+    });
+    const from = images.findIndex((i) => i.id === imageId);
+    const to = direction === "up" ? from - 1 : from + 1;
+    if (from === -1 || to < 0 || to >= images.length) return { success: true };
+    [images[from], images[to]] = [images[to], images[from]];
+    await prisma.$transaction(
+      images.map((img, sortOrder) =>
+        prisma.productImage.update({ where: { id: img.id }, data: { sortOrder } }),
+      ),
+    );
+    revalidateProductImages(productId);
+    return { success: true };
+  });
+
+export const setImageAlt = adminActionClient
+  .schema(setImageAltSchema)
+  .action(async ({ parsedInput: { imageId, productId, altPl } }) => {
+    await prisma.productImage.update({
+      where: { id: imageId, productId },
+      data: { altPl: altPl || null },
+    });
+    revalidateProductImages(productId);
     return { success: true };
   });
 

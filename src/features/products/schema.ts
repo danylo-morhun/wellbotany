@@ -163,6 +163,8 @@ export const productFiltersSchema = z.object({
   noBrand: z.boolean().optional(),
   noCategory: z.boolean().optional(),
   noImage: z.boolean().optional(),
+  noEan: z.boolean().optional(),
+  noDescription: z.boolean().optional(),
 });
 
 /**
@@ -206,6 +208,23 @@ export const productImageSchema = z.object({
 export const deleteImageSchema = z.object({
   imageId: z.string().min(1),
   productId: z.string().min(1),
+});
+
+export const setMainImageSchema = z.object({
+  imageId: z.string().min(1),
+  productId: z.string().min(1),
+});
+
+export const moveImageSchema = z.object({
+  imageId: z.string().min(1),
+  productId: z.string().min(1),
+  direction: z.enum(["up", "down"]),
+});
+
+export const setImageAltSchema = z.object({
+  imageId: z.string().min(1),
+  productId: z.string().min(1),
+  altPl: z.string().trim().max(200),
 });
 
 export const setImageVariantSchema = z.object({

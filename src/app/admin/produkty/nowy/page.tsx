@@ -1,5 +1,9 @@
+import type { Metadata } from "next";
+import { PageHeader } from "@/app/admin/components/ui";
 import { ProductForm } from "@/features/products/components/ProductForm";
 import { prisma } from "@/lib/prisma";
+
+export const metadata: Metadata = { title: "Nowy produkt" };
 
 export default async function AdminNewProductPage() {
   const [categories, brands, tags] = await Promise.all([
@@ -10,7 +14,7 @@ export default async function AdminNewProductPage() {
 
   return (
     <div>
-      <h1 className="mb-6 text-2xl font-bold">Nowy produkt</h1>
+      <PageHeader back={{ href: "/admin/produkty", label: "Produkty" }} title="Nowy produkt" />
       <ProductForm categories={categories} brands={brands} tags={tags} />
     </div>
   );
