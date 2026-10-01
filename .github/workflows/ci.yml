@@ -22,11 +22,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7
-      - uses: pnpm/action-setup@v6
-      - uses: actions/setup-node@v7
-        with: { node-version-file: .nvmrc, cache: pnpm }
-      - run: pnpm install
-      - run: pnpm exec prisma generate
+      - uses: ./.github/actions/setup
       - run: pnpm biome check .
       - run: pnpm tsc --noEmit
 
@@ -56,11 +52,7 @@ jobs:
           branch_name: ci-${{ github.run_id }}
           api_key: ${{ secrets.NEON_API_KEY }}
       - uses: actions/checkout@v7
-      - uses: pnpm/action-setup@v6
-      - uses: actions/setup-node@v7
-        with: { node-version-file: .nvmrc, cache: pnpm }
-      - run: pnpm install
-      - run: pnpm exec prisma generate
+      - uses: ./.github/actions/setup
       - run: pnpm exec prisma migrate deploy
         env:
           DATABASE_URL: ${{ steps.create-branch.outputs.db_url_pooled }}
@@ -79,11 +71,7 @@ jobs:
           branch_name: ci-${{ github.run_id }}
           api_key: ${{ secrets.NEON_API_KEY }}
       - uses: actions/checkout@v7
-      - uses: pnpm/action-setup@v6
-      - uses: actions/setup-node@v7
-        with: { node-version-file: .nvmrc, cache: pnpm }
-      - run: pnpm install
-      - run: pnpm exec prisma generate
+      - uses: ./.github/actions/setup
       - run: pnpm exec vitest run tests/unit
         env:
           DATABASE_URL: ${{ steps.create-branch.outputs.db_url_pooled }}
@@ -102,11 +90,7 @@ jobs:
           branch_name: ci-${{ github.run_id }}
           api_key: ${{ secrets.NEON_API_KEY }}
       - uses: actions/checkout@v7
-      - uses: pnpm/action-setup@v6
-      - uses: actions/setup-node@v7
-        with: { node-version-file: .nvmrc, cache: pnpm }
-      - run: pnpm install
-      - run: pnpm exec prisma generate
+      - uses: ./.github/actions/setup
       - run: pnpm build
         env:
           DATABASE_URL: ${{ steps.create-branch.outputs.db_url_pooled }}
