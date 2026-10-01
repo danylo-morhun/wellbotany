@@ -1,7 +1,6 @@
 // Well Botany — E-commerce
 // Prices stored as Int PLN grosz (4990 = 49.90 PLN) — never Float for money
 // Multi-language: Polish primary (Pl), English (En), Ukrainian (Uk)
-// BaseLinker is the integration hub for Allegro + InPost + DHL/DPD
 
 generator client {
   provider = "prisma-client-js"
@@ -249,9 +248,6 @@ model Product {
   metaDescPl  String?
   metaDescEn  String?
 
-  // BaseLinker product sync
-  baselinkerProductId String? @unique
-
   variants      ProductVariant[]
   images        ProductImage[]
   tags          ProductTag[]
@@ -300,14 +296,6 @@ model ProductVariant {
 
   // Physical attributes (for carrier calculation)
   weightGrams Float?
-
-  // BaseLinker variant sync
-  baselinkerVariantId String? @unique
-
-  // Shoper product sync — Shoper's numeric product_id, used to refresh
-  // price/stock via GET /products/{id} without relying on Shoper's
-  // ?filters= query param (silently ignored on some shop installs).
-  shoperProductId Int? @unique
 
   isDefault Boolean @default(false)
   isActive  Boolean @default(true)
@@ -717,12 +705,6 @@ model Order {
   noteCustomer String? @db.Text
   noteAdmin    String? @db.Text
 
-  // ── BASELINKER SYNC ──
-  // Pushed to BaseLinker after payment captured
-  // BaseLinker handles: Allegro sync, InPost label generation, DHL/DPD labels
-  baselinkerOrderId String? @unique
-  baselinkerStatus  String? // status string from BaseLinker
-
   // ── ALLEGRO (marketplace origin) ──
   allegroOrderId String? @unique // non-null when order originated from Allegro
 
@@ -743,7 +725,6 @@ model Order {
   @@index([status])
   @@index([paymentStatus])
   @@index([createdAt])
-  @@index([baselinkerOrderId])
   @@index([allegroOrderId])
 }
 
@@ -806,17 +787,6 @@ model ContactMessage {
   createdAt DateTime @default(now())
 
   @@index([createdAt])
-}
-
-// Cursor/bookkeeping for scheduled Shoper API sync jobs (see /api/cron/shoper-sync).
-// One row per job kind — lets a stateless serverless cron resume a paginated crawl.
-model ShoperSyncState {
-  id            String    @id @default(cuid())
-  kind          String    @unique // "incremental" | "discover"
-  cursorPage    Int       @default(0)
-  lastRunAt     DateTime?
-  lastSuccessAt DateTime?
-  lastError     String?   @db.Text
 }
 
 // ─── CONTENT ──────────────────────────────────────────────────────────────────
