@@ -1,7 +1,7 @@
 "use server";
 
 import { Prisma } from "@prisma/client";
-import { revalidatePath, revalidateTag } from "next/cache";
+import { revalidatePath, updateTag } from "next/cache";
 import { after } from "next/server";
 import { rankBySearchRelevance } from "@/features/catalog/lib/search-relevance";
 import { ActionError } from "@/lib/action-error";
@@ -103,7 +103,8 @@ export const saveCategory = adminActionClient
     revalidatePath("/admin/kategorie");
     revalidatePath("/katalog", "layout");
     revalidatePath("/kategoria/[slug]", "page");
-    revalidateTag("categories", "max");
+    updateTag("categories");
+    updateTag("products");
     return { success: true, id: savedId };
   });
 
@@ -114,7 +115,8 @@ export const deleteCategory = adminActionClient
     revalidatePath("/admin/kategorie");
     revalidatePath("/katalog", "layout");
     revalidatePath("/kategoria/[slug]", "page");
-    revalidateTag("categories", "max");
+    updateTag("categories");
+    updateTag("products");
     return { success: true };
   });
 
@@ -143,7 +145,8 @@ export const saveBrand = adminActionClient
     revalidatePath("/admin/marki");
     revalidatePath("/marki", "layout");
     revalidatePath("/marki/[slug]", "page");
-    revalidateTag("brands", "max");
+    updateTag("brands");
+    updateTag("products");
     return { success: true, id: savedId };
   });
 
@@ -154,7 +157,8 @@ export const deleteBrand = adminActionClient
     revalidatePath("/admin/marki");
     revalidatePath("/marki", "layout");
     revalidatePath("/marki/[slug]", "page");
-    revalidateTag("brands", "max");
+    updateTag("brands");
+    updateTag("products");
     return { success: true };
   });
 
@@ -175,7 +179,8 @@ export const saveTag = adminActionClient
       await prisma.tag.create({ data: payload });
     }
     revalidatePath("/admin/tagi");
-    revalidateTag("tags", "max");
+    updateTag("tags");
+    updateTag("products");
     return { success: true };
   });
 
@@ -188,8 +193,8 @@ export const deleteTag = adminActionClient
       prisma.tag.delete({ where: { id } }),
     ]);
     revalidatePath("/admin/tagi");
-    revalidateTag("tags", "max");
-    revalidateTag("products", "max");
+    updateTag("tags");
+    updateTag("products");
     return { success: true };
   });
 
@@ -285,7 +290,8 @@ export const saveProduct = adminActionClient
     if (savedId) revalidatePath(`/admin/produkty/${savedId}`);
     revalidatePath("/katalog", "layout");
     revalidatePath("/produkt/[slug]", "page");
-    revalidateTag("products", "max");
+    revalidatePath("/zestawy-prezentowe", "layout");
+    updateTag("products");
     if (savedId) after(() => syncProductsToMerchant([savedId as string]).catch(console.error));
     return { success: true, id: savedId };
   });
@@ -313,7 +319,8 @@ export const deleteProduct = adminActionClient
     revalidatePath("/admin/produkty");
     revalidatePath("/katalog", "layout");
     revalidatePath("/produkt/[slug]", "page");
-    revalidateTag("products", "max");
+    revalidatePath("/zestawy-prezentowe", "layout");
+    updateTag("products");
     return { success: true };
   });
 
@@ -349,7 +356,8 @@ export const saveVariant = adminActionClient
     revalidatePath("/admin/produkty");
     revalidatePath(`/admin/produkty/${input.productId}`);
     revalidatePath("/produkt/[slug]", "page");
-    revalidateTag("products", "max");
+    revalidatePath("/zestawy-prezentowe", "layout");
+    updateTag("products");
     after(() => syncProductsToMerchant([input.productId]).catch(console.error));
     return { success: true };
   });
@@ -372,7 +380,8 @@ export const deleteVariant = adminActionClient
     );
     revalidatePath("/admin/produkty");
     revalidatePath("/produkt/[slug]", "page");
-    revalidateTag("products", "max");
+    revalidatePath("/zestawy-prezentowe", "layout");
+    updateTag("products");
     return { success: true };
   });
 
@@ -387,7 +396,8 @@ export const quickUpdateVariant = adminActionClient
     });
     revalidatePath("/admin/produkty");
     revalidatePath("/produkt/[slug]", "page");
-    revalidateTag("products", "max");
+    revalidatePath("/zestawy-prezentowe", "layout");
+    updateTag("products");
     after(() => syncProductsToMerchant([variant.productId]).catch(console.error));
     return { success: true };
   });
@@ -412,6 +422,9 @@ export const bulkUpdateStock = adminActionClient
     after(() => syncProductsToMerchant(productIds.map((v) => v.productId)).catch(console.error));
 
     revalidatePath("/admin/magazyn");
+    revalidatePath("/produkt/[slug]", "page");
+    revalidatePath("/zestawy-prezentowe", "layout");
+    updateTag("products");
     return { success: true };
   });
 
@@ -429,7 +442,8 @@ export const bulkUpdateProductStatus = adminActionClient
     revalidatePath("/admin/produkty");
     revalidatePath("/katalog", "layout");
     revalidatePath("/produkt/[slug]", "page");
-    revalidateTag("products", "max");
+    revalidatePath("/zestawy-prezentowe", "layout");
+    updateTag("products");
     return { success: true, count };
   });
 
@@ -444,7 +458,8 @@ export const bulkAssignBrand = adminActionClient
     revalidatePath("/admin/produkty");
     revalidatePath("/katalog", "layout");
     revalidatePath("/produkt/[slug]", "page");
-    revalidateTag("products", "max");
+    revalidatePath("/zestawy-prezentowe", "layout");
+    updateTag("products");
     return { success: true, count };
   });
 
@@ -477,7 +492,8 @@ export const bulkAssignCategory = adminActionClient
     revalidatePath("/admin/produkty");
     revalidatePath("/katalog", "layout");
     revalidatePath("/produkt/[slug]", "page");
-    revalidateTag("products", "max");
+    revalidatePath("/zestawy-prezentowe", "layout");
+    updateTag("products");
     return { success: true, count };
   });
 
@@ -509,7 +525,8 @@ export const bulkDeleteProducts = adminActionClient
     revalidatePath("/admin/produkty");
     revalidatePath("/katalog", "layout");
     revalidatePath("/produkt/[slug]", "page");
-    revalidateTag("products", "max");
+    revalidatePath("/zestawy-prezentowe", "layout");
+    updateTag("products");
     return {
       success: true,
       requiresConfirmation: false,
@@ -545,7 +562,8 @@ export const addProductImage = adminActionClient
     revalidatePath("/admin/produkty");
     revalidatePath(`/admin/produkty/${input.productId}`);
     revalidatePath("/produkt/[slug]", "page");
-    revalidateTag("products", "max");
+    revalidatePath("/zestawy-prezentowe", "layout");
+    updateTag("products");
     return { success: true };
   });
 
@@ -565,7 +583,8 @@ export const deleteProductImage = adminActionClient
     revalidatePath("/admin/produkty");
     revalidatePath(`/admin/produkty/${productId}`);
     revalidatePath("/produkt/[slug]", "page");
-    revalidateTag("products", "max");
+    revalidatePath("/zestawy-prezentowe", "layout");
+    updateTag("products");
     return { success: true };
   });
 
@@ -573,7 +592,8 @@ function revalidateProductImages(productId: string) {
   revalidatePath("/admin/produkty");
   revalidatePath(`/admin/produkty/${productId}`);
   revalidatePath("/produkt/[slug]", "page");
-  revalidateTag("products", "max");
+  revalidatePath("/zestawy-prezentowe", "layout");
+  updateTag("products");
 }
 
 export const setMainImage = adminActionClient
@@ -630,6 +650,7 @@ export const setImageVariant = adminActionClient
     });
     revalidatePath(`/admin/produkty/${productId}`);
     revalidatePath("/produkt/[slug]", "page");
-    revalidateTag("products", "max");
+    revalidatePath("/zestawy-prezentowe", "layout");
+    updateTag("products");
     return { success: true };
   });

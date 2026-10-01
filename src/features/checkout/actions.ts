@@ -1,5 +1,6 @@
 "use server";
 
+import { revalidatePath, updateTag } from "next/cache";
 import { cookies, headers } from "next/headers";
 import { after } from "next/server";
 import { z } from "zod";
@@ -281,6 +282,9 @@ export const placeOrder = actionClient
 
     cookieStore.delete(CART_COOKIE_NAME);
     await grantOrderAccess(order.orderNumber);
+    // Stock went down — product pages show "Ostatnie N szt." / "Niedostępny"
+    updateTag("products");
+    revalidatePath("/zestawy-prezentowe", "layout");
 
     // after(): sent once the response is out, and the function stays alive until they finish
     after(async () => {
