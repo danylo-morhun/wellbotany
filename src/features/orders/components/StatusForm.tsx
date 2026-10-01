@@ -81,6 +81,16 @@ export function StatusForm({
           </p>
         </div>
       )}
+      {status === "CANCELLED" && currentStatus !== "CANCELLED" && (
+        <p className="text-xs text-muted-foreground">
+          Produkty wrócą na stan magazynowy, a użycie kodu rabatowego zostanie zwolnione.
+        </p>
+      )}
+      {currentStatus === "CANCELLED" && status !== "CANCELLED" && (
+        <p className="text-xs text-muted-foreground">
+          Produkty zostaną ponownie zdjęte ze stanu, a kod rabatowy policzony jako użyty.
+        </p>
+      )}
       {status === "SHIPPED" && isPickup && (
         <p className="text-xs text-muted-foreground">
           Po zapisaniu wyślemy klientowi e-mail, że zamówienie czeka na odbiór.
