@@ -3,6 +3,8 @@
 import { useAction } from "next-safe-action/hooks";
 import { useState } from "react";
 import { toast } from "sonner";
+import { Button } from "@/components/ui/button";
+import { Field, Section, Switch, TextInput } from "@/features/products/components/editor/fields";
 import { saveShopSettings } from "../actions";
 import type { ShopSettings } from "../lib/shop-settings";
 
@@ -12,6 +14,8 @@ export function ShopSettingsForm({ settings }: Props) {
   const [freeShippingEnabled, setFreeShippingEnabled] = useState(
     settings.freeShippingThresholdPln !== null,
   );
+  const [metaSuffix, setMetaSuffix] = useState(settings.productMetaSuffixPl ?? "");
+  const [thresholdError, setThresholdError] = useState<string>();
 
   const { execute, isPending } = useAction(saveShopSettings, {
     onSuccess: () => toast.success("Ustawienia zapisane"),
@@ -21,87 +25,78 @@ export function ShopSettingsForm({ settings }: Props) {
   function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
     const fd = new FormData(e.currentTarget);
-    const threshold = Number.parseFloat(
-      String(fd.get("freeShippingThreshold") ?? "").replace(",", "."),
+    const threshold = Number(
+      String(fd.get("freeShippingThreshold") ?? "")
+        .replace(",", ".")
+        .replace(/\s/g, ""),
     );
-    const metaSuffix = String(fd.get("productMetaSuffix") ?? "").trim();
+    if (freeShippingEnabled && !(Number.isFinite(threshold) && threshold > 0)) {
+      setThresholdError("Podaj kwotę, np. 200");
+      return;
+    }
+    setThresholdError(undefined);
     execute({
       freeShippingThresholdPln: freeShippingEnabled ? Math.round(threshold * 100) : null,
-      productMetaSuffixPl: metaSuffix || null,
+      productMetaSuffixPl: metaSuffix.trim() || null,
     });
   }
 
   return (
-    <form
-      onSubmit={handleSubmit}
-      className="max-w-xl space-y-4 rounded-2xl bg-card p-5 shadow-card"
-    >
-      <h2 className="font-semibold">Dostawa</h2>
-
-      <label className="flex items-center gap-2 text-sm font-medium">
-        <input
-          type="checkbox"
+    <form onSubmit={handleSubmit} className="max-w-2xl space-y-6">
+      <Section title="Dostawa">
+        <Switch
+          label="Darmowa dostawa od progu"
+          description="Dotyczy wszystkich metod dostawy"
           checked={freeShippingEnabled}
-          onChange={(e) => setFreeShippingEnabled(e.target.checked)}
+          onChange={setFreeShippingEnabled}
         />
-        Darmowa dostawa od progu
-      </label>
-
-      {freeShippingEnabled && (
-        <div>
-          <label
+        {freeShippingEnabled && (
+          <Field
+            label="Próg darmowej dostawy"
             htmlFor="freeShippingThreshold"
-            className="mb-1 block text-xs font-medium text-muted-foreground"
+            error={thresholdError}
+            hint="Liczony od wartości produktów po rabatach, bez kosztu dostawy. Kwota pojawia się w nagłówku sklepu, w koszyku i na stronie „Dostawa”."
+            className="max-w-xs"
           >
-            Próg darmowej dostawy (zł)
-          </label>
-          <input
-            id="freeShippingThreshold"
-            name="freeShippingThreshold"
-            type="number"
-            step="0.01"
-            min={0}
-            required
-            defaultValue={((settings.freeShippingThresholdPln ?? 20000) / 100).toFixed(2)}
-            className="w-full rounded-lg border border-border px-2 py-1.5 text-sm"
-          />
-          <p className="mt-1 text-xs text-muted-foreground">
-            Liczony od wartości produktów po rabatach, bez kosztu dostawy. Dotyczy wszystkich metod
-            dostawy. Kwota pojawia się w nagłówku sklepu, w koszyku i na stronie „Dostawa”.
-          </p>
-        </div>
-      )}
+            <div className="relative">
+              <TextInput
+                id="freeShippingThreshold"
+                name="freeShippingThreshold"
+                inputMode="decimal"
+                required
+                defaultValue={((settings.freeShippingThresholdPln ?? 20000) / 100)
+                  .toFixed(2)
+                  .replace(".", ",")}
+                className="pr-9"
+              />
+              <span className="pointer-events-none absolute top-1/2 right-3 -translate-y-1/2 text-sm text-muted-foreground">
+                zł
+              </span>
+            </div>
+          </Field>
+        )}
+      </Section>
 
-      <h2 className="pt-2 font-semibold">SEO</h2>
-      <div>
-        <label
+      <Section title="Wyszukiwarki">
+        <Field
+          label="Dopisek do opisu produktów w Google"
           htmlFor="productMetaSuffix"
-          className="mb-1 block text-xs font-medium text-muted-foreground"
+          counter={{ value: metaSuffix.length, max: 40 }}
+          hint="Dodawany na końcu opisu każdego produktu w wynikach wyszukiwania (meta description). Puste pole — bez dopisku."
         >
-          Dopisek do opisu produktów w Google
-        </label>
-        <input
-          id="productMetaSuffix"
-          name="productMetaSuffix"
-          type="text"
-          maxLength={40}
-          defaultValue={settings.productMetaSuffixPl ?? ""}
-          placeholder="np. Wysyłka w 24–48 h."
-          className="w-full rounded-lg border border-border px-2 py-1.5 text-sm"
-        />
-        <p className="mt-1 text-xs text-muted-foreground">
-          Dodawany na końcu opisu każdego produktu w wynikach wyszukiwania (meta description). Puste
-          pole — bez dopisku.
-        </p>
-      </div>
+          <TextInput
+            id="productMetaSuffix"
+            maxLength={40}
+            value={metaSuffix}
+            onChange={(e) => setMetaSuffix(e.target.value)}
+            placeholder="np. Wysyłka w 24–48 h."
+          />
+        </Field>
+      </Section>
 
-      <button
-        type="submit"
-        disabled={isPending}
-        className="rounded-lg bg-primary px-4 py-2 text-sm font-medium text-primary-foreground transition-colors duration-200 hover:bg-primary-deep motion-reduce:transition-none disabled:opacity-50"
-      >
-        {isPending ? "Zapisywanie…" : "Zapisz"}
-      </button>
+      <Button type="submit" size="lg" disabled={isPending}>
+        {isPending ? "Zapisywanie…" : "Zapisz ustawienia"}
+      </Button>
     </form>
   );
 }
