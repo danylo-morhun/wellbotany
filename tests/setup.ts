@@ -31,6 +31,7 @@ vi.mock("next/cache", () => ({
   unstable_cache: <T extends (...args: never[]) => unknown>(fn: T) => fn,
   revalidateTag: () => {},
   revalidatePath: () => {},
+  updateTag: () => {},
 }));
 
 // next-auth (beta) relies on Next.js's bundler resolution for its internal
