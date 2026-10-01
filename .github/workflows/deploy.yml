@@ -47,8 +47,8 @@ jobs:
           VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
         run: |
           live=$(curl -fsS -H "Authorization: Bearer $VERCEL_TOKEN" \
-            "https://api.vercel.com/v6/deployments?projectId=$VERCEL_PROJECT_ID&teamId=$VERCEL_ORG_ID&target=production&state=READY&limit=1" \
-            | jq -r '.deployments[0].meta.githubCommitSha // .deployments[0].meta.gitCommitSha // empty')
+            "https://api.vercel.com/v13/deployments/${SITE_URL#https://}?teamId=$VERCEL_ORG_ID" \
+            | jq -r '.meta.githubCommitSha // .meta.gitCommitSha // empty')
           echo "Live deployment: ${live:-unknown}"
           if [ -z "$live" ] || ! git cat-file -e "$live^{commit}" 2>/dev/null; then
             echo "Live commit unknown here — treating migrations as pending"
@@ -92,8 +92,8 @@ jobs:
         id: previous
         run: |
           url=$(curl -fsS -H "Authorization: Bearer $VERCEL_TOKEN" \
-            "https://api.vercel.com/v6/deployments?projectId=$VERCEL_PROJECT_ID&teamId=$VERCEL_ORG_ID&target=production&state=READY&limit=1" \
-            | jq -r '.deployments[0].url // empty')
+            "https://api.vercel.com/v13/deployments/${SITE_URL#https://}?teamId=$VERCEL_ORG_ID" \
+            | jq -r '.url // empty')
           echo "Live before deploy: ${url:-none}"
           echo "url=$url" >> "$GITHUB_OUTPUT"
       - name: Build and deploy on Vercel
