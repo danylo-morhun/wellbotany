@@ -1,13 +1,21 @@
 import type { Metadata } from "next";
 import Image from "next/image";
 import { notFound } from "next/navigation";
+import { cache } from "react";
 import { AddCuratedGiftSetButton } from "@/features/gift-sets/components/AddCuratedGiftSetButton";
 import { formatPrice } from "@/lib/format";
 import { prisma } from "@/lib/prisma";
 
 type Props = { params: Promise<{ slug: string }> };
 
-async function getGiftSet(slug: string) {
+// Rendered on first request, then cached until a gift set or product edit
+// revalidates /zestawy-prezentowe (ISR) — same as product pages
+export async function generateStaticParams() {
+  return [];
+}
+
+// generateMetadata and the page read the same set — one query per render
+const getGiftSet = cache(async (slug: string) => {
   return prisma.giftSet.findFirst({
     where: { slug, status: "ACTIVE" },
     include: {
@@ -26,7 +34,7 @@ async function getGiftSet(slug: string) {
       },
     },
   });
-}
+});
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { slug } = await params;
