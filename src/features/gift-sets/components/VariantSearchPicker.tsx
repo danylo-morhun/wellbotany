@@ -3,7 +3,9 @@
 import { useAction } from "next-safe-action/hooks";
 import { useState } from "react";
 import { useDebouncedCallback } from "use-debounce";
+import { inputClass } from "@/features/products/components/editor/fields";
 import { formatPrice } from "@/lib/format";
+import { cn } from "@/lib/utils";
 import { searchVariantsForGiftSet } from "../actions";
 
 type SearchResult = {
@@ -49,7 +51,8 @@ export function VariantSearchPicker({ excludeIds, onPick }: Props) {
         onFocus={() => setOpen(true)}
         onBlur={() => setTimeout(() => setOpen(false), 150)}
         placeholder="Szukaj produktu po nazwie lub SKU…"
-        className="w-full rounded-lg border border-border px-2 py-1.5 text-sm"
+        aria-label="Dodaj produkt do zestawu"
+        className={cn(inputClass, "h-9")}
       />
 
       {open && query.trim().length >= 2 && (

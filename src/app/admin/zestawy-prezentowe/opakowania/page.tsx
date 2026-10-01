@@ -1,6 +1,10 @@
+import { ChevronLeft } from "lucide-react";
+import type { Metadata } from "next";
 import Link from "next/link";
 import { GiftPackagingAdmin } from "@/features/gift-sets/components/GiftPackagingAdmin";
 import { prisma } from "@/lib/prisma";
+
+export const metadata: Metadata = { title: "Opakowania" };
 
 export default async function AdminGiftPackagingPage() {
   const packagings = await prisma.giftPackaging.findMany({
@@ -8,12 +12,13 @@ export default async function AdminGiftPackagingPage() {
   });
 
   return (
-    <div className="space-y-4">
+    <div>
       <Link
         href="/admin/zestawy-prezentowe"
-        className="text-sm font-medium text-primary hover:underline"
+        className="mb-2 inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground"
       >
-        ← Zestawy prezentowe
+        <ChevronLeft className="size-4" aria-hidden />
+        Zestawy prezentowe
       </Link>
       <GiftPackagingAdmin packagings={packagings} />
     </div>
