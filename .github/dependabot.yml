@@ -15,7 +15,7 @@ updates:
       - dependency-name: "@prisma/client"
         update-types: [version-update:semver-major]
   - package-ecosystem: github-actions
-    directory: /
+    directories: ["/", "/.github/actions/*"]
     schedule: { interval: monthly }
     commit-message: { prefix: "ci", include: scope }
     groups:
