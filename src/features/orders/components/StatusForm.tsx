@@ -24,7 +24,7 @@ export function StatusForm({
 }: Props) {
   const isPickup = shippingMethod === "PICKUP";
   const { execute, isPending } = useAction(updateOrderStatus, {
-    onSuccess: () => toast.success("Status zamówienia zaktualizowany"),
+    onSuccess: () => toast.success("Zapisano zmiany"),
     onError: ({ error }) => toast.error(error?.serverError ?? "Błąd aktualizacji statusu"),
   });
   const [status, setStatus] = useState<OrderStatus>(currentStatus);
@@ -35,7 +35,8 @@ export function StatusForm({
     execute({
       orderId,
       status: fd.get("status") as OrderStatus,
-      noteAdmin: (fd.get("noteAdmin") as string) || undefined,
+      // Always sent (even empty) so the note can be cleared
+      noteAdmin: (fd.get("noteAdmin") as string) ?? "",
       trackingNumber: (fd.get("trackingNumber") as string) || undefined,
     });
   }
