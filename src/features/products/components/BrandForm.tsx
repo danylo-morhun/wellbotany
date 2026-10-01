@@ -1,293 +1,308 @@
 "use client";
 
 import type { Brand } from "@prisma/client";
+import { Search } from "lucide-react";
 import Image from "next/image";
 import { useAction } from "next-safe-action/hooks";
 import { useState } from "react";
 import { toast } from "sonner";
 import { ConfirmDialog } from "@/components/ConfirmDialog";
-import { CloudinaryDropzone } from "@/components/ui/cloudinary-dropzone";
+import { Button } from "@/components/ui/button";
+import { RowActions } from "@/components/ui/row-actions";
+import { FormSheet } from "@/features/admin/components/FormSheet";
 import { slugify } from "@/lib/slugify";
+import { cn } from "@/lib/utils";
 import { deleteBrand, saveBrand } from "../actions";
+import { Field, inputClass, TextArea, TextInput } from "./editor/fields";
+import { ImageUrlInput } from "./editor/ImageUrlInput";
+
+export type BrandRow = Brand & { productCount: number };
 
 interface Props {
-  brands: Brand[];
+  brands: BrandRow[];
 }
 
 export function BrandForm({ brands }: Props) {
-  const [editing, setEditing] = useState<Brand | null>(null);
-  const [showNew, setShowNew] = useState(false);
-  const [formName, setFormName] = useState("");
-  const [formSlug, setFormSlug] = useState("");
-  const [formSlugManual, setFormSlugManual] = useState(false);
-  const [formLogo, setFormLogo] = useState("");
-  const [formParentBrandId, setFormParentBrandId] = useState("");
-  const [deletingBrand, setDeletingBrand] = useState<Brand | null>(null);
+  const [editing, setEditing] = useState<BrandRow | "new" | null>(null);
+  const [deletingBrand, setDeletingBrand] = useState<BrandRow | null>(null);
+  const [query, setQuery] = useState("");
 
-  // Only top-level brands can be picked as a parent — keeps the tree exactly
-  // 2 levels deep (manufacturer → product line) with no cycle handling needed.
-  const parentOptions = brands.filter((b) => !b.parentBrandId && b.id !== editing?.id);
-
-  const { execute: execSave, isPending: saving } = useAction(saveBrand, {
-    onSuccess: () => {
-      setEditing(null);
-      setShowNew(false);
-    },
-    onError: ({ error }) => toast.error(error?.serverError ?? "Błąd zapisu marki"),
-  });
   const { execute: execDelete, isPending: deleting } = useAction(deleteBrand, {
     onSuccess: () => setDeletingBrand(null),
     onError: ({ error }) => toast.error(error?.serverError ?? "Błąd usuwania marki"),
   });
 
-  function startNew() {
-    setEditing(null);
-    setFormName("");
-    setFormSlug("");
-    setFormSlugManual(false);
-    setFormLogo("");
-    setFormParentBrandId("");
-    setShowNew(true);
-  }
+  // Manufacturer first, its product lines right under it
+  const q = query.trim().toLowerCase();
+  const matches = (b: Brand) => !q || b.name.toLowerCase().includes(q) || b.slug.includes(q);
+  const ordered = brands
+    .filter((b) => !b.parentBrandId)
+    .flatMap((parent) => [parent, ...brands.filter((b) => b.parentBrandId === parent.id)])
+    .filter(
+      (b) =>
+        matches(b) ||
+        // keep a parent visible when one of its lines matches
+        (!b.parentBrandId && brands.some((c) => c.parentBrandId === b.id && matches(c))),
+    );
 
-  function startEditing(item: Brand) {
-    setShowNew(false);
-    setFormName(item.name);
-    setFormSlug(item.slug);
-    setFormSlugManual(true);
-    setFormLogo(item.logo ?? "");
-    setFormParentBrandId(item.parentBrandId ?? "");
-    setEditing(item);
-  }
+  return (
+    <div>
+      <div className="mb-6 flex flex-wrap items-center justify-between gap-3">
+        <div>
+          <h1 className="font-heading text-2xl font-semibold tracking-tight">Marki</h1>
+          <p className="mt-1 text-sm text-muted-foreground">{brands.length} marek</p>
+        </div>
+        <Button size="lg" onClick={() => setEditing("new")}>
+          + Dodaj markę
+        </Button>
+      </div>
 
-  function cancelForm() {
-    setEditing(null);
-    setShowNew(false);
-  }
+      <div className="relative mb-4 max-w-sm">
+        <Search
+          className="pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2 text-muted-foreground"
+          aria-hidden
+        />
+        <input
+          type="search"
+          value={query}
+          onChange={(e) => setQuery(e.target.value)}
+          placeholder="Szukaj marki…"
+          aria-label="Szukaj marki"
+          className={cn(inputClass, "h-9 pl-9")}
+        />
+      </div>
 
-  function handleNameChange(value: string) {
-    setFormName(value);
-    if (!formSlugManual) setFormSlug(slugify(value));
-  }
+      <div className="divide-y divide-border rounded-2xl bg-card shadow-card">
+        {ordered.map((brand) => (
+          <div
+            key={brand.id}
+            className={cn("flex items-center gap-3 px-4 py-3", brand.parentBrandId && "pl-10")}
+          >
+            <BrandLogo brand={brand} size={brand.parentBrandId ? 32 : 40} />
+            <button
+              type="button"
+              onClick={() => setEditing(brand)}
+              className="min-w-0 flex-1 text-left"
+            >
+              <p className="truncate font-medium hover:underline">{brand.name}</p>
+              <p className="truncate text-xs text-muted-foreground">
+                {brand.slug}
+                {brand.countryCode && ` · ${brand.countryCode}`}
+              </p>
+            </button>
+            <span className="shrink-0 text-xs tabular-nums text-muted-foreground">
+              {brand.productCount} {brand.productCount === 1 ? "produkt" : "produktów"}
+            </span>
+            <RowActions
+              label={brand.name}
+              onEdit={() => setEditing(brand)}
+              onDelete={() => setDeletingBrand(brand)}
+            />
+          </div>
+        ))}
+        {ordered.length === 0 && (
+          <p className="px-4 py-6 text-center text-sm text-muted-foreground">
+            {q ? "Brak marek pasujących do wyszukiwania" : "Brak marek"}
+          </p>
+        )}
+      </div>
 
-  function handleSlugChange(value: string) {
-    setFormSlug(value);
-    setFormSlugManual(true);
-  }
+      {editing && (
+        <BrandSheet
+          key={editing === "new" ? "new" : editing.id}
+          brand={editing === "new" ? null : editing}
+          brands={brands}
+          onClose={() => setEditing(null)}
+        />
+      )}
 
-  function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
+      <ConfirmDialog
+        open={deletingBrand !== null}
+        onOpenChange={(open) => !open && setDeletingBrand(null)}
+        title="Usuń markę"
+        description={
+          deletingBrand?.productCount
+            ? `Marka „${deletingBrand.name}" ma ${deletingBrand.productCount} produktów — po usunięciu zostaną bez marki. Tej operacji nie można cofnąć.`
+            : `Czy na pewno chcesz usunąć markę „${deletingBrand?.name}"? Tej operacji nie można cofnąć.`
+        }
+        pending={deleting}
+        onConfirm={() => deletingBrand && execDelete({ id: deletingBrand.id })}
+      />
+    </div>
+  );
+}
+
+function BrandLogo({ brand, size }: { brand: Brand; size: number }) {
+  return brand.logo ? (
+    <div
+      className="relative shrink-0 overflow-hidden rounded-md border border-border bg-muted"
+      style={{ width: size, height: size }}
+    >
+      <Image src={brand.logo} alt="" fill className="object-contain p-1" sizes={`${size}px`} />
+    </div>
+  ) : (
+    <div
+      className="flex shrink-0 items-center justify-center rounded-md bg-muted text-sm font-bold text-muted-foreground"
+      style={{ width: size, height: size }}
+      aria-hidden
+    >
+      {brand.name.charAt(0)}
+    </div>
+  );
+}
+
+function BrandSheet({
+  brand,
+  brands,
+  onClose,
+}: {
+  brand: Brand | null;
+  brands: Brand[];
+  onClose: () => void;
+}) {
+  const [name, setName] = useState(brand?.name ?? "");
+  const [slug, setSlug] = useState(brand?.slug ?? "");
+  const [slugManual, setSlugManual] = useState(!!brand);
+  const [logo, setLogo] = useState(brand?.logo ?? "");
+  const [errors, setErrors] = useState<Record<string, string>>({});
+
+  // Only top-level brands can be picked as a parent — keeps the tree exactly
+  // 2 levels deep (manufacturer → product line) with no cycle handling needed.
+  const hasLines = !!brand && brands.some((b) => b.parentBrandId === brand.id);
+  const parentOptions = brands.filter((b) => !b.parentBrandId && b.id !== brand?.id);
+
+  const { execute, isPending } = useAction(saveBrand, {
+    onSuccess: () => {
+      toast.success(brand ? "Marka zapisana" : "Marka dodana");
+      onClose();
+    },
+    onError: ({ error }) => {
+      const fieldErrors: Record<string, string> = {};
+      for (const [k, v] of Object.entries(error.validationErrors ?? {})) {
+        const msg = (v as { _errors?: string[] })?._errors?.[0];
+        if (msg) fieldErrors[k] = msg;
+      }
+      setErrors(fieldErrors);
+      if (error.serverError || !Object.keys(fieldErrors).length)
+        toast.error(error.serverError ?? "Błąd zapisu marki");
+    },
+  });
+
+  function submit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
     const fd = new FormData(e.currentTarget);
-    execSave({
-      id: (fd.get("id") as string) || undefined,
-      slug: formSlug,
-      name: formName,
-      logo: formLogo || undefined,
-      description: (fd.get("description") as string) || undefined,
-      website: (fd.get("website") as string) || undefined,
-      countryCode: (fd.get("countryCode") as string) || undefined,
-      parentBrandId: formParentBrandId || undefined,
+    const get = (k: string) => String(fd.get(k) ?? "").trim();
+    setErrors({});
+    execute({
+      id: brand?.id,
+      slug,
+      name,
+      logo: logo || undefined,
+      description: get("description") || undefined,
+      website: get("website") || undefined,
+      countryCode: get("countryCode").toUpperCase() || undefined,
+      parentBrandId: get("parentBrandId") || undefined,
     });
   }
 
-  const form = (item?: Brand) => (
-    <form
-      onSubmit={handleSubmit}
-      className="mt-2 mb-4 grid gap-3 rounded-2xl bg-card p-4 shadow-card"
+  return (
+    <FormSheet
+      title={brand ? `Edytuj markę ${brand.name}` : "Nowa marka"}
+      onClose={onClose}
+      onSubmit={submit}
+      pending={isPending}
+      submitLabel={brand ? "Zapisz markę" : "Dodaj markę"}
     >
-      {item && <input type="hidden" name="id" value={item.id} />}
-      <div className="grid grid-cols-2 gap-2">
-        <input
-          name="name"
-          value={formName}
-          onChange={(e) => handleNameChange(e.target.value)}
-          placeholder="Nazwa *"
+      <Field label="Nazwa" htmlFor="b-name" error={errors.name}>
+        <TextInput
+          id="b-name"
           required
-          className="rounded-lg border border-border px-2 py-1 text-sm"
+          autoFocus
+          value={name}
+          onChange={(e) => {
+            setName(e.target.value);
+            if (!slugManual) setSlug(slugify(e.target.value));
+          }}
         />
-        <div className="relative">
-          <input
-            name="slug"
-            value={formSlug}
-            onChange={(e) => handleSlugChange(e.target.value)}
-            placeholder="Slug *"
-            required
-            className="w-full rounded-lg border border-border px-2 py-1 font-mono text-sm"
-          />
-          {!formSlugManual && (
-            <span className="pointer-events-none absolute right-1.5 top-1/2 -translate-y-1/2 rounded bg-muted px-1 py-0.5 text-xs text-muted-foreground">
-              auto
-            </span>
-          )}
-        </div>
-        <input
-          name="website"
-          defaultValue={item?.website ?? ""}
-          placeholder="Strona www"
-          className="rounded-lg border border-border px-2 py-1 text-sm"
+      </Field>
+      <Field
+        label="Slug"
+        htmlFor="b-slug"
+        error={errors.slug}
+        hint={`wellbotany.pl/marki/${slug || "…"}${slugManual ? "" : " · generowany z nazwy"}`}
+      >
+        <TextInput
+          id="b-slug"
+          required
+          value={slug}
+          onChange={(e) => {
+            setSlug(e.target.value);
+            setSlugManual(true);
+          }}
+          className="font-mono"
         />
-        <input
-          name="countryCode"
-          defaultValue={item?.countryCode ?? ""}
-          placeholder="Kraj (PL, DE…)"
-          maxLength={2}
-          className="rounded-lg border border-border px-2 py-1 text-sm"
-        />
+      </Field>
+      <Field
+        label="Marka nadrzędna"
+        htmlFor="b-parent"
+        hint={
+          hasLines
+            ? "Ta marka ma własne linie produktów, więc sama nie może być linią innej marki"
+            : "Wybierz producenta, jeśli to jego linia produktów (np. ForMeds → BICAPS)"
+        }
+      >
         <select
+          id="b-parent"
           name="parentBrandId"
-          value={formParentBrandId}
-          onChange={(e) => setFormParentBrandId(e.target.value)}
-          className="col-span-2 rounded-lg border border-border px-2 py-1 text-sm"
+          defaultValue={brand?.parentBrandId ?? ""}
+          disabled={hasLines}
+          className={cn(inputClass, "h-9 disabled:opacity-60")}
         >
-          <option value="">— brak (marka nadrzędna) —</option>
+          <option value="">— brak (marka główna) —</option>
           {parentOptions.map((b) => (
             <option key={b.id} value={b.id}>
               {b.name}
             </option>
           ))}
         </select>
-        <input
+      </Field>
+      <div className="grid grid-cols-[1fr_6rem] gap-3">
+        <Field label="Strona www" htmlFor="b-website" error={errors.website}>
+          <TextInput
+            id="b-website"
+            name="website"
+            type="url"
+            defaultValue={brand?.website ?? ""}
+            placeholder="https://"
+          />
+        </Field>
+        <Field label="Kraj" htmlFor="b-country" error={errors.countryCode}>
+          <TextInput
+            id="b-country"
+            name="countryCode"
+            defaultValue={brand?.countryCode ?? ""}
+            placeholder="PL"
+            maxLength={2}
+            className="uppercase"
+          />
+        </Field>
+      </div>
+      <Field label="Opis" htmlFor="b-desc" hint="Krótki opis marki">
+        <TextArea
+          id="b-desc"
           name="description"
-          defaultValue={item?.description ?? ""}
-          placeholder="Opis"
-          className="col-span-2 rounded-lg border border-border px-2 py-1 text-sm"
+          defaultValue={brand?.description ?? ""}
+          maxLength={2000}
         />
-      </div>
-
-      <div className="rounded-lg border border-border p-3">
-        <p className="mb-2 text-xs font-medium text-muted-foreground">Logo marki</p>
-        <div className="flex items-center gap-3">
-          {formLogo ? (
-            <div className="relative size-14 shrink-0 overflow-hidden rounded-md border border-border bg-muted">
-              <Image src={formLogo} alt="Logo" fill className="object-contain p-1" sizes="56px" />
-            </div>
-          ) : (
-            <div className="flex size-14 shrink-0 items-center justify-center rounded-md border border-dashed border-border bg-muted text-xs text-muted-foreground">
-              brak
-            </div>
-          )}
-          <div className="flex flex-1 flex-col gap-2">
-            <CloudinaryDropzone
-              variant="button"
-              multiple={false}
-              buttonLabel="Prześlij logo"
-              onUploaded={setFormLogo}
-            />
-            <div className="flex gap-2">
-              <input
-                type="url"
-                value={formLogo}
-                onChange={(e) => setFormLogo(e.target.value)}
-                placeholder="lub wklej URL logo…"
-                className="flex-1 rounded-lg border border-border px-2 py-1 text-xs"
-              />
-              {formLogo && (
-                <button
-                  type="button"
-                  onClick={() => setFormLogo("")}
-                  className="rounded-lg border border-border px-2 py-1 text-xs text-destructive"
-                >
-                  Usuń
-                </button>
-              )}
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <div className="flex gap-2">
-        <button
-          type="submit"
-          disabled={saving}
-          className="rounded-lg bg-primary px-3 py-1 text-xs font-medium text-primary-foreground transition-colors duration-200 hover:bg-primary-deep motion-reduce:transition-none disabled:opacity-50"
-        >
-          {saving ? "…" : "Zapisz"}
-        </button>
-        <button
-          type="button"
-          onClick={cancelForm}
-          className="rounded-lg border border-border px-3 py-1 text-xs"
-        >
-          Anuluj
-        </button>
-      </div>
-    </form>
-  );
-
-  return (
-    <div>
-      <div className="mb-4 flex items-center justify-between">
-        <h1 className="text-2xl font-bold">Marki</h1>
-        <button
-          type="button"
-          onClick={startNew}
-          className="rounded-lg bg-primary px-3 py-1.5 text-sm font-medium text-primary-foreground transition-colors duration-200 hover:bg-primary-deep motion-reduce:transition-none"
-        >
-          + Dodaj
-        </button>
-      </div>
-      {showNew && !editing && form()}
-      <div className="divide-y divide-border rounded-2xl bg-card shadow-card">
-        {brands.map((brand) => (
-          <div key={brand.id}>
-            <div className="flex items-center justify-between px-4 py-3">
-              <div className="flex items-center gap-3">
-                {brand.logo ? (
-                  <div className="relative size-10 shrink-0 overflow-hidden rounded-md border border-border bg-muted">
-                    <Image
-                      src={brand.logo}
-                      alt={brand.name}
-                      fill
-                      className="object-contain p-1"
-                      sizes="40px"
-                    />
-                  </div>
-                ) : (
-                  <div className="flex size-10 shrink-0 items-center justify-center rounded-md bg-muted text-sm font-bold text-muted-foreground">
-                    {brand.name.charAt(0)}
-                  </div>
-                )}
-                <div>
-                  <p className="font-medium">{brand.name}</p>
-                  <p className="text-xs text-muted-foreground">
-                    {brand.slug}
-                    {brand.countryCode && ` · ${brand.countryCode}`}
-                  </p>
-                </div>
-              </div>
-              <div className="flex gap-2">
-                <button
-                  type="button"
-                  onClick={() => startEditing(brand)}
-                  className="rounded-lg border border-border px-2 py-1 text-xs"
-                >
-                  Edytuj
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setDeletingBrand(brand)}
-                  className="rounded-lg border border-border border-destructive px-2 py-1 text-xs text-destructive disabled:opacity-50"
-                >
-                  Usuń
-                </button>
-              </div>
-            </div>
-            {editing?.id === brand.id && form(brand)}
-          </div>
-        ))}
-        {brands.length === 0 && (
-          <p className="px-4 py-6 text-center text-sm text-muted-foreground">Brak marek</p>
-        )}
-      </div>
-
-      <ConfirmDialog
-        open={deletingBrand !== null}
-        onOpenChange={(open) => !open && setDeletingBrand(null)}
-        title="Usuń markę"
-        description={`Czy na pewno chcesz usunąć markę „${deletingBrand?.name}"? Tej operacji nie można cofnąć.`}
-        pending={deleting}
-        onConfirm={() => deletingBrand && execDelete({ id: deletingBrand.id })}
-      />
-    </div>
+      </Field>
+      <Field label="Logo" error={errors.logo}>
+        <ImageUrlInput
+          value={logo}
+          onChange={setLogo}
+          uploadLabel="Prześlij logo"
+          alt="Logo marki"
+        />
+      </Field>
+    </FormSheet>
   );
 }
