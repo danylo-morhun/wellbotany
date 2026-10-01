@@ -6,3 +6,5 @@ export const contactMessageSchema = z.object({
   subject: z.string().min(3, "Podaj temat wiadomości").max(200),
   message: z.string().min(10, "Wiadomość jest zbyt krótka").max(5000),
 });
+
+export const setMessageReadSchema = z.object({ id: z.string().min(1), isRead: z.boolean() });
