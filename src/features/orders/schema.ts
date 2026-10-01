@@ -10,4 +10,16 @@ export const updateOrderStatusSchema = z.object({
 
 export const markOrderPaidSchema = z.object({ orderId: z.string().min(1) });
 
+/** Bulk changes skip SHIPPED for courier orders — those need a tracking number each. */
+export const BULK_ORDER_STATUSES = ["PROCESSING", "SHIPPED", "DELIVERED", "CANCELLED"] as const;
+
+export const bulkUpdateOrderStatusSchema = z.object({
+  orderIds: z.array(z.string().min(1)).min(1).max(100),
+  status: z.enum(BULK_ORDER_STATUSES),
+});
+
+export const bulkMarkOrdersPaidSchema = z.object({
+  orderIds: z.array(z.string().min(1)).min(1).max(100),
+});
+
 export type UpdateOrderStatusInput = z.input<typeof updateOrderStatusSchema>;
