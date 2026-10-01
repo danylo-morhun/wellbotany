@@ -14,6 +14,7 @@ import {
   TextInput,
 } from "@/features/products/components/editor/fields";
 import { saveGiftBuilderSettings } from "../actions";
+import { DEFAULT_GIFT_BUILDER_POLICY } from "../lib/pricing";
 
 /** "12,50" / "12.50" → 1250; undefined when empty or not a positive amount */
 function toGrosz(value: string): number | undefined {
@@ -26,14 +27,14 @@ const zl = (grosz: number | null | undefined) =>
 
 type Props = { settings: GiftBuilderSettings | null };
 
-export function GiftBuilderSettingsForm({ settings }: Props) {
-  const [isActive, setIsActive] = useState(settings?.isActive ?? true);
-  const [pricingMode, setPricingMode] = useState<GiftBuilderPricingMode>(
-    settings?.pricingMode ?? "FIXED_BOX",
-  );
+export function GiftBuilderSettingsForm({ settings: saved }: Props) {
+  // Never saved yet → show what the shop actually uses
+  const settings = saved ?? DEFAULT_GIFT_BUILDER_POLICY;
+  const [isActive, setIsActive] = useState(settings.isActive);
+  const [pricingMode, setPricingMode] = useState<GiftBuilderPricingMode>(settings.pricingMode);
   // Both mode fields stay in state so switching modes doesn't reset the other one
-  const [boxPrice, setBoxPrice] = useState(zl(settings?.boxPricePln));
-  const [discount, setDiscount] = useState(String(settings?.discountPercent ?? 0));
+  const [boxPrice, setBoxPrice] = useState(zl(settings.boxPricePln));
+  const [discount, setDiscount] = useState(String(settings.discountPercent));
   const [errors, setErrors] = useState<Record<string, string>>({});
 
   const { execute, isPending } = useAction(saveGiftBuilderSettings, {
@@ -82,12 +83,7 @@ export function GiftBuilderSettingsForm({ settings }: Props) {
           onChange={setIsActive}
         />
         <Field label="Nazwa wyświetlana klientowi" htmlFor="namePl" error={errors.namePl}>
-          <TextInput
-            id="namePl"
-            name="namePl"
-            defaultValue={settings?.namePl ?? "Zestaw prezentowy"}
-            required
-          />
+          <TextInput id="namePl" name="namePl" defaultValue={settings.namePl} required />
         </Field>
         <div className="grid grid-cols-2 gap-3">
           <Field label="Min. liczba produktów" htmlFor="minItems" error={errors.minItems}>
@@ -97,7 +93,7 @@ export function GiftBuilderSettingsForm({ settings }: Props) {
               type="number"
               min={1}
               max={50}
-              defaultValue={settings?.minItems ?? 3}
+              defaultValue={settings.minItems}
               required
             />
           </Field>
@@ -108,7 +104,7 @@ export function GiftBuilderSettingsForm({ settings }: Props) {
               type="number"
               min={1}
               max={50}
-              defaultValue={settings?.maxItems ?? 8}
+              defaultValue={settings.maxItems}
               required
             />
           </Field>
