@@ -15,8 +15,12 @@ import { loginSchema, registerSchema } from "./schema";
 // /konto only redirects to /konto/profil; a sign-in redirect that lands on a
 // second redirect leaves the client on the form showing a generic error.
 const ACCOUNT_HOME = "/konto/profil";
+// Only same-site paths: "//host" and "/\\host" are protocol-relative URLs to another site
+const isLocalPath = (url: string) => url.startsWith("/") && !/^\/[/\\]/.test(url);
 const afterSignIn = (callbackUrl?: string) =>
-  !callbackUrl || callbackUrl === "/konto" ? ACCOUNT_HOME : callbackUrl;
+  !callbackUrl || callbackUrl === "/konto" || !isLocalPath(callbackUrl)
+    ? ACCOUNT_HOME
+    : callbackUrl;
 
 export const loginCustomer = actionClient
   .schema(loginSchema)

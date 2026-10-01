@@ -111,13 +111,15 @@ const guardedProxy = auth((req) => {
 
   if (isKonto && !isLoggedIn) {
     const loginUrl = new URL("/logowanie", req.url);
-    loginUrl.searchParams.set("callbackUrl", req.nextUrl.pathname);
+    // Keep the query so e.g. /admin/zamowienia?widok=… survives the login round-trip
+    loginUrl.searchParams.set("callbackUrl", req.nextUrl.pathname + req.nextUrl.search);
     return NextResponse.redirect(loginUrl);
   }
 
   if (isAdmin && req.auth?.user?.role !== "ADMIN") {
     const loginUrl = new URL("/logowanie", req.url);
-    loginUrl.searchParams.set("callbackUrl", req.nextUrl.pathname);
+    // Keep the query so e.g. /admin/zamowienia?widok=… survives the login round-trip
+    loginUrl.searchParams.set("callbackUrl", req.nextUrl.pathname + req.nextUrl.search);
     return NextResponse.redirect(loginUrl);
   }
 
