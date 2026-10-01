@@ -6,25 +6,35 @@
 
 /* Admin-only markup is compiled into admin/admin.css, not the storefront bundle */
 @source not "./admin";
+@source not "../components/ui/badge.tsx";
 @source not "../components/ui/cloudinary-dropzone.tsx";
+@source not "../components/ui/dropdown-menu.tsx";
 @source not "../components/ui/rich-text-editor.tsx";
+@source not "../components/ui/row-actions.tsx";
 @source not "../components/ui/tabs.tsx";
+@source not "../features/admin";
 @source not "../features/blog/components/PostForm.tsx";
+@source not "../features/contact/components/MessageReadToggle.tsx";
+@source not "../features/coupons";
 @source not "../features/gift-sets/components/GiftBuilderSettingsForm.tsx";
 @source not "../features/gift-sets/components/GiftPackagingAdmin.tsx";
 @source not "../features/gift-sets/components/GiftSetsAdmin.tsx";
 @source not "../features/gift-sets/components/VariantSearchPicker.tsx";
 @source not "../features/orders/components/MarkPaidButton.tsx";
+@source not "../features/orders/components/OrdersTable.tsx";
+@source not "../features/orders/components/PrintButton.tsx";
 @source not "../features/orders/components/StatusForm.tsx";
+@source not "../features/orders/components/TransferReconciler.tsx";
 @source not "../features/products/components/BrandForm.tsx";
 @source not "../features/products/components/BulkActionsToolbar.tsx";
 @source not "../features/products/components/CategoryForm.tsx";
 @source not "../features/products/components/CategoryIconPicker.tsx";
-@source not "../features/products/components/DeleteProductButton.tsx";
+@source not "../features/products/components/editor";
 @source not "../features/products/components/ExtraCategoriesPicker.tsx";
 @source not "../features/products/components/ImagesSection.tsx";
 @source not "../features/products/components/InlineVariantEditor.tsx";
 @source not "../features/products/components/ProductForm.tsx";
+@source not "../features/products/components/ProductRowActions.tsx";
 @source not "../features/products/components/ProductsTable.tsx";
 @source not "../features/products/components/StockTable.tsx";
 @source not "../features/products/components/TagForm.tsx";
