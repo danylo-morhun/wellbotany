@@ -35,6 +35,7 @@ export async function GET(req: NextRequest) {
   if (!(await isAuthorized(req))) {
     return NextResponse.json({ ok: false, error: "Unauthorized" }, { status: 401 });
   }
-  for (const tag of TAGS) revalidateTag(tag, "max");
+  // Expire right away — scripts call this after bulk edits and expect fresh pages
+  for (const tag of TAGS) revalidateTag(tag, { expire: 0 });
   return NextResponse.json({ ok: true, revalidated: TAGS });
 }

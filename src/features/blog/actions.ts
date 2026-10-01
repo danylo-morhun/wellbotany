@@ -1,7 +1,7 @@
 "use server";
 
 import { Prisma } from "@prisma/client";
-import { revalidatePath, revalidateTag } from "next/cache";
+import { revalidatePath, updateTag } from "next/cache";
 import { prisma } from "@/lib/prisma";
 import { adminActionClient } from "@/lib/safe-action";
 import { POSTS_TAG } from "./lib/queries";
@@ -28,7 +28,7 @@ export const savePost = adminActionClient
       ? await prisma.post.update({ where: { id }, data })
       : await prisma.post.create({ data });
 
-    revalidateTag(POSTS_TAG, "max");
+    updateTag(POSTS_TAG);
     revalidatePath("/poradnik");
     revalidatePath(`/poradnik/${post.slug}`);
     if (existing && existing.slug !== post.slug) revalidatePath(`/poradnik/${existing.slug}`);
@@ -40,7 +40,7 @@ export const deletePost = adminActionClient
   .schema(deletePostSchema)
   .action(async ({ parsedInput: { id } }) => {
     const post = await prisma.post.delete({ where: { id }, select: { slug: true } });
-    revalidateTag(POSTS_TAG, "max");
+    updateTag(POSTS_TAG);
     revalidatePath("/poradnik");
     revalidatePath(`/poradnik/${post.slug}`);
     revalidatePath("/admin/poradnik");

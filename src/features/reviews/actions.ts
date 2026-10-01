@@ -1,6 +1,6 @@
 "use server";
 
-import { revalidatePath, revalidateTag } from "next/cache";
+import { revalidatePath, updateTag } from "next/cache";
 import { ActionError } from "@/lib/action-error";
 import { prisma } from "@/lib/prisma";
 import { assertNotRateLimited, getClientIp, reviewLimiter } from "@/lib/rate-limit";
@@ -53,7 +53,7 @@ export const moderateReview = adminActionClient
       data: { status },
       select: { product: { select: { slug: true } } },
     });
-    revalidateTag(REVIEWS_TAG, "max");
+    updateTag(REVIEWS_TAG);
     revalidatePath(`/produkt/${review.product.slug}`);
     revalidatePath("/admin/opinie");
     return { success: true };
