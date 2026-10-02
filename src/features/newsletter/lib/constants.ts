@@ -1,0 +1,2 @@
+export const WELCOME_DISCOUNT_PERCENT = 10;
+export const WELCOME_COUPON_VALID_DAYS = 30;
