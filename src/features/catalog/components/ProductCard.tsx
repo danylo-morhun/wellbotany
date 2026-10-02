@@ -10,9 +10,12 @@ import { resolveDisplayBrand } from "../lib/brand-tree";
 type Props = {
   product: ProductListItem;
   priority?: boolean;
+  /** h3 inside a page section that already has its own h2 */
+  headingLevel?: 2 | 3;
 };
 
-export function ProductCard({ product, priority = false }: Props) {
+export function ProductCard({ product, priority = false, headingLevel = 2 }: Props) {
+  const Heading = headingLevel === 3 ? "h3" : "h2";
   const displayBrand = product.brand ? resolveDisplayBrand(product.brand) : null;
   const defaultVariant = product.variants[0];
   const mainImage = product.images[0];
@@ -43,18 +46,22 @@ export function ProductCard({ product, priority = false }: Props) {
       <Link href={`/produkt/${product.slug}`} className="block">
         <div className="relative aspect-square overflow-hidden bg-card">
           {mainImage ? (
-            <Image
-              src={mainImage.url}
-              alt={
-                mainImage.altPl ?? [displayBrand?.name, product.namePl].filter(Boolean).join(" ")
-              }
-              fill
-              priority={priority}
-              sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
-              className={`object-contain p-5 transition-transform duration-300 ease-out group-hover:scale-[1.05] motion-reduce:group-hover:scale-100 ${
-                isOutOfStock ? "grayscale-[60%] opacity-50" : ""
-              }`}
-            />
+            // Inset, rounded frame: lifestyle photos on colored backdrops read as
+            // tiles instead of bleeding next to white packshots
+            <span className="absolute inset-4 overflow-hidden rounded-xl">
+              <Image
+                src={mainImage.url}
+                alt={
+                  mainImage.altPl ?? [displayBrand?.name, product.namePl].filter(Boolean).join(" ")
+                }
+                fill
+                priority={priority}
+                sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
+                className={`object-contain transition-transform duration-300 ease-out group-hover:scale-[1.05] motion-reduce:group-hover:scale-100 ${
+                  isOutOfStock ? "grayscale-[60%] opacity-50" : ""
+                }`}
+              />
+            </span>
           ) : (
             <div className="flex h-full items-center justify-center text-muted-foreground">
               <span className="text-sm">Brak zdjęcia</span>
@@ -95,9 +102,9 @@ export function ProductCard({ product, priority = false }: Props) {
         )}
 
         <Link href={`/produkt/${product.slug}`} className="flex-1">
-          <h2 className="line-clamp-2 text-sm font-semibold leading-snug text-foreground transition-colors group-hover:text-primary">
+          <Heading className="line-clamp-2 text-sm font-semibold leading-snug text-foreground transition-colors group-hover:text-primary">
             {product.namePl}
-          </h2>
+          </Heading>
         </Link>
 
         {product.tags.length > 0 && (
