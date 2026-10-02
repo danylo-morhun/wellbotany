@@ -13,6 +13,7 @@ import { getBrands } from "@/features/catalog/actions";
 import { getHomepageData, SEASONAL_SHELF } from "@/features/catalog/lib/homepage";
 import { HeroSlider } from "@/features/home/components/HeroSlider";
 import { getHomeBanners } from "@/features/home/lib/banners";
+import { HideIfSubscribed } from "@/features/newsletter/components/HideIfSubscribed";
 
 export const metadata: Metadata = {
   title: { absolute: "Suplementy diety, witaminy i zioła – sklep Well Botany" },
@@ -81,9 +82,11 @@ export default async function HomePage() {
           <FadeInView>
             <WhyUs />
           </FadeInView>
-          <FadeInView>
-            <NewsletterSection />
-          </FadeInView>
+          <HideIfSubscribed>
+            <FadeInView>
+              <NewsletterSection />
+            </FadeInView>
+          </HideIfSubscribed>
         </div>
       </div>
     </>
