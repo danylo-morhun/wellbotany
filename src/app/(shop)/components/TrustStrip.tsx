@@ -1,11 +1,11 @@
-import { Leaf, Phone, ShieldCheck, Truck } from "lucide-react";
+import { ClipboardList, PackageCheck, Store, Truck } from "lucide-react";
 import { getShopSettings } from "@/features/settings/lib/shop-settings";
 import { formatPriceCompact } from "@/lib/format";
 
 const staticItems = [
-  { icon: ShieldCheck, title: "Certyfikowana jakość", sub: "atestowane GIS/Sanepid" },
-  { icon: Leaf, title: "Naturalne składniki", sub: "bez sztucznych dodatków" },
-  { icon: Phone, title: "Wsparcie eksperta", sub: "pon–pt 9–18, sob 9–14" },
+  { icon: PackageCheck, title: "Wysyłka w 24–48 h", sub: "paczkomat, Orlen, kurier" },
+  { icon: Store, title: "Odbiór osobisty", sub: "w Kaliszu — 0 zł" },
+  { icon: ClipboardList, title: "Pełny skład i dawka", sub: "przy każdym produkcie" },
 ];
 
 export async function TrustStrip() {
@@ -17,28 +17,32 @@ export async function TrustStrip() {
           title: "Darmowa dostawa",
           sub: `od ${formatPriceCompact(freeShippingThresholdPln)}`,
         }
-      : { icon: Truck, title: "Szybka wysyłka", sub: "wysyłamy w 24h" },
+      : { icon: Truck, title: "Szybka wysyłka", sub: "wysyłamy w 24–48 h" },
     ...staticItems,
   ];
 
   return (
-    <section aria-label="Nasze gwarancje">
-      <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
+    <section aria-label="Zakupy w Well Botany">
+      {/* 2×2 until four columns have room for one-line titles; no sideways
+          scroll, so no item is cut off on phones */}
+      <ul className="grid grid-cols-2 gap-2 md:gap-3 lg:grid-cols-4">
         {items.map(({ icon: Icon, title, sub }) => (
-          <div
+          <li
             key={title}
-            className="group flex flex-col items-start gap-3 rounded-2xl bg-card px-4 py-4 shadow-card sm:flex-row sm:items-center transition-[box-shadow,transform] duration-200 ease-out hover:-translate-y-0.5 hover:shadow-card-hover motion-reduce:transition-none motion-reduce:hover:translate-y-0"
+            className="flex items-center gap-3 rounded-2xl bg-card px-3.5 py-3 shadow-card sm:px-4"
           >
-            <span className="flex size-11 shrink-0 items-center justify-center rounded-full bg-secondary text-primary transition-transform duration-200 group-hover:scale-110 motion-reduce:group-hover:scale-100">
-              <Icon className="size-5" strokeWidth={1.75} />
+            <span className="hidden size-9 shrink-0 sm:flex items-center justify-center rounded-full bg-secondary text-primary">
+              <Icon className="size-4.5" strokeWidth={1.75} aria-hidden />
             </span>
-            <div className="min-w-0">
-              <p className="text-sm font-bold leading-snug text-foreground">{title}</p>
-              <p className="text-xs text-muted-foreground">{sub}</p>
-            </div>
-          </div>
+            <span className="min-w-0">
+              <span className="block text-[13px] font-bold leading-snug text-foreground sm:text-sm">
+                {title}
+              </span>{" "}
+              <span className="block text-xs text-muted-foreground">{sub}</span>
+            </span>
+          </li>
         ))}
-      </div>
+      </ul>
     </section>
   );
 }
