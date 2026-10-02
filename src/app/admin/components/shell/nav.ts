@@ -3,6 +3,7 @@ import {
   BookOpen,
   FolderTree,
   Gift,
+  House,
   LayoutDashboard,
   type LucideIcon,
   Mail,
@@ -64,6 +65,7 @@ export const NAV_GROUPS: NavGroup[] = [
   {
     label: "Treści",
     items: [
+      { href: "/admin/strona-glowna", label: "Strona główna", icon: House },
       { href: "/admin/poradnik", label: "Poradnik", icon: BookOpen },
       {
         href: "/admin/wiadomosci",
