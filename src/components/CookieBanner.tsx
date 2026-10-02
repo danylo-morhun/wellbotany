@@ -52,15 +52,14 @@ export function CookieBanner() {
       className="fixed inset-x-4 bottom-4 z-50 mx-auto flex max-w-2xl flex-col gap-3 rounded-2xl bg-foreground p-4 text-background shadow-float sm:flex-row sm:items-center sm:justify-between print:hidden"
     >
       <p className="text-sm">
-        Używamy niezbędnych plików cookie do działania sklepu (koszyk, logowanie). Za Twoją zgodą
-        użyjemy też cookie analitycznych Google Analytics, by sprawdzać, jak korzystasz ze sklepu.
-        Zgodę możesz zmienić w każdej chwili. Więcej w{" "}
+        Cookie niezbędne (koszyk, logowanie) działają zawsze. Za Twoją zgodą użyjemy też Google
+        Analytics, by sprawdzać, jak korzystasz ze sklepu — zgodę zmienisz w każdej chwili. Więcej w{" "}
         <Link href="/cookies" className="underline">
           polityce cookies
         </Link>
         .
       </p>
-      <div className="flex shrink-0 gap-2">
+      <div className="flex shrink-0 gap-2 [&>button]:flex-1 sm:[&>button]:flex-none">
         <button
           type="button"
           onClick={() => respond("rejected")}
