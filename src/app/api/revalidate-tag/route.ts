@@ -2,6 +2,7 @@ import { revalidateTag } from "next/cache";
 import { type NextRequest, NextResponse } from "next/server";
 import { POSTS_TAG } from "@/features/blog/lib/queries";
 import { GLOSSARY_TAG } from "@/features/glossary/lib/queries";
+import { HOME_BANNERS_TAG } from "@/features/home/lib/banners";
 import { SHOP_SETTINGS_TAG } from "@/features/settings/lib/shop-settings";
 import { auth } from "@/lib/auth";
 import { safeCompare } from "@/lib/timing-safe-equal";
@@ -17,6 +18,7 @@ const TAGS = [
   SHOP_SETTINGS_TAG,
   GLOSSARY_TAG,
   POSTS_TAG,
+  HOME_BANNERS_TAG,
 ];
 
 // An open endpoint would let anyone force every cached page to rebuild.
