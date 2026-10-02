@@ -4,6 +4,7 @@ import { BrandStrip } from "@/app/(shop)/components/BrandStrip";
 import { FadeInView } from "@/app/(shop)/components/FadeInView";
 import { GuidesRow } from "@/app/(shop)/components/GuidesRow";
 import { HomeAbout } from "@/app/(shop)/components/HomeAbout";
+import { HomeGiftSets } from "@/app/(shop)/components/HomeGiftSets";
 import { HomeIntro } from "@/app/(shop)/components/HomeIntro";
 import { IngredientTiles } from "@/app/(shop)/components/IngredientTiles";
 import { NewsletterSection } from "@/app/(shop)/components/NewsletterSection";
@@ -11,6 +12,7 @@ import { SeasonalShelf } from "@/app/(shop)/components/SeasonalShelf";
 import { WhyUs } from "@/app/(shop)/components/WhyUs";
 import { getBrands } from "@/features/catalog/actions";
 import { getHomepageData, SEASONAL_SHELF } from "@/features/catalog/lib/homepage";
+import { getHomeGiftSets } from "@/features/gift-sets/lib/homepage";
 import { HeroSlider } from "@/features/home/components/HeroSlider";
 import { getHomeBanners } from "@/features/home/lib/banners";
 import { HideIfSubscribed } from "@/features/newsletter/components/HideIfSubscribed";
@@ -28,7 +30,8 @@ export default async function HomePage() {
     { categories, featured, featuredHref, newArrivals, promos, seasonalTabs, ingredientTiles },
     banners,
     brands,
-  ] = await Promise.all([getHomepageData(), getHomeBanners(), getBrands()]);
+    { giftSets, builderActive },
+  ] = await Promise.all([getHomepageData(), getHomeBanners(), getBrands(), getHomeGiftSets()]);
 
   return (
     <>
@@ -57,6 +60,9 @@ export default async function HomePage() {
               href="/katalog?promocje=1"
               variant="scroll"
             />
+          </FadeInView>
+          <FadeInView>
+            <HomeGiftSets giftSets={giftSets} builderActive={builderActive} />
           </FadeInView>
           <FadeInView>
             <IngredientTiles tiles={ingredientTiles} />
