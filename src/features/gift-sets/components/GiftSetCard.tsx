@@ -11,7 +11,14 @@ export type GiftSetListItem = {
   itemCount: number;
 };
 
-export function GiftSetCard({ giftSet }: { giftSet: GiftSetListItem }) {
+type Props = {
+  giftSet: GiftSetListItem;
+  /** h3 inside a page section that already has its own h2 */
+  headingLevel?: 2 | 3;
+};
+
+export function GiftSetCard({ giftSet, headingLevel = 2 }: Props) {
+  const Heading = headingLevel === 3 ? "h3" : "h2";
   const hasDiscount = giftSet.comparePricePln != null && giftSet.comparePricePln > giftSet.pricePln;
 
   return (
@@ -36,9 +43,9 @@ export function GiftSetCard({ giftSet }: { giftSet: GiftSetListItem }) {
       </div>
 
       <div className="flex flex-1 flex-col p-4 pt-2">
-        <h2 className="line-clamp-2 text-sm font-semibold leading-snug text-foreground transition-colors group-hover:text-primary">
+        <Heading className="line-clamp-2 text-sm font-semibold leading-snug text-foreground transition-colors group-hover:text-primary">
           {giftSet.namePl}
-        </h2>
+        </Heading>
         <p className="mt-1 text-xs text-muted-foreground">{giftSet.itemCount} produktów</p>
 
         <div className="mt-3 flex items-baseline gap-2">
