@@ -1,9 +1,13 @@
-import { Bell } from "lucide-react";
+import Link from "next/link";
 import { NewsletterForm } from "@/features/newsletter/components/NewsletterForm";
+import { sectionTitleClass } from "./SectionHeading";
 
 export function NewsletterSection() {
   return (
-    <section className="relative overflow-hidden rounded-3xl bg-band px-6 py-14 text-center text-band-foreground">
+    <section
+      aria-labelledby="newsletter-h"
+      className="relative overflow-hidden rounded-3xl bg-band px-6 py-12 text-center text-band-foreground md:py-14"
+    >
       <div
         className="pointer-events-none absolute -left-12 -top-12 size-48 rounded-full bg-band-foreground/5 animate-float-soft motion-reduce:animate-none"
         aria-hidden="true"
@@ -14,14 +18,20 @@ export function NewsletterSection() {
         aria-hidden="true"
       />
       <div className="relative">
-        <span className="mx-auto mb-4 flex size-12 items-center justify-center rounded-full bg-band-foreground/10">
-          <Bell className="size-6" strokeWidth={1.75} />
-        </span>
-        <h2 className="mb-2 font-heading text-2xl font-bold tracking-tight">Bądź na bieżąco</h2>
+        <h2 id="newsletter-h" className={`mb-2 ${sectionTitleClass}`}>
+          Promocje i porady na e-mail
+        </h2>
         <p className="mx-auto max-w-md text-band-foreground/75">
-          Zapisz się do newslettera i otrzymuj informacje o nowościach i promocjach.
+          Nowe promocje, nowości w sklepie i artykuły z poradnika. Bez spamu.
         </p>
         <NewsletterForm />
+        <p className="mx-auto mt-3 max-w-md text-xs text-band-foreground/60">
+          Zapisując się, zgadzasz się na otrzymywanie newslettera. Zgodę możesz wycofać w każdej
+          chwili.{" "}
+          <Link href="/polityka-prywatnosci" className="underline hover:text-band-foreground">
+            Polityka prywatności
+          </Link>
+        </p>
       </div>
     </section>
   );
