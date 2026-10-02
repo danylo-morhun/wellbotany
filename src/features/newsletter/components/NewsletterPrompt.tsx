@@ -24,7 +24,7 @@ import { NewsletterForm } from "./NewsletterForm";
 // once per session, never while the cookie banner is up or on cart/checkout/
 // account pages. Closed, it shrinks to a corner teaser and comes back after a
 // growing pause (see prompt-state); after subscribing, never again.
-const ENGAGED_MS = 20_000;
+const ENGAGED_MS = 10_000;
 const EXIT_INTENT_MIN_MS = 8_000;
 const AFTER_CONSENT_MS = 4_000;
 const HIDDEN_PATHS = ["/koszyk", "/zamowienie", "/konto", "/logowanie", "/rejestracja"];
