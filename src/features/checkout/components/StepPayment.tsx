@@ -2,9 +2,10 @@
 
 import { ShieldCheck } from "lucide-react";
 import { useAction } from "next-safe-action/hooks";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { groupCartItems } from "@/features/cart/lib/grouping";
 import { effectiveUnitPricePln } from "@/features/cart/lib/pricing";
+import { clearSavedCoupon, readSavedCoupon } from "@/features/cart/lib/saved-coupon";
 import type { CartItem } from "@/features/cart/lib/session";
 import { formatPrice } from "@/lib/format";
 import { verifyCoupon } from "../actions";
@@ -54,12 +55,23 @@ export function StepPayment({
   const [verifying, setVerifying] = useState(false);
 
   const { execute: executeVerify } = useAction(verifyCoupon, {
-    onSuccess: ({ data: result }) => {
+    onSuccess: ({ data: result, input }) => {
+      if (result && !result.valid && input.code === readSavedCoupon()) clearSavedCoupon();
       setCouponResult(result ?? null);
       setVerifying(false);
     },
     onError: () => setVerifying(false),
   });
+
+  // Carries over the code verified in the cart or brought in by the welcome e-mail
+  // biome-ignore lint/correctness/useExhaustiveDependencies: once when the step opens
+  useEffect(() => {
+    const code = data.couponCode.trim() || readSavedCoupon();
+    if (!code) return;
+    if (!data.couponCode.trim()) onChange({ couponCode: code });
+    setVerifying(true);
+    executeVerify({ code, subtotal });
+  }, []);
 
   const handleVerifyCoupon = () => {
     if (!data.couponCode.trim()) return;

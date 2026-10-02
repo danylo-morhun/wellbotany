@@ -4,6 +4,7 @@ import { useRouter } from "next/navigation";
 import { useAction } from "next-safe-action/hooks";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
+import { clearSavedCoupon } from "@/features/cart/lib/saved-coupon";
 import type { CartItem } from "@/features/cart/lib/session";
 import { trackItems } from "@/lib/analytics";
 import type { PickupLocationKey } from "@/lib/pickup-locations";
@@ -129,6 +130,7 @@ export function CheckoutForm({
 
   const { execute, isPending } = useAction(placeOrder, {
     onSuccess: ({ data }) => {
+      clearSavedCoupon();
       if (data?.redirectUrl) {
         setRedirecting(true);
         window.location.href = data.redirectUrl;
