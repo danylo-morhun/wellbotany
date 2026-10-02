@@ -1,10 +1,11 @@
 "use client";
 
 import { useAction } from "next-safe-action/hooks";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { verifyCoupon } from "@/features/checkout/actions";
 import { formatPrice } from "@/lib/format";
+import { clearSavedCoupon, readSavedCoupon, saveCoupon } from "../lib/saved-coupon";
 
 type CouponState = {
   valid: boolean;
@@ -22,13 +23,24 @@ export function CouponInput({ subtotal, onDiscount }: Props) {
   const [couponState, setCouponState] = useState<CouponState | null>(null);
 
   const { execute, isExecuting } = useAction(verifyCoupon, {
-    onSuccess: ({ data }) => {
+    onSuccess: ({ data, input }) => {
       if (!data) return;
+      if (data.valid) saveCoupon(input.code);
+      else if (input.code === readSavedCoupon()) clearSavedCoupon();
       setCouponState(data);
       onDiscount(data.valid ? data.discountPln : 0);
     },
     onError: ({ error }) => toast.error(error?.serverError ?? "Błąd sprawdzania kodu rabatowego"),
   });
+
+  // A code from the welcome e-mail (or an earlier visit) applies itself
+  // biome-ignore lint/correctness/useExhaustiveDependencies: once on mount
+  useEffect(() => {
+    const saved = readSavedCoupon();
+    if (!saved) return;
+    setCode(saved);
+    execute({ code: saved, subtotal });
+  }, []);
 
   const handleVerify = () => {
     if (!code.trim()) return;
