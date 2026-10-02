@@ -658,6 +658,8 @@ model Coupon {
   validUntil  DateTime?
   isActive    Boolean    @default(true)
   orders      Order[]
+  // Set on the personal welcome code a newsletter sign-up receives
+  subscriber  NewsletterSubscriber?
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -812,6 +814,9 @@ model OrderItem {
 model NewsletterSubscriber {
   id        String   @id @default(cuid())
   email     String   @unique
+  // Single-use welcome discount, e-mailed once on sign-up
+  couponId  String?  @unique
+  coupon    Coupon?  @relation(fields: [couponId], references: [id], onDelete: SetNull)
   createdAt DateTime @default(now())
 }
 
