@@ -8,7 +8,6 @@ import { HomeIntro } from "@/app/(shop)/components/HomeIntro";
 import { IngredientTiles } from "@/app/(shop)/components/IngredientTiles";
 import { NewsletterSection } from "@/app/(shop)/components/NewsletterSection";
 import { SeasonalShelf } from "@/app/(shop)/components/SeasonalShelf";
-import { TrustStrip } from "@/app/(shop)/components/TrustStrip";
 import { WhyUs } from "@/app/(shop)/components/WhyUs";
 import { getBrands } from "@/features/catalog/actions";
 import { getHomepageData, SEASONAL_SHELF } from "@/features/catalog/lib/homepage";
@@ -36,7 +35,6 @@ export default async function HomePage() {
       <div className="container mx-auto px-4 py-6 md:py-8">
         <div className="space-y-12 md:space-y-16">
           <div className="space-y-8 md:space-y-10">
-            <TrustStrip />
             {/* Products right under the hero so the first screen sells; the H1 and
                 need shortcuts follow */}
             <BestsellerRow
