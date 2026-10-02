@@ -91,3 +91,37 @@ export function getCategoryIcon(name?: string | null): LucideIcon | null {
   if (!name) return null;
   return CATEGORY_ICONS.find((i) => i.name === name)?.icon ?? null;
 }
+
+// Need categories ("na-…") without an icon picked in the admin still get one
+const NEED_ICON_FALLBACK: Record<string, string> = {
+  "na-odpornosc": "Shield",
+  "na-jelita-i-trawienie": "Salad",
+  "na-stawy-i-kosci": "Bone",
+  "na-zmeczenie-i-energie": "Zap",
+  "na-wlosy-skore-i-paznokcie": "Sparkles",
+  "na-serce-i-krazenie": "Heart",
+  "na-stres-i-nerwy": "Smile",
+  "na-detoks-i-oczyszczanie": "Droplets",
+  "na-sen": "Moon",
+  "na-pamiec-i-koncentracje": "Brain",
+  "na-wzrok": "Eye",
+  "na-alergie": "ShieldAlert",
+  "na-watrobe": "Filter",
+  "na-tarczyce": "Gauge",
+  "na-cholesterol": "TrendingDown",
+  "na-poziom-cukru": "TrendingDown",
+  "na-odchudzanie-i-metabolizm": "Flame",
+  "na-drogi-moczowe-i-nerki": "Droplet",
+  "na-drogi-oddechowe": "Wind",
+  "na-plodnosc": "Baby",
+  "na-menopauze": "Flower2",
+  "na-prostate": "Mars",
+  "na-libido": "HeartPulse",
+};
+
+/** The admin-picked icon, else a default for known need categories. */
+export function categoryIconFor(category: { icon?: string | null; slug: string }): LucideIcon {
+  return (
+    getCategoryIcon(category.icon) ?? getCategoryIcon(NEED_ICON_FALLBACK[category.slug]) ?? Leaf
+  );
+}
