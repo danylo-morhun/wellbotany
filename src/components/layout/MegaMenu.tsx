@@ -7,7 +7,7 @@ import { useEffect, useState } from "react";
 import type { CategoryNav, NavMenu, NavSection } from "@/features/catalog/lib/nav";
 import { cn } from "@/lib/utils";
 
-type Props = { nav: CategoryNav };
+type Props = { nav: CategoryNav; showPromos: boolean };
 
 const leafClass = "text-sm text-muted-foreground transition-colors hover:text-primary";
 
@@ -85,7 +85,7 @@ function MenuPanel({ menu }: { menu: NavMenu }) {
   );
 }
 
-export function MegaMenu({ nav }: Props) {
+export function MegaMenu({ nav, showPromos }: Props) {
   const [openMenu, setOpenMenu] = useState<string | null>(null);
   const pathname = usePathname();
 
@@ -150,14 +150,16 @@ export function MegaMenu({ nav }: Props) {
             Poradnik
           </Link>
 
-          <Link
-            href="/katalog?promocje=1"
-            onMouseEnter={() => setOpenMenu(null)}
-            className="flex items-center gap-1.5 font-semibold text-foreground transition-colors hover:text-primary"
-          >
-            <span className="size-1.5 rounded-full bg-accent" aria-hidden="true" />
-            Promocje
-          </Link>
+          {showPromos && (
+            <Link
+              href="/katalog?promocje=1"
+              onMouseEnter={() => setOpenMenu(null)}
+              className="flex items-center gap-1.5 font-semibold text-foreground transition-colors hover:text-primary"
+            >
+              <span className="size-1.5 rounded-full bg-accent" aria-hidden="true" />
+              Promocje
+            </Link>
+          )}
         </div>
 
         {nav.map(

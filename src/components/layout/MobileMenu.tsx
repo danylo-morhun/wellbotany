@@ -16,6 +16,7 @@ type Props = {
   navLinks: MenuLink[];
   utilityLinks: MenuLink[];
   nav: CategoryNav | null;
+  showPromos: boolean;
 };
 
 const linkClass =
@@ -35,7 +36,7 @@ function LeafLinks({ leaves }: { leaves: NavLeaf[] }) {
   );
 }
 
-export function MobileMenu({ navLinks, utilityLinks, nav }: Props) {
+export function MobileMenu({ navLinks, utilityLinks, nav, showPromos }: Props) {
   const [open, setOpen] = useState(false);
   const pathname = usePathname();
 
@@ -72,13 +73,15 @@ export function MobileMenu({ navLinks, utilityLinks, nav }: Props) {
         </div>
 
         <nav className="flex flex-col gap-0.5 p-3">
-          <Link
-            href="/katalog?promocje=1"
-            className="flex items-center gap-1.5 rounded-xl px-3.5 py-2.5 text-sm font-semibold text-foreground transition-colors hover:bg-secondary hover:text-primary"
-          >
-            <span className="size-1.5 rounded-full bg-accent" aria-hidden="true" />
-            Promocje
-          </Link>
+          {showPromos && (
+            <Link
+              href="/katalog?promocje=1"
+              className="flex items-center gap-1.5 rounded-xl px-3.5 py-2.5 text-sm font-semibold text-foreground transition-colors hover:bg-secondary hover:text-primary"
+            >
+              <span className="size-1.5 rounded-full bg-accent" aria-hidden="true" />
+              Promocje
+            </Link>
+          )}
 
           {nav?.map((menu) => (
             <details key={menu.key} className="group">
