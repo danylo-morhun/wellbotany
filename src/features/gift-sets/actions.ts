@@ -1,10 +1,11 @@
 "use server";
 
-import { revalidatePath } from "next/cache";
+import { revalidatePath, updateTag } from "next/cache";
 import { ensureCartId } from "@/features/cart/lib/session";
 import { ActionError } from "@/lib/action-error";
 import { prisma } from "@/lib/prisma";
 import { actionClient, adminActionClient } from "@/lib/safe-action";
+import { GIFT_SETS_TAG } from "./lib/homepage";
 import {
   allocateGiftBoxPrice,
   DEFAULT_GIFT_BUILDER_POLICY,
@@ -95,6 +96,7 @@ export const saveGiftSet = adminActionClient
 
     revalidatePath("/admin/zestawy-prezentowe");
     revalidatePath("/zestawy-prezentowe", "layout");
+    updateTag(GIFT_SETS_TAG);
     return { success: true, id: savedId };
   });
 
@@ -104,6 +106,7 @@ export const deleteGiftSet = adminActionClient
     await prisma.giftSet.delete({ where: { id } });
     revalidatePath("/admin/zestawy-prezentowe");
     revalidatePath("/zestawy-prezentowe", "layout");
+    updateTag(GIFT_SETS_TAG);
     return { success: true };
   });
 
@@ -119,6 +122,7 @@ export const saveGiftBuilderSettings = adminActionClient
     });
     revalidatePath("/admin/zestawy-prezentowe/ustawienia");
     revalidatePath("/zestawy-prezentowe/stworz");
+    updateTag(GIFT_SETS_TAG);
     return { success: true };
   });
 
