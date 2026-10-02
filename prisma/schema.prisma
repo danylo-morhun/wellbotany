@@ -584,6 +584,44 @@ model ShopSettings {
   updatedAt DateTime @updatedAt
 }
 
+enum BannerTextPosition {
+  LEFT
+  RIGHT
+}
+
+enum BannerTextTone {
+  LIGHT // white text, for dark photos
+  DARK
+}
+
+// Homepage hero slider, managed in /admin/strona-glowna. Headline/CTA are
+// HTML over the photo (crawlable, screen-reader friendly), so uploaded images
+// carry no baked-in text. Shown while active and inside startsAt–endsAt.
+model HomeBanner {
+  id         String  @id @default(cuid())
+  titlePl    String
+  subtitlePl String?
+  ctaLabelPl String?
+  href       String // internal path, e.g. /kategoria/na-odpornosc
+
+  imageDesktopUrl String // ~2.7:1, e.g. 1920×710
+  imageMobileUrl  String? // ~3:2, e.g. 1080×720; desktop image when missing
+  altPl           String? // describes the photo; title used when empty
+
+  textPosition BannerTextPosition @default(RIGHT)
+  textTone     BannerTextTone     @default(LIGHT)
+
+  isActive  Boolean   @default(true)
+  startsAt  DateTime?
+  endsAt    DateTime?
+  sortOrder Int       @default(0)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([isActive, sortOrder])
+}
+
 // Admin-managed packaging options for the custom gift-set builder — the
 // customer must pick one; its price is added on top of the items total.
 model GiftPackaging {
