@@ -1,5 +1,6 @@
 import { Footer } from "@/components/layout/Footer";
 import { NavBar } from "@/components/layout/NavBar";
+import { NewsletterPrompt } from "@/features/newsletter/components/NewsletterPrompt";
 import { StorefrontSessionProvider } from "@/features/session/components/StorefrontSessionProvider";
 
 export default function ShopLayout({ children }: { children: React.ReactNode }) {
@@ -8,6 +9,7 @@ export default function ShopLayout({ children }: { children: React.ReactNode }) 
       <NavBar />
       <main className="flex-1">{children}</main>
       <Footer />
+      <NewsletterPrompt />
     </StorefrontSessionProvider>
   );
 }
