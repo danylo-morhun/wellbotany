@@ -5,22 +5,7 @@ import { PICKUP_HOLD_DAYS, pickupLocation } from "@/lib/pickup-locations";
 import { prisma } from "@/lib/prisma";
 import { BANK_TRANSFER_DETAILS } from "@/lib/shop-config";
 import { EMAIL_FROM, resendClient, sendEmail } from "./client";
-
-function escapeHtml(value: string): string {
-  return value
-    .replace(/&/g, "&amp;")
-    .replace(/</g, "&lt;")
-    .replace(/>/g, "&gt;")
-    .replace(/"/g, "&quot;");
-}
-
-function layout(title: string, body: string): string {
-  return `<div style="font-family:-apple-system,Segoe UI,Roboto,sans-serif;max-width:560px;margin:0 auto;color:#1a1a1a">
-    <h1 style="font-size:20px;margin-bottom:16px">${title}</h1>
-    ${body}
-    <p style="margin-top:32px;font-size:12px;color:#767676">Well Botany</p>
-  </div>`;
-}
+import { escapeHtml, layout } from "./layout";
 
 function pickupBlock(key: string | null): string {
   const location = pickupLocation(key);
