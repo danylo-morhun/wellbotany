@@ -1,5 +1,6 @@
 import Link from "next/link";
 import type { CategoryItem } from "@/features/catalog/actions";
+import { categoryIconFor } from "@/lib/category-icons";
 
 // Two even rows of four on desktop
 const NEEDS_LIMIT = 8;
@@ -27,17 +28,26 @@ export function HomeIntro({ categories }: Props) {
         </p>
       </div>
       <ul className="-mx-4 flex gap-2 overflow-x-auto px-4 pb-1 [scrollbar-width:none] sm:mx-0 sm:grid sm:grid-cols-2 sm:px-0 md:gap-3 lg:grid-cols-4 [&::-webkit-scrollbar]:hidden">
-        {needs.map((c) => (
-          <li key={c.id} className="shrink-0">
-            <Link
-              href={`/kategoria/${c.slug}`}
-              className="flex h-11 items-center justify-between gap-2 rounded-full bg-secondary px-4 text-sm font-semibold text-secondary-foreground transition-colors duration-200 hover:bg-primary hover:text-primary-foreground motion-reduce:transition-none md:h-12 md:rounded-xl md:text-[15px]"
-            >
-              <span className="truncate">{c.namePl}</span>
-              <span className="shrink-0 text-xs font-medium opacity-70">{c.productCount}</span>
-            </Link>
-          </li>
-        ))}
+        {needs.map((c) => {
+          const Icon = categoryIconFor(c);
+          return (
+            <li key={c.id} className="shrink-0">
+              <Link
+                href={`/kategoria/${c.slug}`}
+                className="group flex h-11 items-center gap-2.5 rounded-full bg-secondary pl-3 pr-4 text-sm font-semibold text-secondary-foreground transition-colors duration-200 hover:bg-primary hover:text-primary-foreground motion-reduce:transition-none md:h-12 md:rounded-xl md:text-[15px]"
+              >
+                <Icon
+                  className="size-[18px] shrink-0 text-primary transition-colors duration-200 group-hover:text-primary-foreground motion-reduce:transition-none"
+                  aria-hidden="true"
+                />
+                <span className="truncate">{c.namePl}</span>
+                <span className="ml-auto shrink-0 text-xs font-medium opacity-70">
+                  {c.productCount}
+                </span>
+              </Link>
+            </li>
+          );
+        })}
       </ul>
     </section>
   );
