@@ -1,18 +1,20 @@
 import Link from "next/link";
+import { sectionTitleClass } from "./SectionHeading";
 
-const POPULAR = [
-  { label: "Magnez", href: "/kategoria/magnez" },
-  { label: "Witamina D3", href: "/kategoria/witamina-d" },
-  { label: "Witaminy z grupy B", href: "/kategoria/witaminy-b" },
-  { label: "Kwasy omega-3", href: "/kategoria/kwasy-omega" },
-  { label: "Probiotyki", href: "/kategoria/probiotyki" },
-  { label: "Kolagen", href: "/kategoria/kolagen" },
-  { label: "Adaptogeny", href: "/kategoria/adaptogeny" },
+// Categories not linked elsewhere on the homepage (needs + ingredient tiles cover the rest)
+const MORE_CATEGORIES = [
   { label: "Zioła jednoskładnikowe", href: "/kategoria/ziola-jednoskladnikowe" },
-  { label: "Na odporność", href: "/kategoria/na-odpornosc" },
-  { label: "Na sen", href: "/kategoria/na-sen" },
-  { label: "Na stawy i kości", href: "/kategoria/na-stawy-i-kosci" },
-  { label: "Na jelita i trawienie", href: "/kategoria/na-jelita-i-trawienie" },
+  { label: "Multiwitaminy", href: "/kategoria/multiwitaminy" },
+  { label: "Aminokwasy", href: "/kategoria/aminokwasy" },
+  { label: "Adaptogeny", href: "/kategoria/adaptogeny" },
+  { label: "Grzyby funkcjonalne", href: "/kategoria/grzyby-funkcjonalne" },
+  { label: "Kurkuma", href: "/kategoria/kurkuma" },
+  { label: "Koenzym Q10", href: "/kategoria/koenzym-q10" },
+  { label: "Witamina K2", href: "/kategoria/witamina-k2" },
+  { label: "Spirulina i chlorella", href: "/kategoria/algi-i-superfoods" },
+  { label: "Polifenole", href: "/kategoria/polifenole" },
+  { label: "Selen", href: "/kategoria/selen" },
+  { label: "Pielęgnacja twarzy", href: "/kategoria/pielegnacja-twarzy" },
 ];
 
 /** Short "who we are" text + links into the main categories (crawlable, not just a menu). */
@@ -20,7 +22,7 @@ export function HomeAbout() {
   return (
     <section aria-labelledby="home-about-heading" className="grid gap-8 md:grid-cols-2">
       <div className="max-w-prose">
-        <h2 id="home-about-heading" className="font-heading text-2xl text-foreground md:text-3xl">
+        <h2 id="home-about-heading" className={sectionTitleClass}>
           Sklep z suplementami i ziołami online
         </h2>
         <p className="mt-4 text-muted-foreground">
@@ -38,13 +40,13 @@ export function HomeAbout() {
         </p>
       </div>
       <div>
-        <h3 className="text-base font-semibold text-foreground">Popularne kategorie</h3>
+        <h3 className="text-base font-semibold text-foreground">Więcej kategorii</h3>
         <ul className="mt-4 flex flex-wrap gap-2">
-          {POPULAR.map((item) => (
+          {MORE_CATEGORIES.map((item) => (
             <li key={item.href}>
               <Link
                 href={item.href}
-                className="inline-block rounded-full bg-secondary px-3 py-1.5 text-sm font-medium text-secondary-foreground transition-colors hover:bg-primary hover:text-primary-foreground"
+                className="inline-flex min-h-9 items-center rounded-full bg-secondary px-3.5 text-sm font-medium text-secondary-foreground transition-colors hover:bg-primary hover:text-primary-foreground motion-reduce:transition-none"
               >
                 {item.label}
               </Link>
