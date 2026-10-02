@@ -1,10 +1,12 @@
 import Link from "next/link";
 import { NewsletterForm } from "@/features/newsletter/components/NewsletterForm";
+import { WELCOME_DISCOUNT_PERCENT } from "@/features/newsletter/lib/constants";
 import { sectionTitleClass } from "./SectionHeading";
 
 export function NewsletterSection() {
   return (
     <section
+      id="newsletter"
       aria-labelledby="newsletter-h"
       className="relative overflow-hidden rounded-3xl bg-band px-6 py-12 text-center text-band-foreground md:py-14"
     >
@@ -19,10 +21,11 @@ export function NewsletterSection() {
       />
       <div className="relative">
         <h2 id="newsletter-h" className={`mb-2 ${sectionTitleClass}`}>
-          Promocje i porady na e-mail
+          -{WELCOME_DISCOUNT_PERCENT}% na pierwsze zakupy za zapis
         </h2>
         <p className="mx-auto max-w-md text-band-foreground/75">
-          Nowe promocje, nowości w sklepie i artykuły z poradnika. Bez spamu.
+          Zapisz się do newslettera, a kod rabatowy wyślemy na Twój e-mail. Potem tylko promocje,
+          nowości i porady — bez spamu.
         </p>
         <NewsletterForm />
         <p className="mx-auto mt-3 max-w-md text-xs text-band-foreground/60">
