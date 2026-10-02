@@ -108,7 +108,7 @@ export function MegaMenu({ nav, showPromos }: Props) {
         className="relative mx-auto max-w-7xl px-4 sm:px-6 lg:px-8"
         onMouseLeave={() => setOpenMenu(null)}
       >
-        <div className="flex h-11 items-center gap-7 text-sm font-medium">
+        <div className="flex h-11 items-center gap-5 whitespace-nowrap text-sm font-medium lg:gap-7">
           {nav.map((menu) => (
             <div key={menu.key} className={menu.wide ? undefined : "relative"}>
               <button
@@ -148,6 +148,16 @@ export function MegaMenu({ nav, showPromos }: Props) {
             className="text-muted-foreground transition-colors hover:text-primary"
           >
             Poradnik
+          </Link>
+
+          <Link
+            href="/zestawy-prezentowe"
+            onMouseEnter={() => setOpenMenu(null)}
+            className="whitespace-nowrap text-muted-foreground transition-colors hover:text-primary"
+          >
+            {/* Full label wraps the row on tablets */}
+            <span className="lg:hidden">Prezenty</span>
+            <span className="hidden lg:inline">Zestawy prezentowe</span>
           </Link>
 
           {showPromos && (
