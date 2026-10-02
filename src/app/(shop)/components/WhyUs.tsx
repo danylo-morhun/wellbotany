@@ -5,7 +5,7 @@ import { getShopSettings } from "@/features/settings/lib/shop-settings";
 import { formatPrice, formatPriceCompact } from "@/lib/format";
 import { SectionHeading } from "./SectionHeading";
 
-/** Buying details TrustStrip doesn't cover: shipping prices, returns, help. */
+/** Buying details: shipping prices, returns, help. */
 export async function WhyUs() {
   const { freeShippingThresholdPln } = await getShopSettings();
   const freeShipping =
