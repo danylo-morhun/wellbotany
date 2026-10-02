@@ -8,14 +8,17 @@ import { ThemeToggle } from "@/components/layout/ThemeToggle";
 import { CartIconClient } from "@/features/cart/components/CartIconClient";
 import { getCategories } from "@/features/catalog/actions";
 import { HeaderSearch } from "@/features/catalog/components/HeaderSearch";
+import { getListingFlags } from "@/features/catalog/lib/listing-flags";
 import { buildCategoryNav } from "@/features/catalog/lib/nav";
 import { getShopSettings } from "@/features/settings/lib/shop-settings";
 import { WishlistIconClient } from "@/features/wishlist/components/WishlistIconClient";
 import { formatPriceCompact } from "@/lib/format";
 
+const NEW_ARRIVALS_HREF = "/katalog?nowosci=1";
+
 const navLinks = [
   { label: "Katalog", href: "/katalog" },
-  { label: "Nowości", href: "/katalog?nowosci=1" },
+  { label: "Nowości", href: NEW_ARRIVALS_HREF },
   { label: "Zestawy prezentowe", href: "/zestawy-prezentowe" },
 ];
 
@@ -26,11 +29,10 @@ const utilityLinks = [
 ];
 
 export async function NavBar() {
-  const [categories, { freeShippingThresholdPln }] = await Promise.all([
-    getCategories(),
-    getShopSettings(),
-  ]);
+  const [categories, { freeShippingThresholdPln }, { hasPromos, hasNewArrivals }] =
+    await Promise.all([getCategories(), getShopSettings(), getListingFlags()]);
   const nav = buildCategoryNav(categories);
+  const mobileLinks = navLinks.filter((l) => hasNewArrivals || l.href !== NEW_ARRIVALS_HREF);
 
   return (
     <header className="sticky top-0 z-50 bg-background/95 backdrop-blur-sm print:hidden">
@@ -62,7 +64,12 @@ export async function NavBar() {
       {/* Main row */}
       <div className="border-b border-border">
         <div className="mx-auto flex h-16 max-w-7xl items-center gap-1 px-4 sm:gap-4 sm:px-6 lg:gap-6 lg:px-8">
-          <MobileMenu navLinks={navLinks} utilityLinks={utilityLinks} nav={nav} />
+          <MobileMenu
+            navLinks={mobileLinks}
+            utilityLinks={utilityLinks}
+            nav={nav}
+            showPromos={hasPromos}
+          />
           <Link href="/" className="flex min-w-0 shrink items-center">
             <Image
               src="/branding/logo-horizontal.svg"
@@ -107,7 +114,7 @@ export async function NavBar() {
         </div>
       </div>
 
-      {nav.length > 0 && <MegaMenu nav={nav} />}
+      {nav.length > 0 && <MegaMenu nav={nav} showPromos={hasPromos} />}
     </header>
   );
 }
