@@ -1,9 +1,9 @@
 "use client";
 
-import { ChevronDown, Gift } from "lucide-react";
+import { ArrowRight, ChevronDown, Gift } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useEffect, useState } from "react";
+import { type ReactNode, useEffect, useState } from "react";
 import type { CategoryNav, NavMenu, NavSection } from "@/features/catalog/lib/nav";
 import { cn } from "@/lib/utils";
 
@@ -12,78 +12,105 @@ type Props = { nav: CategoryNav; showPromos: boolean };
 // One look for every tab — the special links differ only by a small marker
 const tabClass = "flex h-11 items-center gap-1.5 transition-colors hover:text-primary";
 
-const leafClass = "text-sm text-muted-foreground transition-colors hover:text-primary";
+const headingClass = "text-sm font-semibold text-foreground transition-colors hover:text-primary";
+const linkClass = "text-sm text-muted-foreground transition-colors hover:text-primary";
 
-function SectionBlock({ section }: { section: NavSection }) {
-  // Untitled: each link flows through the panel's columns on its own
-  if (!section.title) {
-    return section.links.map((leaf) => (
-      <Link
-        key={leaf.slug}
-        href={leaf.href}
-        className={cn(leafClass, "mb-2 block break-inside-avoid")}
-      >
-        {leaf.namePl}
-      </Link>
-    ));
-  }
+/** Supplement types: bold group heading, links under it. */
+function GroupsBody({ sections }: { sections: NavSection[] }) {
   return (
-    <div className="mb-6 break-inside-avoid">
-      {section.href ? (
-        <Link
-          href={section.href}
-          className="block text-sm font-semibold text-foreground transition-colors hover:text-primary"
-        >
-          {section.title}
-        </Link>
-      ) : (
-        <p className="text-sm font-semibold text-foreground">{section.title}</p>
-      )}
-      {section.links.length > 0 && (
-        <ul className="mt-2 space-y-1.5">
-          {section.links.map((leaf) => (
+    <div className="columns-2 gap-x-8 sm:columns-3 lg:columns-4">
+      {sections.map((section) => (
+        <div key={section.title} className="mb-6 break-inside-avoid">
+          {section.href ? (
+            <Link href={section.href} className={cn(headingClass, "block")}>
+              {section.title}
+            </Link>
+          ) : (
+            <p className="text-sm font-semibold text-foreground">{section.title}</p>
+          )}
+          {section.links.length > 0 && (
+            <ul className="mt-2 space-y-1.5">
+              {section.links.map((leaf) => (
+                <li key={leaf.slug}>
+                  <Link href={leaf.href} className={linkClass}>
+                    {leaf.namePl}
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          )}
+        </div>
+      ))}
+    </div>
+  );
+}
+
+/** Flat menus: top-level links in columns, titled sections ("Dla kogo", "Więcej") in a tinted side column. */
+function ListBody({ sections, footer }: { sections: NavSection[]; footer: ReactNode }) {
+  const main = sections.filter((s) => !s.title).flatMap((s) => s.links);
+  const side = sections.filter((s) => s.title);
+  return (
+    <div className="grid gap-8 lg:grid-cols-[1fr_16rem]">
+      {/* Footer sits under the links, not under the taller side column */}
+      <div className="flex flex-col">
+        <ul className="grid content-start gap-x-8 gap-y-2.5 sm:grid-cols-2 lg:grid-cols-3">
+          {main.map((leaf) => (
             <li key={leaf.slug}>
-              <Link href={leaf.href} className={leafClass}>
+              <Link
+                href={leaf.href}
+                className="text-sm font-medium text-foreground transition-colors hover:text-primary"
+              >
                 {leaf.namePl}
               </Link>
             </li>
           ))}
         </ul>
-      )}
+        {footer}
+      </div>
+      {side.map((section) => (
+        <div key={section.title} className="self-start rounded-2xl bg-secondary/60 p-4">
+          <p className="text-sm font-semibold text-foreground">{section.title}</p>
+          <ul className="mt-2 space-y-1.5">
+            {section.links.map((leaf) => (
+              <li key={leaf.slug}>
+                <Link href={leaf.href} className={linkClass}>
+                  {leaf.namePl}
+                </Link>
+              </li>
+            ))}
+          </ul>
+        </div>
+      ))}
     </div>
   );
 }
 
+/** One shell for every menu: full-width panel, same padding, "see all" link at the bottom. */
 function MenuPanel({ menu }: { menu: NavMenu }) {
-  if (menu.wide) {
-    return (
-      <div className="absolute inset-x-0 top-full z-40 rounded-b-2xl border-t border-border bg-card shadow-float">
-        <div className="columns-2 gap-x-8 px-4 py-6 sm:columns-3 sm:px-6 lg:columns-4 lg:px-8">
-          {menu.sections.map((section) => (
-            <SectionBlock key={section.title ?? section.links[0]?.slug} section={section} />
-          ))}
-        </div>
-      </div>
-    );
-  }
+  const footer = (
+    <Link
+      href={menu.href}
+      className="group mt-5 inline-flex items-center gap-1 self-start text-sm font-semibold text-primary hover:underline"
+    >
+      {menu.seeAllLabel}
+      <ArrowRight
+        className="size-4 transition-transform group-hover:translate-x-0.5 motion-reduce:transition-none"
+        aria-hidden
+      />
+    </Link>
+  );
   return (
-    <div className="absolute top-full left-0 z-40 mt-3 min-w-48 rounded-2xl border border-border bg-card p-2 shadow-float">
-      {menu.sections.map((section) => (
-        <div key={section.title ?? section.links[0]?.slug}>
-          {section.title && (
-            <p className="px-3 pt-2 pb-1 text-xs font-semibold text-foreground">{section.title}</p>
-          )}
-          {section.links.map((leaf) => (
-            <Link
-              key={leaf.slug}
-              href={leaf.href}
-              className="block rounded-xl px-3 py-2 text-sm text-muted-foreground transition-colors hover:bg-secondary hover:text-primary"
-            >
-              {leaf.namePl}
-            </Link>
-          ))}
-        </div>
-      ))}
+    <div className="absolute inset-x-0 top-full z-40 rounded-b-2xl border-t border-border bg-card shadow-float">
+      <div className="flex flex-col px-4 py-6 sm:px-6 lg:px-8">
+        {menu.layout === "groups" ? (
+          <>
+            <GroupsBody sections={menu.sections} />
+            {footer}
+          </>
+        ) : (
+          <ListBody sections={menu.sections} footer={footer} />
+        )}
+      </div>
     </div>
   );
 }
@@ -113,7 +140,7 @@ export function MegaMenu({ nav, showPromos }: Props) {
       >
         <div className="flex h-11 items-center gap-5 whitespace-nowrap text-sm font-medium lg:gap-7">
           {nav.map((menu) => (
-            <div key={menu.key} className={menu.wide ? undefined : "relative"}>
+            <div key={menu.key}>
               <button
                 type="button"
                 aria-expanded={openMenu === menu.key}
@@ -134,7 +161,6 @@ export function MegaMenu({ nav, showPromos }: Props) {
                   aria-hidden="true"
                 />
               </button>
-              {!menu.wide && openMenu === menu.key && <MenuPanel menu={menu} />}
             </div>
           ))}
 
@@ -170,9 +196,7 @@ export function MegaMenu({ nav, showPromos }: Props) {
           )}
         </div>
 
-        {nav.map(
-          (menu) => menu.wide && openMenu === menu.key && <MenuPanel key={menu.key} menu={menu} />,
-        )}
+        {nav.map((menu) => openMenu === menu.key && <MenuPanel key={menu.key} menu={menu} />)}
       </div>
     </nav>
   );
