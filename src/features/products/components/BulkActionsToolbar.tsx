@@ -18,6 +18,7 @@ import {
   bulkAssignBrand,
   bulkAssignCategory,
   bulkDeleteProducts,
+  bulkSetGiftEligible,
   bulkUpdateProductStatus,
 } from "../actions";
 import type { ProductFilters } from "../lib/where";
@@ -34,6 +35,7 @@ type PendingAction =
   | { type: "status"; status: ProductStatus; label: string }
   | { type: "brand"; brandId: string | null; label: string }
   | { type: "category"; categoryId: string | null; label: string }
+  | { type: "gift"; isGiftEligible: boolean }
   | { type: "delete" }
   | { type: "delete-conflict"; conflictCount: number; deletableCount: number };
 
@@ -84,6 +86,14 @@ export function BulkActionsToolbar({
     onError: ({ error }) => toast.error(error?.serverError ?? "Błąd przypisania kategorii"),
   });
 
+  const giftAction = useAction(bulkSetGiftEligible, {
+    onSuccess: ({ data }) => {
+      toast.success(`Zaktualizowano kreator zestawów dla ${data?.count ?? 0} produktów`);
+      onDone();
+    },
+    onError: ({ error }) => toast.error(error?.serverError ?? "Błąd aktualizacji produktów"),
+  });
+
   const deleteAction = useAction(bulkDeleteProducts, {
     onSuccess: ({ data }) => {
       if (data?.requiresConfirmation) {
@@ -104,6 +114,7 @@ export function BulkActionsToolbar({
     statusAction.isPending ||
     brandAction.isPending ||
     categoryAction.isPending ||
+    giftAction.isPending ||
     deleteAction.isPending;
 
   function confirmPending() {
@@ -114,6 +125,8 @@ export function BulkActionsToolbar({
       brandAction.execute({ ...selectionPayload, brandId: pending.brandId });
     } else if (pending.type === "category") {
       categoryAction.execute({ ...selectionPayload, categoryId: pending.categoryId });
+    } else if (pending.type === "gift") {
+      giftAction.execute({ ...selectionPayload, isGiftEligible: pending.isGiftEligible });
     } else if (pending.type === "delete") {
       deleteAction.execute({ ...selectionPayload, skipConflicts: false });
     } else if (pending.type === "delete-conflict") {
@@ -211,6 +224,27 @@ export function BulkActionsToolbar({
           ))}
         </select>
 
+        <select
+          aria-label="Kreator zestawów dla zaznaczonych"
+          disabled={isPending}
+          value=""
+          onChange={(e) => {
+            if (!e.target.value) return;
+            setPending({ type: "gift", isGiftEligible: e.target.value === "on" });
+          }}
+          className="rounded-lg border border-background/30 bg-transparent px-2 py-1 text-sm"
+        >
+          <option value="" disabled>
+            Kreator zestawów…
+          </option>
+          <option value="on" className="text-foreground">
+            Dostępne w kreatorze
+          </option>
+          <option value="off" className="text-foreground">
+            Niedostępne w kreatorze
+          </option>
+        </select>
+
         <button
           type="button"
           disabled={isPending}
@@ -267,6 +301,23 @@ export function BulkActionsToolbar({
                 <AlertDialogTitle>Przypisać kategorię</AlertDialogTitle>
                 <AlertDialogDescription>
                   Przypisać „{pending.label}" jako kategorię dla {count} produktów?
+                </AlertDialogDescription>
+              </AlertDialogHeader>
+              <AlertDialogFooter>
+                <AlertDialogCancel>Anuluj</AlertDialogCancel>
+                <AlertDialogAction onClick={confirmPending}>Potwierdź</AlertDialogAction>
+              </AlertDialogFooter>
+            </>
+          )}
+
+          {pending?.type === "gift" && (
+            <>
+              <AlertDialogHeader>
+                <AlertDialogTitle>Kreator zestawów</AlertDialogTitle>
+                <AlertDialogDescription>
+                  {pending.isGiftEligible
+                    ? `Udostępnić ${count} produktów w kreatorze zestawów prezentowych?`
+                    : `Wyłączyć ${count} produktów z kreatora zestawów prezentowych?`}
                 </AlertDialogDescription>
               </AlertDialogHeader>
               <AlertDialogFooter>
