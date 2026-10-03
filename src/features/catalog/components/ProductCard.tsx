@@ -48,7 +48,7 @@ export function ProductCard({ product, priority = false, headingLevel = 2 }: Pro
           {mainImage ? (
             // Inset, rounded frame: lifestyle photos on colored backdrops read as
             // tiles instead of bleeding next to white packshots
-            <span className="absolute inset-4 overflow-hidden rounded-xl">
+            <span className="absolute inset-4 overflow-hidden rounded-[calc(var(--radius-2xl)-1rem)]">
               <Image
                 src={mainImage.url}
                 alt={
