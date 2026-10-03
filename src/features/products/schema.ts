@@ -68,7 +68,7 @@ export const productSchema = z.object({
   brandId: z.string().optional(),
   isFeatured: z.boolean().default(false),
   isNewArrival: z.boolean().default(false),
-  isGiftEligible: z.boolean().default(false),
+  isGiftEligible: z.boolean().default(true),
   netWeight: z.string().max(200).optional(),
   servingSize: z.string().max(1000).optional(),
   servingsPerContainer: z.coerce.number().int().positive().optional(),
