@@ -191,6 +191,10 @@ export const bulkAssignCategorySchema = productSelectionSchema.extend({
   categoryId: z.string().min(1).nullable(),
 });
 
+export const bulkSetGiftEligibleSchema = productSelectionSchema.extend({
+  isGiftEligible: z.boolean(),
+});
+
 export const bulkDeleteProductsSchema = productSelectionSchema.extend({
   skipConflicts: z.boolean().default(false),
 });

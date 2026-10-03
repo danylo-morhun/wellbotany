@@ -15,6 +15,7 @@ import {
   bulkAssignBrandSchema,
   bulkAssignCategorySchema,
   bulkDeleteProductsSchema,
+  bulkSetGiftEligibleSchema,
   bulkUpdateProductStatusSchema,
   bulkUpdateStockSchema,
   categorySchema,
@@ -460,6 +461,19 @@ export const bulkAssignBrand = adminActionClient
     revalidatePath("/produkt/[slug]", "page");
     revalidatePath("/zestawy-prezentowe", "layout");
     updateTag("products");
+    return { success: true, count };
+  });
+
+export const bulkSetGiftEligible = adminActionClient
+  .schema(bulkSetGiftEligibleSchema)
+  .action(async ({ parsedInput: { isGiftEligible, ...selection } }) => {
+    const ids = await resolveProductIds(selection);
+    const { count } = await prisma.product.updateMany({
+      where: { id: { in: ids } },
+      data: { isGiftEligible },
+    });
+    revalidatePath("/admin/produkty");
+    revalidatePath("/zestawy-prezentowe", "layout");
     return { success: true, count };
   });
 
