@@ -209,8 +209,8 @@ model Product {
   isFeatured   Boolean @default(false)
   isNewArrival Boolean @default(false)
 
-  // Eligible for the customer-facing custom gift-set builder pool
-  isGiftEligible Boolean @default(false)
+  // Eligible for the customer-facing custom gift-set builder pool (opt-out)
+  isGiftEligible Boolean @default(true)
 
   // Supplement-specific product-level data
   netWeight            String? // "120 g", "500 ml", "60 kaps."
