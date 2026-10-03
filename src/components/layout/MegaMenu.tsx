@@ -1,6 +1,6 @@
 "use client";
 
-import { ChevronDown } from "lucide-react";
+import { ChevronDown, Gift } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
@@ -8,6 +8,9 @@ import type { CategoryNav, NavMenu, NavSection } from "@/features/catalog/lib/na
 import { cn } from "@/lib/utils";
 
 type Props = { nav: CategoryNav; showPromos: boolean };
+
+// One look for every tab — the special links differ only by a small marker
+const tabClass = "flex h-11 items-center gap-1.5 transition-colors hover:text-primary";
 
 const leafClass = "text-sm text-muted-foreground transition-colors hover:text-primary";
 
@@ -117,8 +120,9 @@ export function MegaMenu({ nav, showPromos }: Props) {
                 onMouseEnter={() => setOpenMenu(menu.key)}
                 onClick={() => setOpenMenu((v) => (v === menu.key ? null : menu.key))}
                 className={cn(
-                  "flex items-center gap-1 transition-colors hover:text-primary",
-                  openMenu === menu.key ? "text-primary" : "text-muted-foreground",
+                  tabClass,
+                  "gap-1",
+                  openMenu === menu.key ? "text-primary" : "text-foreground",
                 )}
               >
                 {menu.label}
@@ -137,7 +141,7 @@ export function MegaMenu({ nav, showPromos }: Props) {
           <Link
             href="/marki"
             onMouseEnter={() => setOpenMenu(null)}
-            className="text-muted-foreground transition-colors hover:text-primary"
+            className={cn(tabClass, "text-foreground")}
           >
             Marki
           </Link>
@@ -145,8 +149,10 @@ export function MegaMenu({ nav, showPromos }: Props) {
           <Link
             href="/zestawy-prezentowe"
             onMouseEnter={() => setOpenMenu(null)}
-            className="whitespace-nowrap text-muted-foreground transition-colors hover:text-primary"
+            // Pushed right with Promocje: shopping occasions, not categories
+            className={cn(tabClass, "ml-auto text-foreground")}
           >
+            <Gift className="size-4 text-primary" aria-hidden />
             {/* Full label wraps the row on tablets */}
             <span className="lg:hidden">Prezenty</span>
             <span className="hidden lg:inline">Zestawy prezentowe</span>
@@ -156,7 +162,7 @@ export function MegaMenu({ nav, showPromos }: Props) {
             <Link
               href="/katalog?promocje=1"
               onMouseEnter={() => setOpenMenu(null)}
-              className="flex items-center gap-1.5 font-semibold text-foreground transition-colors hover:text-primary"
+              className={cn(tabClass, "text-foreground")}
             >
               <span className="size-1.5 rounded-full bg-accent" aria-hidden="true" />
               Promocje
