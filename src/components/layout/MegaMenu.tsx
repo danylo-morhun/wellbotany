@@ -143,14 +143,6 @@ export function MegaMenu({ nav, showPromos }: Props) {
           </Link>
 
           <Link
-            href="/poradnik"
-            onMouseEnter={() => setOpenMenu(null)}
-            className="text-muted-foreground transition-colors hover:text-primary"
-          >
-            Poradnik
-          </Link>
-
-          <Link
             href="/zestawy-prezentowe"
             onMouseEnter={() => setOpenMenu(null)}
             className="whitespace-nowrap text-muted-foreground transition-colors hover:text-primary"

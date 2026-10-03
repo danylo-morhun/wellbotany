@@ -23,6 +23,7 @@ const navLinks = [
 ];
 
 const utilityLinks = [
+  { label: "Poradnik", href: "/poradnik" },
   { label: "Dostawa", href: "/dostawa" },
   { label: "FAQ", href: "/faq" },
   { label: "Kontakt", href: "/kontakt" },
