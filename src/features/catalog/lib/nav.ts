@@ -2,12 +2,18 @@ import type { CategoryItem } from "../actions";
 
 export type NavLeaf = { slug: string; namePl: string; href: string };
 /** A titled section renders as a heading + list; an untitled one's links flow on their own. */
-export type NavSection = { title?: string; href?: string; links: NavLeaf[] };
+export type NavSection = {
+  title?: string;
+  href?: string;
+  links: NavLeaf[];
+};
 export type NavMenu = {
   key: string;
   label: string;
   href: string;
-  wide: boolean;
+  /** "groups": headed columns of links; "list": link columns + titled side column */
+  layout: "groups" | "list";
+  seeAllLabel: string;
   sections: NavSection[];
 };
 export type CategoryNav = NavMenu[];
@@ -85,14 +91,16 @@ export function buildCategoryNav(categories: CategoryItem[]): CategoryNav {
       key: "suplementy",
       label: "Suplementy",
       href: "/katalog",
-      wide: true,
+      layout: "groups",
+      seeAllLabel: "Wszystkie suplementy",
       sections: typeSections,
     },
     {
       key: "na-co",
       label: "Na co?",
       href: "/kategorie",
-      wide: true,
+      layout: "list",
+      seeAllLabel: "Wszystkie kategorie",
       sections: [
         { links: needs },
         ...(audiences.length ? [{ title: "Dla kogo", links: audiences }] : []),
@@ -102,7 +110,8 @@ export function buildCategoryNav(categories: CategoryItem[]): CategoryNav {
       key: root.slug,
       label: root.namePl,
       href: `/kategoria/${root.slug}`,
-      wide: false,
+      layout: "list" as const,
+      seeAllLabel: `Wszystko: ${root.namePl}`,
       sections: [
         { links: childrenOf(listed, root.id).map(toLeaf) },
         ...(i === otherWithChildren.length - 1 && otherLeaves.length
