@@ -151,7 +151,7 @@ function initialValues(p?: ProductWithTags): Values {
     benefitsPl: strArray(p?.benefitsPl),
     isFeatured: p?.isFeatured ?? false,
     isNewArrival: p?.isNewArrival ?? false,
-    isGiftEligible: p?.isGiftEligible ?? false,
+    isGiftEligible: p?.isGiftEligible ?? true,
     netWeight: p?.netWeight ?? "",
     servingSize: p?.servingSize ?? "",
     servingsPerContainer: p?.servingsPerContainer?.toString() ?? "",
