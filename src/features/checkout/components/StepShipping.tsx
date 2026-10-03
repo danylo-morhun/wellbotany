@@ -1,14 +1,19 @@
 "use client";
 
+import Image from "next/image";
 import { useState } from "react";
 import { formatPrice } from "@/lib/format";
 import { PICKUP_HOLD_DAYS, PICKUP_LOCATION_KEYS, PICKUP_LOCATIONS } from "@/lib/pickup-locations";
+import type { PickupPoint } from "../lib/points";
 import {
   PICKUP_POINT_METHODS,
+  POINT_SERVICE_METHOD,
   requiresAddress,
   SHIPPING_COSTS,
   SHIPPING_LABELS,
+  SHIPPING_META,
   SHIPPING_METHODS_BY_PRICE,
+  type ShippingMethodKey,
   shippingCostFor,
 } from "../lib/shipping";
 import type { CheckoutFormData } from "./CheckoutForm";
@@ -30,6 +35,25 @@ const SHIPPING_OPTIONS = SHIPPING_METHODS_BY_PRICE.map((key) => ({
 
 const inputClass =
   "w-full rounded-lg border border-border px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary";
+
+// Native radio (keeps form semantics + e2e selectors), drawn as a brand-coloured dot
+const radioClass =
+  "size-5 shrink-0 cursor-pointer appearance-none rounded-full border-2 border-border bg-background transition-[border] duration-150 checked:border-[6px] checked:border-primary focus-visible:outline-none motion-reduce:transition-none";
+
+function CarrierLogo({ method }: { method: ShippingMethodKey }) {
+  return (
+    <span className="flex h-10 w-14 shrink-0 items-center justify-center rounded-lg bg-white p-1 ring-1 ring-black/5">
+      <Image
+        src={SHIPPING_META[method].logo}
+        alt=""
+        width={64}
+        height={44}
+        unoptimized
+        className="max-h-full w-auto max-w-full object-contain"
+      />
+    </span>
+  );
+}
 
 function formatPostalCode(raw: string): string {
   const digits = raw.replace(/\D/g, "").slice(0, 5);
@@ -55,6 +79,35 @@ export function StepShipping({
   const [nipError, setNipError] = useState<string | null>(null);
   const pointMethod = PICKUP_POINT_METHODS[data.shippingMethod];
 
+  function costFor(method: ShippingMethodKey) {
+    return shippingCostFor(method, subtotal, freeShippingThresholdPln);
+  }
+
+  const pointCosts = {
+    inpost: costFor(POINT_SERVICE_METHOD.inpost),
+    orlen: costFor(POINT_SERVICE_METHOD.orlen),
+  };
+
+  function selectMethod(method: ShippingMethodKey) {
+    onChange({
+      shippingMethod: method,
+      // A point code belongs to one carrier — don't carry it across methods
+      ...(method !== data.shippingMethod && { inpostMachineId: "", inpostMachineName: "" }),
+      // Pay-at-pickup only exists for in-store pickup
+      ...(method !== "PICKUP" &&
+        data.paymentMethod === "CASH_ON_DELIVERY" && { paymentMethod: "BANK_TRANSFER" }),
+    });
+  }
+
+  /** The map shows every carrier — a point from another one switches the method too. */
+  function selectPoint(point: PickupPoint) {
+    onChange({
+      shippingMethod: POINT_SERVICE_METHOD[point.service],
+      inpostMachineId: point.id,
+      inpostMachineName: point.address ? `${point.id} — ${point.address}` : point.name,
+    });
+  }
+
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     if (data.wantsFaktura && !validateNip(data.billNip)) {
@@ -71,49 +124,38 @@ export function StepShipping({
 
       <div className="space-y-3">
         {SHIPPING_OPTIONS.map((opt) => {
-          const cost = shippingCostFor(opt.value, subtotal, freeShippingThresholdPln);
+          const cost = costFor(opt.value);
           const regularCost = SHIPPING_COSTS[opt.value];
+          const selected = data.shippingMethod === opt.value;
           return (
             <label
               key={opt.value}
-              className={`flex cursor-pointer items-center justify-between rounded-lg border px-4 py-3 transition-colors ${
-                data.shippingMethod === opt.value
-                  ? "border-primary bg-primary/5"
-                  : "border-border hover:border-primary/50"
+              className={`flex cursor-pointer items-center gap-3 rounded-xl bg-card p-3 shadow-card ring-primary transition-shadow duration-200 has-focus-visible:ring-2 motion-reduce:transition-none ${
+                selected ? "ring-2" : "hover:shadow-card-hover"
               }`}
             >
-              <div className="flex items-center gap-3">
-                <input
-                  type="radio"
-                  name="shippingMethod"
-                  value={opt.value}
-                  checked={data.shippingMethod === opt.value}
-                  onChange={() =>
-                    onChange({
-                      shippingMethod: opt.value,
-                      // A point code belongs to one carrier — don't carry it across methods
-                      ...(opt.value !== data.shippingMethod && {
-                        inpostMachineId: "",
-                        inpostMachineName: "",
-                      }),
-                      // Pay-at-pickup only exists for in-store pickup
-                      ...(opt.value !== "PICKUP" &&
-                        data.paymentMethod === "CASH_ON_DELIVERY" && {
-                          paymentMethod: "BANK_TRANSFER",
-                        }),
-                    })
-                  }
-                  className="accent-primary"
-                />
-                <span className="text-sm font-medium">{opt.label}</span>
-              </div>
-              <span className="text-sm font-semibold">
+              <input
+                type="radio"
+                name="shippingMethod"
+                value={opt.value}
+                checked={selected}
+                onChange={() => selectMethod(opt.value)}
+                className={radioClass}
+              />
+              <CarrierLogo method={opt.value} />
+              <span className="min-w-0 flex-1">
+                <span className="block text-sm font-semibold">{opt.label}</span>
+                <span className="block text-xs text-muted-foreground">
+                  {SHIPPING_META[opt.value].hint}
+                </span>
+              </span>
+              <span className="shrink-0 text-right text-sm font-semibold">
                 {cost < regularCost && (
-                  <span className="mr-2 font-normal text-muted-foreground line-through">
+                  <span className="block text-xs font-normal text-muted-foreground line-through">
                     {formatPrice(regularCost)}
                   </span>
                 )}
-                {formatPrice(cost)}
+                {cost === 0 ? <span className="text-primary">Gratis</span> : formatPrice(cost)}
               </span>
             </label>
           );
@@ -122,16 +164,14 @@ export function StepShipping({
 
       {data.shippingMethod === "PICKUP" && (
         <fieldset className="space-y-3">
-          <legend className="mb-3 text-sm font-medium">Punkt odbioru</legend>
+          <legend className="mb-3 text-sm font-semibold">Punkt odbioru</legend>
           {PICKUP_LOCATION_KEYS.map((key) => {
             const location = PICKUP_LOCATIONS[key];
             return (
               <label
                 key={key}
-                className={`flex cursor-pointer items-start gap-3 rounded-lg border px-4 py-3 transition-colors ${
-                  data.pickupLocation === key
-                    ? "border-primary bg-primary/5"
-                    : "border-border hover:border-primary/50"
+                className={`flex cursor-pointer items-start gap-3 rounded-xl bg-card p-3 shadow-card ring-primary transition-shadow duration-200 has-focus-visible:ring-2 motion-reduce:transition-none ${
+                  data.pickupLocation === key ? "ring-2" : "hover:shadow-card-hover"
                 }`}
               >
                 <input
@@ -141,7 +181,7 @@ export function StepShipping({
                   required
                   checked={data.pickupLocation === key}
                   onChange={() => onChange({ pickupLocation: key })}
-                  className="mt-1 accent-primary"
+                  className={`mt-0.5 ${radioClass}`}
                 />
                 <span className="text-sm">
                   <span className="block font-medium">{location.address}</span>
@@ -230,35 +270,33 @@ export function StepShipping({
       )}
 
       {pointMethod && (
-        <div className="rounded-lg border border-border bg-muted/30 p-4">
+        <div className="rounded-xl bg-muted/50 p-4">
           {/* A name is only set when the point came from the map; manual entry stores just the code */}
           {data.inpostMachineName ? (
-            <div className="flex items-center justify-between gap-3">
-              <div>
-                <p className="text-sm font-medium">Wybrany {pointMethod.pointName}</p>
-                <p className="text-sm text-muted-foreground">
-                  {data.inpostMachineName || data.inpostMachineId}
-                </p>
+            <div className="flex items-center gap-3">
+              <CarrierLogo method={data.shippingMethod as ShippingMethodKey} />
+              <div className="min-w-0 flex-1">
+                <p className="text-sm font-semibold">Wybrany {pointMethod.pointName}</p>
+                <p className="text-sm text-muted-foreground">{data.inpostMachineName}</p>
               </div>
-              <button
-                type="button"
-                onClick={() => onChange({ inpostMachineId: "", inpostMachineName: "" })}
-                className="text-sm font-medium text-primary underline underline-offset-2"
-              >
-                Zmień
-              </button>
+              <PointPicker
+                costs={pointCosts}
+                onSelect={selectPoint}
+                triggerLabel="Zmień"
+                triggerClassName="inline-flex shrink-0 items-center gap-1.5 rounded-full px-3 py-1.5 text-sm font-medium text-primary hover:bg-primary/10"
+              />
             </div>
           ) : (
             <>
-              <p className="mb-3 text-sm font-medium">Wybierz {pointMethod.pointName}</p>
-              <div className="mb-3">
+              <p className="mb-1 text-sm font-semibold">Wybierz {pointMethod.pointName}</p>
+              <p className="mb-3 text-xs text-muted-foreground">
+                Na mapie zobaczysz paczkomaty InPost i punkty Orlen Paczka w Twojej okolicy.
+              </p>
+              <div className="mb-4">
                 <PointPicker
-                  key={pointMethod.service}
-                  service={pointMethod.service}
-                  pointName={pointMethod.pointName}
-                  onSelect={(code, name) =>
-                    onChange({ inpostMachineId: code, inpostMachineName: name })
-                  }
+                  costs={pointCosts}
+                  onSelect={selectPoint}
+                  triggerLabel="Wybierz na mapie"
                 />
               </div>
               <label htmlFor="co-pointCode" className="mb-1 block text-xs text-muted-foreground">
@@ -276,7 +314,7 @@ export function StepShipping({
                     inpostMachineName: "",
                   })
                 }
-                className="w-full rounded-lg border border-border px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary"
+                className={`bg-background ${inputClass}`}
               />
             </>
           )}

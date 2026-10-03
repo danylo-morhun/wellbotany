@@ -1,12 +1,112 @@
-/* Pickup-point markers (Leaflet circleMarker SVG paths) */
-.point-marker {
-  stroke: var(--primary-deep);
-  fill: var(--primary);
-  fill-opacity: 0.8;
+/* Pickup-point map. Markers are zero-size divIcons anchored at the point;
+   .pm-pin positions itself around that anchor depending on map density. */
+
+/* Calmer basemap so the carrier logos carry the colour */
+.point-map .leaflet-tile-pane {
+  filter: saturate(0.55) brightness(1.03);
 }
 
-.point-marker-selected {
-  stroke: var(--foreground);
-  stroke-width: 3;
-  fill-opacity: 1;
+.point-map .pm-icon {
+  overflow: visible;
+}
+
+.point-map .pm-pin {
+  position: absolute;
+  left: 0;
+  top: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  background: #fff;
+  transition: transform 150ms ease-out;
+}
+
+/* Leaflet resets img max-width/height inside the map — size the logo explicitly */
+.point-map .pm-pin img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  pointer-events: none;
+}
+
+/* Close up: logo pin with a tail pointing at the spot */
+.point-map[data-density="full"] .pm-pin,
+.point-map .pm-pin.pm-selected {
+  width: 42px;
+  height: 30px;
+  padding: 3px;
+  border-radius: 8px;
+  transform: translate(-50%, calc(-100% - 7px));
+  box-shadow:
+    0 1px 2px rgb(0 0 0 / 0.18),
+    0 4px 12px rgb(0 0 0 / 0.14);
+}
+
+.point-map[data-density="full"] .pm-pin::after,
+.point-map .pm-pin.pm-selected::after {
+  content: "";
+  position: absolute;
+  left: 50%;
+  bottom: -5px;
+  width: 10px;
+  height: 10px;
+  background: inherit;
+  transform: translateX(-50%) rotate(45deg);
+  border-radius: 0 0 2px 0;
+  box-shadow: 2px 2px 3px rgb(0 0 0 / 0.1);
+}
+
+.point-map[data-density="full"] .pm-pin:hover {
+  transform: translate(-50%, calc(-100% - 7px)) scale(1.08);
+}
+
+/* Mid zoom: small logo badge centred on the spot */
+.point-map[data-density="mini"] .pm-pin:not(.pm-selected) {
+  width: 30px;
+  height: 21px;
+  padding: 2px;
+  border-radius: 5px;
+  transform: translate(-50%, -50%);
+  box-shadow: 0 1px 3px rgb(0 0 0 / 0.25);
+}
+
+.point-map[data-density="mini"] .pm-pin:not(.pm-selected):hover {
+  transform: translate(-50%, -50%) scale(1.2);
+}
+
+/* Far out: carrier-coloured dots */
+.point-map[data-density="dot"] .pm-pin:not(.pm-selected) {
+  width: 10px;
+  height: 10px;
+  border-radius: 9999px;
+  border: 1.5px solid #fff;
+  transform: translate(-50%, -50%);
+  box-shadow: 0 0 0 1px rgb(0 0 0 / 0.25);
+}
+
+.point-map[data-density="dot"] .pm-pin:not(.pm-selected) img {
+  display: none;
+}
+
+.point-map[data-density="dot"] .pm-pin:not(.pm-selected)[data-service="inpost"] {
+  background: #ffcd00;
+}
+
+.point-map[data-density="dot"] .pm-pin:not(.pm-selected)[data-service="orlen"] {
+  background: #e30613;
+}
+
+.point-map .pm-pin.pm-selected {
+  outline: 2.5px solid var(--primary);
+  outline-offset: 1px;
+  transform: translate(-50%, calc(-100% - 7px)) scale(1.18);
+  transform-origin: 50% 100%;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .point-map .pm-pin {
+    transition: none;
+  }
 }
