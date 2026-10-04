@@ -8,10 +8,22 @@ import { formatDateTime, OrderStatusBadge, PageHeader, Panel } from "@/app/admin
 import { Badge } from "@/components/ui/badge";
 import { buttonVariants } from "@/components/ui/button";
 import { PAYMENT_LABELS } from "@/features/checkout/lib/payment";
-import { shippingLabel } from "@/features/checkout/lib/shipping";
+import { CARRIERS, isPointService, shippingLabel } from "@/features/checkout/lib/shipping";
 import { MarkPaidButton } from "@/features/orders/components/MarkPaidButton";
 import { StatusForm } from "@/features/orders/components/StatusForm";
 import { RequestReviewButton } from "@/features/reviews/components/RequestReviewButton";
+import { EpakaShipmentPanel } from "@/features/shipping/components/EpakaShipmentPanel";
+import {
+  findEpakaPoint,
+  getEpakaSenderPoints,
+  isEpakaConfigured,
+} from "@/features/shipping/lib/epaka";
+import {
+  DEFAULT_PACKAGE,
+  parsePointAddress,
+  SENDER,
+  splitStreet,
+} from "@/features/shipping/lib/shipment";
 import { formatPrice, pluralPl } from "@/lib/format";
 import { pickupLocation } from "@/lib/pickup-locations";
 import { prisma } from "@/lib/prisma";
@@ -89,6 +101,39 @@ export default async function AdminOrderDetailPage({ params }: Props) {
   ]
     .filter(Boolean)
     .join("\n");
+
+  // epaka wants a full receiver address even for point delivery — take the point's own
+  const epakaCourierId =
+    order.shippingMethod in CARRIERS
+      ? CARRIERS[order.shippingMethod as keyof typeof CARRIERS].epakaCourierId
+      : null;
+  const point =
+    epakaCourierId &&
+    isPointService(order.shippingMethod) &&
+    order.inpostMachineId &&
+    !order.epakaOrderId
+      ? (parsePointAddress(order.inpostMachineName) ??
+        (await findEpakaPoint(epakaCourierId, order.inpostMachineId)))
+      : null;
+  const receiverStreet = splitStreet(point?.street ?? order.shipStreet ?? "");
+  const epakaReceiver = {
+    firstName: order.shipFirstName,
+    lastName: order.shipLastName,
+    company: order.shipCompany ?? "",
+    street: receiverStreet.street,
+    houseNumber: receiverStreet.houseNumber,
+    flatNumber: order.shipApartment ?? receiverStreet.flatNumber,
+    postCode: point?.postCode ?? order.shipPostalCode ?? "",
+    city: point?.city ?? order.shipCity ?? "",
+    phone: phone ?? "",
+    email: order.customerEmail,
+    pointId: order.inpostMachineId ?? "",
+    pointDescription: order.inpostMachineName ?? order.inpostMachineId ?? "",
+  };
+  const senderPoints =
+    epakaCourierId && !order.epakaOrderId
+      ? await getEpakaSenderPoints(epakaCourierId, SENDER.city)
+      : [];
 
   const timeline: { label: string; at: Date | null; done?: boolean }[] = [
     { label: "Złożono zamówienie", at: order.createdAt },
@@ -313,7 +358,9 @@ export default async function AdminOrderDetailPage({ params }: Props) {
             ) : (
               <div className="divide-y divide-border/60">
                 <CopyField
-                  label={order.shippingMethod === "ORLEN_PACZKA" ? "Punkt Orlen" : "Paczkomat"}
+                  label={
+                    order.shippingMethod === "INPOST_PACZKOMAT" ? "Paczkomat" : "Punkt odbioru"
+                  }
                   value={order.inpostMachineId}
                 />
                 {order.inpostMachineName && (
@@ -345,6 +392,20 @@ export default async function AdminOrderDetailPage({ params }: Props) {
               </div>
             )}
           </Panel>
+
+          {epakaCourierId && (
+            <Panel title="Wysyłka epaka">
+              <EpakaShipmentPanel
+                orderId={order.id}
+                epakaOrderId={order.epakaOrderId}
+                trackingNumber={order.trackingNumber}
+                epakaReady={isEpakaConfigured()}
+                receiver={epakaReceiver}
+                senderPoints={senderPoints}
+                defaultPackage={DEFAULT_PACKAGE}
+              />
+            </Panel>
+          )}
 
           <Panel title="Płatność">
             <p className="text-sm">{PAYMENT_LABELS[order.paymentMethod] ?? order.paymentMethod}</p>
