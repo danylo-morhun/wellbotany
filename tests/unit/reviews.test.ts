@@ -20,6 +20,7 @@ const base = {
   ],
   slug: "magnez",
   freeShippingThresholdPln: 20000,
+  cheapestShippingPln: 1199,
 };
 
 describe("publicName", () => {

@@ -24,6 +24,7 @@ import { checkoutItemUnitPricePln, getCartForCheckout } from "./lib/cart";
 import { grantOrderAccess } from "./lib/order-access";
 import { isOfflinePayment } from "./lib/payment";
 import { requiresAddress, requiresPickupPoint, shippingCostFor } from "./lib/shipping";
+import { getShippingRates } from "./lib/shipping-rates";
 import { checkoutSchema } from "./schema";
 
 export const verifyCoupon = actionClient
@@ -102,6 +103,9 @@ export const placeOrder = actionClient
     const hasAddress = requiresAddress(input.shippingMethod);
     const hasPickupPoint = requiresPickupPoint(input.shippingMethod);
     const { freeShippingThresholdPln } = await getShopSettings();
+    // Only methods switched on in /admin/dostawa, at today's price
+    const rate = (await getShippingRates()).find((r) => r.method === input.shippingMethod);
+    if (!rate) throw new ActionError("Wybrana metoda dostawy jest niedostępna");
     const subtotalPln = cart.items.reduce(
       (sum, item) => sum + checkoutItemUnitPricePln(item) * item.quantity,
       0,
@@ -186,7 +190,7 @@ export const placeOrder = actionClient
 
       // Free-delivery threshold applies to the subtotal after discounts
       const shippingPln = shippingCostFor(
-        input.shippingMethod,
+        rate.pricePln,
         subtotalPln - discountPln,
         freeShippingThresholdPln,
       );

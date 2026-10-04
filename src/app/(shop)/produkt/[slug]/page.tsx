@@ -9,6 +9,8 @@ import { ProductCard } from "@/features/catalog/components/ProductCard";
 import { ProductGallery } from "@/features/catalog/components/ProductGallery";
 import { TrackViewItem } from "@/features/catalog/components/TrackViewItem";
 import { VariantSelectionProvider } from "@/features/catalog/components/VariantSelection";
+import { cheapestPaidRate } from "@/features/checkout/lib/shipping";
+import { getShippingRates } from "@/features/checkout/lib/shipping-rates";
 import { findIngredientSlug, getIngredientLinkIndex } from "@/features/glossary/lib/queries";
 import { readNutritionFacts } from "@/features/products/lib/nutrition-facts";
 import { ProductReviews } from "@/features/reviews/components/ProductReviews";
@@ -106,9 +108,10 @@ export default async function ProduktPage({ params }: Props) {
     brandName: product.brand?.name ?? null,
   });
 
-  const [{ freeShippingThresholdPln }, reviews] = await Promise.all([
+  const [{ freeShippingThresholdPln }, reviews, shippingRates] = await Promise.all([
     getShopSettings(),
     getProductReviews(product.id),
+    getShippingRates(),
   ]);
   const jsonLd = buildProductJsonLd({
     name: product.namePl,
@@ -118,6 +121,7 @@ export default async function ProduktPage({ params }: Props) {
     variants: product.variants,
     slug: product.slug,
     freeShippingThresholdPln,
+    cheapestShippingPln: cheapestPaidRate(shippingRates),
     reviews,
   });
 
