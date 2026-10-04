@@ -1,9 +1,11 @@
 "use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
+import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import type { CheckoutFormData } from "./CheckoutForm";
+import { FakturaFields, validateNip } from "./FakturaFields";
 
 const schema = z.object({
   firstName: z.string().min(2, "Min. 2 znaki"),
@@ -21,6 +23,7 @@ type Props = {
 };
 
 export function StepContact({ data, onChange, onNext }: Props) {
+  const [nipError, setNipError] = useState<string | null>(null);
   const {
     register,
     handleSubmit,
@@ -37,6 +40,11 @@ export function StepContact({ data, onChange, onNext }: Props) {
   });
 
   const onSubmit = (values: FormValues) => {
+    // Faktura fields are controlled by the parent, outside react-hook-form
+    if (data.wantsFaktura && !validateNip(data.billNip)) {
+      setNipError("Nieprawidłowy NIP");
+      return;
+    }
     onChange(values);
     onNext();
   };
@@ -106,6 +114,13 @@ export function StepContact({ data, onChange, onNext }: Props) {
         />
         {errors.phone && <p className="mt-1 text-xs text-destructive">{errors.phone.message}</p>}
       </div>
+
+      <FakturaFields
+        data={data}
+        onChange={onChange}
+        nipError={nipError}
+        onNipChange={() => setNipError(null)}
+      />
 
       <button
         type="submit"
