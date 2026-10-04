@@ -54,8 +54,16 @@ enum ShippingMethod {
   INPOST_PACZKOMAT // requires inpostMachineId
   INPOST_KURIER
   ORLEN_PACZKA // requires inpostMachineId (reused as generic pickup-point id)
+  DPD_PICKUP // pickup point, inpostMachineId
+  DHL_POINT // DHL Servicepoint, inpostMachineId
+  FEDEX_POINT // inpostMachineId
+  EPAKA_POINT // epaka.pl point, inpostMachineId
   DHL
   DPD
+  GLS
+  FEDEX
+  POCZTEX
+  POCZTA_POLSKA
   COURIER // generic courier
   PICKUP // in-store pickup
 }
@@ -584,6 +592,16 @@ model ShopSettings {
   updatedAt DateTime @updatedAt
 }
 
+// Customer-facing delivery price per method, edited in /admin/dostawa.
+// No row (or enabled = false) → the method is not offered at checkout.
+model ShippingRate {
+  method   ShippingMethod @id
+  pricePln Int // grosz
+  enabled  Boolean        @default(false)
+
+  updatedAt DateTime @updatedAt
+}
+
 enum BannerTextPosition {
   LEFT
   RIGHT
@@ -751,6 +769,8 @@ model Order {
   // ── SHIPPING TRACKING ──
   trackingNumber String?
   trackingUrl    String?
+  // epaka.pl order id once the shipment is created from the admin; label PDF is fetched by it
+  epakaOrderId Int?
 
   items OrderItem[]
 
