@@ -13,6 +13,7 @@ import {
   Star,
   Tags,
   TicketPercent,
+  Truck,
   Users,
   Warehouse,
 } from "lucide-react";
@@ -48,6 +49,7 @@ export const NAV_GROUPS: NavGroup[] = [
       },
       { href: "/admin/klienci", label: "Klienci", icon: Users, shortcut: "c" },
       { href: "/admin/kupony", label: "Kupony", icon: TicketPercent },
+      { href: "/admin/dostawa", label: "Dostawa", icon: Truck },
       { href: "/admin/opinie", label: "Opinie", icon: Star, badge: "reviews", shortcut: "r" },
     ],
   },
