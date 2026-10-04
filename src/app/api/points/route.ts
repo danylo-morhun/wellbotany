@@ -34,9 +34,17 @@ function toPoint(p: EpakaPoint): PickupPoint {
   };
 }
 
+// Values the checkout sent before every carrier got its own key — browsers
+// still on the old bundle keep working through a deploy
+const LEGACY_SERVICES: Record<string, string> = {
+  inpost: "INPOST_PACZKOMAT",
+  orlen: "ORLEN_PACZKA",
+};
+
 export async function GET(req: NextRequest) {
   const params = req.nextUrl.searchParams;
-  const service = params.get("service");
+  const raw = params.get("service");
+  const service = raw && (LEGACY_SERVICES[raw] ?? raw);
   if (!isPointService(service)) {
     return NextResponse.json({ error: "Unknown service" }, { status: 400 });
   }
