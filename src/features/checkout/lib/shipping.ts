@@ -18,6 +18,20 @@ export const SHIPPING_LABELS = {
 
 export type ShippingMethodKey = keyof typeof SHIPPING_COSTS;
 
+/** Carrier logo (in /public) and one-line hint shown on the checkout method cards. */
+export const SHIPPING_META: Record<ShippingMethodKey, { logo: string; hint: string }> = {
+  INPOST_PACZKOMAT: {
+    logo: "/carriers/inpost-paczkomat.svg",
+    hint: "Odbiór w wybranym paczkomacie",
+  },
+  ORLEN_PACZKA: {
+    logo: "/carriers/orlen-paczka.svg",
+    hint: "Odbiór na stacji Orlen lub w punkcie partnerskim",
+  },
+  INPOST_KURIER: { logo: "/carriers/inpost-kurier.svg", hint: "Dostawa pod wskazany adres" },
+  PICKUP: { logo: "/branding/logo-mark.svg", hint: "W naszym sklepie, bez opłat" },
+};
+
 /** Display order: cheapest first; in-store pickup last since it only suits local customers. */
 export const SHIPPING_METHODS_BY_PRICE = (Object.keys(SHIPPING_COSTS) as ShippingMethodKey[]).sort(
   (a, b) =>
@@ -44,6 +58,14 @@ export const PICKUP_POINT_METHODS: Partial<
     pointName: "punkt Orlen Paczka",
     placeholder: "np. KA-123264-W9-15",
   },
+};
+
+export const POINT_SERVICES: readonly PointService[] = ["inpost", "orlen"];
+
+/** Shipping method a point of the given carrier is delivered with. */
+export const POINT_SERVICE_METHOD: Record<PointService, ShippingMethodKey> = {
+  inpost: "INPOST_PACZKOMAT",
+  orlen: "ORLEN_PACZKA",
 };
 
 export function requiresPickupPoint(method: string): boolean {

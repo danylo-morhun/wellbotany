@@ -103,6 +103,8 @@ test("@mobile InPost Paczkomat picked on the map + bank transfer, guest", async 
   await expect(page.locator("#co-street")).toHaveCount(0);
 
   await page.getByRole("button", { name: "Wybierz na mapie" }).click();
+  // The map shows every carrier — narrow it to InPost so the first point is a paczkomat
+  await page.getByRole("button", { name: /^InPost Paczkomat/ }).click();
   await page.getByPlaceholder("Miasto, ulica lub kod punktu").fill("Kalisz");
   await page.getByPlaceholder("Miasto, ulica lub kod punktu").press("Enter");
   await page

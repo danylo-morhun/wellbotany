@@ -3,6 +3,7 @@ import type { PointService } from "./shipping";
 /** Pickup point as returned by /api/points. `id` is the carrier's own code (e.g. "KAL06M"). */
 export type PickupPoint = {
   id: string;
+  service: PointService;
   name: string;
   address: string;
   /** Where exactly the point is, e.g. "w sklepie Żabka" — null when the carrier gives none. */
@@ -19,4 +20,9 @@ export const EPAKA_COURIER_IDS: Record<PointService, number> = {
 
 export function isPointService(value: string | null): value is PointService {
   return value !== null && value in EPAKA_COURIER_IDS;
+}
+
+/** Unique across carriers — point codes are only unique within one carrier. */
+export function pointKey(point: Pick<PickupPoint, "service" | "id">): string {
+  return `${point.service}:${point.id}`;
 }
