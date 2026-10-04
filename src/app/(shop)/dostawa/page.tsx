@@ -1,9 +1,6 @@
 import type { Metadata } from "next";
-import {
-  SHIPPING_COSTS,
-  SHIPPING_METHODS_BY_PRICE,
-  shippingLabel,
-} from "@/features/checkout/lib/shipping";
+import { shippingLabel } from "@/features/checkout/lib/shipping";
+import { getShippingRates } from "@/features/checkout/lib/shipping-rates";
 import { isP24Enabled } from "@/features/przelewy24/lib/config";
 import { getShopSettings } from "@/features/settings/lib/shop-settings";
 import { formatPriceCompact } from "@/lib/format";
@@ -17,8 +14,8 @@ export const metadata: Metadata = {
   description: "Informacje o metodach dostawy, kosztach i czasie realizacji zamówień.",
 };
 
-// Delivery time shown per method. Keyed by string so methods added to
-// SHIPPING_COSTS later still render (with the default) before copy is written.
+// Delivery time shown per method. Keyed by string so methods switched on
+// later still render (with the default) before copy is written.
 const DELIVERY_TIME: Record<string, string> = {
   PICKUP: "gotowe do odbioru zwykle w 1–2 dni robocze",
 };
@@ -30,9 +27,7 @@ export default async function DostawaPage() {
   const threshold =
     freeShippingThresholdPln !== null ? formatPriceCompact(freeShippingThresholdPln) : null;
 
-  const methods = SHIPPING_METHODS_BY_PRICE.map(
-    (method) => [method, SHIPPING_COSTS[method]] as const,
-  );
+  const methods = (await getShippingRates()).map((r) => [r.method, r.pricePln] as const);
 
   return (
     <div className="container mx-auto max-w-prose px-4 py-12">

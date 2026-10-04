@@ -1,7 +1,4 @@
-import { SHIPPING_COSTS } from "@/features/checkout/lib/shipping";
 import { publicImageUrl } from "@/lib/image-loader";
-
-const CHEAPEST_SHIPPING_PLN = Math.min(...Object.values(SHIPPING_COSTS).filter((cost) => cost > 0));
 
 export const DEFAULT_OG_IMAGE = {
   url: "/og-image.jpg",
@@ -140,16 +137,20 @@ function buildReturnPolicy() {
 }
 
 /**
- * Cheapest home-delivery option (Orlen Paczka), free from the shop's free
- * shipping threshold; ships within 2 business days, 1–2 days in transit.
+ * Cheapest paid delivery option, free from the shop's free shipping
+ * threshold; ships within 2 business days, 1–2 days in transit.
  */
-function buildShippingDetails(pricePln: number, freeShippingThresholdPln: number | null) {
+function buildShippingDetails(
+  pricePln: number,
+  cheapestShippingPln: number,
+  freeShippingThresholdPln: number | null,
+) {
   const free = freeShippingThresholdPln !== null && pricePln >= freeShippingThresholdPln;
   return {
     "@type": "OfferShippingDetails",
     shippingRate: {
       "@type": "MonetaryAmount",
-      value: free ? "0.00" : (CHEAPEST_SHIPPING_PLN / 100).toFixed(2),
+      value: free ? "0.00" : (cheapestShippingPln / 100).toFixed(2),
       currency: "PLN",
     },
     shippingDestination: { "@type": "DefinedRegion", addressCountry: "PL" },
@@ -266,6 +267,8 @@ export function buildProductJsonLd(product: {
   variants: JsonLdVariant[];
   slug: string;
   freeShippingThresholdPln: number | null;
+  /** Grosz; null = no paid delivery offered, shipping details are left out */
+  cheapestShippingPln: number | null;
   reviews?: {
     average: number | null;
     count: number;
@@ -332,7 +335,13 @@ export function buildProductJsonLd(product: {
           !v.trackStock || v.stock > 0
             ? "https://schema.org/InStock"
             : "https://schema.org/OutOfStock",
-        shippingDetails: buildShippingDetails(v.pricePln, product.freeShippingThresholdPln),
+        ...(product.cheapestShippingPln !== null && {
+          shippingDetails: buildShippingDetails(
+            v.pricePln,
+            product.cheapestShippingPln,
+            product.freeShippingThresholdPln,
+          ),
+        }),
         hasMerchantReturnPolicy: buildReturnPolicy(),
       },
     };

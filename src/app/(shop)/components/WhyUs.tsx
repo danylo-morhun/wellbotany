@@ -1,13 +1,23 @@
 import { ArrowRight, MessageCircle, RotateCcw, Truck } from "lucide-react";
 import Link from "next/link";
-import { SHIPPING_COSTS } from "@/features/checkout/lib/shipping";
+import { cheapestPaidRate } from "@/features/checkout/lib/shipping";
+import { getShippingRates } from "@/features/checkout/lib/shipping-rates";
 import { getShopSettings } from "@/features/settings/lib/shop-settings";
 import { formatPrice, formatPriceCompact } from "@/lib/format";
 import { SectionHeading } from "./SectionHeading";
 
 /** Buying details: shipping prices, returns, help. */
 export async function WhyUs() {
-  const { freeShippingThresholdPln } = await getShopSettings();
+  const [{ freeShippingThresholdPln }, rates] = await Promise.all([
+    getShopSettings(),
+    getShippingRates(),
+  ]);
+  const pointFrom = cheapestPaidRate(rates, "point");
+  const doorFrom = cheapestPaidRate(rates, "door");
+  const prices = [
+    pointFrom !== null && `Paczkomaty i punkty od ${formatPrice(pointFrom)}`,
+    doorFrom !== null && `kurier od ${formatPrice(doorFrom)}`,
+  ].filter(Boolean);
   const freeShipping =
     freeShippingThresholdPln !== null
       ? ` Od ${formatPriceCompact(freeShippingThresholdPln)} — gratis.`
@@ -17,7 +27,7 @@ export async function WhyUs() {
     {
       icon: Truck,
       title: "Dostawa w 24–48 h",
-      text: `Orlen Paczka ${formatPrice(SHIPPING_COSTS.ORLEN_PACZKA)}, Paczkomat InPost ${formatPrice(SHIPPING_COSTS.INPOST_PACZKOMAT)}, kurier ${formatPrice(SHIPPING_COSTS.INPOST_KURIER)}.${freeShipping}`,
+      text: `${prices.join(", ")}.${freeShipping}`,
       link: { href: "/dostawa", label: "Dostawa i płatność" },
     },
     {

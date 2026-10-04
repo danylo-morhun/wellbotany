@@ -1,14 +1,16 @@
 "use client";
 
-import { useState } from "react";
+import { Store } from "lucide-react";
+import Image from "next/image";
+import { Fragment } from "react";
 import { formatPrice } from "@/lib/format";
 import { PICKUP_HOLD_DAYS, PICKUP_LOCATION_KEYS, PICKUP_LOCATIONS } from "@/lib/pickup-locations";
 import {
-  PICKUP_POINT_METHODS,
+  CARRIERS,
+  carrierLogo,
+  isPointService,
   requiresAddress,
-  SHIPPING_COSTS,
-  SHIPPING_LABELS,
-  SHIPPING_METHODS_BY_PRICE,
+  type ShippingRate,
   shippingCostFor,
 } from "../lib/shipping";
 import type { CheckoutFormData } from "./CheckoutForm";
@@ -18,15 +20,11 @@ type Props = {
   data: CheckoutFormData;
   subtotal: number;
   freeShippingThresholdPln: number | null;
+  shippingRates: ShippingRate[];
   onChange: (updates: Partial<CheckoutFormData>) => void;
   onBack: () => void;
   onNext: () => void;
 };
-
-const SHIPPING_OPTIONS = SHIPPING_METHODS_BY_PRICE.map((key) => ({
-  value: key,
-  label: SHIPPING_LABELS[key],
-}));
 
 const inputClass =
   "w-full rounded-lg border border-border px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary";
@@ -36,93 +34,31 @@ function formatPostalCode(raw: string): string {
   return digits.length > 2 ? `${digits.slice(0, 2)}-${digits.slice(2)}` : digits;
 }
 
-function validateNip(nip: string): boolean {
-  const digits = nip.replace(/\D/g, "");
-  if (digits.length !== 10) return false;
-  const weights = [6, 5, 7, 2, 3, 4, 5, 6, 7];
-  const sum = weights.reduce((acc, w, i) => acc + w * parseInt(digits[i], 10), 0);
-  return sum % 11 === parseInt(digits[9], 10);
-}
-
 export function StepShipping({
   data,
   subtotal,
   freeShippingThresholdPln,
+  shippingRates,
   onChange,
   onBack,
   onNext,
 }: Props) {
-  const [nipError, setNipError] = useState<string | null>(null);
-  const pointMethod = PICKUP_POINT_METHODS[data.shippingMethod];
+  const pointService = isPointService(data.shippingMethod) ? data.shippingMethod : null;
+  const pointMethod = pointService && CARRIERS[pointService].point;
 
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    if (data.wantsFaktura && !validateNip(data.billNip)) {
-      setNipError("Nieprawidłowy NIP");
-      return;
-    }
-    setNipError(null);
     onNext();
   }
 
-  return (
-    <form onSubmit={handleSubmit} className="space-y-6">
-      <h2 className="text-lg font-semibold">Metoda dostawy</h2>
-
-      <div className="space-y-3">
-        {SHIPPING_OPTIONS.map((opt) => {
-          const cost = shippingCostFor(opt.value, subtotal, freeShippingThresholdPln);
-          const regularCost = SHIPPING_COSTS[opt.value];
-          return (
-            <label
-              key={opt.value}
-              className={`flex cursor-pointer items-center justify-between rounded-lg border px-4 py-3 transition-colors ${
-                data.shippingMethod === opt.value
-                  ? "border-primary bg-primary/5"
-                  : "border-border hover:border-primary/50"
-              }`}
-            >
-              <div className="flex items-center gap-3">
-                <input
-                  type="radio"
-                  name="shippingMethod"
-                  value={opt.value}
-                  checked={data.shippingMethod === opt.value}
-                  onChange={() =>
-                    onChange({
-                      shippingMethod: opt.value,
-                      // A point code belongs to one carrier — don't carry it across methods
-                      ...(opt.value !== data.shippingMethod && {
-                        inpostMachineId: "",
-                        inpostMachineName: "",
-                      }),
-                      // Pay-at-pickup only exists for in-store pickup
-                      ...(opt.value !== "PICKUP" &&
-                        data.paymentMethod === "CASH_ON_DELIVERY" && {
-                          paymentMethod: "BANK_TRANSFER",
-                        }),
-                    })
-                  }
-                  className="accent-primary"
-                />
-                <span className="text-sm font-medium">{opt.label}</span>
-              </div>
-              <span className="text-sm font-semibold">
-                {cost < regularCost && (
-                  <span className="mr-2 font-normal text-muted-foreground line-through">
-                    {formatPrice(regularCost)}
-                  </span>
-                )}
-                {formatPrice(cost)}
-              </span>
-            </label>
-          );
-        })}
-      </div>
-
+  // Point picker / address / store choice opens right under the chosen method —
+  // with many carriers it would otherwise sit below a long list
+  const methodDetails = (
+    <>
       {data.shippingMethod === "PICKUP" && (
-        <fieldset className="space-y-3">
-          <legend className="mb-3 text-sm font-medium">Punkt odbioru</legend>
+        <fieldset className="space-y-3 rounded-lg border border-border bg-muted/30 p-4">
+          <legend className="sr-only">Punkt odbioru</legend>
+          <p className="text-sm font-medium">Punkt odbioru</p>
           {PICKUP_LOCATION_KEYS.map((key) => {
             const location = PICKUP_LOCATIONS[key];
             return (
@@ -159,7 +95,7 @@ export function StepShipping({
       )}
 
       {requiresAddress(data.shippingMethod) && (
-        <div className="space-y-4">
+        <div className="space-y-4 rounded-lg border border-border bg-muted/30 p-4">
           <h3 className="text-sm font-semibold">Adres dostawy</h3>
           <div>
             <label htmlFor="co-street" className="mb-1 block text-sm font-medium">
@@ -229,13 +165,13 @@ export function StepShipping({
         </div>
       )}
 
-      {pointMethod && (
+      {pointService && pointMethod && (
         <div className="rounded-lg border border-border bg-muted/30 p-4">
           {/* A name is only set when the point came from the map; manual entry stores just the code */}
           {data.inpostMachineName ? (
             <div className="flex items-center justify-between gap-3">
               <div>
-                <p className="text-sm font-medium">Wybrany {pointMethod.pointName}</p>
+                <p className="text-sm font-medium">Wybrany {pointMethod.name}</p>
                 <p className="text-sm text-muted-foreground">
                   {data.inpostMachineName || data.inpostMachineId}
                 </p>
@@ -250,12 +186,12 @@ export function StepShipping({
             </div>
           ) : (
             <>
-              <p className="mb-3 text-sm font-medium">Wybierz {pointMethod.pointName}</p>
+              <p className="mb-3 text-sm font-medium">Wybierz {pointMethod.name}</p>
               <div className="mb-3">
                 <PointPicker
-                  key={pointMethod.service}
-                  service={pointMethod.service}
-                  pointName={pointMethod.pointName}
+                  key={pointService}
+                  service={pointService}
+                  pointName={pointMethod.name}
                   onSelect={(code, name) =>
                     onChange({ inpostMachineId: code, inpostMachineName: name })
                   }
@@ -282,101 +218,81 @@ export function StepShipping({
           )}
         </div>
       )}
-      <div className="border-t border-border pt-4">
-        <label className="flex cursor-pointer items-center gap-3">
-          <input
-            type="checkbox"
-            checked={data.wantsFaktura}
-            onChange={(e) => onChange({ wantsFaktura: e.target.checked })}
-            className="accent-primary"
-          />
-          <span className="text-sm font-medium">Chcę fakturę VAT</span>
-        </label>
+    </>
+  );
+
+  return (
+    <form onSubmit={handleSubmit} className="space-y-6">
+      <h2 className="text-lg font-semibold">Metoda dostawy</h2>
+
+      <div className="space-y-3">
+        {shippingRates.map((rate) => {
+          const opt = { value: rate.method, label: CARRIERS[rate.method].label };
+          const cost = shippingCostFor(rate.pricePln, subtotal, freeShippingThresholdPln);
+          const regularCost = rate.pricePln;
+          const logo = carrierLogo(rate.method);
+          return (
+            <Fragment key={opt.value}>
+              <label
+                className={`flex cursor-pointer items-center justify-between rounded-lg border px-4 py-3 transition-colors ${
+                  data.shippingMethod === opt.value
+                    ? "border-primary bg-primary/5"
+                    : "border-border hover:border-primary/50"
+                }`}
+              >
+                <div className="flex items-center gap-3">
+                  <input
+                    type="radio"
+                    name="shippingMethod"
+                    value={opt.value}
+                    checked={data.shippingMethod === opt.value}
+                    onChange={() =>
+                      onChange({
+                        shippingMethod: opt.value,
+                        // A point code belongs to one carrier — don't carry it across methods
+                        ...(opt.value !== data.shippingMethod && {
+                          inpostMachineId: "",
+                          inpostMachineName: "",
+                        }),
+                        // Pay-at-pickup only exists for in-store pickup
+                        ...(opt.value !== "PICKUP" &&
+                          data.paymentMethod === "CASH_ON_DELIVERY" && {
+                            paymentMethod: "BANK_TRANSFER",
+                          }),
+                      })
+                    }
+                    className="accent-primary"
+                  />
+                  {/* White plate keeps brand colours readable in dark mode */}
+                  <span className="flex h-7 w-12 shrink-0 items-center justify-center rounded bg-white p-0.5">
+                    {logo ? (
+                      <Image
+                        src={logo}
+                        alt=""
+                        width={48}
+                        height={28}
+                        className="h-full w-full object-contain"
+                      />
+                    ) : (
+                      <Store className="size-4 text-primary" aria-hidden />
+                    )}
+                  </span>
+                  <span className="text-sm font-medium">{opt.label}</span>
+                </div>
+                <span className="text-sm font-semibold">
+                  {cost < regularCost && (
+                    <span className="mr-2 font-normal text-muted-foreground line-through">
+                      {formatPrice(regularCost)}
+                    </span>
+                  )}
+                  {formatPrice(cost)}
+                </span>
+              </label>
+              {data.shippingMethod === opt.value && methodDetails}
+            </Fragment>
+          );
+        })}
       </div>
-
-      {data.wantsFaktura && (
-        <div className="space-y-4 rounded-lg border border-border p-4">
-          <h3 className="text-sm font-semibold">Dane do faktury</h3>
-
-          <div>
-            <label className="mb-1 block text-sm font-medium" htmlFor="billCompany">
-              Nazwa firmy
-            </label>
-            <input
-              id="billCompany"
-              type="text"
-              required
-              value={data.billCompany}
-              onChange={(e) => onChange({ billCompany: e.target.value })}
-              className="w-full rounded-lg border border-border px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary"
-            />
-          </div>
-
-          <div>
-            <label className="mb-1 block text-sm font-medium" htmlFor="billNip">
-              NIP (10 cyfr)
-            </label>
-            <input
-              id="billNip"
-              type="text"
-              required
-              maxLength={10}
-              value={data.billNip}
-              onChange={(e) => {
-                onChange({ billNip: e.target.value.replace(/\D/g, "") });
-                setNipError(null);
-              }}
-              className="w-full rounded-lg border border-border px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary"
-            />
-            {nipError && <p className="mt-1 text-xs text-destructive">{nipError}</p>}
-          </div>
-
-          <div>
-            <label className="mb-1 block text-sm font-medium" htmlFor="billStreet">
-              Ulica i numer
-            </label>
-            <input
-              id="billStreet"
-              type="text"
-              required
-              value={data.billStreet}
-              onChange={(e) => onChange({ billStreet: e.target.value })}
-              className="w-full rounded-lg border border-border px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary"
-            />
-          </div>
-
-          <div className="grid gap-4 sm:grid-cols-2">
-            <div>
-              <label className="mb-1 block text-sm font-medium" htmlFor="billPostalCode">
-                Kod pocztowy
-              </label>
-              <input
-                id="billPostalCode"
-                type="text"
-                required
-                placeholder="00-000"
-                pattern="\d{2}-\d{3}"
-                value={data.billPostalCode}
-                onChange={(e) => onChange({ billPostalCode: e.target.value })}
-                className="w-full rounded-lg border border-border px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary"
-              />
-            </div>
-            <div>
-              <label className="mb-1 block text-sm font-medium" htmlFor="billCity">
-                Miasto
-              </label>
-              <input
-                id="billCity"
-                type="text"
-                required
-                value={data.billCity}
-                onChange={(e) => onChange({ billCity: e.target.value })}
-                className="w-full rounded-lg border border-border px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary"
-              />
-            </div>
-          </div>
-        </div>
-      )}
 
       <div className="flex gap-3">
         <button

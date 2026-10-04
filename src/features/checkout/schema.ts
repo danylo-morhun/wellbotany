@@ -1,6 +1,6 @@
 import { z } from "zod";
 import { PICKUP_LOCATION_KEYS } from "@/lib/pickup-locations";
-import { requiresAddress, requiresPickupPoint } from "./lib/shipping";
+import { requiresAddress, requiresPickupPoint, SHIPPING_METHOD_KEYS } from "./lib/shipping";
 
 export const checkoutSchema = z
   .object({
@@ -13,7 +13,7 @@ export const checkoutSchema = z
     apartment: z.string().optional(),
     city: z.string().optional(),
     postalCode: z.string().optional(),
-    shippingMethod: z.enum(["INPOST_PACZKOMAT", "INPOST_KURIER", "ORLEN_PACZKA", "PICKUP"]),
+    shippingMethod: z.enum(SHIPPING_METHOD_KEYS),
     inpostMachineId: z.string().optional(),
     inpostMachineName: z.string().optional(),
     pickupLocation: z.enum(PICKUP_LOCATION_KEYS).optional(),

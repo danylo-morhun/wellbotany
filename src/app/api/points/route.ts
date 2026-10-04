@@ -1,9 +1,6 @@
 import { type NextRequest, NextResponse } from "next/server";
-import {
-  EPAKA_COURIER_IDS,
-  isPointService,
-  type PickupPoint,
-} from "@/features/checkout/lib/points";
+import type { PickupPoint } from "@/features/checkout/lib/points";
+import { CARRIERS, isPointService } from "@/features/checkout/lib/shipping";
 
 // Pickup-point search for the checkout map. Proxied because the epaka API sends
 // no CORS headers for our origin; the points endpoint itself needs no token.
@@ -22,7 +19,7 @@ type EpakaPoint = {
 };
 
 function toPoint(p: EpakaPoint): PickupPoint {
-  // InPost names end with a location hint: "Paczkomat KAL06M - Kalisz, Kościuszki 1a (przy …)";
+  // Most names end with a location hint: "Paczkomat KAL06M - Kalisz, Kościuszki 1a (przy …)";
   // Orlen repeats the point id there instead
   const hint = p.name.match(/\(([^()]+)\)\s*$/)?.[1]?.trim() ?? null;
   const street = [p.street, p.number].filter(Boolean).join(" ");
@@ -53,7 +50,7 @@ export async function GET(req: NextRequest) {
   }
 
   const upstream = new URLSearchParams({
-    "couriers[]": String(EPAKA_COURIER_IDS[service]),
+    "couriers[]": String(CARRIERS[service].epakaCourierId),
     pointFunction: "receiver",
     limit: String(LIMIT),
   });

@@ -92,7 +92,8 @@ async function expectedShipping(
 ) {
   const settings = await prisma.shopSettings.findUnique({ where: { id: 1 } });
   const threshold = settings ? settings.freeShippingThresholdPln : 20000;
-  return shippingCostFor(method, productsPln, threshold);
+  const rate = await prisma.shippingRate.findUniqueOrThrow({ where: { method } });
+  return shippingCostFor(rate.pricePln, productsPln, threshold);
 }
 
 test("@mobile InPost Paczkomat picked on the map + bank transfer, guest", async ({ page }) => {
@@ -132,20 +133,21 @@ test("@mobile InPost Paczkomat picked on the map + bank transfer, guest", async 
 
 test("Orlen Paczka typed by hand + bank transfer + faktura", async ({ page }) => {
   await addToCartAndOpenCheckout(page);
-  await fillContact(page, guestEmail("orlen"));
-  await chooseShipping(page, "ORLEN_PACZKA");
-  await page.locator("#co-pointCode").fill("KA-123264-W9-15");
-
+  // Faktura data sits with the contact data, before the delivery step
   await page.getByText("Chcę fakturę VAT").click();
   await page.locator("#billCompany").fill("Testowa Sp. z o.o.");
   await page.locator("#billStreet").fill("Firmowa 2");
   await page.locator("#billPostalCode").fill("62-800");
   await page.locator("#billCity").fill("Kalisz");
-  // Checksum is validated before the payment step
+  // Checksum is validated before the delivery step
   await page.locator("#billNip").fill("1234567890");
-  await page.getByRole("button", { name: "Dalej: Płatność" }).click();
+  await fillContact(page, guestEmail("orlen"));
   await expect(page.getByText("Nieprawidłowy NIP")).toBeVisible();
   await page.locator("#billNip").fill("5260250274");
+  await page.getByRole("button", { name: "Dalej: Dostawa →" }).click();
+
+  await chooseShipping(page, "ORLEN_PACZKA");
+  await page.locator("#co-pointCode").fill("KA-123264-W9-15");
 
   const order = await pay(page, "BANK_TRANSFER");
   expect(order.shippingMethod).toBe("ORLEN_PACZKA");

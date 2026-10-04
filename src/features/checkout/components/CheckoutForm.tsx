@@ -9,7 +9,7 @@ import type { CartItem } from "@/features/cart/lib/session";
 import { trackItems } from "@/lib/analytics";
 import type { PickupLocationKey } from "@/lib/pickup-locations";
 import { placeOrder } from "../actions";
-import { requiresAddress, type ShippingMethodKey } from "../lib/shipping";
+import { requiresAddress, type ShippingMethodKey, type ShippingRate } from "../lib/shipping";
 import { OrderSummarySidebar } from "./OrderSummarySidebar";
 import { StepContact } from "./StepContact";
 import { StepPayment } from "./StepPayment";
@@ -93,6 +93,8 @@ type Props = {
   items: CartItem[];
   subtotal: number;
   freeShippingThresholdPln: number | null;
+  /** Enabled methods, cheapest first */
+  shippingRates: ShippingRate[];
   onlinePaymentsEnabled: boolean;
   initialContact?: InitialContact;
 };
@@ -102,6 +104,7 @@ export function CheckoutForm({
   items,
   subtotal,
   freeShippingThresholdPln,
+  shippingRates,
   onlinePaymentsEnabled,
   initialContact,
 }: Props) {
@@ -123,6 +126,7 @@ export function CheckoutForm({
   const [step, setStep] = useState(1);
   const [formData, setFormData] = useState<CheckoutFormData>({
     ...INITIAL_DATA,
+    shippingMethod: shippingRates[0]?.method ?? INITIAL_DATA.shippingMethod,
     ...initialContact,
   });
   const [error, setError] = useState<string | null>(null);
@@ -221,6 +225,7 @@ export function CheckoutForm({
               data={formData}
               subtotal={subtotal}
               freeShippingThresholdPln={freeShippingThresholdPln}
+              shippingRates={shippingRates}
               onChange={update}
               onBack={() => setStep(1)}
               onNext={() => setStep(3)}
@@ -238,6 +243,7 @@ export function CheckoutForm({
           items={items}
           subtotal={subtotal}
           freeShippingThresholdPln={freeShippingThresholdPln}
+          shippingRates={shippingRates}
           onlinePaymentsEnabled={onlinePaymentsEnabled}
           pending={isPending || redirecting}
           error={error}

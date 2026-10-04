@@ -4,11 +4,11 @@ import Link from "next/link";
 import { CookieSettingsButton } from "@/components/CookieSettingsButton";
 import { getListingFlags } from "@/features/catalog/lib/listing-flags";
 import { PAYMENT_LABELS } from "@/features/checkout/lib/payment";
-import { SHIPPING_LABELS, SHIPPING_METHODS_BY_PRICE } from "@/features/checkout/lib/shipping";
+import { shippingLabel } from "@/features/checkout/lib/shipping";
+import { getShippingRates } from "@/features/checkout/lib/shipping-rates";
 import { isP24Enabled } from "@/features/przelewy24/lib/config";
 
 // Same sources as checkout, so the footer can't drift from what's offered
-const SHIPPING_METHODS = SHIPPING_METHODS_BY_PRICE.map((m) => SHIPPING_LABELS[m]);
 const ONLINE_PAYMENTS = ["BLIK", "PRZELEWY24", "APPLE_PAY", "GOOGLE_PAY"].map(
   (m) => PAYMENT_LABELS[m],
 );
@@ -37,7 +37,11 @@ const footerLinks = {
 };
 
 export async function Footer() {
-  const { hasPromos, hasNewArrivals } = await getListingFlags();
+  const [{ hasPromos, hasNewArrivals }, shippingRates] = await Promise.all([
+    getListingFlags(),
+    getShippingRates(),
+  ]);
+  const shippingMethods = shippingRates.map((r) => shippingLabel(r.method));
   // Links to an empty listing are hidden until it has products
   const sklepLinks = footerLinks.sklep.filter(
     (l) =>
@@ -127,7 +131,7 @@ export async function Footer() {
           {(
             [
               ["Płatność", paymentMethods],
-              ["Dostawa", SHIPPING_METHODS],
+              ["Dostawa", shippingMethods],
             ] as const
           ).map(([title, methods]) => (
             <div key={title}>

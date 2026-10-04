@@ -60,6 +60,7 @@ describe("buildProductJsonLd", () => {
       variants,
       slug: "magnez",
       freeShippingThresholdPln: 20000,
+      cheapestShippingPln: 1199,
     }) as Record<string, any>;
     expect(ld["@type"]).toBe("ProductGroup");
     expect(ld.description).toBe("Opis magnezu");
@@ -87,6 +88,7 @@ describe("buildProductJsonLd", () => {
       variants: [variants[1]],
       slug: "cynk",
       freeShippingThresholdPln: 1000,
+      cheapestShippingPln: 1199,
     }) as Record<string, any>;
     expect(ld["@type"]).toBe("Product");
     expect(ld.url).toBe("https://wellbotany.pl/produkt/cynk");

@@ -10,7 +10,7 @@ import type { CartItem } from "@/features/cart/lib/session";
 import { formatPrice } from "@/lib/format";
 import { verifyCoupon } from "../actions";
 import { isOfflinePayment } from "../lib/payment";
-import { shippingCostFor, shippingLabel } from "../lib/shipping";
+import { type ShippingRate, shippingCostFor, shippingLabel } from "../lib/shipping";
 import type { CheckoutFormData } from "./CheckoutForm";
 
 type Props = {
@@ -21,6 +21,7 @@ type Props = {
   items: CartItem[];
   subtotal: number;
   freeShippingThresholdPln: number | null;
+  shippingRates: ShippingRate[];
   onlinePaymentsEnabled: boolean;
   pending: boolean;
   error: string | null;
@@ -43,6 +44,7 @@ export function StepPayment({
   items,
   subtotal,
   freeShippingThresholdPln,
+  shippingRates,
   onlinePaymentsEnabled,
   pending,
   error,
@@ -81,7 +83,7 @@ export function StepPayment({
 
   const discount = couponResult?.valid ? couponResult.discountPln : 0;
   const shippingCost = shippingCostFor(
-    data.shippingMethod,
+    shippingRates.find((r) => r.method === data.shippingMethod)?.pricePln ?? 0,
     subtotal - discount,
     freeShippingThresholdPln,
   );
