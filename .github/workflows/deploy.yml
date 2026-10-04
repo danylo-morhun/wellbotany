@@ -130,7 +130,7 @@ jobs:
           fail=0
           for url in "$SITE_URL/" "$SITE_URL/koszyk" "$SITE_URL/zamowienie" "$SITE_URL/logowanie" \
                      "$product" "$SITE_URL/product-feed.xml" "$SITE_URL/sitemap_index.xml" \
-                     "$SITE_URL/api/points?service=inpost&q=Kalisz"; do
+                     "$SITE_URL/api/points?service=INPOST_PACZKOMAT&q=Kalisz"; do
             code=$(curl -sL -o /dev/null -w "%{http_code}" "$url")
             echo "$code $url"
             [ "$code" = 200 ] || fail=1
