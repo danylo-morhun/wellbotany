@@ -173,7 +173,7 @@ export default async function PotwierdzeniePage({ params }: Props) {
 
         {order.inpostMachineId && (
           <div className="rounded-lg bg-muted/50 px-3 py-2 text-sm">
-            Paczkomat: <span className="font-medium">{order.inpostMachineId}</span>
+            Punkt odbioru: <span className="font-medium">{order.inpostMachineId}</span>
           </div>
         )}
       </div>
