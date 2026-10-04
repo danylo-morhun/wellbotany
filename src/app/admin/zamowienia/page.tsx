@@ -9,7 +9,7 @@ import { AdminSelectFilter } from "@/app/admin/components/AdminSelectFilter";
 import { EmptyState, PageHeader, relativeDate } from "@/app/admin/components/ui";
 import { buttonVariants } from "@/components/ui/button";
 import { PAYMENT_LABELS } from "@/features/checkout/lib/payment";
-import { shippingLabel } from "@/features/checkout/lib/shipping";
+import { SHIPPING_METHOD_KEYS, shippingLabel } from "@/features/checkout/lib/shipping";
 import { type OrderRow, OrdersTable } from "@/features/orders/components/OrdersTable";
 import { ORDER_VIEWS, resolveOrderView } from "@/features/orders/lib/views";
 import { pluralPl } from "@/lib/format";
@@ -21,13 +21,7 @@ export const metadata: Metadata = { title: "Zamówienia" };
 
 const PAGE_SIZE = 50;
 
-const SHIPPING_OPTIONS: ShippingMethod[] = [
-  "INPOST_PACZKOMAT",
-  "ORLEN_PACZKA",
-  "COURIER",
-  "INPOST_KURIER",
-  "PICKUP",
-];
+const SHIPPING_OPTIONS: ShippingMethod[] = [...SHIPPING_METHOD_KEYS, "COURIER"];
 const PAYMENT_OPTIONS: PaymentMethod[] = [
   "BANK_TRANSFER",
   "CASH_ON_DELIVERY",
