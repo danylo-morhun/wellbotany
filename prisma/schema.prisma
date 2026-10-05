@@ -530,18 +530,33 @@ model GiftSet {
 
   pricePln        Int // fixed sale price of the whole set, in grosz
   comparePricePln Int? // reference "sum of components" price, strikethrough
+  // Omnibus: written only by the DB trigger record_gift_set_price (see
+  // migration 20261005120000_gift_set_price_history) — never set it from app code.
+  lowestPrice30dPln Int?
 
   isFeatured Boolean @default(false)
 
-  items      GiftSetItem[]
-  cartItems  CartItem[]
-  orderItems OrderItem[]
+  items        GiftSetItem[]
+  cartItems    CartItem[]
+  orderItems   OrderItem[]
+  priceHistory GiftSetPriceHistory[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
   @@index([slug])
   @@index([status])
+}
+
+model GiftSetPriceHistory {
+  id              String   @id @default(cuid())
+  giftSetId       String
+  giftSet         GiftSet  @relation(fields: [giftSetId], references: [id], onDelete: Cascade)
+  pricePln        Int
+  comparePricePln Int?
+  validFrom       DateTime @default(now())
+
+  @@index([giftSetId, validFrom])
 }
 
 model GiftSetItem {
