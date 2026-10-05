@@ -220,6 +220,10 @@ model Product {
   // Eligible for the customer-facing custom gift-set builder pool (opt-out)
   isGiftEligible Boolean @default(true)
 
+  // Listed in /product-feed.xml and pushed to Merchant Center (opt-out, e.g.
+  // products Google rejects under its health policies)
+  isInGoogleFeed Boolean @default(true)
+
   // Supplement-specific product-level data
   netWeight            String? // "120 g", "500 ml", "60 kaps."
   servingSize          String? // "2 kapsułki dziennie"
