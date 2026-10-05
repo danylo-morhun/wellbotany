@@ -5,6 +5,7 @@ import { revalidatePath, updateTag } from "next/cache";
 import { after } from "next/server";
 import { rankBySearchRelevance } from "@/features/catalog/lib/search-relevance";
 import { ActionError } from "@/lib/action-error";
+import { pingIndexNow } from "@/lib/indexnow";
 import { pushOffersToMerchant, syncProductsToMerchant } from "@/lib/merchant";
 import { prisma } from "@/lib/prisma";
 import { adminActionClient } from "@/lib/safe-action";
@@ -106,6 +107,7 @@ export const saveCategory = adminActionClient
     revalidatePath("/kategoria/[slug]", "page");
     updateTag("categories");
     updateTag("products");
+    after(() => pingIndexNow([`/kategoria/${payload.slug}`]).catch(console.error));
     return { success: true, id: savedId };
   });
 
@@ -294,6 +296,9 @@ export const saveProduct = adminActionClient
     revalidatePath("/zestawy-prezentowe", "layout");
     updateTag("products");
     if (savedId) after(() => syncProductsToMerchant([savedId as string]).catch(console.error));
+    if (payload.status === "ACTIVE") {
+      after(() => pingIndexNow([`/produkt/${payload.slug}`]).catch(console.error));
+    }
     return { success: true, id: savedId };
   });
 
