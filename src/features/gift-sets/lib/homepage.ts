@@ -21,6 +21,7 @@ export const getHomeGiftSets = unstable_cache(
           imageUrl: true,
           pricePln: true,
           comparePricePln: true,
+          lowestPrice30dPln: true,
           _count: { select: { items: true } },
         },
       }),
