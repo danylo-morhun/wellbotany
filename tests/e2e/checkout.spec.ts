@@ -279,7 +279,7 @@ test("admin: mark as paid, then shipped with a tracking number", async ({ page, 
   await adminPage.locator("#status").selectOption("SHIPPED");
   await adminPage.locator("#trackingNumber").fill("620000000000000000000001");
   await adminPage.getByRole("button", { name: "Zapisz" }).click();
-  await expect(adminPage.getByText("Status zamówienia zaktualizowany")).toBeVisible();
+  await expect(adminPage.getByText("Zapisano zmiany")).toBeVisible();
 
   const shipped = await prisma.order.findUniqueOrThrow({ where: { id: order.id } });
   expect(shipped.status).toBe("SHIPPED");
