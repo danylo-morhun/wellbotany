@@ -2,6 +2,8 @@
 
 import { Prisma } from "@prisma/client";
 import { revalidatePath, updateTag } from "next/cache";
+import { after } from "next/server";
+import { pingIndexNow } from "@/lib/indexnow";
 import { prisma } from "@/lib/prisma";
 import { adminActionClient } from "@/lib/safe-action";
 import { POSTS_TAG } from "./lib/queries";
@@ -33,6 +35,8 @@ export const savePost = adminActionClient
     revalidatePath(`/poradnik/${post.slug}`);
     if (existing && existing.slug !== post.slug) revalidatePath(`/poradnik/${existing.slug}`);
     revalidatePath("/admin/poradnik");
+    if (post.isPublished)
+      after(() => pingIndexNow([`/poradnik/${post.slug}`]).catch(console.error));
     return { id: post.id };
   });
 
