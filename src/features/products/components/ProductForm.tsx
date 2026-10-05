@@ -104,6 +104,7 @@ type Values = {
   isFeatured: boolean;
   isNewArrival: boolean;
   isGiftEligible: boolean;
+  isInGoogleFeed: boolean;
   netWeight: string;
   servingSize: string;
   servingsPerContainer: string;
@@ -152,6 +153,7 @@ function initialValues(p?: ProductWithTags): Values {
     isFeatured: p?.isFeatured ?? false,
     isNewArrival: p?.isNewArrival ?? false,
     isGiftEligible: p?.isGiftEligible ?? true,
+    isInGoogleFeed: p?.isInGoogleFeed ?? true,
     netWeight: p?.netWeight ?? "",
     servingSize: p?.servingSize ?? "",
     servingsPerContainer: p?.servingsPerContainer?.toString() ?? "",
@@ -205,6 +207,7 @@ function toPayload(v: Values, id?: string): ProductInput {
     isFeatured: v.isFeatured,
     isNewArrival: v.isNewArrival,
     isGiftEligible: v.isGiftEligible,
+    isInGoogleFeed: v.isInGoogleFeed,
     netWeight: opt(v.netWeight),
     servingSize: opt(v.servingSize),
     servingsPerContainer: num(v.servingsPerContainer),
@@ -819,6 +822,12 @@ export function ProductForm({
                 description="Klient może dodać go do własnego zestawu prezentowego"
                 checked={values.isGiftEligible}
                 onChange={(v) => set("isGiftEligible", v)}
+              />
+              <Switch
+                label="W Google Shopping"
+                description="Wysyłany do Google Merchant Center"
+                checked={values.isInGoogleFeed}
+                onChange={(v) => set("isInGoogleFeed", v)}
               />
             </div>
           </Section>
