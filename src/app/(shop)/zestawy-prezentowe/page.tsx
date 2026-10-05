@@ -19,6 +19,7 @@ export default async function GiftSetsPage() {
       imageUrl: true,
       pricePln: true,
       comparePricePln: true,
+      lowestPrice30dPln: true,
       _count: { select: { items: true } },
     },
   });
@@ -64,6 +65,7 @@ export default async function GiftSetsPage() {
                 imageUrl: gs.imageUrl,
                 pricePln: gs.pricePln,
                 comparePricePln: gs.comparePricePln,
+                lowestPrice30dPln: gs.lowestPrice30dPln,
                 itemCount: gs._count.items,
               }}
             />

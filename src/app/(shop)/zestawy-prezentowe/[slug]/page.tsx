@@ -4,6 +4,7 @@ import { notFound } from "next/navigation";
 import { cache } from "react";
 import { AddCuratedGiftSetButton } from "@/features/gift-sets/components/AddCuratedGiftSetButton";
 import { formatPrice } from "@/lib/format";
+import { omnibusNote } from "@/lib/omnibus";
 import { prisma } from "@/lib/prisma";
 
 type Props = { params: Promise<{ slug: string }> };
@@ -52,6 +53,7 @@ export default async function GiftSetDetailPage({ params }: Props) {
   if (!giftSet) notFound();
 
   const isAvailable = giftSet.items.every((i) => i.variant.stock >= i.quantity);
+  const lowestNote = omnibusNote(giftSet);
 
   return (
     <div className="mx-auto max-w-5xl px-4 py-10 sm:px-6 lg:px-8">
@@ -85,6 +87,7 @@ export default async function GiftSetDetailPage({ params }: Props) {
               </span>
             )}
           </div>
+          {lowestNote && <p className="mt-1 text-sm text-muted-foreground">{lowestNote}</p>}
 
           {giftSet.descriptionPl && (
             <p className="mt-4 text-sm text-muted-foreground">{giftSet.descriptionPl}</p>
