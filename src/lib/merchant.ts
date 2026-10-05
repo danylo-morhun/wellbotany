@@ -98,7 +98,8 @@ export async function pushOffersToMerchant(offers: MerchantOffer[]): Promise<num
 /** Offers for these products, computed the same way as /product-feed.xml. */
 async function offersFor(where: Prisma.ProductWhereInput): Promise<MerchantOffer[]> {
   const products = await prisma.product.findMany({
-    where,
+    // Opted-out products aren't in the feed — nothing to update
+    where: { ...where, isInGoogleFeed: true },
     select: {
       status: true,
       variants: {

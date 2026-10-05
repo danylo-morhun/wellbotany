@@ -23,7 +23,7 @@ function escapeXml(value: string): string {
 
 export async function GET() {
   const products = await prisma.product.findMany({
-    where: { status: "ACTIVE" },
+    where: { status: "ACTIVE", isInGoogleFeed: true },
     select: {
       id: true,
       slug: true,
