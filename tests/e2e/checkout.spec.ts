@@ -212,13 +212,18 @@ test("store pickup + bank transfer, free-shipping threshold ignored for pickup",
 });
 
 test("free delivery above the threshold (InPost Kurier)", async ({ page }) => {
-  await addToCartAndOpenCheckout(page, 25000);
+  // The threshold is an admin setting — price the product just above it
+  const settings = await prisma.shopSettings.findUnique({ where: { id: 1 } });
+  const threshold = settings ? settings.freeShippingThresholdPln : 20000;
+  test.skip(threshold === null, "free delivery is switched off");
+  const pricePln = (threshold ?? 0) + 1000;
+  await addToCartAndOpenCheckout(page, pricePln);
   await fillContact(page, guestEmail("free"));
   await chooseShipping(page, "INPOST_KURIER");
   await fillAddress(page);
   const order = await pay(page, "BANK_TRANSFER");
-  expect(order.subtotalPln).toBe(25000);
-  expect(order.shippingPln).toBe(await expectedShipping("INPOST_KURIER", 25000));
+  expect(order.subtotalPln).toBe(pricePln);
+  expect(order.shippingPln).toBe(0);
 });
 
 test("logged-in customer: order is linked to the account and listed in /konto", async ({
