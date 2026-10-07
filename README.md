@@ -4,6 +4,8 @@
 
 Online shop for herbs and supplements in Poland: storefront, checkout, customer accounts, and an admin panel.
 
+[wellbotany.pl](https://wellbotany.pl)
+
 Also inside: gift-set builder, verified-buyer reviews, newsletter coupons, guides, shipping labels, bank-transfer matching.
 
 ## How it works
