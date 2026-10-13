@@ -25,6 +25,37 @@ export function nutritionFactsToText({ rows, text }: NutritionFacts): string {
   return rows.map((n) => `${n.name} | ${n.amount}${n.rws ? ` | ${n.rws}` : ""}`).join("\n");
 }
 
+export type NutritionLabel = { basis: string; rows: NutritionRow[]; notes: string[] };
+
+/**
+ * Food label text ("WARTOŚĆ ODŻYWCZA w 100 g\nTłuszcz: 22 g\n…") → table rows,
+ * so the shop can render it like structured facts. Returns null for anything
+ * else (supplement labels, several tables in one text) — show those as text.
+ */
+export function parseNutritionLabel(text: string): NutritionLabel | null {
+  const [head = "", ...lines] = text
+    .split("\n")
+    .map((l) => l.trim())
+    .filter(Boolean);
+  const basis = head.match(/^wartość odżywcza\s+w\s+(100\s*(?:g|ml))\b/i)?.[1];
+  if (!basis) return null;
+  const rows: NutritionRow[] = [];
+  const notes: string[] = [];
+  for (const line of lines) {
+    if (/^wartość odżywcza/i.test(line)) return null;
+    const m = line.match(/^([^\d:<]+?)\s*(?::|\s[-–]\s|\s)\s*(<?\s*\d.*)$/);
+    if (!m) {
+      notes.push(line);
+      continue;
+    }
+    const [, name, value] = m;
+    const rws = value.match(/\(([\d,]+)\s*%\)?\**\)?\s*$/)?.[1];
+    const amount = rws ? value.slice(0, value.lastIndexOf("(")).trim() : value;
+    rows.push({ name, amount, rws: rws ? `${rws}%` : undefined });
+  }
+  return rows.length > 0 ? { basis: basis.replace(/\s+/, " "), rows, notes } : null;
+}
+
 /**
  * Inverse of nutritionFactsToText. Every line in "Name | amount" form →
  * structured rows; anything else is kept as free text so saving the form
