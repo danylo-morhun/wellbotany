@@ -12,7 +12,7 @@ import { VariantSelectionProvider } from "@/features/catalog/components/VariantS
 import { cheapestPaidRate } from "@/features/checkout/lib/shipping";
 import { getShippingRates } from "@/features/checkout/lib/shipping-rates";
 import { findIngredientSlug, getIngredientLinkIndex } from "@/features/glossary/lib/queries";
-import { readNutritionFacts } from "@/features/products/lib/nutrition-facts";
+import { parseNutritionLabel, readNutritionFacts } from "@/features/products/lib/nutrition-facts";
 import { ProductReviews } from "@/features/reviews/components/ProductReviews";
 import { getProductReviews } from "@/features/reviews/lib/queries";
 import { getShopSettings } from "@/features/settings/lib/shop-settings";
@@ -153,7 +153,11 @@ export default async function ProduktPage({ params }: Props) {
     en?: string;
   } | null;
   const { rows: nutritionFacts, text: nutritionText } = readNutritionFacts(product.nutritionFacts);
-  // Links each nutrition row to its glossary guide (internal linking both ways)
+  // Food labels imported as text ("WARTOŚĆ ODŻYWCZA w 100 g …") render as a table too
+  const foodLabel = nutritionText ? parseNutritionLabel(nutritionText) : null;
+  const tableRows = foodLabel?.rows ?? nutritionFacts;
+  const showRws = !foodLabel || tableRows.some((row) => row.rws);
+  // Links each supplement row to its glossary guide (internal linking both ways)
   const ingredientIndex = nutritionFacts.length > 0 ? await getIngredientLinkIndex() : [];
   const allergenInfo = product.allergenInfo as {
     contains?: string[];
@@ -322,26 +326,32 @@ export default async function ProduktPage({ params }: Props) {
                 <p className="mt-3 text-sm text-muted-foreground">{ingredients.pl}</p>
               )}
 
-              {nutritionText && (
+              {nutritionText && !foodLabel && (
                 <p className="mt-4 whitespace-pre-line text-sm text-muted-foreground">
                   {nutritionText}
                 </p>
               )}
 
-              {nutritionFacts.length > 0 && (
+              {tableRows.length > 0 && (
                 <div className="mt-4 overflow-x-auto">
                   <table className="w-full text-left text-sm">
                     <thead>
                       <tr className="border-b border-border text-xs text-muted-foreground">
-                        <th className="py-2 font-medium">Składnik</th>
-                        <th className="py-2 font-medium">Dawka na porcję</th>
-                        <th className="py-2 font-medium">%RWS</th>
+                        <th className="py-2 font-medium">
+                          {foodLabel ? "Wartość odżywcza" : "Składnik"}
+                        </th>
+                        <th className="py-2 font-medium">
+                          {foodLabel ? `W ${foodLabel.basis}` : "Dawka na porcję"}
+                        </th>
+                        {showRws && <th className="py-2 font-medium">%RWS</th>}
                       </tr>
                     </thead>
                     <tbody>
-                      {nutritionFacts.map((row) => (
+                      {tableRows.map((row) => (
                         <tr key={row.name} className="border-b border-border/60 last:border-0">
-                          <td className="py-2 text-foreground">
+                          <td
+                            className={`py-2 ${/^w tym/i.test(row.name) ? "pl-4 text-muted-foreground" : "text-foreground"}`}
+                          >
                             {(() => {
                               const slug = findIngredientSlug(row.name, ingredientIndex);
                               return slug ? (
@@ -357,11 +367,18 @@ export default async function ProduktPage({ params }: Props) {
                             })()}
                           </td>
                           <td className="py-2 text-muted-foreground">{row.amount}</td>
-                          <td className="py-2 text-muted-foreground">{row.rws ?? "—"}</td>
+                          {showRws && (
+                            <td className="py-2 text-muted-foreground">{row.rws ?? "—"}</td>
+                          )}
                         </tr>
                       ))}
                     </tbody>
                   </table>
+                  {foodLabel?.notes.map((note) => (
+                    <p key={note} className="mt-2 text-xs text-muted-foreground">
+                      {note}
+                    </p>
+                  ))}
                 </div>
               )}
 
