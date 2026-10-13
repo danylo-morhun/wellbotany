@@ -49,12 +49,21 @@ export function rankBySearchRelevance<T extends ScorableProduct>(items: T[], que
     return own.includes(needle) || parent.includes(needle);
   });
 
+  // Fuse penalizes matches far from the start of a string (`distance`), so a
+  // word later in the name ("Liposomalny Cynk" for "cynk") falls below the
+  // threshold. An exact substring hit in the name or slug always counts.
+  const nameMatches = items.filter(
+    (item) =>
+      item.namePl.toLowerCase().includes(needle) ||
+      (item.slug ?? "").includes(needle.replace(/\s+/g, "-")),
+  );
+
   const fuse = new Fuse(items, FUSE_OPTIONS);
   const fuzzyMatches = fuse.search(trimmed).map((r) => r.item);
 
   const seen = new Set<T>();
   const merged: T[] = [];
-  for (const item of [...brandMatches, ...fuzzyMatches]) {
+  for (const item of [...brandMatches, ...nameMatches, ...fuzzyMatches]) {
     if (!seen.has(item)) {
       seen.add(item);
       merged.push(item);
