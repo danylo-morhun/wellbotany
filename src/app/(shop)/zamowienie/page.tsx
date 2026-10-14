@@ -6,7 +6,7 @@ import { CART_COOKIE_NAME, getCart, getCartByCustomerId } from "@/features/cart/
 import { CheckoutForm } from "@/features/checkout/components/CheckoutForm";
 import { getShippingRates } from "@/features/checkout/lib/shipping-rates";
 import { isP24Enabled } from "@/features/przelewy24/lib/config";
-import { getShopSettings } from "@/features/settings/lib/shop-settings";
+import { getShopSettings, ordersPausedMessage } from "@/features/settings/lib/shop-settings";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 
@@ -33,6 +33,16 @@ export default async function ZamowieniePage() {
 
   if (!cartId || items.length === 0) {
     redirect("/koszyk");
+  }
+
+  const settings = await getShopSettings();
+  if (settings.ordersPaused) {
+    return (
+      <div className="mx-auto max-w-2xl px-4 py-16 text-center sm:px-6">
+        <h1 className="mb-4 text-balance text-2xl">Zamówienia wstrzymane</h1>
+        <p className="text-muted-foreground">{ordersPausedMessage(settings)}</p>
+      </div>
+    );
   }
 
   const subtotal = items.reduce(
@@ -62,7 +72,7 @@ export default async function ZamowieniePage() {
         cartId={cartId}
         items={items}
         subtotal={subtotal}
-        freeShippingThresholdPln={(await getShopSettings()).freeShippingThresholdPln}
+        freeShippingThresholdPln={settings.freeShippingThresholdPln}
         shippingRates={await getShippingRates()}
         onlinePaymentsEnabled={isP24Enabled()}
         initialContact={{

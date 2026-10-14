@@ -10,7 +10,7 @@ import { getCategories } from "@/features/catalog/actions";
 import { HeaderSearch } from "@/features/catalog/components/HeaderSearch";
 import { getListingFlags } from "@/features/catalog/lib/listing-flags";
 import { buildCategoryNav } from "@/features/catalog/lib/nav";
-import { getShopSettings } from "@/features/settings/lib/shop-settings";
+import { getShopSettings, ordersPausedMessage } from "@/features/settings/lib/shop-settings";
 import { WishlistIconClient } from "@/features/wishlist/components/WishlistIconClient";
 import { formatPriceCompact } from "@/lib/format";
 
@@ -30,18 +30,30 @@ const utilityLinks = [
 ];
 
 export async function NavBar() {
-  const [categories, { freeShippingThresholdPln }, { hasPromos, hasNewArrivals }] =
-    await Promise.all([getCategories(), getShopSettings(), getListingFlags()]);
+  const [categories, settings, { hasPromos, hasNewArrivals }] = await Promise.all([
+    getCategories(),
+    getShopSettings(),
+    getListingFlags(),
+  ]);
+  const { freeShippingThresholdPln, ordersPaused } = settings;
   const nav = buildCategoryNav(categories);
   const mobileLinks = navLinks.filter((l) => hasNewArrivals || l.href !== NEW_ARRIVALS_HREF);
 
   return (
     <header className="sticky top-0 z-50 bg-background/95 backdrop-blur-sm print:hidden">
+      {ordersPaused && (
+        <p
+          role="status"
+          className="bg-primary px-4 py-2 text-center text-sm font-medium text-primary-foreground"
+        >
+          {ordersPausedMessage(settings)}
+        </p>
+      )}
       {/* Utility bar */}
       <div className="bg-band text-band-foreground">
         <div className="mx-auto flex h-9 max-w-7xl items-center justify-between px-4 text-xs font-medium sm:px-6 lg:px-8">
           <p className="flex items-center gap-1.5">
-            {freeShippingThresholdPln !== null && (
+            {freeShippingThresholdPln !== null && !ordersPaused && (
               <>
                 <Truck className="size-3.5" strokeWidth={2} />
                 Darmowa dostawa od {formatPriceCompact(freeShippingThresholdPln)}
