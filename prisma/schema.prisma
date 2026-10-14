@@ -608,6 +608,12 @@ model ShopSettings {
   // kept here so a delivery-time change is one edit, not 1400; null = none
   productMetaSuffixPl String? @default("Wysyłka w 24–48 h.")
 
+  // Temporary pause: pages stay live and indexable, but nothing can be bought
+  // (cart, gift sets, checkout) and Google sees every offer as out of stock
+  ordersPaused          Boolean @default(false)
+  // Banner text while paused; null = default message
+  ordersPausedMessagePl String?
+
   updatedAt DateTime @updatedAt
 }
 
