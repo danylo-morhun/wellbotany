@@ -1,6 +1,7 @@
 "use server";
 
 import { cookies } from "next/headers";
+import { assertOrdersOpen } from "@/features/settings/lib/shop-settings";
 import { prisma } from "@/lib/prisma";
 import { actionClient } from "@/lib/safe-action";
 import { CART_COOKIE_NAME, ensureCartId } from "./lib/session";
@@ -14,6 +15,7 @@ import {
 export const addToCart = actionClient
   .schema(addToCartSchema)
   .action(async ({ parsedInput: { variantId, quantity } }) => {
+    await assertOrdersOpen();
     const cartId = await ensureCartId();
     const { variant } = await prisma.cartItem.upsert({
       where: {
