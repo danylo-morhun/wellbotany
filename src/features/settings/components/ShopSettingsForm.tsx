@@ -4,9 +4,16 @@ import { useAction } from "next-safe-action/hooks";
 import { useState } from "react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
-import { Field, Section, Switch, TextInput } from "@/features/products/components/editor/fields";
+import {
+  Field,
+  Section,
+  Switch,
+  TextArea,
+  TextInput,
+} from "@/features/products/components/editor/fields";
 import { saveShopSettings } from "../actions";
 import type { ShopSettings } from "../lib/shop-settings";
+import { DEFAULT_ORDERS_PAUSED_MESSAGE_PL } from "../schema";
 
 type Props = { settings: ShopSettings };
 
@@ -16,6 +23,8 @@ export function ShopSettingsForm({ settings }: Props) {
   );
   const [metaSuffix, setMetaSuffix] = useState(settings.productMetaSuffixPl ?? "");
   const [thresholdError, setThresholdError] = useState<string>();
+  const [ordersPaused, setOrdersPaused] = useState(settings.ordersPaused);
+  const [pausedMessage, setPausedMessage] = useState(settings.ordersPausedMessagePl ?? "");
 
   const { execute, isPending } = useAction(saveShopSettings, {
     onSuccess: () => toast.success("Ustawienia zapisane"),
@@ -38,11 +47,39 @@ export function ShopSettingsForm({ settings }: Props) {
     execute({
       freeShippingThresholdPln: freeShippingEnabled ? Math.round(threshold * 100) : null,
       productMetaSuffixPl: metaSuffix.trim() || null,
+      ordersPaused,
+      ordersPausedMessagePl: pausedMessage.trim() || null,
     });
   }
 
   return (
     <form onSubmit={handleSubmit} className="max-w-2xl space-y-6">
+      <Section title="Zamówienia">
+        <Switch
+          label="Wstrzymaj zamówienia"
+          description="Strony zostają widoczne dla klientów i Google, ale nie da się dodać nic do koszyka ani złożyć zamówienia. Produkty trafiają do Google jako niedostępne."
+          checked={ordersPaused}
+          onChange={setOrdersPaused}
+        />
+        {ordersPaused && (
+          <Field
+            label="Komunikat na stronie"
+            htmlFor="ordersPausedMessage"
+            counter={{ value: pausedMessage.length, max: 160 }}
+            hint="Pasek na górze każdej strony. Puste pole — komunikat domyślny."
+          >
+            <TextArea
+              id="ordersPausedMessage"
+              maxLength={160}
+              rows={2}
+              value={pausedMessage}
+              onChange={(e) => setPausedMessage(e.target.value)}
+              placeholder={`np. ${DEFAULT_ORDERS_PAUSED_MESSAGE_PL} Wracamy 3 listopada.`}
+            />
+          </Field>
+        )}
+      </Section>
+
       <Section title="Dostawa">
         <Switch
           label="Darmowa dostawa od progu"
