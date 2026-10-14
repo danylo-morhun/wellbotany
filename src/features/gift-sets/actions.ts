@@ -2,6 +2,7 @@
 
 import { revalidatePath, updateTag } from "next/cache";
 import { ensureCartId } from "@/features/cart/lib/session";
+import { assertOrdersOpen } from "@/features/settings/lib/shop-settings";
 import { ActionError } from "@/lib/action-error";
 import { prisma } from "@/lib/prisma";
 import { actionClient, adminActionClient } from "@/lib/safe-action";
@@ -157,6 +158,7 @@ export const deleteGiftPackaging = adminActionClient
 export const addCuratedGiftSetToCart = actionClient
   .schema(addCuratedGiftSetToCartSchema)
   .action(async ({ parsedInput: { giftSetId } }) => {
+    await assertOrdersOpen();
     const giftSet = await prisma.giftSet.findUnique({
       where: { id: giftSetId, status: "ACTIVE" },
       include: { items: { include: { variant: { select: { pricePln: true, stock: true } } } } },
@@ -199,6 +201,7 @@ export const addCuratedGiftSetToCart = actionClient
 export const addCustomGiftSetToCart = actionClient
   .schema(addCustomGiftSetToCartSchema)
   .action(async ({ parsedInput: { items, packagingId, giftMessage } }) => {
+    await assertOrdersOpen();
     const savedSettings = await prisma.giftBuilderSettings.findUnique({ where: { id: 1 } });
     const settings = savedSettings ?? DEFAULT_GIFT_BUILDER_POLICY;
     if (!settings.isActive) {

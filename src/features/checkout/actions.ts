@@ -7,7 +7,7 @@ import { z } from "zod";
 import { CART_COOKIE_NAME } from "@/features/cart/lib/session";
 import { paymentUrl, registerTransaction } from "@/features/przelewy24/lib/client";
 import { isP24Enabled } from "@/features/przelewy24/lib/config";
-import { getShopSettings } from "@/features/settings/lib/shop-settings";
+import { assertOrdersOpen, getShopSettings } from "@/features/settings/lib/shop-settings";
 import { ActionError } from "@/lib/action-error";
 import { auth } from "@/lib/auth";
 import { sendOrderConfirmationEmail, sendShopOrderNotification } from "@/lib/email/order-emails";
@@ -88,6 +88,7 @@ export const placeOrder = actionClient
   .schema(placeOrderSchema)
   .action(async ({ parsedInput: input }) => {
     await assertNotRateLimited(checkoutLimiter, await getClientIp());
+    await assertOrdersOpen();
 
     const session = await auth();
     const cookieStore = await cookies();
