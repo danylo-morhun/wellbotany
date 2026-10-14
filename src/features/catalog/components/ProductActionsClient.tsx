@@ -9,9 +9,10 @@ import { useVariantSelection } from "./VariantSelection";
 type Props = {
   variants: Variant[];
   productName: string;
+  ordersPaused: boolean;
 };
 
-export function ProductActionsClient({ variants, productName }: Props) {
+export function ProductActionsClient({ variants, productName, ordersPaused }: Props) {
   const anchorRef = useRef<HTMLDivElement>(null);
   const selectedId = useVariantSelection()?.selectedId;
   const defaultVariant =
@@ -20,9 +21,9 @@ export function ProductActionsClient({ variants, productName }: Props) {
   return (
     <>
       <div ref={anchorRef}>
-        <AddToCartSection variants={variants} />
+        <AddToCartSection variants={variants} ordersPaused={ordersPaused} />
       </div>
-      {defaultVariant && (
+      {defaultVariant && !ordersPaused && (
         <StickyAddToCart
           productName={productName}
           selectedVariantId={defaultVariant.id}

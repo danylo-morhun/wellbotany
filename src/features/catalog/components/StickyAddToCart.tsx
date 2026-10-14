@@ -44,7 +44,7 @@ export function StickyAddToCart({
         },
       });
     },
-    onError: () => toast.error("Błąd dodawania"),
+    onError: ({ error }) => toast.error(error.serverError ?? "Błąd dodawania"),
   });
 
   useEffect(() => {

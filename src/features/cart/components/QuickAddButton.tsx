@@ -31,8 +31,8 @@ export function QuickAddButton({ variantId, disabled = false }: Props) {
         },
       });
     },
-    onError: () => {
-      toast.error("Błąd", { description: "Nie udało się dodać do koszyka" });
+    onError: ({ error }) => {
+      toast.error("Błąd", { description: error.serverError ?? "Nie udało się dodać do koszyka" });
     },
   });
 

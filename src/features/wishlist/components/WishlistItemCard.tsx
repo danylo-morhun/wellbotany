@@ -31,7 +31,8 @@ export function WishlistItemCard({ item }: Props) {
       void refresh();
       toast.success("Dodano do koszyka");
     },
-    onError: () => toast.error("Błąd", { description: "Nie udało się dodać do koszyka" }),
+    onError: ({ error }) =>
+      toast.error("Błąd", { description: error.serverError ?? "Nie udało się dodać do koszyka" }),
   });
 
   const image = item.product.images[0];
