@@ -274,6 +274,8 @@ export function buildProductJsonLd(product: {
     count: number;
     items: { authorName: string; rating: number; content: string; createdAt: Date }[];
   };
+  /** Shop-wide pause: every offer is out of stock */
+  ordersPaused?: boolean;
 }) {
   if (product.variants.length === 0) return null;
   const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "https://wellbotany.pl";
@@ -332,7 +334,7 @@ export function buildProductJsonLd(product: {
         itemCondition: "https://schema.org/NewCondition",
         // Without stock tracking the item is orderable regardless of the count
         availability:
-          !v.trackStock || v.stock > 0
+          !product.ordersPaused && (!v.trackStock || v.stock > 0)
             ? "https://schema.org/InStock"
             : "https://schema.org/OutOfStock",
         ...(product.cheapestShippingPln !== null && {

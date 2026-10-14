@@ -3,6 +3,7 @@
 import { NextResponse } from "next/server";
 import { resolveDisplayBrand } from "@/features/catalog/lib/brand-tree";
 import { MAIN_IMAGE_FIRST } from "@/features/catalog/lib/main-image";
+import { getShopSettings } from "@/features/settings/lib/shop-settings";
 import { publicImageUrl } from "@/lib/image-loader";
 import { prisma } from "@/lib/prisma";
 import { stripHtml } from "@/lib/seo";
@@ -22,6 +23,7 @@ function escapeXml(value: string): string {
 }
 
 export async function GET() {
+  const { ordersPaused } = await getShopSettings();
   const products = await prisma.product.findMany({
     where: { status: "ACTIVE", isInGoogleFeed: true },
     select: {
@@ -75,7 +77,7 @@ export async function GET() {
           : name;
       // Each variant's own URL, so the landing page shows the feed price
       const variantLink = multiVariant ? `${link}?wariant=${variant.id}` : link;
-      const inStock = !variant.trackStock || variant.stock > 0;
+      const inStock = !ordersPaused && (!variant.trackStock || variant.stock > 0);
       const unitPricing = feedUnitPricing(
         variantPackQuantity(variant.optionValue, product.netWeight, !multiVariant, product.namePl),
       );

@@ -97,6 +97,12 @@ export async function pushOffersToMerchant(offers: MerchantOffer[]): Promise<num
 
 /** Offers for these products, computed the same way as /product-feed.xml. */
 async function offersFor(where: Prisma.ProductWhereInput): Promise<MerchantOffer[]> {
+  // Read uncached: runs right after the admin flips the pause
+  const settings = await prisma.shopSettings.findUnique({
+    where: { id: 1 },
+    select: { ordersPaused: true },
+  });
+  const ordersPaused = settings?.ordersPaused ?? false;
   const products = await prisma.product.findMany({
     // Opted-out products aren't in the feed — nothing to update
     where: { ...where, isInGoogleFeed: true },
@@ -113,7 +119,11 @@ async function offersFor(where: Prisma.ProductWhereInput): Promise<MerchantOffer
       pricePln: v.pricePln,
       // Archived/draft products and inactive variants leave the feed on the next
       // fetch; until then they must not show as buyable
-      inStock: product.status === "ACTIVE" && v.isActive && (!v.trackStock || v.stock > 0),
+      inStock:
+        !ordersPaused &&
+        product.status === "ACTIVE" &&
+        v.isActive &&
+        (!v.trackStock || v.stock > 0),
     })),
   );
 }
