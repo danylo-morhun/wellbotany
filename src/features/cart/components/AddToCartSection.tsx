@@ -26,9 +26,11 @@ export type Variant = {
 
 type Props = {
   variants: Variant[];
+  /** Shop-wide pause: shown as unavailable, button off */
+  ordersPaused?: boolean;
 };
 
-export function AddToCartSection({ variants }: Props) {
+export function AddToCartSection({ variants, ordersPaused = false }: Props) {
   const refresh = useRefreshStorefront();
   const defaultVariant = variants.find((v) => v.isDefault) ?? variants[0];
   const [localId, setLocalId] = useState(defaultVariant?.id ?? "");
@@ -54,8 +56,8 @@ export function AddToCartSection({ variants }: Props) {
         },
       });
     },
-    onError: () => {
-      toast.error("Błąd", { description: "Nie udało się dodać do koszyka" });
+    onError: ({ error }) => {
+      toast.error("Błąd", { description: error.serverError ?? "Nie udało się dodać do koszyka" });
     },
   });
 
@@ -68,6 +70,8 @@ export function AddToCartSection({ variants }: Props) {
   }, [selected, quantity]);
   if (!selected) return null;
 
+  // Paused reads as out of stock — matches the OutOfStock in the page's JSON-LD
+  const available = selected.stock > 0 && !ordersPaused;
   const hasOptions = variants.some((v) => v.optionValue);
   const isMultiVariant = variants.length > 1;
   const comparePrice = selected.comparePricePln;
@@ -124,14 +128,16 @@ export function AddToCartSection({ variants }: Props) {
       )}
 
       <div className="space-y-1">
-        <p className={`text-sm ${selected.stock > 0 ? "text-success" : "text-muted-foreground"}`}>
-          {selected.stock > 0
-            ? selected.stock <= 5
-              ? `Ostatnie ${selected.stock} szt.`
-              : "Dostępny"
-            : "Niedostępny"}
+        <p className={`text-sm ${available ? "text-success" : "text-muted-foreground"}`}>
+          {ordersPaused
+            ? "Chwilowo niedostępny"
+            : selected.stock > 0
+              ? selected.stock <= 5
+                ? `Ostatnie ${selected.stock} szt.`
+                : "Dostępny"
+              : "Niedostępny"}
         </p>
-        {selected.stock > 0 && (
+        {available && (
           <p className="flex items-center gap-1.5 text-xs text-muted-foreground">
             <Truck className="size-3.5 shrink-0" aria-hidden />
             Wysyłka w 24–48 h · paczkomat, punkt odbioru lub kurier
@@ -166,7 +172,7 @@ export function AddToCartSection({ variants }: Props) {
 
       <button
         type="button"
-        disabled={isExecuting || selected.stock <= 0}
+        disabled={isExecuting || !available}
         onClick={() => execute({ variantId: selected.id, quantity })}
         className="flex w-full items-center justify-center gap-2 rounded-lg bg-primary px-4 py-3 text-sm font-medium text-primary-foreground transition-[transform,background-color,color,border-color] duration-[160ms] ease-[cubic-bezier(0.23,1,0.32,1)] hover:bg-primary-deep active:scale-[0.97] disabled:cursor-not-allowed disabled:opacity-50 motion-reduce:transition-none motion-reduce:active:scale-100"
       >
@@ -175,7 +181,13 @@ export function AddToCartSection({ variants }: Props) {
           key={isExecuting ? "loading" : succeeded ? "success" : "idle"}
           className="animate-[btn-text-in_200ms_ease-out_both]"
         >
-          {isExecuting ? "Dodawanie…" : succeeded ? "✓ Dodano" : "Dodaj do koszyka"}
+          {ordersPaused
+            ? "Zamówienia wstrzymane"
+            : isExecuting
+              ? "Dodawanie…"
+              : succeeded
+                ? "✓ Dodano"
+                : "Dodaj do koszyka"}
         </span>
       </button>
     </div>

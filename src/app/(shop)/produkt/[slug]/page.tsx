@@ -108,7 +108,7 @@ export default async function ProduktPage({ params }: Props) {
     brandName: product.brand?.name ?? null,
   });
 
-  const [{ freeShippingThresholdPln }, reviews, shippingRates] = await Promise.all([
+  const [{ freeShippingThresholdPln, ordersPaused }, reviews, shippingRates] = await Promise.all([
     getShopSettings(),
     getProductReviews(product.id),
     getShippingRates(),
@@ -123,6 +123,7 @@ export default async function ProduktPage({ params }: Props) {
     freeShippingThresholdPln,
     cheapestShippingPln: cheapestPaidRate(shippingRates),
     reviews,
+    ordersPaused,
   });
 
   const breadcrumbs = [
@@ -252,6 +253,7 @@ export default async function ProduktPage({ params }: Props) {
                   <ProductActionsClient
                     variants={variantsWithUnitPrice}
                     productName={product.namePl}
+                    ordersPaused={ordersPaused}
                   />
                 </div>
                 <div className="flex items-end pb-0.5">
