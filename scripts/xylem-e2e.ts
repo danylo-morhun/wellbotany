@@ -10,7 +10,7 @@
 //
 // Creates its own test products and removes them afterwards.
 import { execFileSync } from "node:child_process";
-import { mkdtempSync, rmSync } from "node:fs";
+import { existsSync, mkdtempSync, readFileSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join, resolve } from "node:path";
 import { prisma } from "@/lib/prisma";
@@ -20,6 +20,7 @@ const SECRET = "dev-secret";
 const RUN = Date.now().toString(36);
 const stateDir = mkdtempSync(join(tmpdir(), "xylem-e2e-"));
 const xylemDir = resolve(process.env.XYLEM_DIR ?? "../xylem");
+const exportDir = join(stateDir, "zamowienia");
 
 function sql(query: string) {
   execFileSync("docker", [
@@ -57,6 +58,9 @@ function agent(...args: string[]) {
         "Server=localhost,14330;Database=FakeSubiekt;User Id=wb_sync;Password=Dev-only-Passw0rd!;TrustServerCertificate=True",
       Sync__Locations__0__MagazynIds__0: "1",
       Sync__Locations__0__MagazynIds__1: "2",
+      Sync__Orders__Enabled: "true",
+      Sync__Orders__LocationCode: CODE,
+      Sync__Orders__ExportDir: exportDir,
     },
   });
 }
@@ -113,6 +117,54 @@ async function main() {
     expect("A after a sale in the shop (delta)", await stockOf(a.id), 3);
     expect("C blocked in Subiekt → 0", await stockOf(c.id), 0);
 
+    // Orders: web order → .epp once → staff load it → agent finds it → marked entered
+    const orderNumber = `TZ-2099-${String(Date.now() % 100000).padStart(5, "0")}`;
+    await prisma.order.create({
+      data: {
+        orderNumber,
+        status: "PAID",
+        paymentStatus: "CAPTURED",
+        paymentMethod: "BANK_TRANSFER",
+        customerEmail: "e2e@example.com",
+        customerName: "Zofia Żółć",
+        shippingMethod: "INPOST_KURIER",
+        shippingCostPln: 1499,
+        shipFirstName: "Zofia",
+        shipLastName: "Żółć",
+        subtotalPln: 2000,
+        shippingPln: 1499,
+        taxPln: 0,
+        totalPln: 3499,
+        items: {
+          create: {
+            variantId: a.id,
+            productName: "E2E A",
+            sku: a.sku,
+            quantity: 2,
+            unitPricePln: 1000,
+            vatRate: 5,
+            totalPln: 2000,
+          },
+        },
+      },
+    });
+    const file = join(exportDir, `${orderNumber}.epp`);
+    agent();
+    const epp = existsSync(file) ? new TextDecoder("windows-1250").decode(readFileSync(file)) : "";
+    expect("order written as .epp", Number(existsSync(file)), 1);
+    expect("line uses the Subiekt symbol (via EAN)", Number(epp.includes('"SUB-A"')), 1);
+    expect("polish letters in CP1250", Number(epp.includes("Zofia Żółć")), 1);
+
+    rmSync(file);
+    agent();
+    expect("not written twice", Number(existsSync(file)), 0);
+
+    sql(`INSERT INTO dok__Dokument (dok_Typ, dok_NrPelny, dok_Uwagi)
+      VALUES (15, 'ZK 1/2026', 'Zamówienie internetowe ${orderNumber} | Przelew tradycyjny');`);
+    agent();
+    const entered = await prisma.order.findUniqueOrThrow({ where: { orderNumber } });
+    expect("found in Subiekt → marked entered", Number(entered.subiektEnteredAt !== null), 1);
+
     const runs = await prisma.syncRun.findMany({
       where: { location: { code: CODE } },
       orderBy: { createdAt: "asc" },
@@ -124,6 +176,8 @@ async function main() {
       ),
     );
   } finally {
+    // TZ-2099-… is never a real order number
+    await prisma.order.deleteMany({ where: { orderNumber: { startsWith: "TZ-2099-" } } });
     await prisma.stockLocation.deleteMany({ where: { code: CODE } });
     await prisma.product.deleteMany({ where: { slug: { startsWith: "e2e-subiekt-" } } });
     rmSync(stateDir, { recursive: true, force: true });
