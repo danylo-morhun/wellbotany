@@ -17,3 +17,8 @@ export const stockSnapshotSchema = z.object({
 
 export type StockItem = z.infer<typeof stockItemSchema>;
 export type StockSnapshot = z.infer<typeof stockSnapshotSchema>;
+
+// Orders the agent found in Subiekt (their number in a document's uwagi)
+export const enteredOrdersSchema = z.object({
+  orderNumbers: z.array(z.string().regex(/^TZ-\d{4}-\d{5}$/)).max(500),
+});
