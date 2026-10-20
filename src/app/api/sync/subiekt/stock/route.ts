@@ -4,24 +4,17 @@
 import { revalidateTag } from "next/cache";
 import { after, type NextRequest, NextResponse } from "next/server";
 import { applySnapshot } from "@/features/stock-sync/lib/apply";
-import { locationSecret, verifySnapshot } from "@/features/stock-sync/lib/signature";
+import { authenticate } from "@/features/stock-sync/lib/signature";
 import { stockSnapshotSchema } from "@/features/stock-sync/schema";
 import { syncProductsToMerchant } from "@/lib/merchant";
 
 export const maxDuration = 60;
 
-// Lowercase letters and digits only — the code becomes part of an env var name
-const LOCATION_CODE = /^[a-z0-9]{1,32}$/;
-
 export async function POST(req: NextRequest) {
-  const code = req.headers.get("x-sync-location") ?? "";
-  const timestamp = req.headers.get("x-sync-timestamp") ?? "";
-  const signature = req.headers.get("x-sync-signature") ?? "";
-  const secret = LOCATION_CODE.test(code) ? locationSecret(code) : undefined;
-
   // Signature is checked on the raw body, before anything is parsed
   const body = await req.text();
-  if (!secret || !verifySnapshot(secret, timestamp, body, signature)) {
+  const code = authenticate(req.headers, body);
+  if (!code) {
     return NextResponse.json({ ok: false, error: "Unauthorized" }, { status: 401 });
   }
 

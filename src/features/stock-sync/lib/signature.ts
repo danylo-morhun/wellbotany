@@ -25,3 +25,18 @@ export function verifySnapshot(
   if (!Number.isInteger(ts) || Math.abs(now - ts) > MAX_CLOCK_SKEW_MS) return false;
   return safeCompare(signature, signSnapshot(secret, timestamp, body));
 }
+
+// Lowercase letters and digits only — the code becomes part of an env var name
+const LOCATION_CODE = /^[a-z0-9]{1,32}$/;
+
+/**
+ * The location code of a correctly signed agent request, or null. GET
+ * requests sign an empty body.
+ */
+export function authenticate(headers: Headers, body: string): string | null {
+  const code = headers.get("x-sync-location") ?? "";
+  const secret = LOCATION_CODE.test(code) ? locationSecret(code) : undefined;
+  const timestamp = headers.get("x-sync-timestamp") ?? "";
+  const signature = headers.get("x-sync-signature") ?? "";
+  return secret && verifySnapshot(secret, timestamp, body, signature) ? code : null;
+}
