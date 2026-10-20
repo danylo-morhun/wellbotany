@@ -10,6 +10,12 @@ export const updateOrderStatusSchema = z.object({
 
 export const markOrderPaidSchema = z.object({ orderId: z.string().min(1) });
 
+/** entered: false undoes a mistaken click — the order counts against synced stock again */
+export const markOrderInSubiektSchema = z.object({
+  orderId: z.string().min(1),
+  entered: z.boolean(),
+});
+
 /** Bulk changes skip SHIPPED for courier orders — those need a tracking number each. */
 export const BULK_ORDER_STATUSES = ["PROCESSING", "SHIPPED", "DELIVERED", "CANCELLED"] as const;
 

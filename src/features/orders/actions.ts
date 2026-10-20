@@ -11,6 +11,7 @@ import { adminActionClient } from "@/lib/safe-action";
 import {
   bulkMarkOrdersPaidSchema,
   bulkUpdateOrderStatusSchema,
+  markOrderInSubiektSchema,
   markOrderPaidSchema,
   type UpdateOrderStatusInput,
   updateOrderStatusSchema,
@@ -135,6 +136,19 @@ export const markOrderPaid = adminActionClient
   .action(async ({ parsedInput: { orderId } }) => {
     await applyMarkPaid(orderId);
     revalidatePath("/admin/zamowienia");
+    return { success: true };
+  });
+
+// Subiekt stock sync: until an order is entered in Subiekt, its items are held
+// back from the stock the sync reports. The next sync settles ProductVariant.stock.
+export const markOrderInSubiekt = adminActionClient
+  .schema(markOrderInSubiektSchema)
+  .action(async ({ parsedInput: { orderId, entered } }) => {
+    await prisma.order.update({
+      where: { id: orderId },
+      data: { subiektEnteredAt: entered ? new Date() : null },
+    });
+    revalidatePath(`/admin/zamowienia/${orderId}`);
     return { success: true };
   });
 
