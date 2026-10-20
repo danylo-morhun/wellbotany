@@ -317,6 +317,7 @@ model ProductVariant {
   cartItems    CartItem[]
   giftSetItems GiftSetItem[]
   priceHistory PriceHistory[]
+  stockLevels  StockLevel[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -805,6 +806,10 @@ model Order {
   shippedAt   DateTime?
   deliveredAt DateTime?
 
+  // Set once the order is entered in Subiekt GT. Until then its items are
+  // subtracted from the stock the Subiekt sync reports (Subiekt still counts them).
+  subiektEnteredAt DateTime?
+
   @@index([orderNumber])
   @@index([customerId])
   @@index([status])
@@ -950,4 +955,57 @@ model Post {
   updatedAt    DateTime  @updatedAt
 
   @@index([isPublished, publishedAt])
+}
+
+// ── SUBIEKT GT STOCK SYNC ──
+// A shop whose Subiekt GT feeds stock to the site. Its Windows agent posts
+// snapshots to /api/sync/subiekt/stock, signed with SUBIEKT_SYNC_SECRET_<CODE>.
+// See docs/plans/subiekt-sync-research.md.
+model StockLocation {
+  id          String    @id @default(cuid())
+  code        String    @unique // lowercase, e.g. "sklep1"
+  name        String
+  sellsOnline Boolean   @default(true) // counts towards ProductVariant.stock
+  safetyStock Int       @default(1) // held back per variant for walk-in sales between syncs
+  lastSyncAt  DateTime?
+
+  levels StockLevel[]
+  runs   SyncRun[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+// Available quantity in Subiekt (stock minus reservations, never negative)
+model StockLevel {
+  locationId String
+  location   StockLocation  @relation(fields: [locationId], references: [id], onDelete: Cascade)
+  variantId  String
+  variant    ProductVariant @relation(fields: [variantId], references: [id], onDelete: Cascade)
+  quantity   Int
+
+  updatedAt DateTime @updatedAt
+
+  @@id([locationId, variantId])
+  @@index([variantId])
+}
+
+model SyncRun {
+  id         String        @id @default(cuid())
+  locationId String
+  location   StockLocation @relation(fields: [locationId], references: [id], onDelete: Cascade)
+
+  mode            String // "full" | "delta"
+  received        Int
+  matched         Int
+  changedLevels   Int
+  changedVariants Int
+  unmatchedSample Json? // first unmatched items ({ ean, symbol }) for the admin to fix
+  unmatched       Int
+  error           String? // set when the snapshot was rejected
+  agentVersion    String?
+
+  createdAt DateTime @default(now())
+
+  @@index([locationId, createdAt])
 }
