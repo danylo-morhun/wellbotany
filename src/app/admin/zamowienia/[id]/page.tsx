@@ -11,6 +11,7 @@ import { PAYMENT_LABELS } from "@/features/checkout/lib/payment";
 import { CARRIERS, isPointService, shippingLabel } from "@/features/checkout/lib/shipping";
 import { MarkPaidButton } from "@/features/orders/components/MarkPaidButton";
 import { StatusForm } from "@/features/orders/components/StatusForm";
+import { SubiektEnteredButton } from "@/features/orders/components/SubiektEnteredButton";
 import { RequestReviewButton } from "@/features/reviews/components/RequestReviewButton";
 import { EpakaShipmentPanel } from "@/features/shipping/components/EpakaShipmentPanel";
 import {
@@ -61,9 +62,15 @@ export default async function AdminOrderDetailPage({ params }: Props) {
 
   if (!order) notFound();
 
-  const customerOrderCount = await prisma.order.count({
-    where: { customerEmail: { equals: order.customerEmail, mode: "insensitive" } },
-  });
+  const [customerOrderCount, subiektLocations] = await Promise.all([
+    prisma.order.count({
+      where: { customerEmail: { equals: order.customerEmail, mode: "insensitive" } },
+    }),
+    prisma.stockLocation.count(),
+  ]);
+  // Only once a shop's Subiekt is syncing stock, and only for orders that took stock
+  const tracksSubiekt =
+    subiektLocations > 0 && order.status !== "PENDING" && order.status !== "CANCELLED";
 
   // Group gift-set component rows under their box label for packing clarity;
   // plain items ("" groupId) render individually, in original order.
@@ -142,6 +149,7 @@ export default async function AdminOrderDetailPage({ params }: Props) {
     { label: isPickup ? "Gotowe do odbioru" : "Wysłano", at: order.shippedAt },
     { label: isPickup ? "Odebrano" : "Dostarczono", at: order.deliveredAt },
     { label: "Wysłano prośbę o opinię", at: order.reviewRequestedAt },
+    ...(tracksSubiekt ? [{ label: "Wprowadzono do Subiekta", at: order.subiektEnteredAt }] : []),
   ];
 
   return (
@@ -307,6 +315,11 @@ export default async function AdminOrderDetailPage({ params }: Props) {
             {(order.status === "SHIPPED" || order.status === "DELIVERED") && (
               <div className="mt-5 border-t border-border pt-4">
                 <RequestReviewButton orderId={order.id} requestedAt={order.reviewRequestedAt} />
+              </div>
+            )}
+            {tracksSubiekt && (
+              <div className="mt-5 border-t border-border pt-4">
+                <SubiektEnteredButton orderId={order.id} enteredAt={order.subiektEnteredAt} />
               </div>
             )}
           </Panel>
