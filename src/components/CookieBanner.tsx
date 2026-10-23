@@ -63,7 +63,7 @@ export function CookieBanner() {
         <button
           type="button"
           onClick={() => respond("rejected")}
-          className="rounded-lg border border-background/40 px-4 py-2 text-sm font-medium text-background transition-opacity hover:opacity-90"
+          className="rounded-lg bg-background px-4 py-2 text-sm font-medium text-foreground transition-opacity hover:opacity-90"
         >
           Tylko niezbędne
         </button>
