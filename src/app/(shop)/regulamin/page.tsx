@@ -283,17 +283,8 @@ export default function RegulaminPage() {
           </h3>
           <p className="text-muted-foreground">
             Konsument może skorzystać z bezpłatnej pomocy miejskiego lub powiatowego rzecznika
-            konsumentów, właściwego Wojewódzkiego Inspektoratu Inspekcji Handlowej oraz platformy
-            ODR pod adresem{" "}
-            <a
-              href="https://ec.europa.eu/consumers/odr"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="text-primary underline-offset-4 hover:underline"
-            >
-              ec.europa.eu/consumers/odr
-            </a>
-            . Więcej informacji na stronie{" "}
+            konsumentów lub właściwego Wojewódzkiego Inspektoratu Inspekcji Handlowej. Więcej
+            informacji na stronie{" "}
             <a
               href="https://polubowne.uokik.gov.pl/"
               target="_blank"
