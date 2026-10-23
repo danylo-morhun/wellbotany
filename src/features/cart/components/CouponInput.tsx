@@ -15,10 +15,11 @@ type CouponState = {
 
 type Props = {
   subtotal: number;
+  saleSubtotal: number;
   onDiscount: (discountPln: number) => void;
 };
 
-export function CouponInput({ subtotal, onDiscount }: Props) {
+export function CouponInput({ subtotal, saleSubtotal, onDiscount }: Props) {
   const [code, setCode] = useState("");
   const [couponState, setCouponState] = useState<CouponState | null>(null);
 
@@ -39,12 +40,12 @@ export function CouponInput({ subtotal, onDiscount }: Props) {
     const saved = readSavedCoupon();
     if (!saved) return;
     setCode(saved);
-    execute({ code: saved, subtotal });
+    execute({ code: saved, subtotal, saleSubtotal });
   }, []);
 
   const handleVerify = () => {
     if (!code.trim()) return;
-    execute({ code, subtotal });
+    execute({ code, subtotal, saleSubtotal });
   };
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -79,7 +80,7 @@ export function CouponInput({ subtotal, onDiscount }: Props) {
           className={`text-xs font-medium ${couponState.valid ? "text-success" : "text-destructive"}`}
         >
           {couponState.valid
-            ? `✓ Rabat: -${formatPrice(couponState.discountPln)}`
+            ? `✓ Rabat: -${formatPrice(couponState.discountPln)}${couponState.message ? ` · ${couponState.message}` : ""}`
             : couponState.message}
         </p>
       )}

@@ -5,9 +5,9 @@ import { useState } from "react";
 import { formatPrice } from "@/lib/format";
 import { CouponInput } from "./CouponInput";
 
-type Props = { subtotal: number };
+type Props = { subtotal: number; saleSubtotal: number };
 
-export function CartSummary({ subtotal }: Props) {
+export function CartSummary({ subtotal, saleSubtotal }: Props) {
   const [discount, setDiscount] = useState(0);
   const total = subtotal - discount;
 
@@ -40,7 +40,7 @@ export function CartSummary({ subtotal }: Props) {
       </div>
 
       <div className="border-t border-border px-6 py-4">
-        <CouponInput subtotal={subtotal} onDiscount={setDiscount} />
+        <CouponInput subtotal={subtotal} saleSubtotal={saleSubtotal} onDiscount={setDiscount} />
       </div>
 
       <div className="px-6 pb-5">
