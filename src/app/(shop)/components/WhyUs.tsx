@@ -32,8 +32,8 @@ export async function WhyUs() {
     },
     {
       icon: RotateCcw,
-      title: "14 dni na zwrot",
-      text: "Możesz odstąpić od umowy w ciągu 14 dni od otrzymania paczki.",
+      title: "14 dni na odstąpienie",
+      text: "Możesz odstąpić od umowy w ciągu 14 dni od otrzymania paczki, a potem masz 14 dni na odesłanie towaru.",
       link: { href: "/zwroty", label: "Zwroty i reklamacje" },
     },
     {
