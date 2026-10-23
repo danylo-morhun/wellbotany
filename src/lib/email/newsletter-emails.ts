@@ -19,7 +19,7 @@ export async function sendWelcomeCouponEmail(input: {
     <p>Dziękujemy za zapis do newslettera Well Botany!</p>
     <p>Twój kod na -${input.percent}% na zamówienie:</p>
     <p style="font-size:24px;font-weight:700;letter-spacing:2px;margin:16px 0">${input.code}</p>
-    <p>Wpisz go w koszyku albo przy kasie. Kod jest jednorazowy i ważny do ${until}.</p>
+    <p>Wpisz go w koszyku albo przy kasie. Kod jest jednorazowy, ważny do ${until} i nie obejmuje produktów w promocji.</p>
     <p style="margin-top:24px"><a href="${shopUrl}" style="display:inline-block;background:#0f7a5c;color:#fff;padding:12px 24px;border-radius:999px;text-decoration:none;font-weight:600">Przejdź do sklepu</a></p>
     <p style="margin-top:24px;font-size:12px;color:#767676">Z newslettera wypiszesz się w każdej chwili — wystarczy odpowiedzieć na tę wiadomość.</p>`;
 
