@@ -104,3 +104,67 @@ describe("placeOrder — coupon usage race", () => {
     expect(finalCoupon.usageCount).toBe(1);
   });
 });
+
+describe("placeOrder — coupon and sale items", () => {
+  it("discounts only full-price lines when the coupon doesn't stack", async () => {
+    session.userId = null;
+    const coupon = await prisma.coupon.create({
+      data: { code: `NOSTACK-${RUN_ID}`.toUpperCase(), type: "PERCENTAGE", value: 10 },
+    });
+    couponIds.push(coupon.id);
+
+    const { product: sale, variant: saleVariant } = await makeVariant(10, 5000);
+    const { product: full, variant: fullVariant } = await makeVariant(10, 3000);
+    productIds.push(sale.id, full.id);
+    // Price cut with a "was" price — the DB trigger freezes the 30-day low (50 zł)
+    await prisma.productVariant.update({
+      where: { id: saleVariant.id },
+      data: { pricePln: 4000, comparePricePln: 5000 },
+    });
+
+    const cart = await makeCart(saleVariant.id, 1);
+    await prisma.cartItem.create({
+      data: { cartId: cart.id, variantId: fullVariant.id, quantity: 1 },
+    });
+    cartIds.push(cart.id);
+
+    const result = await placeOrder({
+      ...baseCheckoutInput,
+      cartId: cart.id,
+      couponCode: coupon.code,
+    });
+    expect(result.serverError).toBeUndefined();
+    if (result.data) orderNumbers.push(result.data.orderNumber);
+
+    const order = await prisma.order.findUniqueOrThrow({
+      where: { orderNumber: result.data?.orderNumber },
+    });
+    // 10% of the 30 zł full-price line only
+    expect(order.discountPln).toBe(300);
+  });
+
+  it("rejects the code when every line is on sale", async () => {
+    session.userId = null;
+    const coupon = await prisma.coupon.create({
+      data: { code: `ALLSALE-${RUN_ID}`.toUpperCase(), type: "PERCENTAGE", value: 10 },
+    });
+    couponIds.push(coupon.id);
+    const { product, variant } = await makeVariant(10, 5000);
+    productIds.push(product.id);
+    await prisma.productVariant.update({
+      where: { id: variant.id },
+      data: { pricePln: 4000, comparePricePln: 5000 },
+    });
+    const cart = await makeCart(variant.id, 1);
+    cartIds.push(cart.id);
+
+    const result = await placeOrder({
+      ...baseCheckoutInput,
+      cartId: cart.id,
+      couponCode: coupon.code,
+    });
+    expect(result.serverError).toMatch(/nie łączy się z promocjami/);
+    const unused = await prisma.coupon.findUniqueOrThrow({ where: { id: coupon.id } });
+    expect(unused.usageCount).toBe(0);
+  });
+});
