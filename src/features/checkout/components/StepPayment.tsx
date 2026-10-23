@@ -4,7 +4,7 @@ import { ShieldCheck } from "lucide-react";
 import { useAction } from "next-safe-action/hooks";
 import { useEffect, useState } from "react";
 import { groupCartItems } from "@/features/cart/lib/grouping";
-import { effectiveUnitPricePln } from "@/features/cart/lib/pricing";
+import { effectiveUnitPricePln, saleSubtotalPln } from "@/features/cart/lib/pricing";
 import { clearSavedCoupon, readSavedCoupon } from "@/features/cart/lib/saved-coupon";
 import type { CartItem } from "@/features/cart/lib/session";
 import { formatPrice } from "@/lib/format";
@@ -55,6 +55,7 @@ export function StepPayment({
     message: string | null;
   } | null>(null);
   const [verifying, setVerifying] = useState(false);
+  const saleSubtotal = saleSubtotalPln(items);
 
   const { execute: executeVerify } = useAction(verifyCoupon, {
     onSuccess: ({ data: result, input }) => {
@@ -72,13 +73,13 @@ export function StepPayment({
     if (!code) return;
     if (!data.couponCode.trim()) onChange({ couponCode: code });
     setVerifying(true);
-    executeVerify({ code, subtotal });
+    executeVerify({ code, subtotal, saleSubtotal });
   }, []);
 
   const handleVerifyCoupon = () => {
     if (!data.couponCode.trim()) return;
     setVerifying(true);
-    executeVerify({ code: data.couponCode, subtotal });
+    executeVerify({ code: data.couponCode, subtotal, saleSubtotal });
   };
 
   const discount = couponResult?.valid ? couponResult.discountPln : 0;
@@ -180,7 +181,7 @@ export function StepPayment({
         {couponResult && (
           <p className={`text-sm ${couponResult.valid ? "text-success" : "text-destructive"}`}>
             {couponResult.valid
-              ? `✓ Rabat: -${formatPrice(couponResult.discountPln)}`
+              ? `✓ Rabat: -${formatPrice(couponResult.discountPln)}${couponResult.message ? ` · ${couponResult.message}` : ""}`
               : couponResult.message}
           </p>
         )}
