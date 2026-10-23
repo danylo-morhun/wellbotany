@@ -268,7 +268,10 @@ export function StepPayment({
           disabled={pending || !data.acceptedTerms}
           className="flex-1 rounded-lg bg-primary px-4 py-3 text-sm font-medium text-primary-foreground transition-[transform,background-color,color,border-color] duration-[160ms] ease-[cubic-bezier(0.23,1,0.32,1)] hover:bg-primary-deep active:scale-[0.97] disabled:opacity-50 motion-reduce:transition-none motion-reduce:active:scale-100"
         >
-          {pending ? "Składam zamówienie…" : `Złóż zamówienie — ${formatPrice(total)}`}
+          {/* Wording required by art. 17 ust. 3 ustawy o prawach konsumenta */}
+          {pending
+            ? "Składam zamówienie…"
+            : `Zamawiam z obowiązkiem zapłaty — ${formatPrice(total)}`}
         </button>
       </div>
       {!isOfflinePayment(data.paymentMethod) && (

@@ -72,7 +72,7 @@ async function pay(page: Page, method: "BANK_TRANSFER" | "CASH_ON_DELIVERY") {
   }
   await page.locator(`input[name="paymentMethod"][value="${method}"]`).check();
   await page.getByRole("checkbox").check();
-  await page.getByRole("button", { name: /Złóż zamówienie/ }).click();
+  await page.getByRole("button", { name: /Zamawiam z obowiązkiem zapłaty/ }).click();
   await expect(page).toHaveURL(/\/zamowienie\/potwierdzenie\//, { timeout: 20_000 });
   const orderNumber = decodeURIComponent(page.url().split("/").pop() ?? "");
   orderNumbers.push(orderNumber);
