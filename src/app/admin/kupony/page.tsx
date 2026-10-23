@@ -42,6 +42,7 @@ export default async function AdminCouponsPage({
     maxUsages: c.maxUsages,
     validFrom: c.validFrom,
     validUntil: c.validUntil,
+    excludeSaleItems: c.excludeSaleItems,
     isActive: c.isActive,
     usageCount: c.usageCount,
     state: !c.isActive
