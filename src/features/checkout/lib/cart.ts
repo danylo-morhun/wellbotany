@@ -21,11 +21,14 @@ export async function getCartForCheckout(cartId: string) {
           packagingLabel: true,
           giftMessage: true,
           unitPriceOverridePln: true,
+          giftSet: { select: { pricePln: true, comparePricePln: true, lowestPrice30dPln: true } },
           variant: {
             select: {
               id: true,
               sku: true,
               pricePln: true,
+              comparePricePln: true,
+              lowestPrice30dPln: true,
               vatRate: true,
               optionValue: true,
               stock: true,

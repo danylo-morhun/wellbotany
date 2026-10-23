@@ -55,10 +55,13 @@ const cartItemSelect = {
   packagingLabel: true,
   giftMessage: true,
   unitPriceOverridePln: true,
+  giftSet: { select: { pricePln: true, comparePricePln: true, lowestPrice30dPln: true } },
   variant: {
     select: {
       id: true,
       pricePln: true,
+      comparePricePln: true,
+      lowestPrice30dPln: true,
       optionLabel: true,
       optionValue: true,
       stock: true,
