@@ -1,7 +1,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { formatPrice } from "@/lib/format";
-import { omnibusNote } from "@/lib/omnibus";
+import { discountPercent, omnibusNote } from "@/lib/omnibus";
 
 export type GiftSetListItem = {
   slug: string;
@@ -21,7 +21,7 @@ type Props = {
 
 export function GiftSetCard({ giftSet, headingLevel = 2 }: Props) {
   const Heading = headingLevel === 3 ? "h3" : "h2";
-  const hasDiscount = giftSet.comparePricePln != null && giftSet.comparePricePln > giftSet.pricePln;
+  const hasDiscount = discountPercent(giftSet) != null;
   const lowestNote = omnibusNote(giftSet);
 
   return (

@@ -2,7 +2,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { QuickAddButton } from "@/features/cart/components/QuickAddButton";
 import { formatPrice } from "@/lib/format";
-import { omnibusNote } from "@/lib/omnibus";
+import { discountPercent, omnibusNote } from "@/lib/omnibus";
 import { formatUnitPrice, variantPackQuantity } from "@/lib/unit-price";
 import type { ProductListItem } from "../actions";
 import { resolveDisplayBrand } from "../lib/brand-tree";
@@ -21,12 +21,8 @@ export function ProductCard({ product, priority = false, headingLevel = 2 }: Pro
   const mainImage = product.images[0];
   const isOutOfStock = defaultVariant ? defaultVariant.stock <= 0 : true;
   const comparePrice = defaultVariant?.comparePricePln ?? null;
-  const hasDiscount =
-    defaultVariant != null && comparePrice != null && comparePrice > defaultVariant.pricePln;
-  const discountPct =
-    hasDiscount && comparePrice != null
-      ? Math.round(((comparePrice - defaultVariant.pricePln) / comparePrice) * 100)
-      : 0;
+  const discountPct = defaultVariant ? discountPercent(defaultVariant) : null;
+  const hasDiscount = comparePrice != null && discountPct != null;
   const lowestNote = defaultVariant ? omnibusNote(defaultVariant) : null;
   const unitPrice = defaultVariant
     ? formatUnitPrice(

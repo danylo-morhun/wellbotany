@@ -22,6 +22,8 @@ export type Variant = {
   unitPrice?: string | null;
   /** "Najniższa cena z 30 dni przed obniżką: …" — set only while discounted */
   omnibusNote?: string | null;
+  /** Reduction vs the 30-day low (lib/omnibus) — null hides the promotion */
+  discountPercent?: number | null;
 };
 
 type Props = {
@@ -75,10 +77,8 @@ export function AddToCartSection({ variants, ordersPaused = false }: Props) {
   const hasOptions = variants.some((v) => v.optionValue);
   const isMultiVariant = variants.length > 1;
   const comparePrice = selected.comparePricePln;
-  const hasDiscount = comparePrice && comparePrice > selected.pricePln;
-  const discountPct = hasDiscount
-    ? Math.round(((comparePrice - selected.pricePln) / comparePrice) * 100)
-    : 0;
+  const discountPct = selected.discountPercent ?? null;
+  const hasDiscount = comparePrice != null && discountPct != null;
 
   return (
     <div className="space-y-4">

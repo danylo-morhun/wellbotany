@@ -4,7 +4,7 @@ import { notFound } from "next/navigation";
 import { cache } from "react";
 import { AddCuratedGiftSetButton } from "@/features/gift-sets/components/AddCuratedGiftSetButton";
 import { formatPrice } from "@/lib/format";
-import { omnibusNote } from "@/lib/omnibus";
+import { discountPercent, omnibusNote } from "@/lib/omnibus";
 import { prisma } from "@/lib/prisma";
 
 type Props = { params: Promise<{ slug: string }> };
@@ -81,7 +81,7 @@ export default async function GiftSetDetailPage({ params }: Props) {
             <span className="text-2xl font-bold text-foreground">
               {formatPrice(giftSet.pricePln)}
             </span>
-            {giftSet.comparePricePln != null && giftSet.comparePricePln > giftSet.pricePln && (
+            {giftSet.comparePricePln != null && discountPercent(giftSet) != null && (
               <span className="text-base text-muted-foreground line-through">
                 {formatPrice(giftSet.comparePricePln)}
               </span>
