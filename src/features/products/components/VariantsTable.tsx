@@ -16,6 +16,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Sheet, SheetContent, SheetTitle } from "@/components/ui/sheet";
 import { formatPrice } from "@/lib/format";
+import { discountPercent } from "@/lib/omnibus";
 import { cn } from "@/lib/utils";
 import { deleteVariant, saveVariant } from "../actions";
 import { Field, inputClass, Switch, TextInput } from "./editor/fields";
@@ -150,6 +151,10 @@ export function VariantsTable({ productId, variants }: Props) {
                         <p className="text-xs text-muted-foreground line-through">
                           {formatPrice(v.comparePricePln)}
                         </p>
+                      )}
+                      {v.comparePricePln && discountPercent(v) == null && (
+                        // Storefront hides it: no real cut vs the 30-day low
+                        <Badge tone="warning">promocja ukryta</Badge>
                       )}
                     </td>
                     <td className="px-3 py-3 text-right tabular-nums">
