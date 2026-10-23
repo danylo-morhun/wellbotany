@@ -117,6 +117,11 @@ export default function RegulaminPage() {
               Kupujący może założyć Konto lub dokonywać zakupów bez rejestracji, podając swoje dane
               przy każdym zamówieniu.
             </li>
+            <li>
+              Kod rabatowy wpisuje się w koszyku lub przy kasie; do jednego zamówienia można użyć
+              jednego kodu. Jeśli warunki kodu tak stanowią, rabat nie obejmuje produktów objętych
+              obniżką ceny — informacja o tym widoczna jest przy kodzie przed złożeniem zamówienia.
+            </li>
           </ol>
         </section>
 
