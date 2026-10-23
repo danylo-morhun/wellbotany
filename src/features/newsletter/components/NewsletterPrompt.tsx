@@ -215,7 +215,8 @@ export function NewsletterPrompt() {
               </Dialog.Title>
               <Dialog.Description className="mt-2 text-muted-foreground">
                 Podaj e-mail — wyślemy Ci jednorazowy kod -{WELCOME_DISCOUNT_PERCENT}% ważny{" "}
-                {WELCOME_COUPON_VALID_DAYS} dni. Potem tylko promocje i porady, bez spamu.
+                {WELCOME_COUPON_VALID_DAYS} dni (nie łączy się z promocjami). Potem tylko promocje i
+                porady, bez spamu.
               </Dialog.Description>
               <NewsletterForm variant="card" onSubscribed={() => setDone(true)} />
               <p className="mt-3 text-xs text-muted-foreground">
