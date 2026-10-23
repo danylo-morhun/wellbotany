@@ -66,7 +66,7 @@ export default function ZwrotyPage() {
           <h2 className="mb-3 text-xl">Jak złożyć reklamację</h2>
           <p className="text-muted-foreground">
             Jeśli otrzymany produkt jest uszkodzony, niezgodny z opisem lub wadliwy, masz prawo
-            złożyć reklamację z tytułu rękojmi. Reklamację przyjmujemy:
+            złożyć reklamację z tytułu niezgodności towaru z umową. Reklamację przyjmujemy:
           </p>
           <ul className="mt-2 list-inside list-disc space-y-1 text-muted-foreground">
             <li>
@@ -99,8 +99,10 @@ export default function ZwrotyPage() {
           <p className="text-muted-foreground">
             Zgodnie z art. 38 pkt 5 ustawy o prawach konsumenta, prawo odstąpienia nie przysługuje w
             przypadku produktów dostarczonych w zapieczętowanym opakowaniu, których po otwarciu nie
-            można zwrócić ze względu na ochronę zdrowia lub ze względów higienicznych. Dotyczy to
-            suplementów diety i żywności funkcjonalnej z naruszonym opakowaniem.
+            można zwrócić ze względu na ochronę zdrowia lub ze względów higienicznych, jeżeli
+            opakowanie otwarto po dostarczeniu. Dotyczy to suplementów diety, żywności i kosmetyków
+            z fabrycznym zabezpieczeniem (plombą, folią) naruszonym po dostawie. Produkty z
+            nienaruszonym zabezpieczeniem możesz zwrócić na zwykłych zasadach.
           </p>
         </section>
 

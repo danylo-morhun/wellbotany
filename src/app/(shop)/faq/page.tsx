@@ -115,7 +115,7 @@ function buildGroups(
       items: [
         {
           q: "Czy mogę zwrócić produkt?",
-          a: "Tak – masz 14 dni od otrzymania paczki na odstąpienie od umowy bez podania przyczyny. Wyjątkiem są produkty w zapieczętowanym opakowaniu, które po otwarciu nie nadają się do zwrotu ze względów higienicznych lub zdrowotnych (np. suplementy, kosmetyki).",
+          a: "Tak – masz 14 dni od otrzymania paczki na odstąpienie od umowy bez podania przyczyny. Wyjątkiem są suplementy, żywność i kosmetyki z fabrycznym zabezpieczeniem (plombą, folią), jeśli zabezpieczenie zostało naruszone po dostarczeniu — ze względów zdrowotnych i higienicznych takich produktów nie można zwrócić. Produkty z nienaruszonym zabezpieczeniem zwrócisz bez problemu.",
         },
         {
           q: "Jak zwrócić zamówienie?",
