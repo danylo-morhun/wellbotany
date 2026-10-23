@@ -697,6 +697,9 @@ model Coupon {
   value       Int
   minOrderPln Int? // minimum order total in grosz to apply coupon
   maxUsages   Int? // null = unlimited
+  // Kaskada rabatowa guard: true = no discount on lines already on sale
+  // (variant or curated gift set with comparePricePln above the price)
+  excludeSaleItems Boolean @default(true)
   usageCount  Int        @default(0)
   validFrom   DateTime?
   validUntil  DateTime?
