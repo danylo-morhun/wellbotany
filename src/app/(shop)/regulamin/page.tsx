@@ -245,7 +245,9 @@ export default function RegulaminPage() {
                 zdrowia lub ze względów higienicznych, jeżeli opakowanie zostało otwarte po
                 dostarczeniu
               </strong>{" "}
-              — dotyczy to w szczególności suplementów diety i produktów spożywczych;
+              — dotyczy to suplementów diety, żywności i kosmetyków dostarczonych z fabrycznym
+              zabezpieczeniem (plombą, folią), jeśli zabezpieczenie zostało naruszone po
+              dostarczeniu; nienaruszone produkty można zwrócić;
             </li>
             <li>
               w której przedmiotem świadczenia są rzeczy, które po dostarczeniu, ze względu na swój
