@@ -17,6 +17,7 @@ export const couponSchema = z
     maxUsages: z.number().int().positive().nullable(),
     validFrom: z.coerce.date().nullable(),
     validUntil: z.coerce.date().nullable(),
+    excludeSaleItems: z.boolean(),
     isActive: z.boolean(),
   })
   .refine((c) => c.type !== "PERCENTAGE" || c.value <= 100, {

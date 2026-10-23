@@ -16,6 +16,7 @@ export type CouponFormValues = {
   maxUsages: number | null;
   validFrom: Date | null;
   validUntil: Date | null;
+  excludeSaleItems: boolean;
   isActive: boolean;
 };
 
@@ -75,6 +76,7 @@ export function CouponSheet({
       // Dates are whole days in the admin's (Polish) local time
       validFrom: from ? new Date(`${from}T00:00:00`) : null,
       validUntil: until ? new Date(`${until}T23:59:59`) : null,
+      excludeSaleItems: fd.get("excludeSaleItems") === "on",
       isActive: fd.get("isActive") === "on",
     });
   }
@@ -102,6 +104,11 @@ export function CouponSheet({
               className={`${inputClass} font-mono uppercase`}
             />
             {err("code")}
+            <p className="mt-1 text-xs text-muted-foreground">
+              Kod działa na całe zamówienie. Promocji na konkretne produkty lub „na wszystko” nie
+              ogłaszaj kodem — ustaw „Cenę przed” w produkcie, wtedy sklep sam pokaże najniższą cenę
+              z 30 dni (Omnibus).
+            </p>
           </div>
 
           <fieldset>
@@ -215,6 +222,21 @@ export function CouponSheet({
               {err("validUntil")}
             </div>
           </div>
+
+          <label className="flex items-start gap-2 text-sm">
+            <input
+              type="checkbox"
+              name="excludeSaleItems"
+              defaultChecked={coupon?.excludeSaleItems ?? true}
+              className="mt-0.5 size-4 shrink-0 accent-primary"
+            />
+            <span>
+              Nie łączy się z promocjami
+              <span className="block text-xs text-muted-foreground">
+                Rabat liczony tylko od produktów bez obniżki
+              </span>
+            </span>
+          </label>
 
           <label className="flex items-center gap-2 text-sm">
             <input
