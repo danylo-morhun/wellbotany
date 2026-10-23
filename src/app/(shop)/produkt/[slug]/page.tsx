@@ -18,7 +18,7 @@ import { getProductReviews } from "@/features/reviews/lib/queries";
 import { getShopSettings } from "@/features/settings/lib/shop-settings";
 import { WishlistButton } from "@/features/wishlist/components/WishlistButton";
 import { publicImageUrl } from "@/lib/image-loader";
-import { omnibusNote } from "@/lib/omnibus";
+import { discountPercent, omnibusNote } from "@/lib/omnibus";
 import { sanitizeRichText } from "@/lib/sanitize";
 import { buildPageTitle, buildProductJsonLd, DEFAULT_OG_IMAGE, toJsonLdScript } from "@/lib/seo";
 import { formatUnitPrice, variantPackQuantity } from "@/lib/unit-price";
@@ -87,6 +87,7 @@ export default async function ProduktPage({ params }: Props) {
   const variantsWithUnitPrice = product.variants.map((v) => ({
     ...v,
     omnibusNote: omnibusNote(v),
+    discountPercent: discountPercent(v),
     unitPrice: formatUnitPrice(
       v.pricePln,
       variantPackQuantity(
