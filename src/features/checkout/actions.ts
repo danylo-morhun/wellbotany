@@ -4,7 +4,9 @@ import { revalidatePath, updateTag } from "next/cache";
 import { cookies, headers } from "next/headers";
 import { after } from "next/server";
 import { z } from "zod";
+import { saleSubtotalPln } from "@/features/cart/lib/pricing";
 import { CART_COOKIE_NAME } from "@/features/cart/lib/session";
+import { couponDiscountPln, SALE_ITEMS_ONLY_MESSAGE } from "@/features/coupons/lib/discount";
 import { paymentUrl, registerTransaction } from "@/features/przelewy24/lib/client";
 import { isP24Enabled } from "@/features/przelewy24/lib/config";
 import { assertOrdersOpen, getShopSettings } from "@/features/settings/lib/shop-settings";
@@ -28,8 +30,14 @@ import { getShippingRates } from "./lib/shipping-rates";
 import { checkoutSchema } from "./schema";
 
 export const verifyCoupon = actionClient
-  .schema(z.object({ code: z.string().min(1), subtotal: z.number().int() }))
-  .action(async ({ parsedInput: { code, subtotal } }) => {
+  .schema(
+    z.object({
+      code: z.string().min(1),
+      subtotal: z.number().int(),
+      saleSubtotal: z.number().int().nonnegative().default(0),
+    }),
+  )
+  .action(async ({ parsedInput: { code, subtotal, saleSubtotal } }) => {
     await assertNotRateLimited(couponLimiter, await getClientIp());
 
     const coupon = await prisma.coupon.findFirst({
@@ -45,6 +53,7 @@ export const verifyCoupon = actionClient
         id: true,
         type: true,
         value: true,
+        excludeSaleItems: true,
         minOrderPln: true,
         maxUsages: true,
         usageCount: true,
@@ -65,12 +74,17 @@ export const verifyCoupon = actionClient
       };
     }
 
-    const discountPln =
-      coupon.type === "PERCENTAGE"
-        ? Math.round((subtotal * coupon.value) / 100)
-        : Math.min(coupon.value, subtotal);
+    const discountPln = couponDiscountPln(coupon, subtotal, saleSubtotal);
+    if (discountPln === 0) {
+      return { valid: false as const, discountPln: 0, message: SALE_ITEMS_ONLY_MESSAGE };
+    }
+    // Shown under the discount so a smaller-than-expected rabat isn't a surprise
+    const message =
+      coupon.excludeSaleItems && saleSubtotal > 0
+        ? "Rabat nie obejmuje produktów w promocji"
+        : null;
 
-    return { valid: true as const, discountPln, message: null };
+    return { valid: true as const, discountPln, message };
   });
 
 // Online methods stay in the shared enum; the server rejects them while P24 is off.
@@ -149,6 +163,7 @@ export const placeOrder = actionClient
             id: true,
             type: true,
             value: true,
+            excludeSaleItems: true,
             maxUsages: true,
             usageCount: true,
             minOrderPln: true,
@@ -168,6 +183,9 @@ export const placeOrder = actionClient
           );
         }
 
+        discountPln = couponDiscountPln(coupon, subtotalPln, saleSubtotalPln(cart.items));
+        if (discountPln === 0) throw new ActionError(SALE_ITEMS_ONLY_MESSAGE);
+
         // Atomic increment — WHERE guards against exceeding maxUsages
         const used = await tx.coupon.updateMany({
           where: {
@@ -183,10 +201,6 @@ export const placeOrder = actionClient
 
         couponId = coupon.id;
         couponCode = code;
-        discountPln =
-          coupon.type === "PERCENTAGE"
-            ? Math.round((subtotalPln * coupon.value) / 100)
-            : Math.min(coupon.value, subtotalPln);
       }
 
       // Free-delivery threshold applies to the subtotal after discounts
