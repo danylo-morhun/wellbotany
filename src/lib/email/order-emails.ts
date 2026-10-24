@@ -8,6 +8,12 @@ import { EMAIL_FROM, resendClient, sendEmail } from "./client";
 import { contractInfoHtml } from "./contract-info";
 import { escapeHtml, layout } from "./layout";
 
+// „Rabat Black Week” / „Rabat (KOD10)” — which discount the customer got
+function discountLabel(order: { couponCode: string | null; promotionName: string | null }): string {
+  if (order.promotionName) return `Rabat ${escapeHtml(order.promotionName)}`;
+  return order.couponCode ? `Rabat (${escapeHtml(order.couponCode)})` : "Rabat";
+}
+
 function pickupBlock(key: string | null): string {
   const location = pickupLocation(key);
   if (!location) return "";
@@ -33,6 +39,8 @@ export async function sendOrderConfirmationEmail(orderNumber: string): Promise<v
       subtotalPln: true,
       shippingPln: true,
       discountPln: true,
+      couponCode: true,
+      promotionName: true,
       totalPln: true,
       items: {
         select: { productName: true, variantOpt: true, quantity: true, totalPln: true },
@@ -54,7 +62,7 @@ export async function sendOrderConfirmationEmail(orderNumber: string): Promise<v
     <table style="width:100%;border-collapse:collapse;margin-top:16px">
       ${itemRows}
       <tr><td style="padding-top:12px;border-top:1px solid #e5e5e5">Dostawa (${shippingLabel(order.shippingMethod)})</td><td style="padding-top:12px;border-top:1px solid #e5e5e5;text-align:right">${formatPrice(order.shippingPln)}</td></tr>
-      ${order.discountPln > 0 ? `<tr><td>Rabat</td><td style="text-align:right">-${formatPrice(order.discountPln)}</td></tr>` : ""}
+      ${order.discountPln > 0 ? `<tr><td>${discountLabel(order)}</td><td style="text-align:right">-${formatPrice(order.discountPln)}</td></tr>` : ""}
       <tr><td style="padding-top:8px;font-weight:600">Łącznie</td><td style="padding-top:8px;text-align:right;font-weight:600">${formatPrice(order.totalPln)}</td></tr>
     </table>
     ${pickupBlock(order.pickupLocation)}
@@ -222,6 +230,8 @@ export async function sendShopOrderNotification(orderNumber: string): Promise<vo
       paymentStatus: true,
       shippingPln: true,
       discountPln: true,
+      couponCode: true,
+      promotionName: true,
       totalPln: true,
       items: {
         select: { productName: true, variantOpt: true, quantity: true, totalPln: true },
@@ -268,7 +278,7 @@ export async function sendShopOrderNotification(orderNumber: string): Promise<vo
     }
     <table style="width:100%;border-collapse:collapse;margin-top:16px">
       ${itemRows}
-      ${order.discountPln > 0 ? `<tr><td>Rabat</td><td style="text-align:right">-${formatPrice(order.discountPln)}</td></tr>` : ""}
+      ${order.discountPln > 0 ? `<tr><td>${discountLabel(order)}</td><td style="text-align:right">-${formatPrice(order.discountPln)}</td></tr>` : ""}
     </table>
     <p style="margin-top:24px"><a href="${siteUrl}/admin/zamowienia/${order.id}">Otwórz zamówienie w panelu</a></p>
   `;
