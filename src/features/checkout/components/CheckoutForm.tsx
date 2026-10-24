@@ -4,9 +4,11 @@ import { useRouter } from "next/navigation";
 import { useAction } from "next-safe-action/hooks";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
+import { readFbc } from "@/components/MetaClickId";
 import { clearSavedCoupon } from "@/features/cart/lib/saved-coupon";
 import type { CartItem } from "@/features/cart/lib/session";
 import { trackItems } from "@/lib/analytics";
+import { hasMarketingConsent } from "@/lib/consent";
 import type { PickupLocationKey } from "@/lib/pickup-locations";
 import { placeOrder } from "../actions";
 import { requiresAddress, type ShippingMethodKey, type ShippingRate } from "../lib/shipping";
@@ -182,6 +184,8 @@ export function CheckoutForm({
       paymentMethod: formData.paymentMethod,
       couponCode: formData.couponCode || undefined,
       acceptedTerms: formData.acceptedTerms,
+      // Cookie banner choice: the server sends the Meta purchase event only with it
+      ...(hasMarketingConsent() && { marketingConsent: true, fbc: readFbc() }),
     });
   }
 
