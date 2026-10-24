@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import { BankTransferDetails } from "@/features/checkout/components/BankTransferDetails";
 import { PAYMENT_LABELS } from "@/features/checkout/lib/payment";
@@ -194,6 +195,12 @@ export default async function OrderDetailPage({
               {order.paymentStatus === "CAPTURED" ? "opłacone" : "nieopłacone"}
             </p>
           </div>
+          <Link
+            href={`/odstapienie?zamowienie=${encodeURIComponent(order.orderNumber)}`}
+            className="mt-4 inline-block text-sm text-primary underline-offset-4 hover:underline"
+          >
+            Odstąp od umowy tutaj
+          </Link>
         </div>
       </div>
     </div>
