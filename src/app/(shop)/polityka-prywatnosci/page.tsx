@@ -49,6 +49,23 @@ const purposes = [
     consequence: "nie będziemy mieli możliwości udzielenia odpowiedzi na Twoje zapytanie",
   },
   {
+    title: "Newsletter",
+    goal: "wysyłanie kodu rabatowego powitalnego oraz informacji o promocjach, nowościach i porad na Twój adres e-mail",
+    basis: [
+      "Twoja zgoda wyrażona przy zapisie (art. 6 ust. 1 lit. a RODO oraz art. 398 Prawa komunikacji elektronicznej)",
+    ],
+    duration:
+      "do wycofania zgody (wystarczy odpowiedzieć na newsletter lub napisać do nas), a dodatkowo do upływu okresu dochodzenia roszczeń.",
+    consequence: "brak — sklep działa w pełni bez zapisu",
+  },
+  {
+    title: "Opinie o produktach",
+    goal: "publikacja Twojej opinii z wybranym przez Ciebie podpisem i potwierdzenie, że pochodzi od osoby, która kupiła produkt",
+    basis: ["Twoja zgoda wyrażona przez wysłanie opinii (art. 6 ust. 1 lit. a RODO)"],
+    duration: "do wycofania zgody — usuniemy wtedy opinię ze Sklepu.",
+    consequence: "brak — opinia jest dobrowolna",
+  },
+  {
     title: "Statystyki korzystania ze Sklepu",
     goal: "analiza ruchu i zakupów w Sklepie za pomocą Google Analytics (identyfikatory pseudonimowe, bez celów reklamowych)",
     basis: ["Twoja zgoda wyrażona w banerze cookies (art. 6 ust. 1 lit. a RODO)"],
@@ -114,6 +131,10 @@ const recipients = [
         },
       ]
     : []),
+  {
+    action: "wysyłka e-maili (potwierdzenia zamówień, newsletter)",
+    recipient: "dostawca usługi wysyłki poczty e-mail",
+  },
   {
     action: "prowadzenie księgowości",
     recipient: "biuro rachunkowe, dostawca oprogramowania księgowego",
