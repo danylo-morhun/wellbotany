@@ -877,6 +877,20 @@ model NewsletterSubscriber {
   createdAt DateTime @default(now())
 }
 
+// Cookie banner choices — Google's EU User Consent Policy requires keeping
+// records of consent. consentId is a random id kept in the visitor's browser;
+// no IP or account is stored with it.
+model ConsentLog {
+  id        String   @id @default(cuid())
+  consentId String
+  analytics Boolean
+  marketing Boolean
+  version   Int // banner text version the visitor saw
+  createdAt DateTime @default(now())
+
+  @@index([consentId])
+}
+
 model ContactMessage {
   id        String   @id @default(cuid())
   name      String
