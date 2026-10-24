@@ -55,6 +55,18 @@ describe("matchItems", () => {
     expect(unmatched.map((i) => i.symbol)).toEqual(["NOPE"]);
   });
 
+  it("falls back to a symbol that holds our EAN", () => {
+    const { quantities, unmatched } = matchItems(
+      [
+        { symbol: "5901234567890", ean: "5900000000001", quantity: 3 },
+        { symbol: "5909999999999", ean: "", quantity: 1 },
+      ],
+      variants,
+    );
+    expect(quantities).toEqual(new Map([["v3", 3]]));
+    expect(unmatched.map((i) => i.symbol)).toEqual(["5909999999999"]);
+  });
+
   it("treats negative Subiekt stock as 0 and sums duplicates", () => {
     const { quantities } = matchItems(
       [
