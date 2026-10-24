@@ -7,6 +7,7 @@ import { CartSummary } from "@/features/cart/components/CartSummary";
 import { ShippingProgress } from "@/features/cart/components/ShippingProgress";
 import { effectiveUnitPricePln, saleSubtotalPln } from "@/features/cart/lib/pricing";
 import { CART_COOKIE_NAME, getCart, getCartByCustomerId } from "@/features/cart/lib/session";
+import { isTierPromoLive } from "@/features/promotions/lib/tiered";
 import { getShopSettings } from "@/features/settings/lib/shop-settings";
 import { auth } from "@/lib/auth";
 
@@ -28,7 +29,7 @@ export default async function KoszykPage() {
   }
 
   const items = cart?.items ?? [];
-  const { freeShippingThresholdPln } = await getShopSettings();
+  const { freeShippingThresholdPln, tierPromo } = await getShopSettings();
 
   if (items.length === 0) {
     return (
@@ -87,7 +88,11 @@ export default async function KoszykPage() {
         </div>
 
         <div className="lg:sticky lg:top-24 lg:self-start">
-          <CartSummary subtotal={subtotal} saleSubtotal={saleSubtotalPln(items)} />
+          <CartSummary
+            subtotal={subtotal}
+            saleSubtotal={saleSubtotalPln(items)}
+            promo={isTierPromoLive(tierPromo) ? tierPromo : null}
+          />
         </div>
       </div>
     </div>

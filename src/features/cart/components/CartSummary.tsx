@@ -2,13 +2,25 @@
 
 import Link from "next/link";
 import { useState } from "react";
+import { cartDiscount, nextTier, type TierPromo } from "@/features/promotions/lib/tiered";
 import { formatPrice } from "@/lib/format";
 import { CouponInput } from "./CouponInput";
 
-type Props = { subtotal: number; saleSubtotal: number };
+type Props = {
+  subtotal: number;
+  saleSubtotal: number;
+  /** Live cart promotion, if any */
+  promo: TierPromo | null;
+};
 
-export function CartSummary({ subtotal, saleSubtotal }: Props) {
-  const [discount, setDiscount] = useState(0);
+export function CartSummary({ subtotal, saleSubtotal, promo }: Props) {
+  const [couponDiscount, setCouponDiscount] = useState(0);
+  const {
+    discountPln: discount,
+    source,
+    note,
+  } = cartDiscount(promo, subtotal, saleSubtotal, couponDiscount);
+  const next = promo ? nextTier(promo.tiers, subtotal) : null;
   const total = subtotal - discount;
 
   return (
@@ -24,9 +36,18 @@ export function CartSummary({ subtotal, saleSubtotal }: Props) {
         </div>
         {discount > 0 && (
           <div className="flex justify-between text-sm">
-            <span className="text-muted-foreground">Rabat</span>
+            <span className="text-muted-foreground">
+              {source === "promo" ? `Rabat ${promo?.name}` : "Rabat"}
+            </span>
             <span className="font-medium text-success">-{formatPrice(discount)}</span>
           </div>
+        )}
+        {note && <p className="text-xs text-muted-foreground">{note}</p>}
+        {next && (
+          <p className="rounded-lg bg-accent/15 px-3 py-2 text-xs">
+            Dodaj produkty za <strong>{formatPrice(next.missingPln)}</strong>, a dostaniesz -
+            {next.tier.percent}% ({promo?.name}).
+          </p>
         )}
         <div className="flex justify-between text-sm">
           <span className="text-muted-foreground">Dostawa</span>
@@ -40,7 +61,11 @@ export function CartSummary({ subtotal, saleSubtotal }: Props) {
       </div>
 
       <div className="border-t border-border px-6 py-4">
-        <CouponInput subtotal={subtotal} saleSubtotal={saleSubtotal} onDiscount={setDiscount} />
+        <CouponInput
+          subtotal={subtotal}
+          saleSubtotal={saleSubtotal}
+          onDiscount={setCouponDiscount}
+        />
       </div>
 
       <div className="px-6 pb-5">
