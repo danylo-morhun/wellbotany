@@ -615,6 +615,14 @@ model ShopSettings {
   // Banner text while paused; null = default message
   ordersPausedMessagePl String?
 
+  // Cart-value discount („rabat progresywny”): no Omnibus duty because product
+  // prices don't change (UOKiK 2023, s. 19). Never on sale lines, never on top
+  // of a coupon. Tiers: [{ minPln, percent }] in grosz; null/empty = off
+  tierPromoName     String?
+  tierPromoTiers    Json?
+  tierPromoStartsAt DateTime?
+  tierPromoEndsAt   DateTime?
+
   updatedAt DateTime @updatedAt
 }
 
@@ -790,6 +798,8 @@ model Order {
   couponId   String?
   coupon     Coupon? @relation(fields: [couponId], references: [id])
   couponCode String? // snapshot (coupon record may change later)
+  // Cart-value promotion that gave discountPln instead of a coupon (snapshot)
+  promotionName String?
 
   // Marketing-cookie consent at checkout; the Meta Conversions API purchase
   // event is sent only when true
