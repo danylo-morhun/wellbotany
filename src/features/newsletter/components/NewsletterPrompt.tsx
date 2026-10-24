@@ -2,9 +2,9 @@
 
 import { Dialog } from "@base-ui/react/dialog";
 import { Check, Gift, X } from "lucide-react";
-import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
+import { PrivacyNote } from "@/components/PrivacyNote";
 import { captureCouponFromUrl } from "@/features/cart/lib/saved-coupon";
 import { CONSENT_CHANGE_EVENT, needsConsentPrompt } from "@/lib/consent";
 import { WELCOME_COUPON_VALID_DAYS, WELCOME_DISCOUNT_PERCENT } from "../lib/constants";
@@ -219,12 +219,11 @@ export function NewsletterPrompt() {
                 porady, bez spamu.
               </Dialog.Description>
               <NewsletterForm variant="card" onSubscribed={() => setDone(true)} />
-              <p className="mt-3 text-xs text-muted-foreground">
-                Zapisując się, zgadzasz się na newsletter; zgodę wycofasz w każdej chwili.{" "}
-                <Link href="/polityka-prywatnosci" className="underline hover:text-foreground">
-                  Polityka prywatności
-                </Link>
-              </p>
+              <PrivacyNote
+                consent
+                purpose="Zapisując się, zgadzasz się na newsletter — e-mail przetwarzamy, aby wysyłać kod rabatowy, promocje i porady."
+                className="mt-3 text-xs text-muted-foreground"
+              />
               {!done && (
                 <Dialog.Close className="mt-5 self-start text-sm text-muted-foreground underline-offset-4 hover:text-foreground hover:underline">
                   Nie, dziękuję

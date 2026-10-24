@@ -1,4 +1,4 @@
-import Link from "next/link";
+import { PrivacyNote } from "@/components/PrivacyNote";
 import { NewsletterForm } from "@/features/newsletter/components/NewsletterForm";
 import { WELCOME_DISCOUNT_PERCENT } from "@/features/newsletter/lib/constants";
 import { sectionTitleClass } from "./SectionHeading";
@@ -28,13 +28,12 @@ export function NewsletterSection() {
           nowości i porady — bez spamu.
         </p>
         <NewsletterForm />
-        <p className="mx-auto mt-3 max-w-md text-xs text-band-foreground/60">
-          Zapisując się, zgadzasz się na otrzymywanie newslettera. Zgodę możesz wycofać w każdej
-          chwili.{" "}
-          <Link href="/polityka-prywatnosci" className="underline hover:text-band-foreground">
-            Polityka prywatności
-          </Link>
-        </p>
+        <PrivacyNote
+          consent
+          purpose="Zapisując się, zgadzasz się na newsletter — e-mail przetwarzamy, aby wysyłać kod rabatowy, promocje i porady."
+          className="mx-auto mt-3 max-w-md text-xs text-band-foreground/60"
+          linkClassName="underline hover:text-band-foreground"
+        />
       </div>
     </section>
   );
