@@ -32,6 +32,8 @@ export const checkoutSchema = z
       "CASH_ON_DELIVERY",
     ]),
     couponCode: z.string().optional(),
+    marketingConsent: z.boolean().default(false),
+    fbc: z.string().max(500).optional(),
     acceptedTerms: z
       .boolean()
       .refine((v) => v, { message: "Wymagana akceptacja regulaminu i polityki prywatności" }),
