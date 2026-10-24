@@ -194,8 +194,14 @@ export default function RegulaminPage() {
             <Link href="/zwroty" className="text-primary underline-offset-4 hover:underline">
               Zwroty i reklamacje
             </Link>
-            , jednak nie jest to obowiązkowe. Do zachowania terminu wystarczy wysłanie informacji
-            przed jego upływem.
+            , jednak nie jest to obowiązkowe. Oświadczenie można też złożyć przez formularz online
+            na stronie{" "}
+            <Link href="/odstapienie" className="text-primary underline-offset-4 hover:underline">
+              Odstąpienie od umowy
+            </Link>{" "}
+            — Sprzedawca niezwłocznie potwierdzi jego otrzymanie e-mailem, podając treść
+            oświadczenia oraz datę i godzinę jego otrzymania. Do zachowania terminu wystarczy
+            wysłanie informacji przed jego upływem.
           </p>
           <h3 className="mb-2 mt-4 font-semibold text-foreground">Skutki odstąpienia od umowy</h3>
           <ul className="list-inside list-disc space-y-2 text-muted-foreground">
