@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { pluralize } from "../lib/plural";
 import { Stars } from "./Stars";
 
@@ -45,7 +46,11 @@ export function ProductReviews({ average, count, items }: Props) {
       )}
       <p className="mt-3 text-xs text-muted-foreground">
         Opinie mogą wystawiać wyłącznie klienci, którzy kupili produkt w naszym sklepie – link do
-        formularza wysyłamy po dostarczeniu zamówienia. Publikujemy opinie pozytywne i negatywne.
+        formularza wysyłamy po dostarczeniu zamówienia. Publikujemy opinie pozytywne i negatywne bez
+        zmian w treści; nie publikujemy wulgaryzmów, danych osobowych ani obietnic leczenia.{" "}
+        <Link href="/regulamin#opinie" className="underline hover:text-foreground">
+          Zasady opinii
+        </Link>
       </p>
     </section>
   );
