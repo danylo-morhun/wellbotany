@@ -155,8 +155,8 @@ export default async function AdminProductsPage({
       <ProductsTable
         products={products.map((p) => ({
           ...p,
-          // Inline editor works on the default variant only
-          variants: p.variants.filter((v) => v.isDefault).slice(0, 1),
+          // Inline editor works on the default variant (sorted first); falls back to any variant
+          variants: p.variants.slice(0, 1),
           _count: { variants: p.variants.length },
           completeness: (() => {
             const fields = completenessById.get(p.id);
