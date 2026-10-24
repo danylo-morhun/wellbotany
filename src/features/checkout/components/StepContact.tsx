@@ -4,6 +4,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
+import { PrivacyNote } from "@/components/PrivacyNote";
 import type { CheckoutFormData } from "./CheckoutForm";
 import { FakturaFields, validateNip } from "./FakturaFields";
 
@@ -121,6 +122,8 @@ export function StepContact({ data, onChange, onNext }: Props) {
         nipError={nipError}
         onNipChange={() => setNipError(null)}
       />
+
+      <PrivacyNote purpose="Dane przetwarzamy, aby zrealizować zamówienie, dostarczyć je i wystawić dowód zakupu." />
 
       <button
         type="submit"

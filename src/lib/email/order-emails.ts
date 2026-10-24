@@ -5,6 +5,7 @@ import { PICKUP_HOLD_DAYS, pickupLocation } from "@/lib/pickup-locations";
 import { prisma } from "@/lib/prisma";
 import { BANK_TRANSFER_DETAILS } from "@/lib/shop-config";
 import { EMAIL_FROM, resendClient, sendEmail } from "./client";
+import { contractInfoHtml } from "./contract-info";
 import { escapeHtml, layout } from "./layout";
 
 function pickupBlock(key: string | null): string {
@@ -72,6 +73,7 @@ export async function sendOrderConfirmationEmail(orderNumber: string): Promise<v
         ? `<p>Do zapłaty przy odbiorze: <strong>${formatPrice(order.totalPln)}</strong></p>`
         : ""
     }
+    ${contractInfoHtml()}
   `;
 
   await sendEmail(resend, {

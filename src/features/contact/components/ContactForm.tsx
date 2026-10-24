@@ -3,6 +3,7 @@
 import { useAction } from "next-safe-action/hooks";
 import { useState } from "react";
 import { toast } from "sonner";
+import { PrivacyNote } from "@/components/PrivacyNote";
 import { sendContactMessage } from "../actions";
 
 const inputClass =
@@ -118,6 +119,7 @@ export function ContactForm() {
           {isExecuting ? "Wysyłanie…" : "Wyślij wiadomość"}
         </span>
       </button>
+      <PrivacyNote purpose="Dane przetwarzamy, aby odpowiedzieć na Twoją wiadomość." />
     </form>
   );
 }
