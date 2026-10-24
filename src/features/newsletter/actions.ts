@@ -1,11 +1,14 @@
 "use server";
 
 import { after } from "next/server";
+import { z } from "zod";
+import { ActionError } from "@/lib/action-error";
 import { sendWelcomeCouponEmail } from "@/lib/email/newsletter-emails";
 import { prisma } from "@/lib/prisma";
 import { assertNotRateLimited, getClientIp, newsletterLimiter } from "@/lib/rate-limit";
 import { actionClient } from "@/lib/safe-action";
 import { WELCOME_DISCOUNT_PERCENT } from "./lib/constants";
+import { removeSubscriber } from "./lib/remove-subscriber";
 import { createWelcomeCoupon } from "./lib/welcome-coupon";
 import { subscribeSchema } from "./schema";
 
@@ -51,5 +54,13 @@ export const subscribeToNewsletter = actionClient
         }),
       );
     }
+    return { success: true };
+  });
+
+export const unsubscribeFromNewsletter = actionClient
+  .schema(z.object({ email: z.string().email(), token: z.string().min(10).max(100) }))
+  .action(async ({ parsedInput: { email, token } }) => {
+    if (!(await removeSubscriber(email, token)))
+      throw new ActionError("Link jest nieprawidłowy. Napisz do nas, a wypiszemy Cię ręcznie.");
     return { success: true };
   });
