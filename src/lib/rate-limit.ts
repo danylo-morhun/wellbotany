@@ -29,6 +29,7 @@ export const couponLimiter = makeLimiter("coupon", 20, "1 m");
 export const reviewLimiter = makeLimiter("review", 10, "1 h");
 export const newsletterLimiter = makeLimiter("newsletter", 5, "1 h");
 export const consentLimiter = makeLimiter("consent", 20, "1 m");
+export const withdrawalLimiter = makeLimiter("withdrawal", 10, "1 h");
 
 export async function getClientIp(): Promise<string> {
   const h = await headers();
