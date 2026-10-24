@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { PrintButton } from "@/components/PrintButton";
+import { SELLER } from "@/lib/seller";
 
 export const dynamic = "force-static";
 
@@ -54,7 +55,8 @@ export default function ZwrotyPage() {
               faktury/paragonu.
             </li>
             <li>
-              Wyślij paczkę na wskazany przez nas adres zwrotny (otrzymasz go w odpowiedzi e-mail).
+              Odeślij paczkę w ciągu 14 dni od poinformowania nas o odstąpieniu na adres:{" "}
+              {SELLER.legalName}, {SELLER.address}.
             </li>
             <li>
               Koszty przesyłki zwrotnej ponosi Kupujący, z wyjątkiem przypadku wadliwego towaru.
@@ -88,9 +90,13 @@ export default function ZwrotyPage() {
         <section>
           <h2 className="mb-3 text-xl">Zwrot pieniędzy</h2>
           <p className="text-muted-foreground">
-            Po otrzymaniu i sprawdzeniu zwróconego towaru dokonamy zwrotu należności w terminie
-            <strong className="text-foreground"> do 14 dni</strong> od daty otrzymania przesyłki
-            zwrotnej. Zwrot realizowany jest tą samą metodą płatności, którą wybrano przy zakupie.
+            Zwrócimy wszystkie płatności, w tym koszt dostawy (do wysokości najtańszego zwykłego
+            sposobu dostawy w sklepie), niezwłocznie, nie później niż
+            <strong className="text-foreground"> 14 dni</strong> od dnia otrzymania Twojego
+            oświadczenia o odstąpieniu. Możemy wstrzymać się ze zwrotem do czasu otrzymania towaru
+            lub dowodu jego odesłania — w zależności od tego, co nastąpi wcześniej. Zwrot
+            realizujemy tą samą metodą płatności, którą wybrano przy zakupie, chyba że wyraźnie
+            zgodzisz się na inną.
           </p>
         </section>
 
@@ -114,16 +120,25 @@ export default function ZwrotyPage() {
           </p>
           <div className="mt-4 rounded-xl bg-muted p-4 text-xs text-muted-foreground">
             <p className="font-semibold text-foreground">WZÓR FORMULARZA ODSTĄPIENIA OD UMOWY</p>
-            <p className="mt-2">Adresat: Well Botany, kontakt@wellbotany.pl</p>
-            <p className="mt-2">
-              Niniejszym informuję o moim odstąpieniu od umowy sprzedaży następujących towarów:
-              [nazwa towaru]
+            <p className="mt-1">
+              (formularz ten należy wypełnić i odesłać tylko w przypadku chęci odstąpienia od umowy)
             </p>
-            <p className="mt-1">Data zawarcia umowy / data odbioru: [data]</p>
-            <p className="mt-1">Numer zamówienia: [numer]</p>
-            <p className="mt-1">Imię i nazwisko: [imię i nazwisko]</p>
-            <p className="mt-1">Adres: [adres]</p>
-            <p className="mt-2">Data: [data] &nbsp;&nbsp; Podpis: ___________________</p>
+            <p className="mt-2">
+              – Adresat: {SELLER.legalName}, {SELLER.address}, {SELLER.email}
+            </p>
+            <p className="mt-1">
+              – Ja/My(*) niniejszym informuję/informujemy(*) o moim/naszym odstąpieniu od umowy
+              sprzedaży następujących towarów: ………
+            </p>
+            <p className="mt-1">– Data zawarcia umowy(*)/odbioru(*): ………</p>
+            <p className="mt-1">– Imię i nazwisko konsumenta(-ów): ………</p>
+            <p className="mt-1">– Adres konsumenta(-ów): ………</p>
+            <p className="mt-1">
+              – Podpis konsumenta(-ów) (tylko jeżeli formularz jest przesyłany w wersji papierowej):
+              ………
+            </p>
+            <p className="mt-1">– Data: ………</p>
+            <p className="mt-2">(*) Niepotrzebne skreślić.</p>
           </div>
         </section>
       </div>
