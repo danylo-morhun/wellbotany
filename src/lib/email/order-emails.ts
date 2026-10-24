@@ -73,7 +73,7 @@ export async function sendOrderConfirmationEmail(orderNumber: string): Promise<v
         ? `<p>Do zapłaty przy odbiorze: <strong>${formatPrice(order.totalPln)}</strong></p>`
         : ""
     }
-    ${contractInfoHtml()}
+    ${contractInfoHtml(order.orderNumber)}
   `;
 
   await sendEmail(resend, {
