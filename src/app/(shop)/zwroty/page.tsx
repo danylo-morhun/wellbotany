@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Link from "next/link";
 import { PrintButton } from "@/components/PrintButton";
 import { SELLER } from "@/lib/seller";
 
@@ -32,8 +33,15 @@ export default function ZwrotyPage() {
             >
               kontakt@wellbotany.pl
             </a>{" "}
-            przed upływem terminu. Wzór formularza odstąpienia dostępny jest poniżej.
+            przed upływem terminu albo skorzystaj z formularza online — potwierdzenie otrzymasz od
+            razu na e-mail. Wzór formularza odstąpienia do wydruku znajdziesz poniżej.
           </p>
+          <Link
+            href="/odstapienie"
+            className="mt-4 inline-block rounded-full bg-primary px-5 py-2.5 text-sm font-semibold text-primary-foreground transition-colors hover:bg-primary-deep"
+          >
+            Odstąp od umowy tutaj
+          </Link>
         </section>
 
         <section>
