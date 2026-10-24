@@ -10,7 +10,8 @@ const SMALL = 'style="font-size:13px;color:#444"';
  * notice follows the statutory template (zał. 1, so art. 13 covers pkt 9–11)
  * and the form follows zał. 2. A link to the site isn't a durable medium.
  */
-export function contractInfoHtml(): string {
+export function contractInfoHtml(orderNumber: string): string {
+  const withdrawUrl = `${SITE}/odstapienie?zamowienie=${encodeURIComponent(orderNumber)}`;
   return `
     <h2 ${H2}>Sprzedawca</h2>
     <p ${SMALL}>${SELLER.legalName}<br>${SELLER.registry}<br>${SELLER.address}<br>
@@ -21,9 +22,11 @@ export function contractInfoHtml(): string {
 
     <h2 ${H2}>Prawo odstąpienia od umowy</h2>
     <div ${SMALL}>
+    <p><a href="${withdrawUrl}" style="display:inline-block;padding:10px 18px;border-radius:999px;background:#07674A;color:#fff;text-decoration:none">Odstąp od umowy tutaj</a></p>
     <p>Mają Państwo prawo odstąpić od niniejszej umowy w terminie 14 dni bez podania jakiejkolwiek przyczyny.</p>
     <p>Termin do odstąpienia od umowy wygasa po upływie 14 dni od dnia, w którym weszli Państwo w posiadanie towaru lub w którym osoba trzecia inna niż przewoźnik i wskazana przez Państwa weszła w posiadanie towaru.</p>
     <p>Aby skorzystać z prawa odstąpienia od umowy, muszą Państwo poinformować nas (${SELLER.legalName}, ${SELLER.address}, tel. ${SELLER.phone}, e-mail: ${SELLER.email}) o swojej decyzji o odstąpieniu od niniejszej umowy w drodze jednoznacznego oświadczenia (na przykład pismo wysłane pocztą lub pocztą elektroniczną). Mogą Państwo skorzystać z wzoru formularza odstąpienia od umowy, jednak nie jest to obowiązkowe.</p>
+    <p>Mogą Państwo również wypełnić i przesłać formularz odstąpienia od umowy lub jakiekolwiek inne jednoznaczne oświadczenie drogą elektroniczną na naszej stronie internetowej ${SITE}/odstapienie. Jeżeli skorzystają Państwo z tej możliwości, prześlemy Państwu niezwłocznie potwierdzenie otrzymania informacji o odstąpieniu od umowy na trwałym nośniku (np. pocztą elektroniczną).</p>
     <p>Aby zachować termin do odstąpienia od umowy, wystarczy, aby wysłali Państwo informację dotyczącą wykonania przysługującego Państwu prawa odstąpienia od umowy przed upływem terminu do odstąpienia od umowy.</p>
     <p><strong>Skutki odstąpienia od umowy</strong></p>
     <p>W przypadku odstąpienia od niniejszej umowy zwracamy Państwu wszystkie otrzymane od Państwa płatności, w tym koszty dostarczenia towaru (z wyjątkiem dodatkowych kosztów wynikających z wybranego przez Państwa sposobu dostarczenia innego niż najtańszy zwykły sposób dostarczenia oferowany przez nas), niezwłocznie, a w każdym przypadku nie później niż 14 dni od dnia, w którym zostaliśmy poinformowani o Państwa decyzji o wykonaniu prawa odstąpienia od niniejszej umowy. Zwrotu płatności dokonamy przy użyciu takich samych sposobów płatności, jakie zostały przez Państwa użyte w pierwotnej transakcji, chyba że wyraźnie zgodziliście się Państwo na inne rozwiązanie; w każdym przypadku nie poniosą Państwo żadnych opłat w związku z tym zwrotem. Możemy wstrzymać się ze zwrotem płatności do czasu otrzymania towaru lub do czasu dostarczenia nam dowodu jego odesłania, w zależności od tego, które zdarzenie nastąpi wcześniej.</p>
