@@ -257,7 +257,7 @@ html[data-cookie-consent] #cookie-banner:not([data-open]) {
 @media (max-width: 640px) {
   html:not([data-cookie-consent]) body:has(#cookie-banner),
   body:has(#cookie-banner[data-open]) {
-    padding-bottom: 7rem;
+    padding-bottom: 19rem;
   }
 }
 
