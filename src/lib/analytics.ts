@@ -1,12 +1,8 @@
-// GA4 helpers (client-only). Nothing is sent unless the visitor accepted
-// analytics cookies — GoogleAnalytics only loads gtag.js after consent, and
-// track() drops events without it.
+// Google tag helpers (client-only): GA4 with analytics consent, Google Ads
+// conversions with marketing consent. GoogleTag loads gtag.js only after one
+// of them, and every send checks its own category.
 
-export const CONSENT_STORAGE_KEY = "cookie-consent";
-export const CONSENT_CHANGE_EVENT = "cookie-consent:change";
-export const OPEN_COOKIE_SETTINGS_EVENT = "cookie-consent:open";
-
-export type ConsentChoice = "accepted" | "rejected";
+import { hasAnalyticsConsent, hasMarketingConsent, readConsent } from "./consent";
 
 declare global {
   interface Window {
@@ -14,36 +10,9 @@ declare global {
   }
 }
 
-export function readConsent(): ConsentChoice | null {
-  try {
-    const value = localStorage.getItem(CONSENT_STORAGE_KEY);
-    return value === "accepted" || value === "rejected" ? value : null;
-  } catch {
-    return null;
-  }
-}
-
-export function saveConsent(choice: ConsentChoice) {
-  try {
-    localStorage.setItem(CONSENT_STORAGE_KEY, choice);
-  } catch {
-    // Private mode — the choice lasts for this page view only
-  }
-  window.dispatchEvent(new CustomEvent(CONSENT_CHANGE_EVENT, { detail: choice }));
-}
-
-/** Removes GA cookies (_ga, _ga_*) after consent is refused or withdrawn. */
-export function clearGaCookies() {
-  const host = window.location.hostname;
-  // GA sets them on the top-level domain (".wellbotany.pl"), so try each level
-  const domains = host.split(".").map((_, i, parts) => parts.slice(i).join("."));
-  for (const cookie of document.cookie.split(";")) {
-    const name = cookie.split("=")[0].trim();
-    if (!name.startsWith("_ga")) continue;
-    for (const domain of ["", ...domains.map((d) => `; domain=.${d}`)])
-      document.cookie = `${name}=; Max-Age=0; path=/${domain}`;
-  }
-}
+export const GA_ID = process.env.NEXT_PUBLIC_GA_MEASUREMENT_ID;
+export const ADS_ID = process.env.NEXT_PUBLIC_GOOGLE_ADS_ID; // "AW-…"
+const ADS_PURCHASE_LABEL = process.env.NEXT_PUBLIC_GOOGLE_ADS_PURCHASE_LABEL;
 
 export type AnalyticsItem = {
   itemId: string;
@@ -63,40 +32,62 @@ const toGaItem = (item: AnalyticsItem) => ({
   quantity: item.quantity ?? 1,
 });
 
-const GA_ID = process.env.NEXT_PUBLIC_GA_MEASUREMENT_ID;
-
-/**
- * Defines window.gtag (queueing into dataLayer until gtag.js loads) and sends
- * the config hit. Runs from our bundle, not an inline <script>: on strict-CSP
- * pages inline code would need the request nonce.
- */
-export function initGtag() {
-  if (!GA_ID || window.gtag) return;
-  const w = window as unknown as { dataLayer: unknown[] };
-  w.dataLayer = w.dataLayer || [];
-  window.gtag = function gtag() {
-    // biome-ignore lint/complexity/noArguments: gtag.js reads the Arguments object
-    w.dataLayer.push(arguments);
+/** Which Google destinations the stored consent allows. */
+export function allowedGoogleTags() {
+  const consent = readConsent();
+  return {
+    analytics: Boolean(GA_ID) && consent?.analytics === true,
+    ads: Boolean(ADS_ID) && hasMarketingConsent(),
   };
-  window.gtag("consent", "default", {
-    analytics_storage: "granted",
-    ad_storage: "denied",
-    ad_user_data: "denied",
-    ad_personalization: "denied",
-  });
-  window.gtag("js", new Date());
-  window.gtag("config", GA_ID);
 }
 
-/** Queued even before gtag.js has loaded; dropped without consent. */
-export function hasAnalyticsConsent() {
-  return Boolean(GA_ID) && readConsent() === "accepted";
+const configured = new Set<string>();
+
+/**
+ * Defines window.gtag (queueing into dataLayer until gtag.js loads), applies
+ * Consent Mode from the stored choice and configures each allowed destination
+ * once. Safe to call repeatedly. Runs from our bundle, not an inline <script>:
+ * on strict-CSP pages inline code would need the request nonce.
+ */
+export function syncGtag() {
+  const { analytics, ads } = allowedGoogleTags();
+  if (!window.gtag) {
+    if (!analytics && !ads) return;
+    const w = window as unknown as { dataLayer: unknown[] };
+    w.dataLayer = w.dataLayer || [];
+    window.gtag = function gtag() {
+      // biome-ignore lint/complexity/noArguments: gtag.js reads the Arguments object
+      w.dataLayer.push(arguments);
+    };
+    // Basic consent mode: everything denied until the update below.
+    // ad_personalization is never granted — we measure conversions, no remarketing
+    window.gtag("consent", "default", {
+      analytics_storage: "denied",
+      ad_storage: "denied",
+      ad_user_data: "denied",
+      ad_personalization: "denied",
+    });
+    window.gtag("js", new Date());
+  }
+  window.gtag("consent", "update", {
+    analytics_storage: analytics ? "granted" : "denied",
+    ad_storage: ads ? "granted" : "denied",
+    ad_user_data: ads ? "granted" : "denied",
+  });
+  if (analytics && GA_ID && !configured.has(GA_ID)) {
+    window.gtag("config", GA_ID);
+    configured.add(GA_ID);
+  }
+  if (ads && ADS_ID && !configured.has(ADS_ID)) {
+    window.gtag("config", ADS_ID, { allow_enhanced_conversions: true });
+    configured.add(ADS_ID);
+  }
 }
 
 function track(event: string, params: Record<string, unknown>) {
-  if (!hasAnalyticsConsent()) return;
-  initGtag();
-  window.gtag?.("event", event, params);
+  if (!GA_ID || !hasAnalyticsConsent()) return;
+  syncGtag();
+  window.gtag?.("event", event, { ...params, send_to: GA_ID });
 }
 
 /** view_item / add_to_cart / begin_checkout — value = sum of item prices. */
@@ -122,5 +113,34 @@ export function trackPurchase(order: {
     shipping: order.shippingPln / 100,
     ...(order.coupon && { coupon: order.coupon }),
     items: order.items.map(toGaItem),
+  });
+}
+
+export function canTrackAdsConversion() {
+  return Boolean(ADS_PURCHASE_LABEL) && allowedGoogleTags().ads;
+}
+
+/**
+ * Google Ads purchase conversion with enhanced conversions. The e-mail and
+ * phone arrive already normalized and SHA-256 hashed by the server — only
+ * the order's own buyer sees them. No product data is sent.
+ */
+export function trackAdsPurchase(order: {
+  transactionId: string;
+  valuePln: number;
+  sha256Email: string;
+  sha256Phone: string | null;
+}) {
+  if (!canTrackAdsConversion()) return;
+  syncGtag();
+  window.gtag?.("set", "user_data", {
+    sha256_email_address: order.sha256Email,
+    ...(order.sha256Phone && { sha256_phone_number: order.sha256Phone }),
+  });
+  window.gtag?.("event", "conversion", {
+    send_to: `${ADS_ID}/${ADS_PURCHASE_LABEL}`,
+    value: order.valuePln / 100,
+    currency: "PLN",
+    transaction_id: order.transactionId,
   });
 }
