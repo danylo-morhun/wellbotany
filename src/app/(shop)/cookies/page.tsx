@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { GOOGLE_ADS_ENABLED, MARKETING_ENABLED, META_ENABLED } from "@/lib/marketing-config";
 
 export const metadata: Metadata = {
   title: "Polityka cookies",
@@ -24,6 +25,26 @@ const cookieTypes = [
       "Google Analytics 4 (Google Ireland Ltd.): statystyki odwiedzin i zakupów, pliki _ga i _ga_*. Bez zgody nie są zapisywane.",
     duration: "Do 2 lat",
   },
+  ...(GOOGLE_ADS_ENABLED
+    ? [
+        {
+          name: "Marketingowe (tylko za zgodą)",
+          purpose:
+            "Google Ads (Google Ireland Ltd.): pomiar, które nasze reklamy prowadzą do zamówień, pliki _gcl_*. Bez zgody nie są zapisywane.",
+          duration: "Do 90 dni",
+        },
+      ]
+    : []),
+  ...(META_ENABLED
+    ? [
+        {
+          name: "Marketingowe (tylko za zgodą)",
+          purpose:
+            "Meta (Facebook, Instagram): plik _fbc z identyfikatorem kliknięcia w naszą reklamę. Po złożeniu zamówienia nasz serwer przekazuje Meta jego numer i wartość, ten identyfikator, adres IP, dane przeglądarki oraz zahashowany e-mail i telefon — bez informacji o kupionych produktach. Skrypt Meta nie działa w sklepie. Bez zgody nic nie jest zapisywane ani wysyłane.",
+          duration: "Do 90 dni",
+        },
+      ]
+    : []),
 ];
 
 export default function CookiesPage() {
@@ -36,9 +57,10 @@ export default function CookiesPage() {
           <h2 className="mb-3 text-xl">Czym są pliki cookies</h2>
           <p className="text-muted-foreground">
             Pliki cookies to niewielkie pliki tekstowe zapisywane na Twoim urządzeniu podczas
-            korzystania ze sklepu. Niezbędne cookies utrzymują koszyk i sesję logowania. Cookies
-            analityczne zapisujemy wyłącznie po wyrażeniu zgody w banerze — zgodę możesz w każdej
-            chwili zmienić lub wycofać przyciskiem „Ustawienia cookies” w stopce strony.
+            korzystania ze sklepu. Niezbędne cookies utrzymują koszyk i sesję logowania. Cookies{" "}
+            {MARKETING_ENABLED ? "analityczne i marketingowe" : "analityczne"} zapisujemy wyłącznie
+            po wyrażeniu zgody w banerze — zgodę możesz w każdej chwili zmienić lub wycofać
+            przyciskiem „Ustawienia cookies” w stopce strony.
           </p>
         </section>
 
@@ -55,7 +77,7 @@ export default function CookiesPage() {
               </thead>
               <tbody>
                 {cookieTypes.map((row) => (
-                  <tr key={row.name} className="border-b border-border last:border-0">
+                  <tr key={row.purpose} className="border-b border-border last:border-0">
                     <td className="px-4 py-3 font-medium">{row.name}</td>
                     <td className="px-4 py-3 text-muted-foreground">{row.purpose}</td>
                     <td className="px-4 py-3 text-muted-foreground">{row.duration}</td>
