@@ -4,6 +4,7 @@ import { revalidatePath, updateTag } from "next/cache";
 import { cookies, headers } from "next/headers";
 import { after } from "next/server";
 import { z } from "zod";
+import { sendMetaPurchase } from "@/features/ads/lib/meta-capi";
 import { saleSubtotalPln } from "@/features/cart/lib/pricing";
 import { CART_COOKIE_NAME } from "@/features/cart/lib/session";
 import { couponDiscountPln, SALE_ITEMS_ONLY_MESSAGE } from "@/features/coupons/lib/discount";
@@ -28,6 +29,13 @@ import { isOfflinePayment } from "./lib/payment";
 import { requiresAddress, requiresPickupPoint, shippingCostFor } from "./lib/shipping";
 import { getShippingRates } from "./lib/shipping-rates";
 import { checkoutSchema } from "./schema";
+
+async function resolveAppUrl() {
+  const headersList = await headers();
+  const host = headersList.get("host") ?? "";
+  const proto = headersList.get("x-forwarded-proto") ?? "https";
+  return process.env.NEXT_PUBLIC_APP_URL ?? `${proto}://${host}`;
+}
 
 export const verifyCoupon = actionClient
   .schema(
@@ -269,6 +277,7 @@ export const placeOrder = actionClient
           totalPln,
           couponId: couponId ?? null,
           couponCode: couponCode ?? null,
+          marketingConsent: input.marketingConsent,
           items: {
             create: cart.items.map((item) => {
               const unitPricePln = checkoutItemUnitPricePln(item);
@@ -305,6 +314,11 @@ export const placeOrder = actionClient
     updateTag("products");
     revalidatePath("/zestawy-prezentowe", "layout");
 
+    const clientIp = await getClientIp();
+    const userAgent = (await headers()).get("user-agent");
+    const appUrl = await resolveAppUrl();
+    const numItems = cart.items.reduce((sum, item) => sum + item.quantity, 0);
+
     // after(): sent once the response is out, and the function stays alive until they finish
     after(async () => {
       await Promise.all([
@@ -314,6 +328,21 @@ export const placeOrder = actionClient
         sendShopOrderNotification(order.orderNumber).catch((err) => {
           console.error(`[email] shop notification failed for ${order.orderNumber}:`, err);
         }),
+        // Placed order = conversion, also for bank transfer (same moment as GA4 purchase)
+        input.marketingConsent &&
+          sendMetaPurchase({
+            orderNumber: order.orderNumber,
+            totalPln: order.totalPln,
+            numItems,
+            email: input.email,
+            phone: input.phone,
+            fbc: input.fbc,
+            clientIp,
+            userAgent,
+            appUrl,
+          }).catch((err) => {
+            console.error(`[meta] purchase event failed for ${order.orderNumber}:`, err);
+          }),
       ]);
     });
 
@@ -326,11 +355,6 @@ export const placeOrder = actionClient
     }
 
     // Register Przelewy24 transaction
-    const headersList = await headers();
-    const host = headersList.get("host") ?? "";
-    const proto = headersList.get("x-forwarded-proto") ?? "https";
-    const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? `${proto}://${host}`;
-
     const token = await registerTransaction({
       sessionId: order.orderNumber,
       amount: order.totalPln,
