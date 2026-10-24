@@ -35,6 +35,12 @@ const IMG_SRC_HOSTS = [
 const GA_CONNECT =
   "https://*.google-analytics.com https://*.analytics.google.com https://www.googletagmanager.com";
 
+// Google Ads conversions — loaded only with marketing consent (GoogleTag.tsx).
+// Hosts from Google's tag CSP guide; ccTLDs must be listed one by one.
+const ADS_HOSTS =
+  "https://www.googleadservices.com https://googleads.g.doubleclick.net https://ad.doubleclick.net https://pagead2.googlesyndication.com https://www.google.com https://www.google.pl";
+const ADS_FRAME = "https://www.googletagmanager.com";
+
 // Pickup-point map on checkout: OpenStreetMap raster tiles. Point data comes
 // from our own /api/points (proxy to epaka), so no extra connect-src.
 const POINT_MAP_IMG = "https://tile.openstreetmap.org";
@@ -42,7 +48,7 @@ const POINT_MAP_IMG = "https://tile.openstreetmap.org";
 function buildStrictCsp(nonce: string, withPointMap: boolean): string {
   return [
     "default-src 'self'",
-    `img-src 'self' data: blob: ${IMG_SRC_HOSTS}${withPointMap ? ` ${POINT_MAP_IMG}` : ""}`,
+    `img-src 'self' data: blob: ${IMG_SRC_HOSTS} ${ADS_HOSTS}${withPointMap ? ` ${POINT_MAP_IMG}` : ""}`,
     // 'strict-dynamic' trusts scripts loaded by an already-nonce'd script
     // (e.g. Google Analytics' gtag.js pulling in further tag scripts).
     `script-src 'self' 'nonce-${nonce}' '${THEME_INIT_SCRIPT_HASH}' '${COOKIE_CONSENT_SCRIPT_HASH}' 'strict-dynamic'`,
@@ -51,7 +57,8 @@ function buildStrictCsp(nonce: string, withPointMap: boolean): string {
     // here is a deliberate, lower-severity tradeoff.
     "style-src 'self' 'unsafe-inline'",
     "font-src 'self'",
-    `connect-src 'self' https://api.cloudinary.com https://res.cloudinary.com https://*.ingest.de.sentry.io https://*.ingest.sentry.io ${GA_CONNECT}`,
+    `connect-src 'self' https://api.cloudinary.com https://res.cloudinary.com https://*.ingest.de.sentry.io https://*.ingest.sentry.io ${GA_CONNECT} ${ADS_HOSTS}`,
+    `frame-src 'self' ${ADS_FRAME}`,
     "object-src 'none'",
     "base-uri 'self'",
     "form-action 'self'",
@@ -68,13 +75,14 @@ function buildStrictCsp(nonce: string, withPointMap: boolean): string {
 function buildRelaxedCsp(): string {
   return [
     "default-src 'self'",
-    `img-src 'self' data: blob: ${IMG_SRC_HOSTS}`,
-    "script-src 'self' 'unsafe-inline' https://www.googletagmanager.com",
+    `img-src 'self' data: blob: ${IMG_SRC_HOSTS} ${ADS_HOSTS}`,
+    "script-src 'self' 'unsafe-inline' https://www.googletagmanager.com https://www.googleadservices.com https://www.google.com",
     "style-src 'self' 'unsafe-inline'",
     "font-src 'self'",
     // Cloudinary too: a client-side nav from the storefront into /admin keeps
     // this document's CSP, so the admin image upload runs under it.
-    `connect-src 'self' https://api.cloudinary.com https://res.cloudinary.com https://*.ingest.de.sentry.io https://*.ingest.sentry.io ${GA_CONNECT}`,
+    `connect-src 'self' https://api.cloudinary.com https://res.cloudinary.com https://*.ingest.de.sentry.io https://*.ingest.sentry.io ${GA_CONNECT} ${ADS_HOSTS}`,
+    `frame-src 'self' ${ADS_FRAME}`,
     "object-src 'none'",
     "base-uri 'self'",
     "form-action 'self'",
