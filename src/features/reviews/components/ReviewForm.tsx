@@ -4,6 +4,7 @@ import { Star } from "lucide-react";
 import Image from "next/image";
 import { useAction } from "next-safe-action/hooks";
 import { useState } from "react";
+import { PrivacyNote } from "@/components/PrivacyNote";
 import { submitReviews } from "../actions";
 import { REVIEW_MIN_LENGTH } from "../schema";
 
@@ -153,8 +154,13 @@ export function ReviewForm({ token, suggestedName, products, existing }: Props) 
         {isPending ? "Wysyłanie…" : `Wyślij opinie (${ready.length})`}
       </button>
       <p className="text-xs text-muted-foreground">
-        Opinie publikujemy po weryfikacji. Pod opinią pokażemy wyłącznie podany podpis.
+        Opinie publikujemy po weryfikacji. Pod opinią pokażemy wyłącznie podany podpis — nie wpisuj
+        pełnego nazwiska.
       </p>
+      <PrivacyNote
+        consent
+        purpose="Wysyłając opinię, zgadzasz się na jej publikację z podpisem; dane z zamówienia służą tylko do potwierdzenia, że opinia pochodzi od kupującego."
+      />
     </form>
   );
 }
