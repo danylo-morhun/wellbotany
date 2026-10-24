@@ -1,3 +1,4 @@
+import { unsubscribeOneClickUrl, unsubscribePageUrl } from "@/features/newsletter/lib/unsubscribe";
 import { EMAIL_FROM, resendClient, sendEmail } from "./client";
 import { layout } from "./layout";
 
@@ -21,12 +22,17 @@ export async function sendWelcomeCouponEmail(input: {
     <p style="font-size:24px;font-weight:700;letter-spacing:2px;margin:16px 0">${input.code}</p>
     <p>Wpisz go w koszyku albo przy kasie. Kod jest jednorazowy, ważny do ${until} i nie obejmuje produktów w promocji.</p>
     <p style="margin-top:24px"><a href="${shopUrl}" style="display:inline-block;background:#0f7a5c;color:#fff;padding:12px 24px;border-radius:999px;text-decoration:none;font-weight:600">Przejdź do sklepu</a></p>
-    <p style="margin-top:24px;font-size:12px;color:#767676">Z newslettera wypiszesz się w każdej chwili — wystarczy odpowiedzieć na tę wiadomość.</p>`;
+    <p style="margin-top:24px;font-size:12px;color:#767676">Z newslettera wypiszesz się w każdej chwili: <a href="${unsubscribePageUrl(input.email)}" style="color:#767676">wypisz się</a> albo odpowiedz na tę wiadomość.</p>`;
 
   await sendEmail(resend, {
     from: EMAIL_FROM,
     to: input.email,
     subject: `Twój kod -${input.percent}% do Well Botany`,
     html: layout("Witamy w Well Botany", body),
+    // One-click unsubscribe in Gmail/Outlook (RFC 8058)
+    headers: {
+      "List-Unsubscribe": `<${unsubscribeOneClickUrl(input.email)}>`,
+      "List-Unsubscribe-Post": "List-Unsubscribe=One-Click",
+    },
   });
 }
