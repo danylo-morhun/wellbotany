@@ -287,3 +287,50 @@ test("admin: mark as paid, then shipped with a tracking number", async ({ page, 
   expect(shipped.shippedAt).not.toBeNull();
   await ctx.close();
 });
+
+test("cart-value promotion: banner, cart, order snapshot", async ({ page, browser }) => {
+  const { admin, password } = await seedAdmin(undefined, "promo-admin");
+  customerEmails.push(admin.email);
+  const ctx = await browser.newContext();
+  const adminPage = await ctx.newPage();
+  await adminPage.goto("/logowanie");
+  await adminPage.locator("#email").fill(admin.email);
+  await adminPage.locator("#password").fill(password);
+  await adminPage.getByRole("button", { name: "Zaloguj się" }).click();
+  await expect(adminPage).not.toHaveURL(/\/logowanie/, { timeout: 15_000 });
+
+  // Through the admin form, so the cached settings are invalidated like in production
+  const setPromo = async (on: boolean) => {
+    await adminPage.goto("/admin/ustawienia");
+    const toggle = adminPage.getByRole("switch", { name: "Włącz promocję" });
+    if ((await toggle.getAttribute("aria-checked")) !== String(on)) await toggle.click();
+    if (on) {
+      await adminPage.locator("#promoName").fill("E2E Week");
+      await adminPage.getByLabel("Próg 1: kwota").fill("40");
+      await adminPage.getByLabel("Próg 1: rabat w procentach").fill("10");
+    }
+    await adminPage.getByRole("button", { name: "Zapisz promocję" }).click();
+    await expect(adminPage.getByText("Promocja zapisana")).toBeVisible();
+  };
+
+  try {
+    await setPromo(true);
+    await addToCartAndOpenCheckout(page, 4990);
+    await expect(page.getByText("E2E Week:")).toBeVisible();
+    await fillContact(page, guestEmail("promo"));
+    await chooseShipping(page, "PICKUP");
+    await page.locator('input[name="pickupLocation"][value="KALISZ_MLYNARSKA"]').check();
+    await page.getByRole("button", { name: "Dalej: Płatność" }).click();
+    await expect(page.getByText("Rabat E2E Week")).toBeVisible();
+    await expect(page.getByText(/^-4,99/)).toBeVisible();
+    await page.getByRole("button", { name: "Wstecz" }).click();
+
+    const order = await pay(page, "BANK_TRANSFER");
+    expect(order.discountPln).toBe(499);
+    expect(order.promotionName).toBe("E2E Week");
+    expect(order.couponId).toBeNull();
+  } finally {
+    await setPromo(false);
+    await ctx.close();
+  }
+});
