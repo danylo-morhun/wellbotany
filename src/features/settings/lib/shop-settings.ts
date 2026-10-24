@@ -1,4 +1,5 @@
 import { unstable_cache } from "next/cache";
+import { parseTiers, type TierPromo } from "@/features/promotions/lib/tiered";
 import { ActionError } from "@/lib/action-error";
 import { prisma } from "@/lib/prisma";
 import { DEFAULT_ORDERS_PAUSED_MESSAGE_PL } from "../schema";
@@ -17,6 +18,8 @@ export type ShopSettings = {
   ordersPaused: boolean;
   /** Banner text shown while paused; null = default message */
   ordersPausedMessagePl: string | null;
+  /** Cart-value discount as configured; check `isTierPromoLive` before use (dates) */
+  tierPromo: TierPromo | null;
 };
 
 export const getShopSettings = unstable_cache(
@@ -29,6 +32,14 @@ export const getShopSettings = unstable_cache(
       productMetaSuffixPl: row ? row.productMetaSuffixPl : DEFAULT_PRODUCT_META_SUFFIX_PL,
       ordersPaused: row?.ordersPaused ?? false,
       ordersPausedMessagePl: row?.ordersPausedMessagePl ?? null,
+      tierPromo: row?.tierPromoName
+        ? {
+            name: row.tierPromoName,
+            tiers: parseTiers(row.tierPromoTiers),
+            startsAt: row.tierPromoStartsAt?.toISOString() ?? null,
+            endsAt: row.tierPromoEndsAt?.toISOString() ?? null,
+          }
+        : null,
     };
   },
   ["shop-settings"],
