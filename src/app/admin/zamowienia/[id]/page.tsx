@@ -25,6 +25,7 @@ import {
   SENDER,
   splitStreet,
 } from "@/features/shipping/lib/shipment";
+import { formatReceivedAt, withdrawalStatement } from "@/features/withdrawal/lib/statement";
 import { formatPrice, pluralPl } from "@/lib/format";
 import { pickupLocation } from "@/lib/pickup-locations";
 import { prisma } from "@/lib/prisma";
@@ -43,6 +44,7 @@ export default async function AdminOrderDetailPage({ params }: Props) {
   const order = await prisma.order.findUnique({
     where: { id },
     include: {
+      withdrawals: { orderBy: { createdAt: "asc" } },
       items: {
         include: {
           variant: {
@@ -180,6 +182,23 @@ export default async function AdminOrderDetailPage({ params }: Props) {
 
       <div className="grid grid-cols-1 items-start gap-6 lg:grid-cols-[minmax(0,1fr)_340px]">
         <div className="space-y-6">
+          {order.withdrawals.map((w) => (
+            <div key={w.id} className="rounded-2xl bg-destructive/10 p-4 text-sm">
+              <p className="mb-1 font-semibold text-destructive">
+                Odstąpienie od umowy · {formatReceivedAt(w.createdAt)}
+              </p>
+              <p>
+                {withdrawalStatement({
+                  name: w.name,
+                  orderNumber: order.orderNumber,
+                  items: w.items,
+                })}
+              </p>
+              <p className="mt-1 text-muted-foreground">
+                {w.email} · zwrot płatności do 14 dni od tej daty
+              </p>
+            </div>
+          ))}
           {order.noteCustomer?.trim() && (
             <div className="rounded-2xl bg-info/10 p-4 text-sm">
               <p className="mb-1 font-semibold text-info">Uwagi klienta</p>
