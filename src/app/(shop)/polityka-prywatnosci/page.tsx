@@ -98,7 +98,8 @@ const purposes = [
 const recipients = [
   {
     action: "każde działanie w związku ze Sklepem",
-    recipient: "dostawca oprogramowania sklepowego i hostingu",
+    recipient:
+      "dostawcy hostingu i infrastruktury Sklepu: Vercel Inc. (hosting), Neon Inc. (baza danych, serwery we Frankfurcie), Upstash Inc. (ochrona przed nadużyciami — limit zapytań na adres IP), Functional Software Inc. — Sentry (rejestr błędów), Cloudinary Ltd. (zdjęcia produktów)",
   },
   {
     action: "złożenie zamówienia w Sklepie",
@@ -133,7 +134,7 @@ const recipients = [
     : []),
   {
     action: "wysyłka e-maili (potwierdzenia zamówień, newsletter)",
-    recipient: "dostawca usługi wysyłki poczty e-mail",
+    recipient: "Resend Inc. (wysyłka e-maili)",
   },
   {
     action: "prowadzenie księgowości",
@@ -275,11 +276,15 @@ export default function PolitykaPrywatnosciPage() {
             </table>
           </div>
           <p className="mt-2 text-xs text-muted-foreground">
-            Dane mogą być przekazywane do USA przez {META_ENABLED ? "Google i Meta" : "Google"} na
+            Część odbiorców to firmy z siedzibą w USA (Vercel, Neon, Upstash, Sentry, Resend,{" "}
+            {META_ENABLED ? "Google, Meta" : "Google"}), więc dane mogą być przekazywane do USA — na
             podstawie decyzji Komisji Europejskiej stwierdzającej odpowiedni stopień ochrony (EU-US
-            Data Privacy Framework). Pozostali odbiorcy nie przekazują danych poza Europejski Obszar
-            Gospodarczy. Ponadto Twoje dane mogą zostać udostępnione odpowiednim organom publicznym
-            w zakresie, w jakim jesteśmy zobowiązani do ich udostępnienia.
+            Data Privacy Framework) wobec firm, które się w nim certyfikowały, a w pozostałych
+            przypadkach na podstawie standardowych klauzul umownych zatwierdzonych przez Komisję
+            (art. 46 ust. 2 lit. c RODO). Cloudinary ma siedzibę w Izraelu, wobec którego Komisja
+            wydała decyzję o odpowiednim stopniu ochrony. Kopię zabezpieczeń możesz otrzymać, pisząc
+            do nas. Ponadto Twoje dane mogą zostać udostępnione odpowiednim organom publicznym w
+            zakresie, w jakim jesteśmy zobowiązani do ich udostępnienia.
           </p>
         </section>
 
