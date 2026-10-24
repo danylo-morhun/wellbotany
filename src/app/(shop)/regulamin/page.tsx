@@ -122,6 +122,15 @@ export default function RegulaminPage() {
               jednego kodu. Jeśli warunki kodu tak stanowią, rabat nie obejmuje produktów objętych
               obniżką ceny — informacja o tym widoczna jest przy kodzie przed złożeniem zamówienia.
             </li>
+            <li id="rabat-od-koszyka" className="scroll-mt-24">
+              Rabat od wartości koszyka: jeśli Sprzedawca ogłosi rabat zależny od wartości koszyka
+              (np. „-5% od 150 zł”), jego progi i okres obowiązywania podane są w pasku na górze
+              strony Sklepu. Próg liczony jest od wartości wszystkich produktów w koszyku, a rabat
+              naliczany od produktów nieobjętych obniżką ceny. Rabat nie łączy się z kodami
+              rabatowymi — naliczany jest korzystniejszy z nich, a kod niewykorzystany w ten sposób
+              pozostaje do użycia. Wysokość rabatu widoczna jest w koszyku i przy kasie przed
+              złożeniem zamówienia.
+            </li>
           </ol>
         </section>
 
