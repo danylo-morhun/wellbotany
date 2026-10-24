@@ -16,6 +16,10 @@ beforeAll(() => {
     productMetaSuffixPl: null,
     ordersPaused: true,
     ordersPausedMessagePl: "Wracamy 3 listopada.",
+    tierPromoName: null,
+    tierPromoTiers: null,
+    tierPromoStartsAt: null,
+    tierPromoEndsAt: null,
     updatedAt: new Date(),
   });
 });
