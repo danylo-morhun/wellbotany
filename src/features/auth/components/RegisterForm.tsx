@@ -3,6 +3,7 @@
 import { Eye, EyeOff } from "lucide-react";
 import { useAction } from "next-safe-action/hooks";
 import { useMemo, useState } from "react";
+import { PrivacyNote } from "@/components/PrivacyNote";
 import { registerCustomer } from "../actions";
 
 const STRENGTH_LABELS = ["Bardzo słabe", "Słabe", "Średnie", "Dobre", "Silne"];
@@ -190,10 +191,6 @@ export function RegisterForm() {
             Akceptuję{" "}
             <a href="/regulamin" className="underline hover:text-foreground">
               regulamin
-            </a>{" "}
-            i{" "}
-            <a href="/polityka-prywatnosci" className="underline hover:text-foreground">
-              politykę prywatności
             </a>
           </span>
         </label>
@@ -209,6 +206,7 @@ export function RegisterForm() {
       >
         {isPending ? "Rejestracja..." : "Zarejestruj się"}
       </button>
+      <PrivacyNote purpose="Dane przetwarzamy, aby prowadzić Twoje konto." />
     </form>
   );
 }
