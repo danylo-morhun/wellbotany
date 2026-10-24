@@ -378,6 +378,27 @@ export default function RegulaminPage() {
           </p>
         </section>
 
+        <section id="opinie" className="scroll-mt-24">
+          <h2 className="mb-3 text-xl">Opinie o produktach</h2>
+          <ol className="list-inside list-decimal space-y-2 text-muted-foreground">
+            <li>
+              Opinię o produkcie może wystawić wyłącznie osoba, która kupiła go w Sklepie. Link do
+              formularza Sprzedawca wysyła e-mailem po dostarczeniu zamówienia; każda opinia jest
+              powiązana z zamówieniem, a jeden produkt z zamówienia można ocenić raz.
+            </li>
+            <li>
+              Sprzedawca publikuje opinie pozytywne i negatywne, w kolejności od najnowszych, bez
+              zmiany ich treści, i nie oferuje za nie wynagrodzenia ani rabatów.
+            </li>
+            <li>
+              Sprzedawca nie publikuje opinii, które zawierają wulgaryzmy, dane osobowe, treści
+              niezwiązane z produktem, reklamę lub obietnice leczenia — w tym ostatnim przypadku z
+              uwagi na zakaz przypisywania żywności, w tym suplementom diety, właściwości
+              leczniczych.
+            </li>
+          </ol>
+        </section>
+
         <p className="text-muted-foreground">
           Zobacz też:{" "}
           <Link href="/zwroty" className="text-primary underline-offset-4 hover:underline">
