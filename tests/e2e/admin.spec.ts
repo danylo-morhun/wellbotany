@@ -34,4 +34,8 @@ test("admin can log in and sees the product catalog", async ({ page }) => {
 
   await page.goto("/admin/zamowienia");
   await expect(page).toHaveURL(/\/admin\/zamowienia/);
+
+  await page.goto("/admin/marze?widok=wszystkie");
+  await expect(page.getByRole("heading", { name: "Marże" })).toBeVisible();
+  await expect(page.getByText("Mediana marży")).toBeVisible();
 });
