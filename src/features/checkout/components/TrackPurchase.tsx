@@ -1,9 +1,16 @@
 "use client";
 
 import { useEffect } from "react";
-import { type AnalyticsItem, hasAnalyticsConsent, trackPurchase } from "@/lib/analytics";
+import {
+  type AnalyticsItem,
+  canTrackAdsConversion,
+  trackAdsPurchase,
+  trackPurchase,
+} from "@/lib/analytics";
+import { hasAnalyticsConsent } from "@/lib/consent";
 
-const SENT_KEY = "ga-purchases-sent";
+const GA_SENT_KEY = "ga-purchases-sent";
+const ADS_SENT_KEY = "ads-purchases-sent";
 
 type Props = {
   orderNumber: string;
@@ -11,22 +18,58 @@ type Props = {
   shippingPln: number;
   coupon: string | null;
   items: AnalyticsItem[];
+  // Normalized + SHA-256 on the server, for Google Ads enhanced conversions
+  sha256Email: string;
+  sha256Phone: string | null;
 };
 
-/** GA4 purchase, once per order even if the confirmation page is reloaded. */
-export function TrackPurchase({ orderNumber, totalPln, shippingPln, coupon, items }: Props) {
+/** Runs `send` once per order and storage key, even if the confirmation page is reloaded. */
+function once(key: string, orderNumber: string, send: () => void) {
+  let sent: string[] = [];
+  try {
+    sent = JSON.parse(localStorage.getItem(key) ?? "[]");
+  } catch {}
+  if (sent.includes(orderNumber)) return;
+  send();
+  try {
+    localStorage.setItem(key, JSON.stringify([...sent, orderNumber].slice(-20)));
+  } catch {}
+}
+
+/** GA4 purchase (analytics consent) and Google Ads conversion (marketing consent). */
+export function TrackPurchase({
+  orderNumber,
+  totalPln,
+  shippingPln,
+  coupon,
+  items,
+  sha256Email,
+  sha256Phone,
+}: Props) {
   // biome-ignore lint/correctness/useExhaustiveDependencies: once per order number
   useEffect(() => {
-    if (!hasAnalyticsConsent()) return; // nothing sent, so nothing marked as sent
-    let sent: string[] = [];
-    try {
-      sent = JSON.parse(localStorage.getItem(SENT_KEY) ?? "[]");
-    } catch {}
-    if (sent.includes(orderNumber)) return;
-    trackPurchase({ transactionId: orderNumber, valuePln: totalPln, shippingPln, coupon, items });
-    try {
-      localStorage.setItem(SENT_KEY, JSON.stringify([...sent, orderNumber].slice(-20)));
-    } catch {}
+    // Nothing sent without consent, so nothing marked as sent
+    if (hasAnalyticsConsent()) {
+      once(GA_SENT_KEY, orderNumber, () =>
+        trackPurchase({
+          transactionId: orderNumber,
+          valuePln: totalPln,
+          shippingPln,
+          coupon,
+          items,
+        }),
+      );
+    }
+    if (canTrackAdsConversion()) {
+      once(ADS_SENT_KEY, orderNumber, () =>
+        trackAdsPurchase({
+          transactionId: orderNumber,
+          valuePln: totalPln,
+          sha256Email,
+          sha256Phone,
+        }),
+      );
+    }
   }, [orderNumber]);
   return null;
 }
