@@ -246,10 +246,6 @@ export function StepPayment({
           Akceptuję{" "}
           <a href="/regulamin" className="underline hover:text-foreground">
             regulamin sklepu
-          </a>{" "}
-          i{" "}
-          <a href="/polityka-prywatnosci" className="underline hover:text-foreground">
-            politykę prywatności
           </a>
         </span>
       </label>
