@@ -6,7 +6,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import { captureCouponFromUrl } from "@/features/cart/lib/saved-coupon";
-import { CONSENT_CHANGE_EVENT, readConsent } from "@/lib/analytics";
+import { CONSENT_CHANGE_EVENT, needsConsentPrompt } from "@/lib/consent";
 import { WELCOME_COUPON_VALID_DAYS, WELCOME_DISCOUNT_PERCENT } from "../lib/constants";
 import {
   hideTeaser,
@@ -74,7 +74,7 @@ export function NewsletterPrompt() {
       setManual(true);
       setOpen(true);
     };
-    if (readConsent()) openNow();
+    if (!needsConsentPrompt()) openNow();
     else window.addEventListener(CONSENT_CHANGE_EVENT, openNow, { once: true });
     return () => window.removeEventListener(CONSENT_CHANGE_EVENT, openNow);
   }, []);
@@ -88,14 +88,14 @@ export function NewsletterPrompt() {
   useEffect(() => {
     const visit = recordVisit();
     // Never next to an unanswered cookie banner (consent can be withdrawn later)
-    setTeaser(readConsent() !== null && teaserAllowed());
+    setTeaser(!needsConsentPrompt() && teaserAllowed());
     if (triggered.current || !promptAllowed() || hiddenOn(pathname)) return;
 
     let consentWait: (() => void) | null = null;
     const show = () => {
       // Re-checked: the visitor may have subscribed on this page meanwhile
       if (triggered.current || !promptAllowed() || hiddenOn(window.location.pathname)) return;
-      if (!readConsent()) {
+      if (needsConsentPrompt()) {
         // Let the cookie banner go first, then give the page a moment
         if (consentWait) return;
         consentWait = () => window.setTimeout(show, AFTER_CONSENT_MS);
