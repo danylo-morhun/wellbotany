@@ -5,6 +5,7 @@ import { effectiveUnitPricePln } from "@/features/cart/lib/pricing";
 import { CART_COOKIE_NAME, getCart, getCartByCustomerId } from "@/features/cart/lib/session";
 import { CheckoutForm } from "@/features/checkout/components/CheckoutForm";
 import { getShippingRates } from "@/features/checkout/lib/shipping-rates";
+import { isTierPromoLive } from "@/features/promotions/lib/tiered";
 import { isP24Enabled } from "@/features/przelewy24/lib/config";
 import { getShopSettings, ordersPausedMessage } from "@/features/settings/lib/shop-settings";
 import { auth } from "@/lib/auth";
@@ -73,6 +74,7 @@ export default async function ZamowieniePage() {
         items={items}
         subtotal={subtotal}
         freeShippingThresholdPln={settings.freeShippingThresholdPln}
+        promo={isTierPromoLive(settings.tierPromo) ? settings.tierPromo : null}
         shippingRates={await getShippingRates()}
         onlinePaymentsEnabled={isP24Enabled()}
         initialContact={{

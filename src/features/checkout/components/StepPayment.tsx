@@ -7,6 +7,7 @@ import { groupCartItems } from "@/features/cart/lib/grouping";
 import { effectiveUnitPricePln, saleSubtotalPln } from "@/features/cart/lib/pricing";
 import { clearSavedCoupon, readSavedCoupon } from "@/features/cart/lib/saved-coupon";
 import type { CartItem } from "@/features/cart/lib/session";
+import { cartDiscount, type TierPromo } from "@/features/promotions/lib/tiered";
 import { formatPrice } from "@/lib/format";
 import { verifyCoupon } from "../actions";
 import { isOfflinePayment } from "../lib/payment";
@@ -21,6 +22,7 @@ type Props = {
   items: CartItem[];
   subtotal: number;
   freeShippingThresholdPln: number | null;
+  promo: TierPromo | null;
   shippingRates: ShippingRate[];
   onlinePaymentsEnabled: boolean;
   pending: boolean;
@@ -44,6 +46,7 @@ export function StepPayment({
   items,
   subtotal,
   freeShippingThresholdPln,
+  promo,
   shippingRates,
   onlinePaymentsEnabled,
   pending,
@@ -82,7 +85,16 @@ export function StepPayment({
     executeVerify({ code: data.couponCode, subtotal, saleSubtotal });
   };
 
-  const discount = couponResult?.valid ? couponResult.discountPln : 0;
+  const {
+    discountPln: discount,
+    source: discountSource,
+    note: discountNote,
+  } = cartDiscount(
+    promo,
+    subtotal,
+    saleSubtotal,
+    couponResult?.valid ? couponResult.discountPln : 0,
+  );
   const shippingCost = shippingCostFor(
     shippingRates.find((r) => r.method === data.shippingMethod)?.pricePln ?? 0,
     subtotal - discount,
@@ -141,10 +153,13 @@ export function StepPayment({
           </div>
           {discount > 0 && (
             <div className="flex justify-between text-success">
-              <span>Rabat ({data.couponCode})</span>
+              <span>
+                {discountSource === "promo" ? `Rabat ${promo?.name}` : `Rabat (${data.couponCode})`}
+              </span>
               <span>-{formatPrice(discount)}</span>
             </div>
           )}
+          {discountNote && <p className="text-xs text-muted-foreground">{discountNote}</p>}
           <div className="flex justify-between border-t border-border pt-2 font-semibold">
             <span>Łącznie</span>
             <span>{formatPrice(total)}</span>
