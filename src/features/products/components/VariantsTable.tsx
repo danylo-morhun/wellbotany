@@ -19,6 +19,7 @@ import { formatPrice } from "@/lib/format";
 import { discountPercent } from "@/lib/omnibus";
 import { cn } from "@/lib/utils";
 import { deleteVariant, saveVariant } from "../actions";
+import { variantMargin } from "../lib/margin";
 import { Field, inputClass, Switch, TextInput } from "./editor/fields";
 
 type SerializedVariant = Omit<ProductVariant, "vatRate"> & { vatRate: number };
@@ -252,7 +253,7 @@ function VariantSheet({
   const priceGr = plnToGrosze(price);
   const compareGr = compare ? plnToGrosze(compare) : null;
   const costGr = cost ? plnToGrosze(cost) : null;
-  const margin = costGr && priceGr ? Math.round(((priceGr - costGr) / priceGr) * 100) : null;
+  const margin = costGr && priceGr ? variantMargin(priceGr, costGr, Number(vat)) : null;
   const lowest = variant?.lowestPrice30dPln ?? null;
   const eanWarning =
     ean && !isValidEan(ean) ? "Sprawdź kod — nie zgadza się suma kontrolna EAN." : undefined;
@@ -370,7 +371,13 @@ function VariantSheet({
                 <Field
                   label="Cena zakupu"
                   htmlFor="v-cost"
-                  hint={margin != null ? `Marża ${margin}%` : "Widoczna tylko w panelu."}
+                  hint={
+                    margin
+                      ? margin.breakEvenRoas
+                        ? `Marża netto ${margin.percent}% · reklama opłaca się od ROAS ${margin.breakEvenRoas}`
+                        : `Strata ${margin.percent}% — cena netto niższa od ceny zakupu`
+                      : "Cena netto (bez VAT). Widoczna tylko w panelu."
+                  }
                 >
                   <MoneyInput id="v-cost" value={cost} onChange={setCost} />
                 </Field>
