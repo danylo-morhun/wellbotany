@@ -738,6 +738,9 @@ model Order {
   reviewRequestedAt DateTime?
   reviews           Review[]
 
+  // Withdrawal statements filed online (/odstapienie)
+  withdrawals Withdrawal[]
+
   // ── SHIPPING ──
   shippingMethod  ShippingMethod
   shippingCostPln Int // in grosz
@@ -1029,4 +1032,20 @@ model SyncRun {
   createdAt DateTime @default(now())
 
   @@index([locationId, createdAt])
+}
+
+// Withdrawal statement filed online via /odstapienie (UPK art. 30 ust. 3;
+// Dyr. 2011/83 art. 11a) — proof of what was sent and when; acknowledged by e-mail
+model Withdrawal {
+  id        String   @id @default(cuid())
+  orderId   String
+  order     Order    @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  name      String
+  email     String
+  // What the consumer withdraws from, in their words; "" = the whole order
+  items     String   @db.Text
+  createdAt DateTime @default(now())
+
+  @@index([orderId])
+  @@index([createdAt])
 }
