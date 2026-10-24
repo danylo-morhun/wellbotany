@@ -53,7 +53,7 @@ export default async function AdminReviewsPage({ searchParams }: Props) {
     <div>
       <PageHeader
         title="Opinie"
-        description="Opinie zweryfikowanych kupujących. Publikuj pozytywne i negatywne — odrzucaj tylko treści niezgodne z regulaminem (wulgaryzmy, dane osobowe, obietnice leczenia)."
+        description="Opinie zweryfikowanych kupujących. Publikuj pozytywne i negatywne — odrzucaj tylko treści niezgodne z regulaminem: wulgaryzmy, dane osobowe, treści niezwiązane z produktem, reklamę lub obietnice leczenia. Nie zmieniaj treści opinii."
       />
       <nav
         aria-label="Status opinii"
