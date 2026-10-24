@@ -357,7 +357,13 @@ export const saveVariant = adminActionClient
     if (id) {
       await prisma.productVariant.update({ where: { id }, data: payload });
     } else {
-      await prisma.productVariant.create({ data: payload });
+      // A product's first variant becomes its default — listings and the price filter read it
+      const hasDefault = await prisma.productVariant.count({
+        where: { productId: input.productId, isDefault: true },
+      });
+      await prisma.productVariant.create({
+        data: { ...payload, isDefault: payload.isDefault || hasDefault === 0 },
+      });
     }
     revalidatePath("/admin/produkty");
     revalidatePath(`/admin/produkty/${input.productId}`);
@@ -377,8 +383,19 @@ export const deleteVariant = adminActionClient
     }
     const deleted = await prisma.productVariant.delete({
       where: { id },
-      select: { pricePln: true },
+      select: { pricePln: true, isDefault: true, productId: true },
     });
+    if (deleted.isDefault) {
+      // Keep one default: promote the cheapest remaining variant
+      const next = await prisma.productVariant.findFirst({
+        where: { productId: deleted.productId },
+        orderBy: [{ isActive: "desc" }, { pricePln: "asc" }],
+        select: { id: true },
+      });
+      if (next) {
+        await prisma.productVariant.update({ where: { id: next.id }, data: { isDefault: true } });
+      }
+    }
     after(() =>
       pushOffersToMerchant([{ variantId: id, pricePln: deleted.pricePln, inStock: false }]).catch(
         console.error,
