@@ -788,6 +788,10 @@ model Order {
   coupon     Coupon? @relation(fields: [couponId], references: [id])
   couponCode String? // snapshot (coupon record may change later)
 
+  // Marketing-cookie consent at checkout; the Meta Conversions API purchase
+  // event is sent only when true
+  marketingConsent Boolean @default(false)
+
   // Notes
   noteCustomer String? @db.Text
   noteAdmin    String? @db.Text
