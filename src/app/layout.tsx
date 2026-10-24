@@ -2,7 +2,8 @@ import type { Metadata, Viewport } from "next";
 import { Geist_Mono, Onest, Plus_Jakarta_Sans } from "next/font/google";
 import { ThemeProvider } from "next-themes";
 import { CookieBanner } from "@/components/CookieBanner";
-import { GoogleAnalytics } from "@/components/GoogleAnalytics";
+import { GoogleTag } from "@/components/GoogleTag";
+import { MetaClickId } from "@/components/MetaClickId";
 import { Toaster } from "@/components/ui/sonner";
 import { COOKIE_CONSENT_BOOT_SCRIPT } from "@/lib/cookie-consent-script";
 import {
@@ -112,7 +113,8 @@ export default function RootLayout({
           <Toaster />
           <CookieBanner />
         </ThemeProvider>
-        <GoogleAnalytics />
+        <GoogleTag />
+        <MetaClickId />
       </body>
     </html>
   );
