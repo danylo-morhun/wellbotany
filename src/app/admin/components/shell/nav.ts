@@ -8,6 +8,7 @@ import {
   type LucideIcon,
   Mail,
   Package,
+  Percent,
   Settings,
   ShoppingBag,
   Star,
@@ -58,6 +59,7 @@ export const NAV_GROUPS: NavGroup[] = [
     items: [
       { href: "/admin/produkty", label: "Produkty", icon: Package, shortcut: "p" },
       { href: "/admin/magazyn", label: "Magazyn", icon: Warehouse, badge: "lowStock" },
+      { href: "/admin/marze", label: "Marże", icon: Percent },
       { href: "/admin/zestawy-prezentowe", label: "Zestawy prezentowe", icon: Gift },
       { href: "/admin/kategorie", label: "Kategorie", icon: FolderTree },
       { href: "/admin/marki", label: "Marki", icon: Award },
