@@ -10,6 +10,8 @@ import { getCategories } from "@/features/catalog/actions";
 import { HeaderSearch } from "@/features/catalog/components/HeaderSearch";
 import { getListingFlags } from "@/features/catalog/lib/listing-flags";
 import { buildCategoryNav } from "@/features/catalog/lib/nav";
+import { PromoBar } from "@/features/promotions/components/PromoBar";
+import { isTierPromoLive } from "@/features/promotions/lib/tiered";
 import { getShopSettings, ordersPausedMessage } from "@/features/settings/lib/shop-settings";
 import { WishlistIconClient } from "@/features/wishlist/components/WishlistIconClient";
 import { formatPriceCompact } from "@/lib/format";
@@ -35,7 +37,7 @@ export async function NavBar() {
     getShopSettings(),
     getListingFlags(),
   ]);
-  const { freeShippingThresholdPln, ordersPaused } = settings;
+  const { freeShippingThresholdPln, ordersPaused, tierPromo } = settings;
   const nav = buildCategoryNav(categories);
   const mobileLinks = navLinks.filter((l) => hasNewArrivals || l.href !== NEW_ARRIVALS_HREF);
 
@@ -48,6 +50,9 @@ export async function NavBar() {
         >
           {ordersPausedMessage(settings)}
         </p>
+      )}
+      {tierPromo && !ordersPaused && (
+        <PromoBar promo={tierPromo} initiallyLive={isTierPromoLive(tierPromo)} />
       )}
       {/* Utility bar */}
       <div className="bg-band text-band-foreground">
