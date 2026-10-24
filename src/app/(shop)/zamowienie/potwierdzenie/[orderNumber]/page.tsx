@@ -2,6 +2,7 @@ import { CheckCircle, Clock } from "lucide-react";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import { hashedContact } from "@/features/ads/lib/user-data";
 import { BankTransferDetails } from "@/features/checkout/components/BankTransferDetails";
 import { TrackPurchase } from "@/features/checkout/components/TrackPurchase";
 import { hasOrderAccess } from "@/features/checkout/lib/order-access";
@@ -30,6 +31,7 @@ export default async function PotwierdzeniePage({ params }: Props) {
       status: true,
       paymentStatus: true,
       customerEmail: true,
+      customerPhone: true,
       customerName: true,
       shippingMethod: true,
       inpostMachineId: true,
@@ -68,6 +70,7 @@ export default async function PotwierdzeniePage({ params }: Props) {
   if (!canView) notFound();
 
   const pickup = pickupLocation(order.pickupLocation);
+  const contact = hashedContact(order.customerEmail, order.customerPhone);
 
   return (
     <div className="mx-auto max-w-2xl px-4 py-8 sm:px-6 lg:px-8">
@@ -76,6 +79,8 @@ export default async function PotwierdzeniePage({ params }: Props) {
         totalPln={order.totalPln}
         shippingPln={order.shippingPln}
         coupon={order.couponCode}
+        sha256Email={contact.email}
+        sha256Phone={contact.phoneGoogle}
         items={order.items.map((item) => ({
           itemId: item.variant?.productId ?? item.sku,
           itemName: item.productName,
