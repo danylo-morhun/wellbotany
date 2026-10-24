@@ -34,9 +34,7 @@ export const checkoutSchema = z
     couponCode: z.string().optional(),
     marketingConsent: z.boolean().default(false),
     fbc: z.string().max(500).optional(),
-    acceptedTerms: z
-      .boolean()
-      .refine((v) => v, { message: "Wymagana akceptacja regulaminu i polityki prywatności" }),
+    acceptedTerms: z.boolean().refine((v) => v, { message: "Wymagana akceptacja regulaminu" }),
   })
   .superRefine((data, ctx) => {
     if (requiresPickupPoint(data.shippingMethod) && !data.inpostMachineId?.trim()) {
