@@ -1,6 +1,12 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { isP24Enabled } from "@/features/przelewy24/lib/config";
+import {
+  GOOGLE_ADS_ENABLED,
+  MARKETING_ENABLED,
+  MARKETING_TOOLS,
+  META_ENABLED,
+} from "@/lib/marketing-config";
 
 export const dynamic = "force-static";
 
@@ -50,6 +56,18 @@ const purposes = [
       "do wycofania zgody (przycisk „Ustawienia cookies” w stopce), nie dłużej niż 14 miesięcy w Google Analytics.",
     consequence: "brak — sklep działa w pełni bez tej zgody",
   },
+  ...(MARKETING_ENABLED
+    ? [
+        {
+          title: "Pomiar skuteczności reklam",
+          goal: `sprawdzanie, które nasze reklamy w ${MARKETING_TOOLS} prowadzą do zamówień, i optymalizacja ich wyświetlania. Po złożeniu zamówienia przekazujemy jego numer i wartość, identyfikator kliknięcia w reklamę, adres IP, dane przeglądarki oraz zahashowany (zaszyfrowany jednokierunkowo) adres e-mail i numer telefonu — nigdy informacji o kupionych produktach. Nie tworzymy list remarketingowych.`,
+          basis: ["Twoja zgoda na cookies marketingowe (art. 6 ust. 1 lit. a RODO)"],
+          duration:
+            "do wycofania zgody (przycisk „Ustawienia cookies” w stopce); dane przekazane przed wycofaniem Google i Meta przechowują według własnych zasad.",
+          consequence: "brak — sklep działa w pełni bez tej zgody",
+        },
+      ]
+    : []),
   {
     title: "Ustalenie, dochodzenie lub obrona roszczeń",
     goal: "ustalenie, dochodzenie lub obrona roszczeń związanych z zawartą umową lub usługami",
@@ -78,6 +96,24 @@ const recipients = [
     action: "statystyki korzystania ze Sklepu (tylko po wyrażeniu zgody na cookies analityczne)",
     recipient: "Google Ireland Ltd. (Google Analytics)",
   },
+  ...(GOOGLE_ADS_ENABLED
+    ? [
+        {
+          action: "pomiar skuteczności reklam (tylko po wyrażeniu zgody na cookies marketingowe)",
+          recipient: "Google Ireland Ltd. (Google Ads)",
+        },
+      ]
+    : []),
+  ...(META_ENABLED
+    ? [
+        {
+          action:
+            "pomiar skuteczności reklam na Facebooku i Instagramie (tylko po wyrażeniu zgody na cookies marketingowe)",
+          recipient:
+            "Meta Platforms Ireland Ltd. — przy zbieraniu i przekazaniu tych danych jesteśmy z Meta współadministratorami (art. 26 RODO, facebook.com/legal/controller_addendum); dalsze przetwarzanie przez Meta opisuje facebook.com/privacy/policy",
+        },
+      ]
+    : []),
   {
     action: "prowadzenie księgowości",
     recipient: "biuro rachunkowe, dostawca oprogramowania księgowego",
@@ -218,9 +254,11 @@ export default function PolitykaPrywatnosciPage() {
             </table>
           </div>
           <p className="mt-2 text-xs text-muted-foreground">
-            Dane nie są przekazywane poza Europejski Obszar Gospodarczy. Ponadto Twoje dane mogą
-            zostać udostępnione odpowiednim organom publicznym w zakresie, w jakim jesteśmy
-            zobowiązani do ich udostępnienia.
+            Dane mogą być przekazywane do USA przez {META_ENABLED ? "Google i Meta" : "Google"} na
+            podstawie decyzji Komisji Europejskiej stwierdzającej odpowiedni stopień ochrony (EU-US
+            Data Privacy Framework). Pozostali odbiorcy nie przekazują danych poza Europejski Obszar
+            Gospodarczy. Ponadto Twoje dane mogą zostać udostępnione odpowiednim organom publicznym
+            w zakresie, w jakim jesteśmy zobowiązani do ich udostępnienia.
           </p>
         </section>
 
