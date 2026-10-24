@@ -8,6 +8,7 @@ import { sendMetaPurchase } from "@/features/ads/lib/meta-capi";
 import { saleSubtotalPln } from "@/features/cart/lib/pricing";
 import { CART_COOKIE_NAME } from "@/features/cart/lib/session";
 import { couponDiscountPln, SALE_ITEMS_ONLY_MESSAGE } from "@/features/coupons/lib/discount";
+import { isTierPromoLive, pickDiscount, tierDiscountPln } from "@/features/promotions/lib/tiered";
 import { paymentUrl, registerTransaction } from "@/features/przelewy24/lib/client";
 import { isP24Enabled } from "@/features/przelewy24/lib/config";
 import { assertOrdersOpen, getShopSettings } from "@/features/settings/lib/shop-settings";
@@ -125,7 +126,7 @@ export const placeOrder = actionClient
 
     const hasAddress = requiresAddress(input.shippingMethod);
     const hasPickupPoint = requiresPickupPoint(input.shippingMethod);
-    const { freeShippingThresholdPln } = await getShopSettings();
+    const { freeShippingThresholdPln, tierPromo } = await getShopSettings();
     // Only methods switched on in /admin/dostawa, at today's price
     const rate = (await getShippingRates()).find((r) => r.method === input.shippingMethod);
     if (!rate) throw new ActionError("Wybrana metoda dostawy jest niedostępna");
@@ -133,6 +134,12 @@ export const placeOrder = actionClient
       (sum, item) => sum + checkoutItemUnitPricePln(item) * item.quantity,
       0,
     );
+
+    const saleSubtotal = saleSubtotalPln(cart.items);
+    const promo = isTierPromoLive(tierPromo) ? tierPromo : null;
+    const promoDiscountPln = promo
+      ? tierDiscountPln(promo.tiers, subtotalPln, saleSubtotal).discountPln
+      : 0;
 
     const taxPln = cart.items.reduce((sum, item) => {
       const itemTotal = checkoutItemUnitPricePln(item) * item.quantity;
@@ -155,6 +162,7 @@ export const placeOrder = actionClient
       let discountPln = 0;
       let couponId: string | undefined;
       let couponCode: string | undefined;
+      let promotionName: string | undefined;
 
       if (input.couponCode?.trim()) {
         const code = input.couponCode.trim().toUpperCase();
@@ -191,24 +199,35 @@ export const placeOrder = actionClient
           );
         }
 
-        discountPln = couponDiscountPln(coupon, subtotalPln, saleSubtotalPln(cart.items));
-        if (discountPln === 0) throw new ActionError(SALE_ITEMS_ONLY_MESSAGE);
+        const couponPln = couponDiscountPln(coupon, subtotalPln, saleSubtotal);
+        if (couponPln === 0) throw new ActionError(SALE_ITEMS_ONLY_MESSAGE);
 
-        // Atomic increment — WHERE guards against exceeding maxUsages
-        const used = await tx.coupon.updateMany({
-          where: {
-            id: coupon.id,
-            OR: [{ maxUsages: null }, { usageCount: { lt: coupon.maxUsages ?? 0 } }],
-          },
-          data: { usageCount: { increment: 1 } },
-        });
+        // Coupon and cart promotion don't stack: a bigger promotion wins and
+        // the code stays unused (the checkout summary says so)
+        if (pickDiscount(couponPln, promoDiscountPln) === "promo") {
+          discountPln = promoDiscountPln;
+          promotionName = promo?.name;
+        } else {
+          // Atomic increment — WHERE guards against exceeding maxUsages
+          const used = await tx.coupon.updateMany({
+            where: {
+              id: coupon.id,
+              OR: [{ maxUsages: null }, { usageCount: { lt: coupon.maxUsages ?? 0 } }],
+            },
+            data: { usageCount: { increment: 1 } },
+          });
 
-        if (used.count === 0) {
-          throw new ActionError("Kod rabatowy jest już wyczerpany");
+          if (used.count === 0) {
+            throw new ActionError("Kod rabatowy jest już wyczerpany");
+          }
+
+          discountPln = couponPln;
+          couponId = coupon.id;
+          couponCode = code;
         }
-
-        couponId = coupon.id;
-        couponCode = code;
+      } else if (promoDiscountPln > 0) {
+        discountPln = promoDiscountPln;
+        promotionName = promo?.name;
       }
 
       // Free-delivery threshold applies to the subtotal after discounts
@@ -277,6 +296,7 @@ export const placeOrder = actionClient
           totalPln,
           couponId: couponId ?? null,
           couponCode: couponCode ?? null,
+          promotionName: promotionName ?? null,
           marketingConsent: input.marketingConsent,
           items: {
             create: cart.items.map((item) => {
