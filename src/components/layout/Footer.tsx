@@ -25,6 +25,7 @@ const footerLinks = {
   pomoc: [
     { label: "Dostawa i płatność", href: "/dostawa" },
     { label: "Zwroty i reklamacje", href: "/zwroty" },
+    { label: "Odstąp od umowy tutaj", href: "/odstapienie" },
     { label: "FAQ", href: "/faq" },
     { label: "Kontakt", href: "/kontakt" },
   ],

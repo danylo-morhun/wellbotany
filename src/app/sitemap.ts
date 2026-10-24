@@ -18,6 +18,7 @@ const STATIC_ROUTES = [
   "/faq",
   "/dostawa",
   "/zwroty",
+  "/odstapienie",
   "/regulamin",
   "/polityka-prywatnosci",
   "/cookies",
