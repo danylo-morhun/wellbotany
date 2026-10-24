@@ -24,11 +24,12 @@ export async function seedActiveProduct(stock = 20, pricePln = 4990) {
   return product;
 }
 
-export async function seedAdmin(password = "AdminPass123!") {
+// `tag` keeps e-mails unique when one run seeds several admins
+export async function seedAdmin(password = "AdminPass123!", tag = "admin") {
   const passwordHash = await bcrypt.hash(password, 12);
   const admin = await prisma.customer.create({
     data: {
-      email: `e2e-admin-${RUN_ID}@example.com`,
+      email: `e2e-${tag}-${RUN_ID}@example.com`,
       firstName: "E2E",
       lastName: "Admin",
       passwordHash,
