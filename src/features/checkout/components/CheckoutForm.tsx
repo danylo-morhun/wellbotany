@@ -7,6 +7,7 @@ import { toast } from "sonner";
 import { readFbc } from "@/components/MetaClickId";
 import { clearSavedCoupon } from "@/features/cart/lib/saved-coupon";
 import type { CartItem } from "@/features/cart/lib/session";
+import type { TierPromo } from "@/features/promotions/lib/tiered";
 import { trackItems } from "@/lib/analytics";
 import { hasMarketingConsent } from "@/lib/consent";
 import type { PickupLocationKey } from "@/lib/pickup-locations";
@@ -95,6 +96,8 @@ type Props = {
   items: CartItem[];
   subtotal: number;
   freeShippingThresholdPln: number | null;
+  /** Live cart promotion, if any */
+  promo: TierPromo | null;
   /** Enabled methods, cheapest first */
   shippingRates: ShippingRate[];
   onlinePaymentsEnabled: boolean;
@@ -106,6 +109,7 @@ export function CheckoutForm({
   items,
   subtotal,
   freeShippingThresholdPln,
+  promo,
   shippingRates,
   onlinePaymentsEnabled,
   initialContact,
@@ -247,6 +251,7 @@ export function CheckoutForm({
           items={items}
           subtotal={subtotal}
           freeShippingThresholdPln={freeShippingThresholdPln}
+          promo={promo}
           shippingRates={shippingRates}
           onlinePaymentsEnabled={onlinePaymentsEnabled}
           pending={isPending || redirecting}
