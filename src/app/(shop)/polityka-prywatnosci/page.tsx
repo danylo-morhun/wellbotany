@@ -55,7 +55,7 @@ const purposes = [
       "Twoja zgoda wyrażona przy zapisie (art. 6 ust. 1 lit. a RODO oraz art. 398 Prawa komunikacji elektronicznej)",
     ],
     duration:
-      "do wycofania zgody (wystarczy odpowiedzieć na newsletter lub napisać do nas), a dodatkowo do upływu okresu dochodzenia roszczeń.",
+      "do wycofania zgody (link „wypisz się” w każdym newsletterze, odpowiedź na newsletter lub wiadomość do nas), a dodatkowo do upływu okresu dochodzenia roszczeń.",
     consequence: "brak — sklep działa w pełni bez zapisu",
   },
   {
