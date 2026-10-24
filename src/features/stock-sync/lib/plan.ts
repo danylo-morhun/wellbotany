@@ -4,9 +4,11 @@ import type { StockItem, StockSnapshot } from "../schema";
 type VariantKey = { id: string; sku: string; ean: string | null };
 
 const normalizeEan = (ean: string | null | undefined) => ean?.replace(/\D/g, "") || null;
+const EAN_LIKE = /^\d{8,14}$/;
 
 /**
- * Subiekt products → our variants: EAN first, then tw_Symbol = sku (case-insensitive).
+ * Subiekt products → our variants: EAN first, then tw_Symbol = sku (case-insensitive),
+ * then tw_Symbol = our EAN (shops often keep the barcode in the symbol, not in tw_PodstKodKresk).
  * Two Subiekt products landing on one variant are summed.
  */
 export function matchItems(items: StockItem[], variants: VariantKey[]) {
@@ -22,7 +24,10 @@ export function matchItems(items: StockItem[], variants: VariantKey[]) {
   const unmatched: StockItem[] = [];
   for (const item of items) {
     const ean = normalizeEan(item.ean);
-    const id = (ean && byEan.get(ean)) || bySku.get(item.symbol.toLowerCase());
+    const id =
+      (ean && byEan.get(ean)) ||
+      bySku.get(item.symbol.toLowerCase()) ||
+      (EAN_LIKE.test(item.symbol) ? byEan.get(item.symbol) : undefined);
     if (!id) {
       unmatched.push(item);
       continue;
