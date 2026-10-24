@@ -284,7 +284,10 @@ export default async function AdminOrderDetailPage({ params }: Props) {
               </div>
               {order.discountPln > 0 && (
                 <div className="flex justify-between text-success">
-                  <dt>Rabat{order.couponCode && ` (${order.couponCode})`}</dt>
+                  <dt>
+                    Rabat{order.couponCode && ` (${order.couponCode})`}
+                    {order.promotionName && ` ${order.promotionName}`}
+                  </dt>
                   <dd>−{formatPrice(order.discountPln)}</dd>
                 </div>
               )}

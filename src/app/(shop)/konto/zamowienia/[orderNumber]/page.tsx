@@ -46,6 +46,7 @@ export default async function OrderDetailPage({
       paymentMethod: true,
       paymentStatus: true,
       couponCode: true,
+      promotionName: true,
       trackingNumber: true,
       trackingUrl: true,
       items: {
@@ -178,7 +179,9 @@ export default async function OrderDetailPage({
             </div>
             {order.discountPln > 0 && (
               <div className="flex justify-between text-green-700">
-                <span>Rabat {order.couponCode ? `(${order.couponCode})` : ""}</span>
+                <span>
+                  Rabat {order.promotionName ?? (order.couponCode ? `(${order.couponCode})` : "")}
+                </span>
                 <span>−{formatPrice(order.discountPln)}</span>
               </div>
             )}
