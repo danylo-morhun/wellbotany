@@ -2,9 +2,11 @@
 
 import { Store } from "lucide-react";
 import Image from "next/image";
-import { Fragment } from "react";
+import { Fragment, type RefObject } from "react";
+import { inputClass } from "@/components/ui/field";
 import { formatPrice } from "@/lib/format";
 import { PICKUP_HOLD_DAYS, PICKUP_LOCATION_KEYS, PICKUP_LOCATIONS } from "@/lib/pickup-locations";
+import { formatPostalCode } from "@/lib/postal-code";
 import {
   CARRIERS,
   carrierLogo,
@@ -17,6 +19,7 @@ import type { CheckoutFormData } from "./CheckoutForm";
 import { PointPicker } from "./PointPicker";
 
 type Props = {
+  headingRef: RefObject<HTMLHeadingElement | null>;
   data: CheckoutFormData;
   subtotal: number;
   freeShippingThresholdPln: number | null;
@@ -26,15 +29,8 @@ type Props = {
   onNext: () => void;
 };
 
-const inputClass =
-  "w-full rounded-lg border border-border px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary";
-
-function formatPostalCode(raw: string): string {
-  const digits = raw.replace(/\D/g, "").slice(0, 5);
-  return digits.length > 2 ? `${digits.slice(0, 2)}-${digits.slice(2)}` : digits;
-}
-
 export function StepShipping({
+  headingRef,
   data,
   subtotal,
   freeShippingThresholdPln,
@@ -212,7 +208,7 @@ export function StepShipping({
                     inpostMachineName: "",
                   })
                 }
-                className="w-full rounded-lg border border-border px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary"
+                className={inputClass}
               />
             </>
           )}
@@ -223,9 +219,12 @@ export function StepShipping({
 
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
-      <h2 className="text-lg font-semibold">Metoda dostawy</h2>
+      <h2 ref={headingRef} tabIndex={-1} className="text-lg font-semibold focus:outline-none">
+        Metoda dostawy
+      </h2>
 
-      <div className="space-y-3">
+      <fieldset className="space-y-3">
+        <legend className="sr-only">Metoda dostawy</legend>
         {shippingRates.map((rate) => {
           const opt = { value: rate.method, label: CARRIERS[rate.method].label };
           const cost = shippingCostFor(rate.pricePln, subtotal, freeShippingThresholdPln);
@@ -292,7 +291,7 @@ export function StepShipping({
             </Fragment>
           );
         })}
-      </div>
+      </fieldset>
 
       <div className="flex gap-3">
         <button
