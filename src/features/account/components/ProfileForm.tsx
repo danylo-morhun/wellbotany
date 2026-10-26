@@ -2,6 +2,8 @@
 
 import { useAction } from "next-safe-action/hooks";
 import { useState } from "react";
+import { FieldError, FormError, inputClass } from "@/components/ui/field";
+import { fieldA11y } from "@/lib/field-a11y";
 import { updateProfile } from "../actions";
 
 type Props = {
@@ -20,6 +22,17 @@ export function ProfileForm({ firstName, lastName, phone, email }: Props) {
   });
 
   const error = result?.serverError ?? (hasErrored ? "Wystąpił błąd" : null);
+  const fieldErrors = result?.validationErrors;
+  const errors = {
+    firstName: fieldErrors?.firstName?._errors?.[0],
+    lastName: fieldErrors?.lastName?._errors?.[0],
+    phone: fieldErrors?.phone?._errors?.[0],
+  };
+  const a11y = {
+    firstName: fieldA11y("pf-firstName", errors.firstName),
+    lastName: fieldA11y("pf-lastName", errors.lastName),
+    phone: fieldA11y("pf-phone", errors.phone),
+  };
 
   function update(field: keyof typeof form) {
     return (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -37,11 +50,9 @@ export function ProfileForm({ firstName, lastName, phone, email }: Props) {
     <form onSubmit={handleSubmit} className="max-w-lg space-y-4">
       <h1 className="text-xl font-semibold">Profil</h1>
 
-      {error && (
-        <p className="rounded-lg bg-destructive/10 px-3 py-2 text-sm text-destructive">{error}</p>
-      )}
+      <FormError message={error} />
       {saved && (
-        <p className="rounded-lg bg-green-500/10 px-3 py-2 text-sm text-green-700">
+        <p role="status" className="rounded-lg bg-success/10 px-3 py-2 text-sm text-success-ink">
           Zmiany zapisane.
         </p>
       )}
@@ -65,28 +76,30 @@ export function ProfileForm({ firstName, lastName, phone, email }: Props) {
             Imię
           </label>
           <input
-            id="pf-firstName"
+            {...a11y.firstName.inputProps}
             type="text"
             required
             autoComplete="given-name"
             value={form.firstName}
             onChange={update("firstName")}
-            className="w-full rounded-lg border border-border px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary"
+            className={inputClass}
           />
+          <FieldError id={a11y.firstName.errorId} message={errors.firstName} />
         </div>
         <div>
           <label className="mb-1 block text-sm font-medium" htmlFor="pf-lastName">
             Nazwisko
           </label>
           <input
-            id="pf-lastName"
+            {...a11y.lastName.inputProps}
             type="text"
             required
             autoComplete="family-name"
             value={form.lastName}
             onChange={update("lastName")}
-            className="w-full rounded-lg border border-border px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary"
+            className={inputClass}
           />
+          <FieldError id={a11y.lastName.errorId} message={errors.lastName} />
         </div>
       </div>
 
@@ -95,13 +108,14 @@ export function ProfileForm({ firstName, lastName, phone, email }: Props) {
           Telefon
         </label>
         <input
-          id="pf-phone"
+          {...a11y.phone.inputProps}
           type="tel"
           autoComplete="tel"
           value={form.phone}
           onChange={update("phone")}
-          className="w-full rounded-lg border border-border px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary"
+          className={inputClass}
         />
+        <FieldError id={a11y.phone.errorId} message={errors.phone} />
       </div>
 
       <button
