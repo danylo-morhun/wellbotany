@@ -10,6 +10,7 @@ import { CART_COOKIE_NAME, getCart, getCartByCustomerId } from "@/features/cart/
 import { isTierPromoLive } from "@/features/promotions/lib/tiered";
 import { getShopSettings } from "@/features/settings/lib/shop-settings";
 import { auth } from "@/lib/auth";
+import { pluralPl } from "@/lib/format";
 
 export const metadata: Metadata = {
   title: "Koszyk",
@@ -44,7 +45,7 @@ export default async function KoszykPage() {
           </div>
           <Link
             href="/katalog"
-            className="rounded-lg bg-primary px-6 py-2.5 text-sm font-semibold text-primary-foreground transition-[transform,background-color] duration-[160ms] ease-[cubic-bezier(0.23,1,0.32,1)] hover:bg-primary-deep active:scale-[0.97] motion-reduce:transition-none motion-reduce:active:scale-100"
+            className="rounded-full bg-primary px-6 py-2.5 text-sm font-semibold text-primary-foreground transition-[transform,background-color] duration-[160ms] ease-[cubic-bezier(0.23,1,0.32,1)] hover:bg-primary-deep active:scale-[0.97] motion-reduce:transition-none motion-reduce:active:scale-100"
           >
             Przejdź do katalogu
           </Link>
@@ -53,6 +54,7 @@ export default async function KoszykPage() {
     );
   }
 
+  const itemCount = items.reduce((s, i) => s + i.quantity, 0);
   const subtotal = items.reduce(
     (sum, item) => sum + effectiveUnitPricePln(item) * item.quantity,
     0,
@@ -64,8 +66,7 @@ export default async function KoszykPage() {
         <h1 className="text-3xl font-bold tracking-tight">
           Koszyk{" "}
           <span className="text-lg font-normal text-muted-foreground">
-            ({items.reduce((s, i) => s + i.quantity, 0)}{" "}
-            {items.reduce((s, i) => s + i.quantity, 0) === 1 ? "produkt" : "produkty"})
+            ({itemCount} {pluralPl(itemCount, "produkt", "produkty", "produktów")})
           </span>
         </h1>
         <Link
@@ -79,7 +80,7 @@ export default async function KoszykPage() {
 
       <div className="grid gap-8 lg:grid-cols-[1fr_360px]">
         <div className="space-y-4">
-          <div className="rounded-xl border border-border bg-card shadow-card">
+          <div className="rounded-xl bg-card shadow-card">
             <CartList items={items} />
           </div>
           {freeShippingThresholdPln !== null && (
