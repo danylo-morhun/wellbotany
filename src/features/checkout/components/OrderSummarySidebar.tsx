@@ -1,7 +1,7 @@
 import { groupCartItems } from "@/features/cart/lib/grouping";
 import { effectiveUnitPricePln } from "@/features/cart/lib/pricing";
 import type { CartItem } from "@/features/cart/lib/session";
-import { formatPrice } from "@/lib/format";
+import { formatPrice, pluralPl } from "@/lib/format";
 
 type Props = {
   items: CartItem[];
@@ -15,7 +15,7 @@ export function OrderSummarySidebar({ items, subtotal }: Props) {
     <aside className="lg:sticky lg:top-24 lg:self-start">
       <div className="rounded-2xl bg-card p-4 shadow-card">
         <h2 className="mb-3 text-sm font-semibold">
-          Twoje zamówienie ({itemCount} {itemCount === 1 ? "produkt" : "produktów"})
+          Twoje zamówienie ({itemCount} {pluralPl(itemCount, "produkt", "produkty", "produktów")})
         </h2>
         <ul className="max-h-72 divide-y divide-border overflow-y-auto">
           {groupCartItems(items).map((row) =>
