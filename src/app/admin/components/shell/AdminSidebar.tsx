@@ -19,9 +19,7 @@ export function AdminSidebarNav({ badges, onNavigate }: Props) {
         // biome-ignore lint/suspicious/noArrayIndexKey: static config, some groups have no label
         <div key={i} className="flex flex-col gap-0.5">
           {group.label && (
-            <p className="mb-1 px-2.5 text-xs font-medium text-muted-foreground/80">
-              {group.label}
-            </p>
+            <p className="mb-1 px-2.5 text-xs font-medium text-muted-foreground">{group.label}</p>
           )}
           {group.items.map((item) => {
             const active = isNavActive(pathname, item.href);
@@ -34,16 +32,18 @@ export function AdminSidebarNav({ badges, onNavigate }: Props) {
                 onClick={onNavigate}
                 aria-current={active ? "page" : undefined}
                 className={cn(
-                  "group flex h-8 items-center gap-2.5 rounded-lg px-2.5 text-sm transition-colors duration-150 motion-reduce:transition-none",
+                  "group flex h-8 items-center pointer-coarse:h-11 gap-2.5 rounded-lg px-2.5 text-sm transition-colors duration-150 motion-reduce:transition-none",
                   active
-                    ? "bg-card font-semibold text-foreground shadow-card"
+                    ? "bg-secondary font-semibold text-primary-ink"
                     : "font-medium text-muted-foreground hover:bg-card/70 hover:text-foreground",
                 )}
               >
                 <Icon
                   className={cn(
                     "size-4 shrink-0",
-                    active ? "text-primary" : "text-muted-foreground group-hover:text-foreground",
+                    active
+                      ? "text-primary-ink"
+                      : "text-muted-foreground group-hover:text-foreground",
                   )}
                   aria-hidden
                 />

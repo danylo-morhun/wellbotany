@@ -45,6 +45,12 @@ export default async function AdminLayout({ children }: { children: React.ReactN
 
   return (
     <div className="flex min-h-dvh flex-1 bg-sidebar print:bg-background">
+      <a
+        href="#main"
+        className="sr-only focus:not-sr-only focus:fixed focus:top-3 focus:left-3 focus:z-100 focus:rounded-lg focus:bg-primary focus:px-4 focus:py-2.5 focus:text-sm focus:font-medium focus:text-primary-foreground focus:shadow-float focus:outline-none focus:ring-2 focus:ring-ring print:hidden"
+      >
+        Przejdź do treści
+      </a>
       <aside className="sticky top-0 hidden h-dvh w-60 shrink-0 flex-col overflow-y-auto px-3 py-4 lg:flex print:hidden">
         <Link
           href="/admin"
@@ -65,7 +71,11 @@ export default async function AdminLayout({ children }: { children: React.ReactN
       </aside>
       <div className="flex min-w-0 flex-1 flex-col bg-background lg:my-2 lg:mr-2 lg:rounded-2xl lg:shadow-card print:m-0 print:shadow-none">
         <AdminTopbar badges={badges} userMenu={userMenu} />
-        <main className="mx-auto w-full max-w-[1400px] flex-1 px-4 py-6 sm:px-6 lg:px-8 print:max-w-none print:p-0">
+        <main
+          id="main"
+          tabIndex={-1}
+          className="mx-auto w-full max-w-[1400px] flex-1 px-4 py-6 sm:px-6 lg:px-8 print:max-w-none print:p-0 outline-none"
+        >
           {children}
         </main>
       </div>
