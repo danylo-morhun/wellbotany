@@ -47,7 +47,7 @@ export function GiftSetCartRow({
         <p className="shrink-0 text-sm font-bold text-foreground">{formatPrice(totalPln)}</p>
       </div>
 
-      <ul className="mt-3 space-y-1.5 border-l-2 border-border pl-4">
+      <ul className="mt-3 space-y-1.5 rounded-lg bg-muted/50 px-3 py-2">
         {items.map((item) => (
           <li key={item.id} className="flex items-center justify-between gap-3 text-xs">
             <span className="min-w-0 truncate text-muted-foreground">

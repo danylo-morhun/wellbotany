@@ -17,7 +17,7 @@ export function ShippingProgress({ subtotal, threshold }: Props) {
   }
 
   return (
-    <div className="rounded-xl border border-border bg-card px-5 py-4 shadow-card">
+    <div className="rounded-xl bg-card px-5 py-4 shadow-card">
       <div className="mb-3 flex items-center gap-2">
         <Package className="size-4 shrink-0 text-muted-foreground" />
         <p className="text-sm text-muted-foreground">
