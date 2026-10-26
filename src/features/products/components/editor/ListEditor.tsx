@@ -7,6 +7,7 @@ import { inputClass } from "./fields";
 
 /** Ordered list of short strings: one input per item, Enter adds the next one */
 export function ListEditor({
+  label,
   items,
   onChange,
   placeholder,
@@ -14,6 +15,8 @@ export function ListEditor({
   max,
   maxLength,
 }: {
+  /** Names each row for screen readers: "<label> 1", "<label> 2"… */
+  label: string;
   items: string[];
   onChange: (items: string[]) => void;
   placeholder?: string;
@@ -61,6 +64,7 @@ export function ListEditor({
                 value={item}
                 maxLength={maxLength}
                 placeholder={placeholder}
+                aria-label={`${label} ${i + 1}`}
                 onChange={(e) => update(i, e.target.value)}
                 onKeyDown={(e) => {
                   if (e.key === "Enter") {
@@ -73,14 +77,22 @@ export function ListEditor({
                 }}
                 className={`${inputClass} h-9`}
               />
-              <div className="flex shrink-0 opacity-40 transition-opacity group-focus-within:opacity-100 group-hover:opacity-100">
-                <IconBtn label="W górę" onClick={() => move(i, -1)} disabled={i === 0}>
+              <div className="flex shrink-0">
+                <IconBtn
+                  label={`Przesuń ${label.toLowerCase()} ${i + 1} w górę`}
+                  onClick={() => move(i, -1)}
+                  disabled={i === 0}
+                >
                   <ArrowUp />
                 </IconBtn>
-                <IconBtn label="W dół" onClick={() => move(i, 1)} disabled={i === items.length - 1}>
+                <IconBtn
+                  label={`Przesuń ${label.toLowerCase()} ${i + 1} w dół`}
+                  onClick={() => move(i, 1)}
+                  disabled={i === items.length - 1}
+                >
                   <ArrowDown />
                 </IconBtn>
-                <IconBtn label="Usuń" onClick={() => remove(i)}>
+                <IconBtn label={`Usuń ${label.toLowerCase()} ${i + 1}`} onClick={() => remove(i)}>
                   <X />
                 </IconBtn>
               </div>
@@ -92,7 +104,7 @@ export function ListEditor({
         <button
           type="button"
           onClick={() => add()}
-          className="flex h-8 items-center gap-1.5 rounded-lg px-2 text-sm font-medium text-primary hover:bg-secondary"
+          className="flex h-8 items-center gap-1.5 rounded-lg px-2 text-sm font-medium text-primary hover:bg-secondary focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-ring/50 pointer-coarse:h-11"
         >
           <Plus className="size-4" aria-hidden />
           {addLabel}
@@ -112,7 +124,7 @@ function IconBtn({
       type="button"
       aria-label={label}
       title={label}
-      className="flex size-7 items-center justify-center rounded-md text-muted-foreground hover:bg-muted hover:text-foreground disabled:opacity-30 [&_svg]:size-3.5"
+      className="flex size-7 items-center justify-center rounded-md text-muted-foreground hover:bg-muted hover:text-foreground focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-ring/50 disabled:opacity-30 pointer-coarse:size-10 [&_svg]:size-3.5"
       {...props}
     >
       {children}
