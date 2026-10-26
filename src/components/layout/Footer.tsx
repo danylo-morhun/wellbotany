@@ -105,7 +105,7 @@ export async function Footer() {
               ["Firma", footerLinks.firma],
             ] as const
           ).map(([title, links]) => (
-            <div key={title}>
+            <nav key={title} aria-label={title}>
               <p className="text-sm font-bold">{title}</p>
               <ul className="mt-4 space-y-2.5">
                 {links.map((link) => (
@@ -124,7 +124,7 @@ export async function Footer() {
                   </li>
                 )}
               </ul>
-            </div>
+            </nav>
           ))}
         </div>
 
@@ -151,7 +151,7 @@ export async function Footer() {
           ))}
         </div>
 
-        <div className="mt-8 border-t border-band-foreground/15 pt-8 text-xs text-band-foreground/60">
+        <div className="mt-8 border-t border-band-foreground/15 pt-8 text-xs text-band-foreground/75">
           <p>&copy; {new Date().getFullYear()} Well Botany. Wszelkie prawa zastrzeżone.</p>
           <p className="mt-1">
             Suplement diety nie zastępuje zrównoważonej diety i zdrowego trybu życia.
