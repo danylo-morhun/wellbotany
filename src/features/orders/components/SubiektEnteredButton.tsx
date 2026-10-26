@@ -1,7 +1,10 @@
 "use client";
 
 import { useAction } from "next-safe-action/hooks";
+import { useState } from "react";
 import { toast } from "sonner";
+import { ConfirmDialog } from "@/components/ConfirmDialog";
+import { Button } from "@/components/ui/button";
 import { markOrderInSubiekt } from "../actions";
 
 // Until the order is entered in Subiekt, the stock sync keeps its items off
@@ -13,25 +16,37 @@ export function SubiektEnteredButton({
   orderId: string;
   enteredAt: Date | null;
 }) {
+  const [confirming, setConfirming] = useState(false);
   const { execute, isPending } = useAction(markOrderInSubiekt, {
     onSuccess: ({ input }) =>
       toast.success(input.entered ? "Oznaczono: wprowadzone do Subiekta" : "Cofnięto oznaczenie"),
     onError: ({ error }) => toast.error(error?.serverError ?? "Błąd zapisu"),
+    onSettled: () => setConfirming(false),
   });
 
   if (enteredAt) {
     return (
-      <button
-        type="button"
-        disabled={isPending}
-        onClick={() => {
-          if (window.confirm("Cofnąć? Zamówienie znów będzie blokować stan z Subiekta."))
-            execute({ orderId, entered: false });
-        }}
-        className="text-xs font-medium text-muted-foreground hover:text-foreground hover:underline disabled:opacity-50"
-      >
-        {isPending ? "Zapisywanie…" : "Cofnij oznaczenie Subiekta"}
-      </button>
+      <>
+        <button
+          type="button"
+          disabled={isPending}
+          onClick={() => setConfirming(true)}
+          className="text-xs font-medium text-muted-foreground hover:text-foreground hover:underline disabled:opacity-50"
+        >
+          {isPending ? "Zapisywanie…" : "Cofnij oznaczenie Subiekta"}
+        </button>
+        <ConfirmDialog
+          open={confirming}
+          onOpenChange={setConfirming}
+          title="Cofnąć oznaczenie Subiekta?"
+          description="Zamówienie znów będzie blokować stan z Subiekta."
+          confirmLabel="Cofnij oznaczenie"
+          tone="default"
+          pendingLabel="Zapisywanie…"
+          pending={isPending}
+          onConfirm={() => execute({ orderId, entered: false })}
+        />
+      </>
     );
   }
 
@@ -41,14 +56,9 @@ export function SubiektEnteredButton({
         Po wystawieniu dokumentu w Subiekcie oznacz zamówienie — do tego czasu jego produkty są
         odejmowane od stanu z Subiekta.
       </p>
-      <button
-        type="button"
-        disabled={isPending}
-        onClick={() => execute({ orderId, entered: true })}
-        className="rounded-lg bg-primary px-4 py-2 text-sm font-medium text-primary-foreground transition-colors duration-200 hover:bg-primary-deep motion-reduce:transition-none disabled:opacity-50"
-      >
+      <Button size="lg" disabled={isPending} onClick={() => execute({ orderId, entered: true })}>
         {isPending ? "Zapisywanie…" : "Wprowadzone do Subiekta"}
-      </button>
+      </Button>
     </div>
   );
 }

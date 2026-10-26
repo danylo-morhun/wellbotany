@@ -40,3 +40,26 @@ export const ORDER_STATUS_TONE: Record<OrderStatus, StatusTone> = {
   CANCELLED: "danger",
   REFUNDED: "danger",
 };
+
+/** What a status change does beyond the label — shown before the admin confirms it */
+export function statusChangeConsequence(
+  status: string,
+  shippingMethod: string | null,
+): string | null {
+  switch (status) {
+    case "CANCELLED":
+      return "Produkty wrócą na stan magazynowy, a użycie kodu rabatowego zostanie zwolnione.";
+    case "SHIPPED":
+      if (shippingMethod === "PICKUP")
+        return "Klient dostanie e-mail, że zamówienie czeka na odbiór.";
+      if (shippingMethod)
+        return "Klient dostanie e-mail z numerem przesyłki i linkiem do śledzenia.";
+      return "Klienci dostaną e-mail z numerem przesyłki albo informacją, że zamówienie czeka na odbiór.";
+    case "DELIVERED":
+      return shippingMethod
+        ? "Klient dostanie prośbę o opinię o produktach."
+        : "Klienci dostaną prośbę o opinię o produktach.";
+    default:
+      return null;
+  }
+}
