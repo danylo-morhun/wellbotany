@@ -82,7 +82,7 @@ export function ChipsInput({
             }
           }}
           onBlur={() => draft.trim() && add(draft)}
-          className="h-6 min-w-24 flex-1 bg-transparent px-1 text-sm outline-none placeholder:text-muted-foreground/70"
+          className="h-6 min-w-24 flex-1 bg-transparent px-1 text-sm outline-none placeholder:text-muted-foreground"
         />
       </div>
       {openSuggestions.length > 0 && (

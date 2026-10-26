@@ -3,6 +3,8 @@
 import { Search } from "lucide-react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useDebouncedCallback } from "use-debounce";
+import { inputClass } from "@/features/products/components/editor/fields";
+import { cn } from "@/lib/utils";
 
 export function AdminSearch({ placeholder }: { placeholder: string }) {
   const router = useRouter();
@@ -29,7 +31,7 @@ export function AdminSearch({ placeholder }: { placeholder: string }) {
         aria-label={placeholder}
         defaultValue={searchParams.get("szukaj") ?? ""}
         onChange={(e) => handleSearch(e.target.value)}
-        className="h-9 w-full rounded-lg border border-border bg-card pr-3 pl-9 text-sm placeholder:text-muted-foreground focus:border-transparent focus:outline-none focus:ring-2 focus:ring-ring/50"
+        className={cn(inputClass, "h-9 bg-card pr-3 pl-9")}
       />
     </div>
   );
