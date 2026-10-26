@@ -8,9 +8,18 @@ type Props = {
   title: string;
   href: string;
   variant?: "grid" | "scroll";
+  /** Only the first row on the page: eager-load its first images (LCP) */
+  priority?: boolean;
 };
 
-export function BestsellerRow({ id, products, title, href, variant = "grid" }: Props) {
+export function BestsellerRow({
+  id,
+  products,
+  title,
+  href,
+  variant = "grid",
+  priority = false,
+}: Props) {
   if (products.length === 0) return null;
 
   return (
@@ -22,7 +31,7 @@ export function BestsellerRow({ id, products, title, href, variant = "grid" }: P
           <div className="flex snap-x snap-mandatory gap-3 overflow-x-auto pb-3 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
             {products.map((p, index) => (
               <div key={p.id} className="w-[200px] shrink-0 snap-start sm:w-[220px]">
-                <ProductCard product={p} priority={index < 4} headingLevel={3} />
+                <ProductCard product={p} priority={priority && index < 4} headingLevel={3} />
               </div>
             ))}
           </div>
@@ -30,7 +39,7 @@ export function BestsellerRow({ id, products, title, href, variant = "grid" }: P
       ) : (
         <div className="grid grid-cols-2 gap-3 sm:gap-4 md:grid-cols-4">
           {products.map((p, index) => (
-            <ProductCard key={p.id} product={p} priority={index < 4} headingLevel={3} />
+            <ProductCard key={p.id} product={p} priority={priority && index < 4} headingLevel={3} />
           ))}
         </div>
       )}
