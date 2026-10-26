@@ -51,7 +51,7 @@ export function SearchInput() {
           debouncedCommit(e.target.value);
         }}
         placeholder="Szukaj produktów…"
-        className="w-full rounded-lg border border-border bg-card py-2 pl-8 pr-3 text-sm text-foreground placeholder:text-muted-foreground focus:border-transparent focus:outline-none focus:ring-2 focus:ring-ring/50"
+        className="w-full rounded-lg border border-input bg-card py-2 pl-8 pr-3 text-sm text-foreground placeholder:text-muted-foreground focus:border-transparent focus:outline-none focus:ring-2 focus:ring-ring/50"
       />
     </div>
   );

@@ -1,6 +1,6 @@
 "use client";
 
-import { ChevronRight } from "lucide-react";
+import { Check, ChevronRight } from "lucide-react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useCallback, useEffect, useState } from "react";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -16,7 +16,6 @@ type Props = {
   impliedCategory?: string;
   /** Brand implied by the current route (e.g. `/marki/bicaps`) but not present in the URL's query string — shown as checked, and included when toggling other brands. */
   impliedBrand?: string;
-  onFilterChange?: () => void;
 };
 
 /** Stable partition, not a full re-sort — options with zero matches under the active filters sink to the end so the list doesn't visibly reshuffle on every toggle. */
@@ -61,7 +60,6 @@ export function FilterSidebar({
   basePath = "/katalog",
   impliedCategory,
   impliedBrand,
-  onFilterChange,
 }: Props) {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -146,9 +144,8 @@ export function FilterSidebar({
       }
       params.delete("strona");
       router.push(`${basePath}?${params.toString()}`, { scroll: false });
-      onFilterChange?.();
     },
-    [router, searchParams, basePath, onFilterChange],
+    [router, searchParams, basePath],
   );
 
   const toggleMulti = useCallback(
@@ -203,13 +200,11 @@ export function FilterSidebar({
     else params.delete("cenaMax");
     params.delete("strona");
     router.push(`${basePath}?${params.toString()}`, { scroll: false });
-    onFilterChange?.();
-  }, [searchParams, priceMin, priceMax, router, basePath, onFilterChange]);
+  }, [searchParams, priceMin, priceMax, router, basePath]);
 
   const clearAll = useCallback(() => {
     router.push(basePath, { scroll: false });
-    onFilterChange?.();
-  }, [router, basePath, onFilterChange]);
+  }, [router, basePath]);
 
   const hasActiveFilters =
     active.category.length > 0 ||
@@ -352,7 +347,7 @@ export function FilterSidebar({
               onChange={(e) => setPriceMin(e.target.value)}
               onBlur={applyPriceRange}
               onKeyDown={(e) => e.key === "Enter" && applyPriceRange()}
-              className="w-full rounded-md border border-border bg-background py-1.5 pl-2 pr-7 text-sm text-foreground [appearance:textfield] focus:border-transparent focus:outline-none focus:ring-2 focus:ring-ring/50 [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
+              className="w-full rounded-md border border-input bg-background py-1.5 pl-2 pr-7 text-sm text-foreground [appearance:textfield] focus:border-transparent focus:outline-none focus:ring-2 focus:ring-ring/50 [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
             />
             <span className="pointer-events-none absolute right-2 top-1/2 -translate-y-1/2 text-xs text-muted-foreground">
               zł
@@ -373,7 +368,7 @@ export function FilterSidebar({
               onChange={(e) => setPriceMax(e.target.value)}
               onBlur={applyPriceRange}
               onKeyDown={(e) => e.key === "Enter" && applyPriceRange()}
-              className="w-full rounded-md border border-border bg-background py-1.5 pl-2 pr-7 text-sm text-foreground [appearance:textfield] focus:border-transparent focus:outline-none focus:ring-2 focus:ring-ring/50 [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
+              className="w-full rounded-md border border-input bg-background py-1.5 pl-2 pr-7 text-sm text-foreground [appearance:textfield] focus:border-transparent focus:outline-none focus:ring-2 focus:ring-ring/50 [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
             />
             <span className="pointer-events-none absolute right-2 top-1/2 -translate-y-1/2 text-xs text-muted-foreground">
               zł
@@ -436,12 +431,14 @@ export function FilterSidebar({
                   key={tag.id}
                   type="button"
                   onClick={() => toggleMulti("tagi", tag.slug)}
-                  className={`rounded-full px-3 py-1 text-xs font-medium transition-colors ${
+                  aria-pressed={isActive}
+                  className={`inline-flex items-center gap-1 rounded-full px-3 py-1 text-xs font-medium transition-colors ${
                     isActive
-                      ? "bg-primary text-primary-foreground"
+                      ? "bg-primary font-semibold text-primary-foreground"
                       : "bg-muted text-muted-foreground hover:bg-muted/80"
                   }`}
                 >
+                  {isActive && <Check className="size-3" aria-hidden />}
                   {tag.namePl}
                 </button>
               );

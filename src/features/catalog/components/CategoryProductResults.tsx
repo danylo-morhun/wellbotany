@@ -29,7 +29,7 @@ export async function CategoryProductResults({ searchParams, extraFilters, baseP
         </p>
         <SortSelect basePath={basePath} />
       </div>
-      <ProductGrid products={items} />
+      <ProductGrid products={items} query={filters.search} clearHref={basePath} />
       <Pagination filters={filters} total={total} basePath={basePath} />
     </>
   );
