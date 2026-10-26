@@ -10,7 +10,7 @@ export function AdminLink() {
   return (
     <Link
       href="/admin/zamowienia"
-      className="rounded-full px-2.5 py-1.5 text-xs font-semibold text-muted-foreground transition-colors hover:bg-secondary hover:text-primary"
+      className="rounded-full px-2.5 py-1.5 text-xs font-semibold text-muted-foreground transition-colors hover:bg-secondary hover:text-primary-ink"
     >
       Admin
     </Link>
