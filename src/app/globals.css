@@ -273,6 +273,23 @@ html[data-cookie-consent] #cookie-banner:not([data-open]) {
   }
 }
 
+/* Safety net for reduced motion: components still add their own motion-reduce fallbacks */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+  [data-fade-in="pending"],
+  [data-fade-in="visible"] {
+    opacity: 1;
+    transform: none;
+  }
+}
+
 /* Asymmetric sonner toast timing: enter 300ms, exit 150ms */
 [data-sonner-toast][data-mounted="true"] {
   transition-duration: 300ms !important;
