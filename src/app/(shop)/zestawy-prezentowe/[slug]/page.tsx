@@ -4,7 +4,7 @@ import { notFound } from "next/navigation";
 import { cache } from "react";
 import { AddCuratedGiftSetButton } from "@/features/gift-sets/components/AddCuratedGiftSetButton";
 import { formatPrice } from "@/lib/format";
-import { discountPercent, omnibusNote } from "@/lib/omnibus";
+import { omnibusNote, referencePrice } from "@/lib/omnibus";
 import { prisma } from "@/lib/prisma";
 
 type Props = { params: Promise<{ slug: string }> };
@@ -54,6 +54,7 @@ export default async function GiftSetDetailPage({ params }: Props) {
 
   const isAvailable = giftSet.items.every((i) => i.variant.stock >= i.quantity);
   const lowestNote = omnibusNote(giftSet);
+  const struckPrice = referencePrice(giftSet);
 
   return (
     <div className="mx-auto max-w-5xl px-4 py-10 sm:px-6 lg:px-8">
@@ -77,13 +78,13 @@ export default async function GiftSetDetailPage({ params }: Props) {
         <div>
           <h1 className="text-2xl font-bold tracking-tight">{giftSet.namePl}</h1>
 
-          <div className="mt-3 flex items-baseline gap-3">
+          <div className="mt-3 flex flex-wrap items-baseline gap-x-3">
             <span className="text-2xl font-bold text-foreground">
               {formatPrice(giftSet.pricePln)}
             </span>
-            {giftSet.comparePricePln != null && discountPercent(giftSet) != null && (
+            {struckPrice != null && (
               <span className="text-base text-muted-foreground line-through">
-                {formatPrice(giftSet.comparePricePln)}
+                {formatPrice(struckPrice)}
               </span>
             )}
           </div>

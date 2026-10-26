@@ -26,6 +26,15 @@ export function discountPercent({
 }
 
 /**
+ * Price shown struck through next to the current one: the same 30-day low the
+ * percent is measured from (CJEU C-330/23), so the badge and the struck price
+ * agree. Null when there is no reduction.
+ */
+export function referencePrice(offer: PricedOffer): number | null {
+  return discountPercent(offer) == null ? null : offer.lowestPrice30dPln;
+}
+
+/**
  * Omnibus note shown next to a struck-through price. `lowestPrice30dPln` is
  * frozen by the DB trigger when the reduction starts. Null when there is no
  * reduction to explain.
