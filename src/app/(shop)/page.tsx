@@ -5,7 +5,7 @@ import { FadeInView } from "@/app/(shop)/components/FadeInView";
 import { GuidesRow } from "@/app/(shop)/components/GuidesRow";
 import { HomeAbout } from "@/app/(shop)/components/HomeAbout";
 import { HomeGiftSets } from "@/app/(shop)/components/HomeGiftSets";
-import { HomeIntro } from "@/app/(shop)/components/HomeIntro";
+import { HomeH1, HomeIntro } from "@/app/(shop)/components/HomeIntro";
 import { IngredientTiles } from "@/app/(shop)/components/IngredientTiles";
 import { NewsletterSection } from "@/app/(shop)/components/NewsletterSection";
 import { SeasonalShelf } from "@/app/(shop)/components/SeasonalShelf";
@@ -39,14 +39,18 @@ export default async function HomePage() {
       <div className="container mx-auto px-4 py-6 md:py-8">
         <div className="space-y-12 md:space-y-16">
           <div className="space-y-8 md:space-y-10">
-            {/* Products right under the hero so the first screen sells; the H1 and
-                need shortcuts follow */}
-            <BestsellerRow
-              id="featured-h"
-              products={featured}
-              title="Polecane produkty"
-              href={featuredHref}
-            />
+            {/* Products right under the hero so the first screen sells; the compact
+                H1 still leads the DOM, need shortcuts follow */}
+            <div className="space-y-4">
+              <HomeH1 />
+              <BestsellerRow
+                id="featured-h"
+                products={featured}
+                title="Polecane produkty"
+                href={featuredHref}
+                priority
+              />
+            </div>
             <HomeIntro categories={categories} />
           </div>
           <FadeInView>
