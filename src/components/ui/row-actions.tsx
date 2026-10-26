@@ -22,9 +22,9 @@ export function RowActions({
     <DropdownMenu>
       <DropdownMenuTrigger
         aria-label={`Akcje dla ${label}`}
-        className="flex size-8 shrink-0 items-center justify-center rounded-lg hover:bg-muted aria-expanded:bg-muted"
+        className="flex size-8 shrink-0 items-center justify-center rounded-lg hover:bg-muted aria-expanded:bg-muted pointer-coarse:size-11"
       >
-        <MoreHorizontal className="size-4" />
+        <MoreHorizontal className="size-4" aria-hidden />
       </DropdownMenuTrigger>
       <DropdownMenuContent>
         <DropdownMenuItem onClick={onEdit}>Edytuj</DropdownMenuItem>

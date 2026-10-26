@@ -111,7 +111,7 @@ export function EmptyState({
 export const table = {
   wrap: "overflow-x-auto rounded-2xl bg-card shadow-card",
   table: "w-full text-sm",
-  thead: "sticky top-0 z-10 border-b border-border bg-card text-left text-xs text-muted-foreground",
+  thead: "border-b border-border bg-card text-left text-xs text-muted-foreground",
   th: "h-10 px-4 font-medium whitespace-nowrap",
   tr: "border-b border-border/70 last:border-0 transition-colors hover:bg-muted/40 motion-reduce:transition-none",
   td: "h-12 px-4",
