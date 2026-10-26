@@ -4,6 +4,8 @@ import { MoreHorizontal, Plus, TicketPercent } from "lucide-react";
 import { useAction } from "next-safe-action/hooks";
 import { useState } from "react";
 import { toast } from "sonner";
+import { EmptyState } from "@/app/admin/components/ui";
+import { ConfirmDialog } from "@/components/ConfirmDialog";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
@@ -38,12 +40,14 @@ const dateFmt = (d: Date) =>
 export function CouponsTable({ coupons, openNew }: { coupons: CouponRow[]; openNew?: boolean }) {
   const [editing, setEditing] = useState<CouponFormValues | null>(null);
   const [open, setOpen] = useState(!!openNew);
+  const [deleting, setDeleting] = useState<CouponRow | null>(null);
   const toggle = useAction(toggleCoupon, {
     onError: ({ error }) => toast.error(error?.serverError ?? "Błąd zapisu"),
   });
   const remove = useAction(deleteCoupon, {
     onSuccess: () => toast.success("Kod usunięty"),
     onError: ({ error }) => toast.error(error?.serverError ?? "Błąd usuwania"),
+    onSettled: () => setDeleting(null),
   });
 
   function openSheet(c: CouponFormValues | null) {
@@ -61,14 +65,10 @@ export function CouponsTable({ coupons, openNew }: { coupons: CouponRow[]; openN
       </div>
 
       {coupons.length === 0 ? (
-        <div className="flex flex-col items-center rounded-2xl bg-card px-6 py-14 text-center shadow-card">
-          <span className="mb-3 flex size-10 items-center justify-center rounded-full bg-secondary text-primary">
-            <TicketPercent className="size-5" />
-          </span>
-          <p className="text-sm font-medium">Brak kodów rabatowych</p>
-          <p className="mt-1 text-sm text-muted-foreground">
+        <div className="rounded-2xl bg-card shadow-card">
+          <EmptyState icon={TicketPercent} title="Brak kodów rabatowych">
             Utwórz pierwszy kod — klienci wpiszą go w koszyku.
-          </p>
+          </EmptyState>
         </div>
       ) : (
         <div className="overflow-x-auto rounded-2xl bg-card shadow-card">
@@ -81,7 +81,9 @@ export function CouponsTable({ coupons, openNew }: { coupons: CouponRow[]; openN
                 <th className="h-10 px-4 font-medium">Użycia</th>
                 <th className="h-10 px-4 font-medium">Ważność</th>
                 <th className="h-10 px-4 text-right font-medium">Sprzedaż z kodem</th>
-                <th className="h-10 w-12 px-2" />
+                <th className="h-10 w-12 px-2">
+                  <span className="sr-only">Akcje</span>
+                </th>
               </tr>
             </thead>
             <tbody>
@@ -146,10 +148,10 @@ export function CouponsTable({ coupons, openNew }: { coupons: CouponRow[]; openN
                     <td className="px-2 py-3">
                       <DropdownMenu>
                         <DropdownMenuTrigger
-                          className="flex size-8 items-center justify-center rounded-lg hover:bg-muted aria-expanded:bg-muted"
+                          className="flex size-8 items-center justify-center rounded-lg hover:bg-muted aria-expanded:bg-muted pointer-coarse:size-11"
                           aria-label={`Akcje dla ${c.code}`}
                         >
-                          <MoreHorizontal className="size-4" />
+                          <MoreHorizontal className="size-4" aria-hidden />
                         </DropdownMenuTrigger>
                         <DropdownMenuContent>
                           <DropdownMenuItem onClick={() => openSheet(c)}>Edytuj</DropdownMenuItem>
@@ -158,13 +160,7 @@ export function CouponsTable({ coupons, openNew }: { coupons: CouponRow[]; openN
                           >
                             {c.isActive ? "Wyłącz" : "Włącz"}
                           </DropdownMenuItem>
-                          <DropdownMenuItem
-                            destructive
-                            onClick={() => {
-                              if (window.confirm(`Usunąć kod ${c.code}?`))
-                                remove.execute({ id: c.id });
-                            }}
-                          >
+                          <DropdownMenuItem destructive onClick={() => setDeleting(c)}>
                             Usuń
                           </DropdownMenuItem>
                         </DropdownMenuContent>
@@ -186,6 +182,15 @@ export function CouponsTable({ coupons, openNew }: { coupons: CouponRow[]; openN
           coupon={editing}
         />
       )}
+
+      <ConfirmDialog
+        open={deleting !== null}
+        onOpenChange={(o) => !o && setDeleting(null)}
+        title="Usuń kod rabatowy"
+        description={`Czy na pewno chcesz usunąć kod „${deleting?.code ?? ""}”? Tej operacji nie można cofnąć.`}
+        pending={remove.isPending}
+        onConfirm={() => deleting && remove.execute({ id: deleting.id })}
+      />
     </>
   );
 }
