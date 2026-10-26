@@ -67,6 +67,15 @@ describe("matchItems", () => {
     expect(unmatched.map((i) => i.symbol)).toEqual(["5909999999999"]);
   });
 
+  it("skips Subiekt cards on the ignore list even when the EAN matches", () => {
+    const { quantities, unmatched } = matchItems(
+      [{ symbol: "5903263262305", ean: "5903263266014", quantity: 7 }],
+      variants,
+    );
+    expect(quantities.size).toBe(0);
+    expect(unmatched.map((i) => i.symbol)).toEqual(["5903263262305"]);
+  });
+
   it("treats negative Subiekt stock as 0 and sums duplicates", () => {
     const { quantities } = matchItems(
       [
