@@ -103,6 +103,7 @@ export function GiftBuilder({ settings, pool, packagings }: Props) {
                   key={item.variantId}
                   type="button"
                   disabled={disabled}
+                  aria-pressed={selected}
                   onClick={() => toggle(item.variantId)}
                   className={`relative flex flex-col overflow-hidden rounded-2xl bg-card text-left shadow-card transition-[box-shadow,transform] duration-200 ease-out disabled:cursor-not-allowed disabled:opacity-40 ${
                     selected
@@ -167,6 +168,7 @@ export function GiftBuilder({ settings, pool, packagings }: Props) {
                   <button
                     key={p.id}
                     type="button"
+                    aria-pressed={selected}
                     onClick={() => setPackagingId(p.id)}
                     className={`flex flex-col overflow-hidden rounded-2xl bg-card text-left shadow-card transition-[box-shadow,transform] duration-200 ease-out ${
                       selected
@@ -220,7 +222,7 @@ export function GiftBuilder({ settings, pool, packagings }: Props) {
             onChange={(e) => setGiftMessage(e.target.value.slice(0, MESSAGE_MAX_LENGTH))}
             placeholder="Np. Wszystkiego najlepszego! Dbaj o siebie."
             rows={3}
-            className="w-full rounded-xl border border-border px-3 py-2.5 text-sm focus:border-transparent focus:outline-none focus:ring-2 focus:ring-ring/50"
+            className="w-full rounded-xl border border-input px-3 py-2.5 text-sm focus:border-transparent focus:outline-none focus:ring-2 focus:ring-ring/50"
           />
           <p className="mt-1 text-right text-xs text-muted-foreground">
             {giftMessage.length}/{MESSAGE_MAX_LENGTH}
@@ -229,7 +231,7 @@ export function GiftBuilder({ settings, pool, packagings }: Props) {
       </div>
 
       <div className="lg:sticky lg:top-24 lg:self-start">
-        <div className="rounded-xl border border-border bg-card p-5 shadow-card">
+        <div className="rounded-xl bg-card p-5 shadow-card">
           <div className="flex items-center gap-2">
             <Gift className="size-4 text-primary" />
             <h2 className="text-base font-semibold">{settings.namePl}</h2>

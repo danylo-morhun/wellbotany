@@ -91,10 +91,12 @@ export default async function KategoriePage() {
                         <Link
                           key={sub.id}
                           href={`/kategoria/${sub.slug}`}
-                          className="inline-flex items-center gap-1 rounded-full bg-secondary px-3 py-1 text-xs font-medium text-secondary-foreground transition-colors duration-200 hover:bg-primary hover:text-primary-foreground motion-reduce:transition-none"
+                          className="group inline-flex items-center gap-1 rounded-full bg-secondary px-3 py-1 text-xs font-medium text-secondary-foreground transition-colors duration-200 hover:bg-primary hover:text-primary-foreground motion-reduce:transition-none"
                         >
                           {sub.namePl}
-                          <span className="text-[10px] opacity-60">{counts.get(sub.id) ?? 0}</span>
+                          <span className="text-xs text-muted-foreground group-hover:text-primary-foreground">
+                            {counts.get(sub.id) ?? 0}
+                          </span>
                         </Link>
                       ))}
                     </div>
