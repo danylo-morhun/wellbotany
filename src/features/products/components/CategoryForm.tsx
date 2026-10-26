@@ -1,10 +1,11 @@
 "use client";
 
 import type { Category, CategoryGroup } from "@prisma/client";
-import { MoreHorizontal } from "lucide-react";
+import { FolderSearch, MoreHorizontal } from "lucide-react";
 import { useAction } from "next-safe-action/hooks";
 import { useState } from "react";
 import { toast } from "sonner";
+import { EmptyState, PageHeader } from "@/app/admin/components/ui";
 import { ConfirmDialog } from "@/components/ConfirmDialog";
 import { Button } from "@/components/ui/button";
 import {
@@ -65,17 +66,15 @@ export function CategoryForm({ categories, productCounts }: Props) {
 
   return (
     <div>
-      <div className="mb-6 flex flex-wrap items-center justify-between gap-3">
-        <div>
-          <h1 className="font-heading text-2xl font-semibold tracking-tight">Kategorie</h1>
-          <p className="mt-1 text-sm text-muted-foreground">
-            Menu sklepu: rodzaje produktów, potrzeby („na co”) i grupy odbiorców.
-          </p>
-        </div>
-        <Button size="lg" onClick={() => setEditing("new")}>
-          + Dodaj kategorię
-        </Button>
-      </div>
+      <PageHeader
+        title="Kategorie"
+        description="Menu sklepu: rodzaje produktów, potrzeby („na co”) i grupy odbiorców."
+        actions={
+          <Button size="lg" onClick={() => setEditing("new")}>
+            + Dodaj kategorię
+          </Button>
+        }
+      />
       <div className="mb-4 flex flex-wrap items-center gap-3">
         <input
           type="search"
@@ -92,10 +91,10 @@ export function CategoryForm({ categories, productCounts }: Props) {
               type="button"
               aria-pressed={groupFilter === g}
               onClick={() => setGroupFilter(g)}
-              className="flex h-7 items-center gap-1.5 rounded-md px-2.5 text-sm font-medium text-muted-foreground aria-pressed:bg-card aria-pressed:text-foreground aria-pressed:shadow-card"
+              className="flex h-7 items-center gap-1.5 rounded-md px-2.5 text-sm font-medium text-muted-foreground focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-ring/50 aria-pressed:bg-card aria-pressed:text-foreground aria-pressed:shadow-card pointer-coarse:h-9"
             >
               {g === "ALL" ? "Wszystkie" : GROUP_SHORT[g]}
-              <span className="text-xs tabular-nums opacity-70">{groupCount(g)}</span>
+              <span className="text-xs tabular-nums text-muted-foreground">{groupCount(g)}</span>
             </button>
           ))}
         </div>
@@ -135,9 +134,9 @@ export function CategoryForm({ categories, productCounts }: Props) {
               <DropdownMenu>
                 <DropdownMenuTrigger
                   aria-label={`Akcje dla ${cat.namePl}`}
-                  className="flex size-8 shrink-0 items-center justify-center rounded-lg hover:bg-muted aria-expanded:bg-muted"
+                  className="flex size-8 shrink-0 items-center justify-center rounded-lg hover:bg-muted aria-expanded:bg-muted pointer-coarse:size-11"
                 >
-                  <MoreHorizontal className="size-4" />
+                  <MoreHorizontal className="size-4" aria-hidden />
                 </DropdownMenuTrigger>
                 <DropdownMenuContent>
                   <DropdownMenuItem onClick={() => setEditing(cat)}>Edytuj</DropdownMenuItem>
@@ -155,7 +154,10 @@ export function CategoryForm({ categories, productCounts }: Props) {
           );
         })}
         {filtered.length === 0 && (
-          <p className="px-4 py-8 text-center text-sm text-muted-foreground">Brak kategorii</p>
+          <EmptyState
+            icon={FolderSearch}
+            title={q ? "Brak kategorii pasujących do wyszukiwania" : "Brak kategorii"}
+          />
         )}
       </div>
 
@@ -204,6 +206,8 @@ function CategorySheet({
     Array.isArray(category?.faqPl) ? (category.faqPl as FaqRow[]) : [],
   );
   const [errors, setErrors] = useState<Record<string, string>>({});
+  // Icon picker and FAQ add/remove don't fire input events — compare against the start
+  const [initialExtras] = useState(() => JSON.stringify({ icon, faq }));
 
   // A category with subcategories stays top-level — the menu is 2 levels deep
   const hasChildren = !!category && categories.some((c) => c.parentId === category.id);
@@ -258,6 +262,7 @@ function CategorySheet({
   return (
     <FormSheet
       wide
+      dirty={JSON.stringify({ icon, faq }) !== initialExtras}
       title={category ? `Edytuj kategorię ${category.namePl}` : "Nowa kategoria"}
       description={
         category && (
@@ -294,7 +299,7 @@ function CategorySheet({
             />
           </Field>
           <Field
-            label="Slug"
+            label="Adres URL"
             htmlFor="c-slug"
             error={errors.slug}
             hint={slugManual ? undefined : "Generowany z nazwy"}
@@ -468,7 +473,7 @@ function SheetGroup({
   return (
     <section className="space-y-4 border-b border-border pb-6 last:border-0 last:pb-0">
       <div>
-        <h3 className="text-[15px] font-semibold">{title}</h3>
+        <h3 className="text-base font-semibold">{title}</h3>
         {description && <p className="mt-0.5 text-xs text-muted-foreground">{description}</p>}
       </div>
       {children}

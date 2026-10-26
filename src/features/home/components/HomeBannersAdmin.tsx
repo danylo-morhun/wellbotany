@@ -5,6 +5,7 @@ import Image from "next/image";
 import { useAction } from "next-safe-action/hooks";
 import { useState } from "react";
 import { toast } from "sonner";
+import { PageHeader } from "@/app/admin/components/ui";
 import { ConfirmDialog } from "@/components/ConfirmDialog";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -49,17 +50,15 @@ export function HomeBannersAdmin({ banners }: Props) {
 
   return (
     <div>
-      <div className="mb-6 flex flex-wrap items-center justify-between gap-3">
-        <div>
-          <h1 className="font-heading text-2xl font-semibold tracking-tight">Strona główna</h1>
-          <p className="mt-1 text-sm text-muted-foreground">
-            Slajder na górze strony — zalecane 3–4 slajdy, zmiana co 5 s
-          </p>
-        </div>
-        <Button size="lg" onClick={() => setEditing("new")}>
-          + Dodaj slajd
-        </Button>
-      </div>
+      <PageHeader
+        title="Strona główna"
+        description="Slajder na górze strony — zalecane 3–4 slajdy, zmiana co 5 s"
+        actions={
+          <Button size="lg" onClick={() => setEditing("new")}>
+            + Dodaj slajd
+          </Button>
+        }
+      />
       <div className="divide-y divide-border rounded-2xl bg-card shadow-card">
         {banners.map((b) => (
           <div key={b.id} className="flex items-center gap-3 px-4 py-3">
@@ -163,6 +162,11 @@ function BannerSheet({ banner, onClose }: { banner: HomeBanner | null; onClose: 
 
   return (
     <FormSheet
+      dirty={
+        imageDesktopUrl !== (banner?.imageDesktopUrl ?? "") ||
+        imageMobileUrl !== (banner?.imageMobileUrl ?? "") ||
+        isActive !== (banner?.isActive ?? true)
+      }
       title={banner ? `Edytuj slajd` : "Nowy slajd"}
       onClose={onClose}
       onSubmit={submit}

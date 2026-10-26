@@ -7,6 +7,7 @@ import Link from "next/link";
 import { useAction } from "next-safe-action/hooks";
 import { useState } from "react";
 import { toast } from "sonner";
+import { PageHeader } from "@/app/admin/components/ui";
 import { ConfirmDialog } from "@/components/ConfirmDialog";
 import { Badge } from "@/components/ui/badge";
 import { Button, buttonVariants } from "@/components/ui/button";
@@ -71,31 +72,29 @@ export function GiftSetsAdmin({ giftSets }: Props) {
 
   return (
     <div>
-      <div className="mb-6 flex flex-wrap items-start justify-between gap-3">
-        <div>
-          <h1 className="font-heading text-2xl font-semibold tracking-tight">Zestawy prezentowe</h1>
-          <p className="mt-1 text-sm text-muted-foreground">
-            Gotowe zestawy w sklepie. Kreator własnego zestawu konfigurujesz osobno.
-          </p>
-        </div>
-        <div className="flex flex-wrap gap-2">
-          <Link
-            href="/admin/zestawy-prezentowe/opakowania"
-            className={buttonVariants({ variant: "outline", size: "lg" })}
-          >
-            Opakowania
-          </Link>
-          <Link
-            href="/admin/zestawy-prezentowe/ustawienia"
-            className={buttonVariants({ variant: "outline", size: "lg" })}
-          >
-            Ustawienia kreatora
-          </Link>
-          <Button size="lg" onClick={() => setEditing("new")}>
-            + Dodaj zestaw
-          </Button>
-        </div>
-      </div>
+      <PageHeader
+        title="Zestawy prezentowe"
+        description="Gotowe zestawy w sklepie. Kreator własnego zestawu konfigurujesz osobno."
+        actions={
+          <>
+            <Link
+              href="/admin/zestawy-prezentowe/opakowania"
+              className={buttonVariants({ variant: "outline", size: "lg" })}
+            >
+              Opakowania
+            </Link>
+            <Link
+              href="/admin/zestawy-prezentowe/ustawienia"
+              className={buttonVariants({ variant: "outline", size: "lg" })}
+            >
+              Ustawienia kreatora
+            </Link>
+            <Button size="lg" onClick={() => setEditing("new")}>
+              + Dodaj zestaw
+            </Button>
+          </>
+        }
+      />
       <div className="divide-y divide-border rounded-2xl bg-card shadow-card">
         {giftSets.map((gs) => (
           <div key={gs.id} className="flex items-center gap-3 px-4 py-3">
@@ -178,6 +177,8 @@ function GiftSetSheet({
   );
   const [price, setPrice] = useState(zl(giftSet?.pricePln ?? null));
   const [errors, setErrors] = useState<Record<string, string>>({});
+  // Picker, image and switch edits don't fire input events — compare against the start
+  const [initialExtras] = useState(() => JSON.stringify({ imageUrl, isFeatured, items }));
 
   const { execute, isPending } = useAction(saveGiftSet, {
     onSuccess: () => {
@@ -247,6 +248,7 @@ function GiftSetSheet({
   return (
     <FormSheet
       wide
+      dirty={JSON.stringify({ imageUrl, isFeatured, items }) !== initialExtras}
       title={giftSet ? `Edytuj ${giftSet.namePl}` : "Nowy zestaw prezentowy"}
       onClose={onClose}
       onSubmit={submit}
@@ -277,7 +279,7 @@ function GiftSetSheet({
           />
         </Field>
         <Field
-          label="Slug"
+          label="Adres URL"
           htmlFor="gs-slug"
           error={errors.slug}
           hint={slugManual ? undefined : "Generowany z nazwy"}
