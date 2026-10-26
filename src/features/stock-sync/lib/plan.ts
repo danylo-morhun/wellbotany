@@ -6,6 +6,16 @@ type VariantKey = { id: string; sku: string; ean: string | null };
 const normalizeEan = (ean: string | null | undefined) => ean?.replace(/\D/g, "") || null;
 const EAN_LIKE = /^\d{8,14}$/;
 
+// Subiekt cards (tw_Symbol) carrying another product's barcode — never matched,
+// so the site variant with that barcode keeps its manual stock. Remove an entry
+// once the card is fixed in Subiekt.
+export const IGNORED_SYMBOLS = new Set([
+  "5904139923962", // "Tran norweski" (Osavi) with Dr. Jacob's Magnez barcode 4041246500219
+  "5903263262305", // "Zmiana" — retired card still holding Singularis Acerola Organic barcode
+  "5900672150995", // Kenay Turmeric 200 g holding the 100 g barcode 5900672150988
+  "5903148622033", // BIOCAPS C Complex Max 60 kaps; symbol equals BICAPS Witamina C 45 sasz. barcode
+]);
+
 /**
  * Subiekt products → our variants: EAN first, then tw_Symbol = sku (case-insensitive),
  * then tw_Symbol = our EAN (shops often keep the barcode in the symbol, not in tw_PodstKodKresk).
@@ -23,6 +33,10 @@ export function matchItems(items: StockItem[], variants: VariantKey[]) {
   const quantities = new Map<string, number>();
   const unmatched: StockItem[] = [];
   for (const item of items) {
+    if (IGNORED_SYMBOLS.has(item.symbol)) {
+      unmatched.push(item);
+      continue;
+    }
     const ean = normalizeEan(item.ean);
     const id =
       (ean && byEan.get(ean)) ||
