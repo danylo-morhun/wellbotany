@@ -1,9 +1,10 @@
 "use client";
 
-import { ChevronLeft, ChevronRight } from "lucide-react";
+import { ChevronLeft, ChevronRight, Pause, Play } from "lucide-react";
 import { getImageProps } from "next/image";
 import Link from "next/link";
 import { useCallback, useEffect, useRef, useState } from "react";
+import { preload } from "react-dom";
 import { cn } from "@/lib/utils";
 import type { HomeBannerItem } from "../lib/banners";
 
@@ -11,11 +12,16 @@ const AUTOPLAY_MS = 5000;
 
 type Props = { banners: HomeBannerItem[] };
 
-/** Full-width photo slider. A scroll-snap track gives native swipe on touch;
- * autoplay pauses on hover/focus and is off for reduced motion. */
+const reducedMotion = () => window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+/** Full-width photo slider. A scroll-snap track gives native swipe on touch.
+ * Autoplay (WCAG 2.2.2): has a pause button, pauses on hover/focus, stops after
+ * one full loop and is off for reduced motion. */
 export function HeroSlider({ banners }: Props) {
   const trackRef = useRef<HTMLDivElement>(null);
+  const autoAdvances = useRef(0);
   const [active, setActive] = useState(0);
+  const [playing, setPlaying] = useState(true);
   const [paused, setPaused] = useState(false);
   const count = banners.length;
 
@@ -24,10 +30,17 @@ export function HeroSlider({ banners }: Props) {
       const track = trackRef.current;
       if (!track) return;
       const next = (index + count) % count;
-      track.scrollTo({ left: next * track.clientWidth, behavior: "smooth" });
+      track.scrollTo({
+        left: next * track.clientWidth,
+        behavior: reducedMotion() ? "auto" : "smooth",
+      });
     },
     [count],
   );
+
+  useEffect(() => {
+    if (reducedMotion()) setPlaying(false);
+  }, []);
 
   useEffect(() => {
     const track = trackRef.current;
@@ -38,11 +51,20 @@ export function HeroSlider({ banners }: Props) {
   }, []);
 
   useEffect(() => {
-    if (count < 2 || paused) return;
-    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
-    const id = window.setTimeout(() => goTo(active + 1), AUTOPLAY_MS);
+    if (count < 2 || !playing || paused) return;
+    const id = window.setTimeout(() => {
+      autoAdvances.current += 1;
+      // One full loop ends back on the first slide
+      if (autoAdvances.current >= count) setPlaying(false);
+      goTo(active + 1);
+    }, AUTOPLAY_MS);
     return () => window.clearTimeout(id);
-  }, [active, paused, count, goTo]);
+  }, [active, playing, paused, count, goTo]);
+
+  const togglePlaying = () => {
+    if (!playing) autoAdvances.current = 0;
+    setPlaying(!playing);
+  };
 
   if (count === 0) return null;
 
@@ -90,6 +112,20 @@ export function HeroSlider({ banners }: Props) {
           >
             <ChevronRight className="size-5" aria-hidden />
           </button>
+          <button
+            type="button"
+            onClick={togglePlaying}
+            aria-label={playing ? "Zatrzymaj pokaz slajdów" : "Wznów pokaz slajdów"}
+            className="absolute bottom-1 right-2 flex size-11 items-center justify-center rounded-full text-white md:bottom-3 md:right-4"
+          >
+            <span className="flex size-8 items-center justify-center rounded-full bg-black/40 backdrop-blur-sm">
+              {playing ? (
+                <Pause className="size-4" aria-hidden />
+              ) : (
+                <Play className="size-4" aria-hidden />
+              )}
+            </span>
+          </button>
           {/* Dark pill keeps the white dots visible on light photos */}
           <div className="absolute bottom-3 left-1/2 flex -translate-x-1/2 rounded-full bg-black/25 px-1 backdrop-blur-sm md:bottom-5">
             {banners.map((banner, i) => (
@@ -136,6 +172,13 @@ function Slide({
     ...common,
     src: banner.imageMobileUrl ?? banner.imageDesktopUrl,
   }).props;
+  // LCP image: getImageProps doesn't emit a preload, so each art-directed source
+  // gets one for its own viewport
+  if (priority) {
+    const shared = { as: "image", imageSizes: "100vw", fetchPriority: "high" } as const;
+    preload(desktop.src, { ...shared, imageSrcSet: desktop.srcSet, media: "(min-width: 768px)" });
+    preload(mobile.src, { ...shared, imageSrcSet: mobile.srcSet, media: "(max-width: 767px)" });
+  }
 
   const light = banner.textTone === "LIGHT";
   const right = banner.textPosition === "RIGHT";
@@ -145,12 +188,18 @@ function Slide({
       href={banner.href}
       aria-roledescription="slajd"
       aria-label={`${index + 1} z ${count}: ${banner.titlePl}`}
-      tabIndex={hidden ? -1 : undefined}
+      inert={hidden}
+      aria-hidden={hidden || undefined}
       className="relative block aspect-[3/2] w-full shrink-0 snap-start overflow-hidden bg-secondary md:aspect-[1920/710] md:max-h-[440px]"
     >
       <picture>
         <source media="(min-width: 768px)" srcSet={desktop.srcSet} sizes="100vw" />
-        <img {...mobile} alt={alt} className="object-cover" />
+        <img
+          {...mobile}
+          alt={alt}
+          fetchPriority={priority ? "high" : undefined}
+          className="object-cover"
+        />
       </picture>
       {/* Scrim on the text side keeps the headline readable on any photo.
           Phone: text on top (photos keep products in the lower part); desktop: left/right */}

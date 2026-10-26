@@ -7,7 +7,16 @@ const NEEDS_LIMIT = 8;
 
 type Props = { categories: CategoryItem[] };
 
-/** Keyword H1 + shortcuts into the biggest "na …" need categories. */
+/** Keyword H1 — rendered above the first product row so it leads the DOM. */
+export function HomeH1() {
+  return (
+    <h1 className="text-balance font-heading text-2xl font-extrabold tracking-tight md:text-3xl">
+      Suplementy diety, witaminy i zioła
+    </h1>
+  );
+}
+
+/** Shortcuts into the biggest "na …" need categories. */
 export function HomeIntro({ categories }: Props) {
   const needs = categories
     .filter((c) => c.parentId === null && c.slug.startsWith("na-") && c.productCount > 0)
@@ -15,18 +24,10 @@ export function HomeIntro({ categories }: Props) {
     .slice(0, NEEDS_LIMIT);
 
   return (
-    <section aria-labelledby="home-h1" className="space-y-4">
-      <div className="space-y-1">
-        <h1
-          id="home-h1"
-          className="text-balance font-heading text-2xl font-extrabold tracking-tight md:text-3xl"
-        >
-          Suplementy diety, witaminy i zioła
-        </h1>
-        <p className="text-sm text-muted-foreground md:text-base">
-          Ponad 1300 produktów z pełnym składem. Czego szukasz?
-        </p>
-      </div>
+    <section aria-labelledby="home-intro-lead" className="space-y-4">
+      <p id="home-intro-lead" className="text-sm text-muted-foreground md:text-base">
+        Ponad 1300 produktów z pełnym składem. Czego szukasz?
+      </p>
       <ul className="-mx-4 flex gap-2 overflow-x-auto px-4 pb-1 [scrollbar-width:none] sm:mx-0 sm:grid sm:grid-cols-2 sm:px-0 md:gap-3 lg:grid-cols-4 [&::-webkit-scrollbar]:hidden">
         {needs.map((c) => {
           const Icon = categoryIconFor(c);
@@ -34,7 +35,7 @@ export function HomeIntro({ categories }: Props) {
             <li key={c.id} className="shrink-0">
               <Link
                 href={`/kategoria/${c.slug}`}
-                className="group flex h-11 items-center gap-2.5 rounded-full bg-secondary pl-3 pr-4 text-sm font-semibold text-secondary-foreground transition-colors duration-200 hover:bg-primary hover:text-primary-foreground motion-reduce:transition-none md:h-12 md:rounded-xl md:text-[15px]"
+                className="group flex h-11 items-center gap-2.5 rounded-full bg-secondary pl-3 pr-4 text-sm font-semibold text-secondary-foreground transition-colors duration-200 hover:bg-primary hover:text-primary-foreground motion-reduce:transition-none md:h-12 md:rounded-xl md:text-base"
               >
                 <Icon
                   className="size-[18px] shrink-0 text-primary transition-colors duration-200 group-hover:text-primary-foreground motion-reduce:transition-none"
