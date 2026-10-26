@@ -109,9 +109,10 @@ export default function RootLayout({
           dangerouslySetInnerHTML={{ __html: toJsonLdScript(buildWebsiteJsonLd()) }}
         />
         <ThemeProvider attribute="class" defaultTheme="light" disableTransitionOnChange>
+          {/* Early in DOM order so keyboard users reach it first; it's fixed, so layout is unchanged */}
+          <CookieBanner />
           {children}
           <Toaster />
-          <CookieBanner />
         </ThemeProvider>
         <GoogleTag />
         <MetaClickId />
