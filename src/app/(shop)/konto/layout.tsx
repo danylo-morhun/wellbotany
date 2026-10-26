@@ -15,7 +15,7 @@ export default function KontoLayout({ children }: { children: React.ReactNode })
         <aside className="w-full shrink-0 md:w-56">
           <div className="rounded-2xl bg-card p-3 shadow-card">
             <p className="mb-2 px-3.5 pt-1 text-sm font-bold text-foreground">Moje konto</p>
-            <nav className="flex flex-col gap-0.5">
+            <nav aria-label="Konto" className="flex flex-col gap-0.5">
               <SideNav items={NAV_ITEMS} />
               <LogoutButton
                 action={async () => {
