@@ -1,7 +1,7 @@
 import Image from "next/image";
 import Link from "next/link";
-import { formatPrice } from "@/lib/format";
-import { discountPercent, omnibusNote } from "@/lib/omnibus";
+import { formatPrice, pluralPl } from "@/lib/format";
+import { omnibusNote, referencePrice } from "@/lib/omnibus";
 
 export type GiftSetListItem = {
   slug: string;
@@ -21,7 +21,7 @@ type Props = {
 
 export function GiftSetCard({ giftSet, headingLevel = 2 }: Props) {
   const Heading = headingLevel === 3 ? "h3" : "h2";
-  const hasDiscount = discountPercent(giftSet) != null;
+  const struckPrice = referencePrice(giftSet);
   const lowestNote = omnibusNote(giftSet);
 
   return (
@@ -49,15 +49,17 @@ export function GiftSetCard({ giftSet, headingLevel = 2 }: Props) {
         <Heading className="line-clamp-2 text-sm font-semibold leading-snug text-foreground transition-colors group-hover:text-primary">
           {giftSet.namePl}
         </Heading>
-        <p className="mt-1 text-xs text-muted-foreground">{giftSet.itemCount} produktów</p>
+        <p className="mt-1 text-xs text-muted-foreground">
+          {giftSet.itemCount} {pluralPl(giftSet.itemCount, "produkt", "produkty", "produktów")}
+        </p>
 
         <div className="mt-3 flex items-baseline gap-2">
           <span className="text-base font-bold text-foreground">
             {formatPrice(giftSet.pricePln)}
           </span>
-          {hasDiscount && giftSet.comparePricePln != null && (
+          {struckPrice != null && (
             <span className="text-sm text-muted-foreground line-through">
-              {formatPrice(giftSet.comparePricePln)}
+              {formatPrice(struckPrice)}
             </span>
           )}
         </div>

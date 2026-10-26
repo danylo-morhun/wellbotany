@@ -1,6 +1,6 @@
 "use client";
 
-import { Minus, Plus, ShoppingCart, Truck } from "lucide-react";
+import { Check, Minus, Plus, ShoppingCart, Truck } from "lucide-react";
 import { useAction } from "next-safe-action/hooks";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
@@ -24,6 +24,8 @@ export type Variant = {
   omnibusNote?: string | null;
   /** Reduction vs the 30-day low (lib/omnibus) — null hides the promotion */
   discountPercent?: number | null;
+  /** Struck-through price: the 30-day low the percent is measured from (lib/omnibus) */
+  referencePricePln?: number | null;
 };
 
 type Props = {
@@ -76,7 +78,7 @@ export function AddToCartSection({ variants, ordersPaused = false }: Props) {
   const available = selected.stock > 0 && !ordersPaused;
   const hasOptions = variants.some((v) => v.optionValue);
   const isMultiVariant = variants.length > 1;
-  const comparePrice = selected.comparePricePln;
+  const comparePrice = selected.referencePricePln ?? null;
   const discountPct = selected.discountPercent ?? null;
   const hasDiscount = comparePrice != null && discountPct != null;
 
@@ -94,12 +96,14 @@ export function AddToCartSection({ variants, ordersPaused = false }: Props) {
                 type="button"
                 onClick={() => setSelectedId(v.id)}
                 disabled={v.stock <= 0}
-                className={`rounded-md border px-3 py-1.5 text-sm transition-[transform,background-color,color,border-color] duration-[160ms] ease-[cubic-bezier(0.23,1,0.32,1)] active:scale-[0.97] disabled:opacity-40 ${
+                aria-pressed={v.id === selectedId}
+                className={`inline-flex items-center gap-1 rounded-md border px-3 py-1.5 text-sm transition-[transform,background-color,color,border-color] duration-[160ms] ease-[cubic-bezier(0.23,1,0.32,1)] active:scale-[0.97] disabled:opacity-40 motion-reduce:transition-none motion-reduce:active:scale-100 ${
                   v.id === selectedId
-                    ? "border-primary bg-primary text-primary-foreground"
-                    : "border-border hover:border-primary hover:bg-muted"
+                    ? "border-primary bg-primary font-semibold text-primary-foreground"
+                    : "border-input hover:border-primary hover:bg-muted"
                 }`}
               >
+                {v.id === selectedId && <Check className="size-3.5" aria-hidden />}
                 {v.optionValue}
               </button>
             ))}
@@ -107,14 +111,14 @@ export function AddToCartSection({ variants, ordersPaused = false }: Props) {
         </div>
       )}
 
-      <div className="flex items-baseline gap-3">
+      <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1">
         <span className="text-3xl font-bold text-foreground">{formatPrice(selected.pricePln)}</span>
         {hasDiscount && (
           <>
             <span className="text-lg text-muted-foreground line-through">
               {formatPrice(comparePrice)}
             </span>
-            <span className="rounded bg-destructive/10 px-2 py-0.5 text-sm font-medium text-destructive">
+            <span className="rounded-full bg-accent px-2.5 py-0.5 text-sm font-bold text-accent-foreground">
               -{discountPct}%
             </span>
           </>
@@ -179,7 +183,7 @@ export function AddToCartSection({ variants, ordersPaused = false }: Props) {
         <ShoppingCart className="size-4" />
         <span
           key={isExecuting ? "loading" : succeeded ? "success" : "idle"}
-          className="animate-[btn-text-in_200ms_ease-out_both]"
+          className="animate-[btn-text-in_200ms_ease-out_both] motion-reduce:animate-none"
         >
           {ordersPaused
             ? "Zamówienia wstrzymane"

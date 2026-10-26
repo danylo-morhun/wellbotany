@@ -2,7 +2,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { QuickAddButton } from "@/features/cart/components/QuickAddButton";
 import { formatPrice } from "@/lib/format";
-import { discountPercent, omnibusNote } from "@/lib/omnibus";
+import { discountPercent, omnibusNote, referencePrice } from "@/lib/omnibus";
 import { formatUnitPrice, variantPackQuantity } from "@/lib/unit-price";
 import type { ProductListItem } from "../actions";
 import { resolveDisplayBrand } from "../lib/brand-tree";
@@ -20,7 +20,7 @@ export function ProductCard({ product, priority = false, headingLevel = 2 }: Pro
   const defaultVariant = product.variants[0];
   const mainImage = product.images[0];
   const isOutOfStock = defaultVariant ? defaultVariant.stock <= 0 : true;
-  const comparePrice = defaultVariant?.comparePricePln ?? null;
+  const comparePrice = defaultVariant ? referencePrice(defaultVariant) : null;
   const discountPct = defaultVariant ? discountPercent(defaultVariant) : null;
   const hasDiscount = comparePrice != null && discountPct != null;
   const lowestNote = defaultVariant ? omnibusNote(defaultVariant) : null;
@@ -72,7 +72,7 @@ export function ProductCard({ product, priority = false, headingLevel = 2 }: Pro
             ) : (
               <>
                 {hasDiscount && (
-                  <span className="flex size-10 items-center justify-center rounded-full bg-accent text-[11px] font-bold text-accent-foreground animate-pop-in motion-reduce:animate-none">
+                  <span className="flex size-10 items-center justify-center rounded-full bg-accent text-xs font-bold text-accent-foreground animate-pop-in motion-reduce:animate-none">
                     -{discountPct}%
                   </span>
                 )}
@@ -116,7 +116,7 @@ export function ProductCard({ product, priority = false, headingLevel = 2 }: Pro
           </div>
         )}
 
-        <div className="mt-3 flex items-baseline gap-2">
+        <div className="mt-3 flex flex-wrap items-baseline gap-x-2">
           {defaultVariant ? (
             <>
               <span className="text-base font-bold text-foreground">

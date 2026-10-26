@@ -18,7 +18,7 @@ import { getProductReviews } from "@/features/reviews/lib/queries";
 import { getShopSettings } from "@/features/settings/lib/shop-settings";
 import { WishlistButton } from "@/features/wishlist/components/WishlistButton";
 import { publicImageUrl } from "@/lib/image-loader";
-import { discountPercent, omnibusNote } from "@/lib/omnibus";
+import { discountPercent, omnibusNote, referencePrice } from "@/lib/omnibus";
 import { sanitizeRichText } from "@/lib/sanitize";
 import { buildPageTitle, buildProductJsonLd, DEFAULT_OG_IMAGE, toJsonLdScript } from "@/lib/seo";
 import { formatUnitPrice, variantPackQuantity } from "@/lib/unit-price";
@@ -88,6 +88,7 @@ export default async function ProduktPage({ params }: Props) {
     ...v,
     omnibusNote: omnibusNote(v),
     discountPercent: discountPercent(v),
+    referencePricePln: referencePrice(v),
     unitPrice: formatUnitPrice(
       v.pricePln,
       variantPackQuantity(
@@ -202,12 +203,12 @@ export default async function ProduktPage({ params }: Props) {
 
             <div className="space-y-6">
               {displayBrand && (
-                <a
+                <Link
                   href={`/marki/${displayBrand.slug}`}
                   className="text-sm font-medium text-muted-foreground hover:text-foreground"
                 >
                   {displayBrand.name}
-                </a>
+                </Link>
               )}
 
               <h1 className="text-balance text-2xl text-foreground leading-tight">
@@ -448,7 +449,7 @@ export default async function ProduktPage({ params }: Props) {
             <h2 className="mb-6 font-heading text-2xl">Podobne produkty</h2>
             <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
               {related.map((p) => (
-                <ProductCard key={p.id} product={p} />
+                <ProductCard key={p.id} product={p} headingLevel={3} />
               ))}
             </div>
           </section>
