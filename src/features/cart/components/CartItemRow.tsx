@@ -35,6 +35,7 @@ export function CartItemRow({ item, onRemove }: Props) {
 
   const pending = removing || updating;
   const image = item.variant.product.images[0];
+  const name = item.variant.product.namePl;
 
   return (
     <div
@@ -75,29 +76,35 @@ export function CartItemRow({ item, onRemove }: Props) {
         </div>
 
         <div className="mt-auto flex items-center gap-2 pt-3">
-          <div className="flex items-center overflow-hidden rounded-lg border border-border">
+          <fieldset
+            aria-label={`Ilość: ${name}`}
+            className="flex items-center overflow-hidden rounded-lg border border-border"
+          >
             <button
               type="button"
               disabled={pending || item.quantity <= 1}
               onClick={() => doUpdate({ cartItemId: item.id, quantity: item.quantity - 1 })}
-              className="flex size-8 items-center justify-center text-muted-foreground transition-[background-color,color] duration-[120ms] hover:bg-muted hover:text-foreground disabled:opacity-40"
-              aria-label="Zmniejsz ilość"
+              className="flex size-10 items-center justify-center text-muted-foreground pointer-coarse:size-11 transition-[background-color,color] duration-[120ms] hover:bg-muted hover:text-foreground disabled:opacity-40"
+              aria-label={`Zmniejsz ilość: ${name}`}
             >
-              <Minus className="size-3.5" />
+              <Minus className="size-3.5" aria-hidden />
             </button>
-            <span className="w-9 border-x border-border text-center text-sm font-semibold">
+            <span
+              aria-live="polite"
+              className="w-9 border-x border-border text-center text-sm font-semibold"
+            >
               {item.quantity}
             </span>
             <button
               type="button"
               disabled={pending || item.quantity >= item.variant.stock}
               onClick={() => doUpdate({ cartItemId: item.id, quantity: item.quantity + 1 })}
-              className="flex size-8 items-center justify-center text-muted-foreground transition-[background-color,color] duration-[120ms] hover:bg-muted hover:text-foreground disabled:opacity-40"
-              aria-label="Zwiększ ilość"
+              className="flex size-10 items-center justify-center text-muted-foreground pointer-coarse:size-11 transition-[background-color,color] duration-[120ms] hover:bg-muted hover:text-foreground disabled:opacity-40"
+              aria-label={`Zwiększ ilość: ${name}`}
             >
-              <Plus className="size-3.5" />
+              <Plus className="size-3.5" aria-hidden />
             </button>
-          </div>
+          </fieldset>
 
           <button
             type="button"
@@ -110,10 +117,10 @@ export function CartItemRow({ item, onRemove }: Props) {
                 doRemove({ cartItemId: item.id });
               }
             }}
-            className="ml-auto flex size-8 items-center justify-center rounded-lg text-muted-foreground transition-[background-color,color] duration-[120ms] hover:bg-destructive/10 hover:text-destructive disabled:opacity-40"
-            aria-label="Usuń z koszyka"
+            className="ml-auto flex size-10 items-center pointer-coarse:size-11 justify-center rounded-lg text-muted-foreground transition-[background-color,color] duration-[120ms] hover:bg-destructive/10 hover:text-destructive disabled:opacity-40"
+            aria-label={`Usuń ${name} z koszyka`}
           >
-            <Trash2 className="size-3.5" />
+            <Trash2 className="size-3.5" aria-hidden />
           </button>
         </div>
       </div>
