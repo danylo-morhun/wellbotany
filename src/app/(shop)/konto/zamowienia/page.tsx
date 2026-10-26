@@ -33,9 +33,7 @@ export default async function ZamowieniaPage() {
       {orders.length === 0 && (
         <div className="flex flex-col items-center gap-4 rounded-2xl bg-card p-10 text-center shadow-card">
           <PackageSearch className="size-12 text-muted-foreground" />
-          <h2 className="text-balance text-lg font-medium">
-            Nie złożyłeś jeszcze żadnego zamówienia
-          </h2>
+          <h2 className="text-balance text-lg font-medium">Nie masz jeszcze żadnych zamówień</h2>
           <p className="text-sm text-muted-foreground">
             Twoje zamówienia pojawią się tutaj, gdy tylko coś kupisz.
           </p>
