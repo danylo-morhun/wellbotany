@@ -266,8 +266,11 @@ test("admin: mark as paid, then shipped with a tracking number", async ({ page, 
   await expect(adminPage).not.toHaveURL(/\/logowanie/, { timeout: 15_000 });
 
   await adminPage.goto(`/admin/zamowienia/${order.id}`);
-  adminPage.once("dialog", (d) => d.accept());
   await adminPage.getByRole("button", { name: "Oznacz jako opłacone" }).click();
+  await adminPage
+    .getByRole("alertdialog")
+    .getByRole("button", { name: "Oznacz jako opłacone" })
+    .click();
   await expect(adminPage.getByText("Zamówienie oznaczone jako opłacone")).toBeVisible();
   await expect
     .poll(
@@ -279,6 +282,7 @@ test("admin: mark as paid, then shipped with a tracking number", async ({ page, 
   await adminPage.locator("#status").selectOption("SHIPPED");
   await adminPage.locator("#trackingNumber").fill("620000000000000000000001");
   await adminPage.getByRole("button", { name: "Zapisz" }).click();
+  await adminPage.getByRole("alertdialog").getByRole("button", { name: "Zmień status" }).click();
   await expect(adminPage.getByText("Zapisano zmiany")).toBeVisible();
 
   const shipped = await prisma.order.findUniqueOrThrow({ where: { id: order.id } });

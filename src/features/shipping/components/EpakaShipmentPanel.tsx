@@ -3,6 +3,7 @@
 import { useAction } from "next-safe-action/hooks";
 import { useState } from "react";
 import { toast } from "sonner";
+import { ConfirmDialog } from "@/components/ConfirmDialog";
 import { Button, buttonVariants } from "@/components/ui/button";
 import {
   Field,
@@ -69,6 +70,7 @@ export function EpakaShipmentPanel({
   });
   const [mode, setMode] = useState<"pickup" | "dropOff">("dropOff");
   const [senderPointId, setSenderPointId] = useState(senderPoints[0]?.id ?? "");
+  const [confirming, setConfirming] = useState(false);
 
   const create = useAction(createEpakaShipment, {
     onSuccess: ({ data }) =>
@@ -81,6 +83,7 @@ export function EpakaShipmentPanel({
       toast.error("epaka", {
         description: error.serverError ?? "Sprawdź dane odbiorcy i paczki — formularz ma błędy",
       }),
+    onSettled: () => setConfirming(false),
   });
   const refresh = useAction(refreshEpakaShipment, {
     onSuccess: ({ data }) =>
@@ -131,17 +134,18 @@ export function EpakaShipmentPanel({
   }
 
   function submit() {
+    if (mode === "dropOff" && !senderPoints.some((p) => p.id === senderPointId)) {
+      toast.error("Wybierz punkt nadania");
+      return;
+    }
+    setConfirming(true);
+  }
+
+  function createShipment() {
     const numbers = Object.fromEntries(
       Object.entries(pkg).map(([k, v]) => [k, Number(v.replace(",", "."))]),
     ) as Pkg;
     const senderPoint = senderPoints.find((p) => p.id === senderPointId);
-    if (mode === "dropOff" && !senderPoint) {
-      toast.error("Wybierz punkt nadania");
-      return;
-    }
-    if (!window.confirm("Utworzyć przesyłkę w epaka? Koszt zostanie pobrany z salda epaka.")) {
-      return;
-    }
     create.execute({
       orderId,
       receiver: {
@@ -231,6 +235,17 @@ export function EpakaShipmentPanel({
       <Button type="button" disabled={create.isPending} onClick={submit} className="w-full">
         {create.isPending ? "Tworzenie przesyłki…" : "Nadaj przez epaka"}
       </Button>
+      <ConfirmDialog
+        open={confirming}
+        onOpenChange={setConfirming}
+        title="Utworzyć przesyłkę w epaka?"
+        description="Koszt zostanie pobrany z salda epaka."
+        confirmLabel="Nadaj przez epaka"
+        tone="default"
+        pendingLabel="Tworzenie przesyłki…"
+        pending={create.isPending}
+        onConfirm={createShipment}
+      />
     </div>
   );
 }

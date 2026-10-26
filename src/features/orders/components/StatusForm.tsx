@@ -4,8 +4,19 @@ import type { OrderStatus } from "@prisma/client";
 import { useAction } from "next-safe-action/hooks";
 import { useState } from "react";
 import { toast } from "sonner";
+import { ConfirmDialog } from "@/components/ConfirmDialog";
+import { Button } from "@/components/ui/button";
+import { inputClass } from "@/features/products/components/editor/fields";
+import { cn } from "@/lib/utils";
 import { updateOrderStatus } from "../actions";
-import { ORDER_STATUS_LABELS, orderStatusLabel } from "../lib/status-labels";
+import {
+  ORDER_STATUS_LABELS,
+  orderStatusLabel,
+  statusChangeConsequence,
+} from "../lib/status-labels";
+import type { UpdateOrderStatusInput } from "../schema";
+
+const CONFIRM_STATUSES: OrderStatus[] = ["CANCELLED", "SHIPPED"];
 
 interface Props {
   orderId: string;
@@ -23,22 +34,28 @@ export function StatusForm({
   currentTrackingNumber,
 }: Props) {
   const isPickup = shippingMethod === "PICKUP";
+  const [pendingInput, setPendingInput] = useState<UpdateOrderStatusInput | null>(null);
   const { execute, isPending } = useAction(updateOrderStatus, {
     onSuccess: () => toast.success("Zapisano zmiany"),
     onError: ({ error }) => toast.error(error?.serverError ?? "Błąd aktualizacji statusu"),
+    onSettled: () => setPendingInput(null),
   });
   const [status, setStatus] = useState<OrderStatus>(currentStatus);
 
   function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
     const fd = new FormData(e.currentTarget);
-    execute({
+    const input: UpdateOrderStatusInput = {
       orderId,
       status: fd.get("status") as OrderStatus,
       // Always sent (even empty) so the note can be cleared
       noteAdmin: (fd.get("noteAdmin") as string) ?? "",
       trackingNumber: (fd.get("trackingNumber") as string) || undefined,
-    });
+    };
+    // Cancelling and shipping touch stock or e-mail the customer — confirm first
+    const risky = input.status !== currentStatus && CONFIRM_STATUSES.includes(input.status);
+    if (risky) setPendingInput(input);
+    else execute(input);
   }
 
   return (
@@ -52,7 +69,7 @@ export function StatusForm({
           name="status"
           defaultValue={currentStatus}
           onChange={(e) => setStatus(e.target.value as OrderStatus)}
-          className="w-full rounded-lg border border-border bg-card px-3 py-2 text-sm focus:border-transparent focus:outline-none focus:ring-2 focus:ring-ring/50"
+          className={cn(inputClass, "bg-card py-2")}
         >
           {Object.keys(ORDER_STATUS_LABELS).map((value) => (
             <option key={value} value={value}>
@@ -73,7 +90,7 @@ export function StatusForm({
             required={!currentTrackingNumber}
             defaultValue={currentTrackingNumber ?? ""}
             placeholder="np. 1234567890"
-            className="w-full rounded-lg border border-border bg-card px-3 py-2 text-sm focus:border-transparent focus:outline-none focus:ring-2 focus:ring-ring/50"
+            className={cn(inputClass, "bg-card py-2")}
           />
           <p className="mt-1 text-xs text-muted-foreground">
             Wpisz numer po utworzeniu etykiety u przewoźnika — wyślemy klientowi e-mail z numerem i
@@ -105,16 +122,23 @@ export function StatusForm({
           name="noteAdmin"
           defaultValue={currentNote ?? ""}
           rows={3}
-          className="w-full rounded-lg border border-border bg-card px-3 py-2 text-sm focus:border-transparent focus:outline-none focus:ring-2 focus:ring-ring/50"
+          className={cn(inputClass, "bg-card py-2")}
         />
       </div>
-      <button
-        type="submit"
-        disabled={isPending}
-        className="rounded-lg bg-primary px-4 py-2 text-sm font-medium text-primary-foreground transition-colors duration-200 hover:bg-primary-deep motion-reduce:transition-none disabled:opacity-50"
-      >
+      <Button type="submit" size="lg" disabled={isPending}>
         {isPending ? "Zapisywanie…" : "Zapisz"}
-      </button>
+      </Button>
+      <ConfirmDialog
+        open={pendingInput !== null}
+        onOpenChange={(open) => !open && setPendingInput(null)}
+        title={`Zmienić status na „${orderStatusLabel(pendingInput?.status ?? "", shippingMethod)}”?`}
+        description={statusChangeConsequence(pendingInput?.status ?? "", shippingMethod) ?? ""}
+        confirmLabel="Zmień status"
+        tone={pendingInput?.status === "CANCELLED" ? "destructive" : "default"}
+        pendingLabel="Zapisywanie…"
+        pending={isPending}
+        onConfirm={() => pendingInput && execute(pendingInput)}
+      />
     </form>
   );
 }
