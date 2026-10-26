@@ -1,10 +1,12 @@
 "use client";
 
 import type { GiftPackaging } from "@prisma/client";
+import { Gift } from "lucide-react";
 import Image from "next/image";
 import { useAction } from "next-safe-action/hooks";
 import { useState } from "react";
 import { toast } from "sonner";
+import { EmptyState, PageHeader } from "@/app/admin/components/ui";
 import { ConfirmDialog } from "@/components/ConfirmDialog";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -36,17 +38,15 @@ export function GiftPackagingAdmin({ packagings }: Props) {
 
   return (
     <div>
-      <div className="mb-6 flex flex-wrap items-center justify-between gap-3">
-        <div>
-          <h1 className="font-heading text-2xl font-semibold tracking-tight">Opakowania</h1>
-          <p className="mt-1 text-sm text-muted-foreground">
-            Do wyboru w kreatorze własnego zestawu — dopłata doliczana do koszyka
-          </p>
-        </div>
-        <Button size="lg" onClick={() => setEditing("new")}>
-          + Dodaj opakowanie
-        </Button>
-      </div>
+      <PageHeader
+        title="Opakowania"
+        description="Do wyboru w kreatorze własnego zestawu — dopłata doliczana do koszyka"
+        actions={
+          <Button size="lg" onClick={() => setEditing("new")}>
+            + Dodaj opakowanie
+          </Button>
+        }
+      />
       <div className="divide-y divide-border rounded-2xl bg-card shadow-card">
         {packagings.map((p) => (
           <div key={p.id} className="flex items-center gap-3 px-4 py-3">
@@ -81,7 +81,9 @@ export function GiftPackagingAdmin({ packagings }: Props) {
           </div>
         ))}
         {packagings.length === 0 && (
-          <p className="px-4 py-6 text-center text-sm text-muted-foreground">Brak opakowań</p>
+          <EmptyState icon={Gift} title="Brak opakowań">
+            Dodaj opakowanie, aby klienci mogli je wybrać w kreatorze zestawu.
+          </EmptyState>
         )}
       </div>
 
@@ -154,6 +156,7 @@ function PackagingSheet({
 
   return (
     <FormSheet
+      dirty={imageUrl !== (packaging?.imageUrl ?? "") || isActive !== (packaging?.isActive ?? true)}
       title={packaging ? `Edytuj ${packaging.namePl}` : "Nowe opakowanie"}
       onClose={onClose}
       onSubmit={submit}
