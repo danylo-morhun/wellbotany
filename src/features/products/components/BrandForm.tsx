@@ -1,11 +1,12 @@
 "use client";
 
 import type { Brand } from "@prisma/client";
-import { Search } from "lucide-react";
+import { Search, SearchX } from "lucide-react";
 import Image from "next/image";
 import { useAction } from "next-safe-action/hooks";
 import { useState } from "react";
 import { toast } from "sonner";
+import { EmptyState, PageHeader } from "@/app/admin/components/ui";
 import { ConfirmDialog } from "@/components/ConfirmDialog";
 import { Button } from "@/components/ui/button";
 import { RowActions } from "@/components/ui/row-actions";
@@ -47,15 +48,15 @@ export function BrandForm({ brands }: Props) {
 
   return (
     <div>
-      <div className="mb-6 flex flex-wrap items-center justify-between gap-3">
-        <div>
-          <h1 className="font-heading text-2xl font-semibold tracking-tight">Marki</h1>
-          <p className="mt-1 text-sm text-muted-foreground">{brands.length} marek</p>
-        </div>
-        <Button size="lg" onClick={() => setEditing("new")}>
-          + Dodaj markę
-        </Button>
-      </div>
+      <PageHeader
+        title="Marki"
+        description={`${brands.length} marek`}
+        actions={
+          <Button size="lg" onClick={() => setEditing("new")}>
+            + Dodaj markę
+          </Button>
+        }
+      />
 
       <div className="relative mb-4 max-w-sm">
         <Search
@@ -101,9 +102,10 @@ export function BrandForm({ brands }: Props) {
           </div>
         ))}
         {ordered.length === 0 && (
-          <p className="px-4 py-6 text-center text-sm text-muted-foreground">
-            {q ? "Brak marek pasujących do wyszukiwania" : "Brak marek"}
-          </p>
+          <EmptyState
+            icon={SearchX}
+            title={q ? "Brak marek pasujących do wyszukiwania" : "Brak marek"}
+          />
         )}
       </div>
 
@@ -207,6 +209,7 @@ function BrandSheet({
 
   return (
     <FormSheet
+      dirty={logo !== (brand?.logo ?? "")}
       title={brand ? `Edytuj markę ${brand.name}` : "Nowa marka"}
       onClose={onClose}
       onSubmit={submit}
@@ -226,7 +229,7 @@ function BrandSheet({
         />
       </Field>
       <Field
-        label="Slug"
+        label="Adres URL"
         htmlFor="b-slug"
         error={errors.slug}
         hint={`wellbotany.pl/marki/${slug || "…"}${slugManual ? "" : " · generowany z nazwy"}`}
