@@ -2,6 +2,7 @@ import { MessageSquareQuote } from "lucide-react";
 import type { Metadata } from "next";
 import Image from "next/image";
 import Link from "next/link";
+import { AdminPagination } from "@/app/admin/components/AdminPagination";
 import { EmptyState, PageHeader, relativeDate } from "@/app/admin/components/ui";
 import { ModerationButtons } from "@/features/reviews/components/ModerationButtons";
 import { Stars } from "@/features/reviews/components/Stars";
@@ -16,16 +17,20 @@ const TABS = [
   { status: "REJECTED", label: "Odrzucone" },
 ] as const;
 
-type Props = { searchParams: Promise<{ status?: string }> };
+const PAGE_SIZE = 50;
+
+type Props = { searchParams: Promise<{ status?: string; strona?: string }> };
 
 export default async function AdminReviewsPage({ searchParams }: Props) {
-  const { status: raw } = await searchParams;
+  const { status: raw, strona } = await searchParams;
   const status = TABS.find((t) => t.status === raw)?.status ?? "PENDING";
+  const page = Math.max(1, Number.parseInt(strona ?? "1", 10) || 1);
   const [reviews, counts] = await Promise.all([
     prisma.review.findMany({
       where: { status },
       orderBy: { createdAt: "desc" },
-      take: 100,
+      skip: (page - 1) * PAGE_SIZE,
+      take: PAGE_SIZE,
       select: {
         id: true,
         authorName: true,
@@ -47,6 +52,7 @@ export default async function AdminReviewsPage({ searchParams }: Props) {
     prisma.review.groupBy({ by: ["status"], _count: { _all: true } }),
   ]);
   const countFor = (s: string) => counts.find((c) => c.status === s)?._count._all ?? 0;
+  const totalPages = Math.ceil(countFor(status) / PAGE_SIZE);
   const now = new Date();
 
   return (
@@ -88,6 +94,9 @@ export default async function AdminReviewsPage({ searchParams }: Props) {
             <li key={r.id} className="flex gap-4 rounded-2xl bg-card p-5 shadow-card">
               <Link
                 href={`/admin/produkty/${r.product.id}`}
+                // Decorative duplicate of the product name link below — keep it out of tab/AT order
+                aria-hidden
+                tabIndex={-1}
                 className="relative size-14 shrink-0 overflow-hidden rounded-xl bg-muted"
               >
                 {r.product.images[0] && (
@@ -128,6 +137,7 @@ export default async function AdminReviewsPage({ searchParams }: Props) {
           ))}
         </ul>
       )}
+      <AdminPagination currentPage={page} totalPages={totalPages} />
     </div>
   );
 }

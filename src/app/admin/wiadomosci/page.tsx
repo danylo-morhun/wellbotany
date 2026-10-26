@@ -1,6 +1,7 @@
 import { Inbox, Reply } from "lucide-react";
 import type { Metadata } from "next";
 import Link from "next/link";
+import { AdminPagination } from "@/app/admin/components/AdminPagination";
 import { EmptyState, formatDateTime, PageHeader, relativeDate } from "@/app/admin/components/ui";
 import { buttonVariants } from "@/components/ui/button";
 import { MessageReadToggle } from "@/features/contact/components/MessageReadToggle";
@@ -9,17 +10,29 @@ import { cn } from "@/lib/utils";
 
 export const metadata: Metadata = { title: "Wiadomości" };
 
-type Props = { searchParams: Promise<{ id?: string }> };
+const PAGE_SIZE = 50;
+
+type Props = { searchParams: Promise<{ id?: string; strona?: string }> };
 
 export default async function AdminMessagesPage({ searchParams }: Props) {
-  const { id } = await searchParams;
-  const messages = await prisma.contactMessage.findMany({
-    orderBy: { createdAt: "desc" },
-    take: 200,
-  });
-  const current = messages.find((m) => m.id === id) ?? null;
+  const { id, strona } = await searchParams;
+  const page = Math.max(1, Number.parseInt(strona ?? "1", 10) || 1);
+  const [messages, total, unread] = await Promise.all([
+    prisma.contactMessage.findMany({
+      orderBy: { createdAt: "desc" },
+      skip: (page - 1) * PAGE_SIZE,
+      take: PAGE_SIZE,
+    }),
+    prisma.contactMessage.count(),
+    prisma.contactMessage.count({ where: { isRead: false } }),
+  ]);
+  // The open message may sit on another page (e.g. a link from the dashboard)
+  const current =
+    messages.find((m) => m.id === id) ??
+    (id ? await prisma.contactMessage.findUnique({ where: { id } }) : null);
+  const totalPages = Math.ceil(total / PAGE_SIZE);
+  const pageQuery = page > 1 ? `&strona=${page}` : "";
   const now = new Date();
-  const unread = messages.filter((m) => !m.isRead).length;
 
   return (
     <div>
@@ -45,7 +58,7 @@ export default async function AdminMessagesPage({ searchParams }: Props) {
             {messages.map((m) => (
               <li key={m.id}>
                 <Link
-                  href={`/admin/wiadomosci?id=${m.id}`}
+                  href={`/admin/wiadomosci?id=${m.id}${pageQuery}`}
                   className={cn(
                     "block px-4 py-3 transition-colors hover:bg-muted/50 motion-reduce:transition-none",
                     m.id === current?.id && "bg-secondary/60 hover:bg-secondary/60",
@@ -86,7 +99,7 @@ export default async function AdminMessagesPage({ searchParams }: Props) {
           {current ? (
             <article className="p-6">
               <Link
-                href="/admin/wiadomosci"
+                href={page > 1 ? `/admin/wiadomosci?strona=${page}` : "/admin/wiadomosci"}
                 className="mb-4 inline-block text-sm text-muted-foreground hover:text-foreground md:hidden"
               >
                 ← Wszystkie wiadomości
@@ -130,6 +143,7 @@ export default async function AdminMessagesPage({ searchParams }: Props) {
           )}
         </div>
       )}
+      <AdminPagination currentPage={page} totalPages={totalPages} />
     </div>
   );
 }
