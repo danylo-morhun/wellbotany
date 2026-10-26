@@ -22,7 +22,7 @@ export function NewMenu() {
     <DropdownMenu>
       <DropdownMenuTrigger className="flex h-9 items-center gap-1.5 rounded-lg bg-primary px-3 text-sm font-medium text-primary-foreground hover:bg-primary-deep">
         <Plus className="size-4" aria-hidden />
-        <span className="hidden sm:inline">Nowy</span>
+        <span className="max-sm:sr-only">Nowy</span>
       </DropdownMenuTrigger>
       <DropdownMenuContent>
         {ITEMS.map(({ href, label, icon: Icon }) => (
