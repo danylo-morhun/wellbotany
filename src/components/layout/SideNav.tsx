@@ -27,7 +27,7 @@ export function SideNav({ items }: Props) {
             aria-current={isActive ? "page" : undefined}
             className={`flex items-center justify-between rounded-xl px-3.5 py-2.5 text-sm transition-colors duration-150 motion-reduce:transition-none ${
               isActive
-                ? "bg-secondary font-semibold text-primary"
+                ? "bg-secondary font-semibold text-primary-ink"
                 : "font-medium text-muted-foreground hover:bg-muted hover:text-foreground"
             }`}
           >

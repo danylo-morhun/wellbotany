@@ -3,6 +3,7 @@
 import { Heart, X } from "lucide-react";
 import Link from "next/link";
 import { useState } from "react";
+import { headerBadgeClass, headerIconClass } from "@/components/layout/header-icon";
 import {
   Sheet,
   SheetClose,
@@ -25,11 +26,14 @@ export function WishlistIconClient() {
         type="button"
         onClick={() => setOpen(true)}
         aria-label={`Ulubione${itemCount > 0 ? ` (${itemCount})` : ""}`}
-        className="relative rounded-md p-2 text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+        className={headerIconClass}
       >
-        <Heart className="size-5" />
+        <Heart className="size-5" aria-hidden />
         {itemCount > 0 && (
-          <span className="absolute right-0.5 top-0.5 flex size-4 items-center justify-center rounded-full bg-destructive text-[10px] font-bold text-white">
+          <span
+            aria-hidden
+            className={`${headerBadgeClass} bg-destructive text-destructive-foreground`}
+          >
             {itemCount > 99 ? "99+" : itemCount}
           </span>
         )}
@@ -42,7 +46,7 @@ export function WishlistIconClient() {
               Ulubione {itemCount > 0 && `(${itemCount})`}
             </SheetTitle>
             <SheetClose
-              className="rounded-md p-1 text-muted-foreground hover:bg-muted hover:text-foreground"
+              className="-mr-2 flex size-10 items-center justify-center rounded-full text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground"
               aria-label="Zamknij ulubione"
             >
               <X className="size-5" />

@@ -4,6 +4,7 @@ import Link from "next/link";
 import { AdminLink } from "@/components/layout/AdminLink";
 import { MegaMenu } from "@/components/layout/MegaMenu";
 import { MobileMenu } from "@/components/layout/MobileMenu";
+import { MobileSearch } from "@/components/layout/MobileSearch";
 import { ThemeToggle } from "@/components/layout/ThemeToggle";
 import { CartIconClient } from "@/features/cart/components/CartIconClient";
 import { getCategories } from "@/features/catalog/actions";
@@ -15,6 +16,7 @@ import { isTierPromoLive } from "@/features/promotions/lib/tiered";
 import { getShopSettings, ordersPausedMessage } from "@/features/settings/lib/shop-settings";
 import { WishlistIconClient } from "@/features/wishlist/components/WishlistIconClient";
 import { formatPriceCompact } from "@/lib/format";
+import { headerIconClass } from "./header-icon";
 
 const NEW_ARRIVALS_HREF = "/katalog?nowosci=1";
 
@@ -60,12 +62,12 @@ export async function NavBar() {
           <p className="flex items-center gap-1.5">
             {freeShippingThresholdPln !== null && !ordersPaused && (
               <>
-                <Truck className="size-3.5" strokeWidth={2} />
+                <Truck className="size-3.5" strokeWidth={2} aria-hidden />
                 Darmowa dostawa od {formatPriceCompact(freeShippingThresholdPln)}
               </>
             )}
           </p>
-          <nav className="hidden items-center gap-5 sm:flex">
+          <nav aria-label="Informacje" className="hidden items-center gap-5 sm:flex">
             {utilityLinks.map((link) => (
               <Link
                 key={link.href}
@@ -95,7 +97,7 @@ export async function NavBar() {
               width={177}
               height={31}
               priority
-              className="h-6 w-auto min-[360px]:h-7 sm:h-8 dark:hidden"
+              className="h-6 w-auto min-[400px]:h-7 sm:h-8 dark:hidden"
             />
             <Image
               src="/branding/logo-horizontal-white.svg"
@@ -103,7 +105,7 @@ export async function NavBar() {
               width={177}
               height={31}
               priority
-              className="hidden h-6 w-auto min-[360px]:h-7 sm:h-8 dark:block"
+              className="hidden h-6 w-auto min-[400px]:h-7 sm:h-8 dark:block"
             />
           </Link>
 
@@ -111,22 +113,19 @@ export async function NavBar() {
             <HeaderSearch className="w-full max-w-lg" />
           </search>
 
-          {/* On narrow phones theme and wishlist move into the mobile menu so the row fits */}
+          {/* On phones theme and wishlist move into the mobile menu so the row fits */}
           <div className="ml-auto flex shrink-0 items-center gap-0.5 md:ml-0">
+            <MobileSearch />
             <div className="hidden sm:block">
               <ThemeToggle />
             </div>
-            <div className="hidden min-[360px]:block">
+            <div className="hidden sm:block">
               <WishlistIconClient />
             </div>
             <CartIconClient />
             <AdminLink />
-            <Link
-              href="/konto"
-              aria-label="Moje konto"
-              className="rounded-full p-2.5 text-muted-foreground transition-colors hover:bg-secondary hover:text-primary"
-            >
-              <User className="size-5" />
+            <Link href="/konto" aria-label="Moje konto" className={headerIconClass}>
+              <User className="size-5" aria-hidden />
             </Link>
           </div>
         </div>
