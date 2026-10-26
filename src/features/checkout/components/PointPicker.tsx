@@ -161,26 +161,18 @@ export function PointPicker({ service, pointName, onSelect }: Props) {
             </div>
 
             <div className="min-h-0 overflow-y-auto border-t border-border md:order-1 md:border-t-0 md:border-r">
-              {status === "idle" && (
-                <p className="p-4 text-sm text-muted-foreground">
-                  Wpisz miasto, ulicę lub kod punktu albo użyj swojej lokalizacji.
-                </p>
-              )}
-              {status === "loading" && (
-                <p className="p-4 text-sm text-muted-foreground" aria-live="polite">
-                  Szukam punktów…
-                </p>
-              )}
-              {status === "empty" && (
-                <p className="p-4 text-sm text-muted-foreground" aria-live="polite">
-                  Nie znaleziono punktów. Spróbuj innej nazwy miejscowości.
-                </p>
-              )}
-              {status === "error" && (
-                <p className="p-4 text-sm text-destructive" aria-live="polite">
-                  Nie udało się pobrać punktów. Spróbuj ponownie lub wpisz kod punktu ręcznie.
-                </p>
-              )}
+              {/* One region that stays mounted; only its text changes, so each status is announced */}
+              <p
+                aria-live="polite"
+                className={`p-4 text-sm empty:p-0 ${status === "error" ? "text-destructive" : "text-muted-foreground"}`}
+              >
+                {status === "idle" &&
+                  "Wpisz miasto, ulicę lub kod punktu albo użyj swojej lokalizacji."}
+                {status === "loading" && "Szukam punktów…"}
+                {status === "empty" && "Nie znaleziono punktów. Spróbuj innej nazwy miejscowości."}
+                {status === "error" &&
+                  "Nie udało się pobrać punktów. Spróbuj ponownie lub wpisz kod punktu ręcznie."}
+              </p>
               {status === "ok" && (
                 <ul ref={listRef} className="divide-y divide-border">
                   {points.map((point) => (
