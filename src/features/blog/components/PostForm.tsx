@@ -180,9 +180,7 @@ export function PostForm({ post, categories }: Props) {
           )}
           <Button onClick={save} disabled={saving} className="h-8 px-3">
             {saving ? "Zapisywanie…" : post ? "Zapisz" : "Utwórz artykuł"}
-            <kbd className="ml-1 hidden rounded bg-background/15 px-1 text-[11px] sm:inline">
-              ⌘S
-            </kbd>
+            <kbd className="ml-1 hidden rounded bg-background/15 px-1 text-xs sm:inline">⌘S</kbd>
           </Button>
         </div>
       )}
@@ -402,8 +400,8 @@ export function PostForm({ post, categories }: Props) {
             </Field>
           </Section>
 
-          <Section title="Adres strony">
-            <Field label="Slug" htmlFor="slug">
+          <Section title="Adres URL">
+            <Field label="Adres URL" htmlFor="slug">
               <div className="flex items-center overflow-hidden rounded-lg border border-border bg-muted/60 focus-within:border-ring focus-within:ring-3 focus-within:ring-ring/15">
                 <span className="pl-3 text-xs text-muted-foreground">/poradnik/</span>
                 <input

@@ -11,12 +11,12 @@ import type {
   TagType,
 } from "@prisma/client";
 import { Check, ChevronDown, ExternalLink, Sparkles, X } from "lucide-react";
+import dynamic from "next/dynamic";
 import { useRouter } from "next/navigation";
 import { useAction } from "next-safe-action/hooks";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
-import { RichTextEditor } from "@/components/ui/rich-text-editor";
 import { toBrandOptions } from "@/features/catalog/lib/brand-tree";
 import { slugify } from "@/lib/slugify";
 import { cn } from "@/lib/utils";
@@ -31,6 +31,20 @@ import { NutritionEditor, type NutritionState } from "./editor/NutritionEditor";
 import { MultiPicker, type PickerOption, SearchSelect } from "./editor/Pickers";
 import { SeoPreview } from "./editor/SeoPreview";
 import { useUnsavedChanges } from "./editor/useUnsavedChanges";
+
+// Tiptap is heavy — load it on the client only, after the form shell
+const RichTextEditor = dynamic(
+  () => import("@/components/ui/rich-text-editor").then((m) => m.RichTextEditor),
+  {
+    ssr: false,
+    loading: () => (
+      <div
+        className="h-[182px] animate-pulse rounded-md border border-input bg-muted/40 motion-reduce:animate-none"
+        aria-hidden
+      />
+    ),
+  },
+);
 
 type ProductWithTags = Product & {
   tags: ProductTag[];
@@ -280,6 +294,7 @@ export function ProductForm({
   const [slugManual, setSlugManual] = useState(!!product);
   // Bumped on discard so uncontrolled rich-text editors reload their content
   const [editorKey, setEditorKey] = useState(0);
+  const [translationsOpen, setTranslationsOpen] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
 
   const set = useCallback(<K extends keyof Values>(key: K, value: Values[K]) => {
@@ -428,9 +443,7 @@ export function ProductForm({
           )}
           <Button onClick={save} disabled={isPending} className="h-8 bg-primary px-3">
             {isPending ? "Zapisywanie…" : product ? "Zapisz" : "Utwórz produkt"}
-            <kbd className="ml-1 hidden rounded bg-background/15 px-1 text-[11px] sm:inline">
-              ⌘S
-            </kbd>
+            <kbd className="ml-1 hidden rounded bg-background/15 px-1 text-xs sm:inline">⌘S</kbd>
           </Button>
         </div>
       )}
@@ -477,6 +490,7 @@ export function ProductForm({
               hint="Krótkie hasła pod tytułem (4–6). Bez nowych twierdzeń o działaniu, których nie ma w opisie lub na etykiecie."
             >
               <ListEditor
+                label="Korzyść"
                 items={values.benefitsPl}
                 onChange={(v) => set("benefitsPl", v)}
                 placeholder="np. Wysoka biodostępność"
@@ -603,6 +617,7 @@ export function ProductForm({
           >
             <Field label="Ostrzeżenia na etykiecie">
               <ListEditor
+                label="Ostrzeżenie"
                 items={values.healthWarnings}
                 onChange={(v) => set("healthWarnings", v)}
                 placeholder="Treść ostrzeżenia"
@@ -720,10 +735,14 @@ export function ProductForm({
             </Field>
           </Section>
 
-          <details id="tlumaczenia" className="group scroll-mt-24 rounded-2xl bg-card shadow-card">
+          <details
+            id="tlumaczenia"
+            className="group scroll-mt-24 rounded-2xl bg-card shadow-card"
+            onToggle={(e) => e.currentTarget.open && setTranslationsOpen(true)}
+          >
             <summary className="flex cursor-pointer list-none items-center justify-between px-5 py-4 [&::-webkit-details-marker]:hidden">
               <span>
-                <span className="block text-[15px] font-semibold">Tłumaczenia</span>
+                <span className="block text-base font-semibold">Tłumaczenia</span>
                 <span className="block text-xs text-muted-foreground">
                   EN / UK — opcjonalne, sklep działa po polsku.
                 </span>
@@ -759,22 +778,27 @@ export function ProductForm({
                   onChange={(e) => set("shortDescUk", e.target.value)}
                 />
               </Field>
-              <Field label="Opis (EN)" htmlFor="descriptionEn">
-                <RichTextEditor
-                  key={`en-${editorKey}`}
-                  id="descriptionEn"
-                  value={values.descriptionEn}
-                  onChange={(html) => set("descriptionEn", html)}
-                />
-              </Field>
-              <Field label="Opis (UK)" htmlFor="descriptionUk">
-                <RichTextEditor
-                  key={`uk-${editorKey}`}
-                  id="descriptionUk"
-                  value={values.descriptionUk}
-                  onChange={(html) => set("descriptionUk", html)}
-                />
-              </Field>
+              {/* Mounted on first open — two more editors the admin rarely needs */}
+              {translationsOpen && (
+                <>
+                  <Field label="Opis (EN)" htmlFor="descriptionEn">
+                    <RichTextEditor
+                      key={`en-${editorKey}`}
+                      id="descriptionEn"
+                      value={values.descriptionEn}
+                      onChange={(html) => set("descriptionEn", html)}
+                    />
+                  </Field>
+                  <Field label="Opis (UK)" htmlFor="descriptionUk">
+                    <RichTextEditor
+                      key={`uk-${editorKey}`}
+                      id="descriptionUk"
+                      value={values.descriptionUk}
+                      onChange={(html) => set("descriptionUk", html)}
+                    />
+                  </Field>
+                </>
+              )}
               <Field label="Składniki (EN)" htmlFor="ingredientsEn" className="sm:col-span-2">
                 <TextArea
                   id="ingredientsEn"
@@ -834,7 +858,7 @@ export function ProductForm({
 
           <section className="rounded-2xl bg-card p-5 shadow-card">
             <div className="mb-3 flex items-baseline justify-between">
-              <h2 className="text-[15px] font-semibold">Kompletność</h2>
+              <h2 className="text-base font-semibold">Kompletność</h2>
               <span className="text-sm font-semibold tabular-nums">{completeness.score}%</span>
             </div>
             <div className="mb-3 h-1.5 rounded-full bg-muted">
@@ -926,9 +950,9 @@ export function ProductForm({
             </Field>
           </Section>
 
-          <Section title="Adres strony">
+          <Section title="Adres URL">
             <Field
-              label="Slug"
+              label="Adres URL"
               htmlFor="slug"
               error={errors.slug}
               hint={
@@ -975,7 +999,7 @@ export function ProductForm({
 function Placeholder({ title, text }: { title: string; text: string }) {
   return (
     <section className="rounded-2xl border border-dashed border-border p-5">
-      <h2 className="text-[15px] font-semibold">{title}</h2>
+      <h2 className="text-base font-semibold">{title}</h2>
       <p className="mt-1 text-sm text-muted-foreground">{text}</p>
     </section>
   );
