@@ -1,10 +1,12 @@
 "use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useState } from "react";
+import { type RefObject, useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { PrivacyNote } from "@/components/PrivacyNote";
+import { FieldError, inputClass } from "@/components/ui/field";
+import { fieldA11y } from "@/lib/field-a11y";
 import type { CheckoutFormData } from "./CheckoutForm";
 import { FakturaFields, validateNip } from "./FakturaFields";
 
@@ -18,16 +20,18 @@ const schema = z.object({
 type FormValues = z.infer<typeof schema>;
 
 type Props = {
+  headingRef: RefObject<HTMLHeadingElement | null>;
   data: CheckoutFormData;
   onChange: (updates: Partial<CheckoutFormData>) => void;
   onNext: () => void;
 };
 
-export function StepContact({ data, onChange, onNext }: Props) {
+export function StepContact({ headingRef, data, onChange, onNext }: Props) {
   const [nipError, setNipError] = useState<string | null>(null);
   const {
     register,
     handleSubmit,
+    watch,
     formState: { errors },
   } = useForm<FormValues>({
     resolver: zodResolver(schema),
@@ -40,22 +44,28 @@ export function StepContact({ data, onChange, onNext }: Props) {
     },
   });
 
+  // Typed values reach the parent as they change, so the saved draft keeps them
+  useEffect(() => {
+    const subscription = watch((values) => onChange(values));
+    return () => subscription.unsubscribe();
+  }, [watch, onChange]);
+
   const onSubmit = (values: FormValues) => {
     // Faktura fields are controlled by the parent, outside react-hook-form
     if (data.wantsFaktura && !validateNip(data.billNip)) {
       setNipError("Nieprawidłowy NIP");
+      document.getElementById("billNip")?.focus();
       return;
     }
     onChange(values);
     onNext();
   };
 
-  const inputClass =
-    "w-full rounded-lg border border-border px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary";
-
   return (
     <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-      <h2 className="text-lg font-semibold">Dane kontaktowe</h2>
+      <h2 ref={headingRef} tabIndex={-1} className="text-lg font-semibold focus:outline-none">
+        Dane kontaktowe
+      </h2>
 
       <div className="grid gap-4 sm:grid-cols-2">
         <div>
@@ -63,28 +73,24 @@ export function StepContact({ data, onChange, onNext }: Props) {
             Imię *
           </label>
           <input
-            id="co-firstName"
             {...register("firstName")}
+            {...fieldA11y("co-firstName", errors.firstName?.message).inputProps}
             autoComplete="given-name"
             className={inputClass}
           />
-          {errors.firstName && (
-            <p className="mt-1 text-xs text-destructive">{errors.firstName.message}</p>
-          )}
+          <FieldError id="co-firstName-error" message={errors.firstName?.message} />
         </div>
         <div>
           <label htmlFor="co-lastName" className="mb-1 block text-sm font-medium">
             Nazwisko *
           </label>
           <input
-            id="co-lastName"
             {...register("lastName")}
+            {...fieldA11y("co-lastName", errors.lastName?.message).inputProps}
             autoComplete="family-name"
             className={inputClass}
           />
-          {errors.lastName && (
-            <p className="mt-1 text-xs text-destructive">{errors.lastName.message}</p>
-          )}
+          <FieldError id="co-lastName-error" message={errors.lastName?.message} />
         </div>
       </div>
 
@@ -93,13 +99,13 @@ export function StepContact({ data, onChange, onNext }: Props) {
           Adres e-mail *
         </label>
         <input
-          id="co-email"
           {...register("email")}
+          {...fieldA11y("co-email", errors.email?.message).inputProps}
           type="email"
           autoComplete="email"
           className={inputClass}
         />
-        {errors.email && <p className="mt-1 text-xs text-destructive">{errors.email.message}</p>}
+        <FieldError id="co-email-error" message={errors.email?.message} />
       </div>
 
       <div>
@@ -107,13 +113,13 @@ export function StepContact({ data, onChange, onNext }: Props) {
           Telefon *
         </label>
         <input
-          id="co-phone"
           {...register("phone")}
+          {...fieldA11y("co-phone", errors.phone?.message).inputProps}
           type="tel"
           autoComplete="tel"
           className={inputClass}
         />
-        {errors.phone && <p className="mt-1 text-xs text-destructive">{errors.phone.message}</p>}
+        <FieldError id="co-phone-error" message={errors.phone?.message} />
       </div>
 
       <FakturaFields

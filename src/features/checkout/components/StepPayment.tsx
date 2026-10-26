@@ -2,19 +2,23 @@
 
 import { ShieldCheck } from "lucide-react";
 import { useAction } from "next-safe-action/hooks";
-import { useEffect, useState } from "react";
+import { type RefObject, useEffect, useRef, useState } from "react";
+import { FieldError, FormError, inputClass } from "@/components/ui/field";
 import { groupCartItems } from "@/features/cart/lib/grouping";
 import { effectiveUnitPricePln, saleSubtotalPln } from "@/features/cart/lib/pricing";
 import { clearSavedCoupon, readSavedCoupon } from "@/features/cart/lib/saved-coupon";
 import type { CartItem } from "@/features/cart/lib/session";
 import { cartDiscount, type TierPromo } from "@/features/promotions/lib/tiered";
+import { fieldA11y } from "@/lib/field-a11y";
 import { formatPrice } from "@/lib/format";
+import { cn } from "@/lib/utils";
 import { verifyCoupon } from "../actions";
 import { isOfflinePayment } from "../lib/payment";
 import { type ShippingRate, shippingCostFor, shippingLabel } from "../lib/shipping";
 import type { CheckoutFormData } from "./CheckoutForm";
 
 type Props = {
+  headingRef: RefObject<HTMLHeadingElement | null>;
   data: CheckoutFormData;
   onChange: (updates: Partial<CheckoutFormData>) => void;
   onBack: () => void;
@@ -39,6 +43,7 @@ const PAYMENT_OPTIONS = [
 ];
 
 export function StepPayment({
+  headingRef,
   data,
   onChange,
   onBack,
@@ -58,6 +63,9 @@ export function StepPayment({
     message: string | null;
   } | null>(null);
   const [verifying, setVerifying] = useState(false);
+  const [termsError, setTermsError] = useState<string | null>(null);
+  const termsRef = useRef<HTMLInputElement>(null);
+  const terms = fieldA11y("acceptedTerms", termsError);
   const saleSubtotal = saleSubtotalPln(items);
 
   const { execute: executeVerify } = useAction(verifyCoupon, {
@@ -85,6 +93,16 @@ export function StepPayment({
     executeVerify({ code: data.couponCode, subtotal, saleSubtotal });
   };
 
+  // The button stays enabled so a missed checkbox gets an explanation, not a dead button
+  const handleSubmit = () => {
+    if (!data.acceptedTerms) {
+      setTermsError("Zaakceptuj regulamin, aby złożyć zamówienie.");
+      termsRef.current?.focus();
+      return;
+    }
+    onSubmit();
+  };
+
   const {
     discountPln: discount,
     source: discountSource,
@@ -104,7 +122,9 @@ export function StepPayment({
 
   return (
     <div className="space-y-6">
-      <h2 className="text-lg font-semibold">Płatność i podsumowanie</h2>
+      <h2 ref={headingRef} tabIndex={-1} className="text-lg font-semibold focus:outline-none">
+        Płatność i podsumowanie
+      </h2>
 
       {/* Order summary */}
       <div className="rounded-lg border border-border p-4">
@@ -168,7 +188,7 @@ export function StepPayment({
       </div>
 
       {/* Coupon */}
-      <div className="space-y-2">
+      <div>
         <label htmlFor="couponCode" className="mb-1 block text-sm font-medium">
           Kod rabatowy (opcjonalnie)
         </label>
@@ -182,29 +202,34 @@ export function StepPayment({
               setCouponResult(null);
             }}
             placeholder="KOD RABATOWY"
-            className="flex-1 rounded-lg border border-border px-3 py-2 text-sm uppercase focus:outline-none focus:ring-2 focus:ring-primary"
+            aria-describedby="couponCode-result"
+            className={cn(inputClass, "flex-1 uppercase")}
           />
           <button
             type="button"
             onClick={handleVerifyCoupon}
             disabled={verifying || !data.couponCode.trim()}
-            className="rounded-lg border border-border bg-secondary px-4 py-2 text-sm font-medium hover:bg-accent disabled:opacity-50"
+            className="rounded-lg border border-border bg-secondary px-4 py-2 text-sm font-medium hover:bg-muted disabled:opacity-50"
           >
             {verifying ? "…" : "Zastosuj"}
           </button>
         </div>
-        {couponResult && (
-          <p className={`text-sm ${couponResult.valid ? "text-success" : "text-destructive"}`}>
-            {couponResult.valid
+        {/* Mounted before the result arrives, so screen readers announce it */}
+        <p
+          id="couponCode-result"
+          role="status"
+          className={`mt-2 text-sm empty:mt-0 ${couponResult?.valid ? "text-success" : "text-destructive"}`}
+        >
+          {couponResult &&
+            (couponResult.valid
               ? `✓ Rabat: -${formatPrice(couponResult.discountPln)}${couponResult.message ? ` · ${couponResult.message}` : ""}`
-              : couponResult.message}
-          </p>
-        )}
+              : couponResult.message)}
+        </p>
       </div>
 
       {/* Payment method */}
-      <div>
-        <p className="mb-3 text-sm font-medium">Metoda płatności</p>
+      <fieldset>
+        <legend className="mb-3 text-sm font-medium">Metoda płatności</legend>
         <div className="space-y-2">
           {PAYMENT_OPTIONS.filter(
             (opt) =>
@@ -242,43 +267,53 @@ export function StepPayment({
             Zapłacisz przy odbiorze zamówienia w sklepie.
           </p>
         )}
+      </fieldset>
+
+      <FormError message={error} className="px-4 py-3" />
+
+      <div>
+        <label className="flex items-start gap-2 text-sm">
+          <input
+            ref={termsRef}
+            type="checkbox"
+            checked={data.acceptedTerms}
+            onChange={(e) => {
+              onChange({ acceptedTerms: e.target.checked });
+              if (e.target.checked) setTermsError(null);
+            }}
+            {...terms.inputProps}
+            className="size-5 shrink-0 accent-primary"
+          />
+          <span>
+            Akceptuję {/* New tab: leaving this page would lose the checkout form */}
+            <a
+              href="/regulamin"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="underline hover:text-foreground"
+            >
+              regulamin sklepu
+              <span className="sr-only"> (otwiera się w nowej karcie)</span>
+            </a>
+          </span>
+        </label>
+        <FieldError id={terms.errorId} message={termsError} />
       </div>
-
-      {error && (
-        <p className="rounded-lg border border-destructive/30 bg-destructive/10 px-4 py-3 text-sm text-destructive">
-          {error}
-        </p>
-      )}
-
-      <label className="flex items-start gap-2 text-sm">
-        <input
-          type="checkbox"
-          checked={data.acceptedTerms}
-          onChange={(e) => onChange({ acceptedTerms: e.target.checked })}
-          className="mt-0.5"
-        />
-        <span>
-          Akceptuję{" "}
-          <a href="/regulamin" className="underline hover:text-foreground">
-            regulamin sklepu
-          </a>
-        </span>
-      </label>
 
       <div className="flex gap-3">
         <button
           type="button"
           onClick={onBack}
           disabled={pending}
-          className="flex-1 rounded-lg border border-border px-4 py-3 text-sm font-medium transition-[transform,background-color] duration-[160ms] ease-[cubic-bezier(0.23,1,0.32,1)] hover:bg-muted/50 active:scale-[0.97] disabled:opacity-50 motion-reduce:active:scale-100"
+          className="flex-1 rounded-full border border-border px-4 py-3 text-sm font-medium transition-[transform,background-color] duration-[160ms] ease-[cubic-bezier(0.23,1,0.32,1)] hover:bg-muted/50 active:scale-[0.97] disabled:opacity-50 motion-reduce:active:scale-100"
         >
           Wstecz
         </button>
         <button
           type="button"
-          onClick={onSubmit}
-          disabled={pending || !data.acceptedTerms}
-          className="flex-1 rounded-lg bg-primary px-4 py-3 text-sm font-medium text-primary-foreground transition-[transform,background-color,color,border-color] duration-[160ms] ease-[cubic-bezier(0.23,1,0.32,1)] hover:bg-primary-deep active:scale-[0.97] disabled:opacity-50 motion-reduce:transition-none motion-reduce:active:scale-100"
+          onClick={handleSubmit}
+          disabled={pending}
+          className="flex-1 rounded-full bg-primary px-4 py-3 text-sm font-medium text-primary-foreground transition-[transform,background-color,color,border-color] duration-[160ms] ease-[cubic-bezier(0.23,1,0.32,1)] hover:bg-primary-deep active:scale-[0.97] disabled:opacity-50 motion-reduce:transition-none motion-reduce:active:scale-100"
         >
           {/* Wording required by art. 17 ust. 3 ustawy o prawach konsumenta */}
           {pending

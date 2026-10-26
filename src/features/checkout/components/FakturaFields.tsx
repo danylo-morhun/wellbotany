@@ -1,5 +1,7 @@
 "use client";
 
+import { FieldError, inputClass } from "@/components/ui/field";
+import { fieldA11y } from "@/lib/field-a11y";
 import type { CheckoutFormData } from "./CheckoutForm";
 
 export function validateNip(nip: string): boolean {
@@ -20,6 +22,7 @@ type Props = {
 
 /** "Chcę fakturę VAT" checkbox with the company fields it reveals. */
 export function FakturaFields({ data, onChange, nipError, onNipChange }: Props) {
+  const nip = fieldA11y("billNip", nipError);
   return (
     <>
       <div className="border-t border-border pt-4">
@@ -45,10 +48,11 @@ export function FakturaFields({ data, onChange, nipError, onNipChange }: Props) 
             <input
               id="billCompany"
               type="text"
+              autoComplete="billing organization"
               required
               value={data.billCompany}
               onChange={(e) => onChange({ billCompany: e.target.value })}
-              className="w-full rounded-lg border border-border px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary"
+              className={inputClass}
             />
           </div>
 
@@ -57,18 +61,19 @@ export function FakturaFields({ data, onChange, nipError, onNipChange }: Props) 
               NIP (10 cyfr)
             </label>
             <input
-              id="billNip"
+              {...nip.inputProps}
               type="text"
               required
               maxLength={10}
+              inputMode="numeric"
               value={data.billNip}
               onChange={(e) => {
                 onChange({ billNip: e.target.value.replace(/\D/g, "") });
                 onNipChange();
               }}
-              className="w-full rounded-lg border border-border px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary"
+              className={inputClass}
             />
-            {nipError && <p className="mt-1 text-xs text-destructive">{nipError}</p>}
+            <FieldError id={nip.errorId} message={nipError} />
           </div>
 
           <div>
@@ -78,10 +83,11 @@ export function FakturaFields({ data, onChange, nipError, onNipChange }: Props) 
             <input
               id="billStreet"
               type="text"
+              autoComplete="billing address-line1"
               required
               value={data.billStreet}
               onChange={(e) => onChange({ billStreet: e.target.value })}
-              className="w-full rounded-lg border border-border px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary"
+              className={inputClass}
             />
           </div>
 
@@ -93,12 +99,13 @@ export function FakturaFields({ data, onChange, nipError, onNipChange }: Props) 
               <input
                 id="billPostalCode"
                 type="text"
+                autoComplete="billing postal-code"
                 required
                 placeholder="00-000"
                 pattern="\d{2}-\d{3}"
                 value={data.billPostalCode}
                 onChange={(e) => onChange({ billPostalCode: e.target.value })}
-                className="w-full rounded-lg border border-border px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary"
+                className={inputClass}
               />
             </div>
             <div>
@@ -108,10 +115,11 @@ export function FakturaFields({ data, onChange, nipError, onNipChange }: Props) 
               <input
                 id="billCity"
                 type="text"
+                autoComplete="billing address-level2"
                 required
                 value={data.billCity}
                 onChange={(e) => onChange({ billCity: e.target.value })}
-                className="w-full rounded-lg border border-border px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary"
+                className={inputClass}
               />
             </div>
           </div>
