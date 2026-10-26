@@ -1,5 +1,8 @@
+import { FileText } from "lucide-react";
 import type { Metadata } from "next";
 import Link from "next/link";
+import { EmptyState, PageHeader } from "@/app/admin/components/ui";
+import { buttonVariants } from "@/components/ui/button";
 import { prisma } from "@/lib/prisma";
 
 export const metadata: Metadata = { title: "Poradnik" };
@@ -25,24 +28,19 @@ export default async function AdminPostsPage() {
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <div>
-          <h1 className="font-heading text-2xl font-semibold tracking-tight">Poradnik</h1>
-          <p className="text-sm text-muted-foreground">
-            Artykuły na /poradnik. Tylko oświadczenia zdrowotne z rejestru UE (rozp. 432/2012).
-          </p>
-        </div>
-        <Link
-          href="/admin/poradnik/nowy"
-          className="rounded-lg bg-primary px-3 py-1.5 text-sm font-medium text-primary-foreground transition-colors duration-200 hover:bg-primary-deep motion-reduce:transition-none"
-        >
-          + Dodaj
-        </Link>
-      </div>
+      <PageHeader
+        title="Poradnik"
+        description="Artykuły na /poradnik. Tylko oświadczenia zdrowotne z rejestru UE (rozp. 432/2012)."
+        actions={
+          <Link href="/admin/poradnik/nowy" className={buttonVariants({ size: "lg" })}>
+            + Dodaj
+          </Link>
+        }
+      />
       {posts.length === 0 ? (
-        <p className="rounded-2xl bg-card p-6 text-sm text-muted-foreground shadow-card">
-          Brak artykułów.
-        </p>
+        <div className="rounded-2xl bg-card shadow-card">
+          <EmptyState icon={FileText} title="Brak artykułów" />
+        </div>
       ) : (
         <ul className="divide-y divide-border rounded-2xl bg-card shadow-card">
           {posts.map((post) => (

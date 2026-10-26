@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { formatDateTime } from "@/app/admin/components/ui";
+import { formatDateTime, PageHeader } from "@/app/admin/components/ui";
 import { PAYMENT_LABELS } from "@/features/checkout/lib/payment";
 import { shippingLabel } from "@/features/checkout/lib/shipping";
 import { PrintButton } from "@/features/orders/components/PrintButton";
@@ -23,15 +23,12 @@ export default async function PackingSlipsPage({ searchParams }: Props) {
 
   return (
     <div>
-      <div className="mb-6 flex items-center justify-between gap-3 print:hidden">
-        <div>
-          <h1 className="font-heading text-2xl font-semibold tracking-tight">Listy pakowania</h1>
-          <p className="text-sm text-muted-foreground">
-            {orders.length} {pluralPl(orders.length, "zamówienie", "zamówienia", "zamówień")} ·
-            każde na osobnej stronie
-          </p>
-        </div>
-        <PrintButton />
+      <div className="print:hidden">
+        <PageHeader
+          title="Listy pakowania"
+          description={`${orders.length} ${pluralPl(orders.length, "zamówienie", "zamówienia", "zamówień")} · każde na osobnej stronie`}
+          actions={<PrintButton />}
+        />
       </div>
 
       <div className="space-y-6 print:space-y-0">
@@ -101,7 +98,9 @@ export default async function PackingSlipsPage({ searchParams }: Props) {
               <table className="w-full">
                 <thead>
                   <tr className="border-b border-border text-left text-xs text-muted-foreground">
-                    <th className="w-8 pb-2" />
+                    <th className="w-8 pb-2">
+                      <span className="sr-only">Spakowane</span>
+                    </th>
                     <th className="pb-2 font-medium">Produkt</th>
                     <th className="pb-2 font-medium">SKU</th>
                     <th className="pb-2 text-right font-medium">Ilość</th>
