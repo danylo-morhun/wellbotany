@@ -6,9 +6,12 @@ import { useRouter } from "next/navigation";
 import { useAction } from "next-safe-action/hooks";
 import { useMemo, useState } from "react";
 import { toast } from "sonner";
+import { ConfirmDialog } from "@/components/ConfirmDialog";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { inputClass } from "@/features/products/components/editor/fields";
 import { formatPrice } from "@/lib/format";
+import { cn } from "@/lib/utils";
 import { bulkMarkOrdersPaid } from "../actions";
 import { matchTransfers } from "../lib/reconcile";
 
@@ -48,7 +51,9 @@ export function TransferReconciler({ orders }: { orders: Order[] }) {
       router.refresh();
     },
     onError: ({ error }) => toast.error(error?.serverError ?? "Błąd zapisu"),
+    onSettled: () => setConfirming(false),
   });
+  const [confirming, setConfirming] = useState(false);
 
   return (
     <div className="grid grid-cols-1 items-start gap-6 lg:grid-cols-[minmax(0,1fr)_380px]">
@@ -68,7 +73,7 @@ export function TransferReconciler({ orders }: { orders: Order[] }) {
             placeholder={
               "Wklej tutaj historię operacji (Ctrl+V)…\n\nnp. 30.09.2026  Jan Kowalski  Zamówienie TZ-2026-00042  +129,90 PLN"
             }
-            className="w-full resize-y rounded-lg border border-border bg-background px-3 py-2 font-mono text-xs focus:border-transparent focus:outline-none focus:ring-2 focus:ring-ring/50"
+            className={cn(inputClass, "resize-y py-2 font-mono text-xs")}
           />
         </div>
 
@@ -81,15 +86,7 @@ export function TransferReconciler({ orders }: { orders: Order[] }) {
               <Button
                 size="lg"
                 disabled={selected.length === 0 || isPending}
-                onClick={() => {
-                  if (
-                    window.confirm(
-                      `Oznaczyć zaznaczone zamówienia (${selected.length}) jako opłacone?`,
-                    )
-                  ) {
-                    execute({ orderIds: selected });
-                  }
-                }}
+                onClick={() => setConfirming(true)}
               >
                 {isPending ? "Zapisywanie…" : `Oznacz jako opłacone (${selected.length})`}
               </Button>
@@ -194,6 +191,17 @@ export function TransferReconciler({ orders }: { orders: Order[] }) {
           </ul>
         )}
       </div>
+      <ConfirmDialog
+        open={confirming}
+        onOpenChange={setConfirming}
+        title={`Oznaczyć zamówienia (${selected.length}) jako opłacone?`}
+        description="Płatności zostaną zapisane jako otrzymane. Sprawdź, czy kwoty z wyciągu zgadzają się z zamówieniami."
+        confirmLabel="Oznacz jako opłacone"
+        tone="default"
+        pendingLabel="Zapisywanie…"
+        pending={isPending}
+        onConfirm={() => execute({ orderIds: selected })}
+      />
     </div>
   );
 }
