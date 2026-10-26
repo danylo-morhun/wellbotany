@@ -15,7 +15,7 @@ export function Stars({ rating, className = "size-4" }: Props) {
         <Star
           key={i}
           aria-hidden
-          className={`${className} ${i <= full ? "fill-accent text-accent" : "text-border"}`}
+          className={`${className} ${i <= full ? "fill-primary text-primary" : "text-muted-foreground"}`}
         />
       ))}
     </span>

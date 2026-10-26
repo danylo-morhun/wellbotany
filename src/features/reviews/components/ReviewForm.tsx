@@ -78,7 +78,7 @@ export function ReviewForm({ token, suggestedName, products, existing }: Props) 
           onChange={(e) => setAuthorName(e.target.value)}
           maxLength={40}
           required
-          className="mt-1 w-full max-w-xs rounded-lg border border-border bg-background px-3 py-2 text-sm"
+          className="mt-1 w-full max-w-xs rounded-lg border border-input bg-background px-3 py-2 text-sm"
         />
         <p className="mt-1 text-xs text-muted-foreground">Np. imię i pierwsza litera nazwiska.</p>
       </div>
@@ -119,7 +119,7 @@ export function ReviewForm({ token, suggestedName, products, existing }: Props) 
                       <span className="sr-only">{value} na 5</span>
                       <Star
                         aria-hidden
-                        className={`size-7 ${value <= draft.rating ? "fill-accent text-accent" : "text-border"}`}
+                        className={`size-7 ${value <= draft.rating ? "fill-primary text-primary" : "text-muted-foreground"}`}
                       />
                     </label>
                   ))}
@@ -131,7 +131,7 @@ export function ReviewForm({ token, suggestedName, products, existing }: Props) 
                   maxLength={2000}
                   placeholder="Jak sprawdza się produkt? Smak, forma, wygoda stosowania…"
                   aria-label={`Opinia o produkcie ${product.namePl}`}
-                  className="mt-3 w-full rounded-lg border border-border bg-background px-3 py-2 text-sm"
+                  className="mt-3 w-full rounded-lg border border-input bg-background px-3 py-2 text-sm"
                 />
               </>
             )}
