@@ -1,6 +1,7 @@
+import { CircleCheck, TrendingDown } from "lucide-react";
 import type { Metadata } from "next";
 import Link from "next/link";
-import { PageHeader, Panel, table } from "@/app/admin/components/ui";
+import { EmptyState, PageHeader, Panel, table } from "@/app/admin/components/ui";
 import { variantMargin } from "@/features/products/lib/margin";
 import { formatPrice } from "@/lib/format";
 import { prisma } from "@/lib/prisma";
@@ -11,6 +12,8 @@ export const metadata: Metadata = { title: "Marże" };
 // Below this the variant can hardly carry ads, free delivery or a coupon
 const LOW_MARGIN_PERCENT = 15;
 const ROWS = 200;
+
+const pl = (n: number) => n.toLocaleString("pl-PL");
 
 type Props = { searchParams: Promise<{ widok?: string }> };
 
@@ -62,7 +65,7 @@ export default async function AdminMarginsPage({ searchParams }: Props) {
 
       <div className="grid gap-4 sm:grid-cols-4">
         <Panel title="Mediana marży">
-          <p className="text-2xl font-semibold">{median === null ? "—" : `${median}%`}</p>
+          <p className="text-2xl font-semibold">{median === null ? "—" : `${pl(median)}%`}</p>
         </Panel>
         <Panel title="Ze stratą">
           <p className="text-2xl font-semibold text-destructive">{losing.length}</p>
@@ -75,13 +78,14 @@ export default async function AdminMarginsPage({ searchParams }: Props) {
         </Panel>
       </div>
 
-      <nav className="flex flex-wrap gap-2 text-sm">
+      <nav aria-label="Widok marż" className="flex flex-wrap gap-2 text-sm">
         {Object.entries(views).map(([key, v]) => (
           <Link
             key={key}
             href={`/admin/marze?widok=${key}`}
+            aria-current={key === view ? "page" : undefined}
             className={cn(
-              "rounded-full px-3 py-1.5",
+              "rounded-full px-3 py-1.5 pointer-coarse:py-2.5",
               key === view ? "bg-primary text-primary-foreground" : "bg-card shadow-card",
             )}
           >
@@ -124,15 +128,28 @@ export default async function AdminMarginsPage({ searchParams }: Props) {
                     r.margin && r.margin.marginPln <= 0 && "font-semibold text-destructive",
                   )}
                 >
-                  {r.margin ? `${r.margin.percent}%` : "—"}
+                  {r.margin && r.margin.marginPln <= 0 && (
+                    <TrendingDown className="mr-1 inline size-3.5 align-[-2px]" aria-hidden />
+                  )}
+                  {r.margin ? `${pl(r.margin.percent)}%` : "—"}
+                  {r.margin && r.margin.marginPln <= 0 && (
+                    <span className="sr-only"> — strata</span>
+                  )}
                 </td>
                 <td className={cn(table.td, "text-right")}>
-                  {r.margin ? (r.margin.breakEvenRoas ?? "strata") : "—"}
+                  {r.margin
+                    ? r.margin.breakEvenRoas === null
+                      ? "strata"
+                      : pl(r.margin.breakEvenRoas)
+                    : "—"}
                 </td>
               </tr>
             ))}
           </tbody>
         </table>
+        {shown.length === 0 && (
+          <EmptyState icon={CircleCheck} title="Brak wariantów w tym widoku" />
+        )}
       </div>
       {views[view].rows.length > ROWS && (
         <p className="text-xs text-muted-foreground">
