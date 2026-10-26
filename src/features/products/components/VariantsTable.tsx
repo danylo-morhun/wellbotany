@@ -1,7 +1,7 @@
 "use client";
 
 import type { ProductVariant } from "@prisma/client";
-import { MoreHorizontal, Plus } from "lucide-react";
+import { AlertTriangle, MoreHorizontal, Plus } from "lucide-react";
 import { useAction } from "next-safe-action/hooks";
 import { useState } from "react";
 import { toast } from "sonner";
@@ -83,7 +83,7 @@ export function VariantsTable({ productId, variants }: Props) {
     <section className="rounded-2xl bg-card shadow-card">
       <div className="flex items-center justify-between gap-3 px-5 pt-5">
         <div>
-          <h2 className="text-[15px] font-semibold">Warianty, ceny i stany</h2>
+          <h2 className="text-base font-semibold">Warianty, ceny i stany</h2>
           <p className="mt-0.5 text-xs text-muted-foreground">
             Każdy wariant to osobny SKU z własną ceną, EAN i stanem.
           </p>
@@ -107,7 +107,9 @@ export function VariantsTable({ productId, variants }: Props) {
                 <th className="h-9 px-3 font-medium">EAN</th>
                 <th className="h-9 px-3 text-right font-medium">Cena</th>
                 <th className="h-9 px-3 text-right font-medium">Stan</th>
-                <th className="h-9 w-12 pr-3" />
+                <th className="h-9 w-12 pr-3">
+                  <span className="sr-only">Akcje</span>
+                </th>
               </tr>
             </thead>
             <tbody>
@@ -137,10 +139,15 @@ export function VariantsTable({ productId, variants }: Props) {
                     <td className="px-3 py-3">
                       {v.ean ? (
                         <span
-                          className={cn("font-mono text-xs", !eanOk && "text-destructive")}
+                          className={cn(
+                            "inline-flex items-center gap-1 font-mono text-xs",
+                            !eanOk && "text-destructive",
+                          )}
                           title={eanOk ? undefined : "Nieprawidłowa suma kontrolna EAN"}
                         >
+                          {!eanOk && <AlertTriangle className="size-3.5 shrink-0" aria-hidden />}
                           {v.ean}
+                          {!eanOk && <span className="sr-only"> — błędny EAN</span>}
                         </span>
                       ) : (
                         <Badge tone="warning">brak</Badge>
@@ -160,8 +167,15 @@ export function VariantsTable({ productId, variants }: Props) {
                     </td>
                     <td className="px-3 py-3 text-right tabular-nums">
                       {v.trackStock ? (
-                        <span className={cn(low && "font-semibold text-destructive")}>
+                        <span
+                          className={cn(
+                            "inline-flex items-center gap-1",
+                            low && "font-semibold text-destructive",
+                          )}
+                        >
+                          {low && <AlertTriangle className="size-3.5 shrink-0" aria-hidden />}
                           {v.stock} szt.
+                          {low && <span className="sr-only"> — niski stan</span>}
                         </span>
                       ) : (
                         <span className="text-muted-foreground">—</span>
@@ -171,9 +185,9 @@ export function VariantsTable({ productId, variants }: Props) {
                       <DropdownMenu>
                         <DropdownMenuTrigger
                           aria-label={`Akcje dla ${v.sku}`}
-                          className="flex size-8 items-center justify-center rounded-lg hover:bg-muted aria-expanded:bg-muted"
+                          className="flex size-8 items-center justify-center rounded-lg hover:bg-muted aria-expanded:bg-muted pointer-coarse:size-11"
                         >
-                          <MoreHorizontal className="size-4" />
+                          <MoreHorizontal className="size-4" aria-hidden />
                         </DropdownMenuTrigger>
                         <DropdownMenuContent>
                           <DropdownMenuItem onClick={() => setEditing(v)}>Edytuj</DropdownMenuItem>
