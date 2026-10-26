@@ -24,7 +24,7 @@ export function CartSummary({ subtotal, saleSubtotal, promo }: Props) {
   const total = subtotal - discount;
 
   return (
-    <div className="rounded-xl border border-border bg-card shadow-card">
+    <div className="rounded-xl bg-card shadow-card">
       <div className="border-b border-border px-6 py-4">
         <h2 className="text-base font-semibold">Podsumowanie zamówienia</h2>
       </div>

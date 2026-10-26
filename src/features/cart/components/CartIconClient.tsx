@@ -4,6 +4,7 @@ import { ShoppingCart, X } from "lucide-react";
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
+import { headerBadgeClass, headerIconClass } from "@/components/layout/header-icon";
 import {
   Sheet,
   SheetClose,
@@ -45,11 +46,11 @@ export function CartIconClient() {
         type="button"
         onClick={() => setOpen(true)}
         aria-label={`Koszyk${itemCount > 0 ? ` (${itemCount})` : ""}`}
-        className="relative rounded-md p-2 text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+        className={headerIconClass}
       >
-        <ShoppingCart className="size-5" />
+        <ShoppingCart className="size-5" aria-hidden />
         {itemCount > 0 && (
-          <span className="absolute right-0.5 top-0.5 flex size-4 items-center justify-center rounded-full bg-primary text-[10px] font-bold text-primary-foreground">
+          <span aria-hidden className={`${headerBadgeClass} bg-primary text-primary-foreground`}>
             {itemCount > 99 ? "99+" : itemCount}
           </span>
         )}
@@ -62,7 +63,7 @@ export function CartIconClient() {
               Koszyk {itemCount > 0 && `(${itemCount})`}
             </SheetTitle>
             <SheetClose
-              className="rounded-md p-1 text-muted-foreground hover:bg-muted hover:text-foreground"
+              className="-mr-2 flex size-10 items-center justify-center rounded-full text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground"
               aria-label="Zamknij koszyk"
             >
               <X className="size-5" />
@@ -74,13 +75,13 @@ export function CartIconClient() {
               <div className="flex h-full flex-col items-center justify-center gap-3 py-12 text-center">
                 <ShoppingCart className="size-10 text-muted-foreground" />
                 <p className="text-sm text-muted-foreground">Twój koszyk jest pusty</p>
-                <button
-                  type="button"
+                <Link
+                  href="/katalog"
                   onClick={() => setOpen(false)}
-                  className="text-sm font-medium text-primary hover:underline"
+                  className="inline-flex min-h-11 items-center rounded-full bg-secondary px-5 text-sm font-semibold text-secondary-foreground transition-colors hover:bg-secondary/80"
                 >
                   Przeglądaj katalog
-                </button>
+                </Link>
               </div>
             ) : (
               <div className="divide-y divide-border">
@@ -113,7 +114,7 @@ export function CartIconClient() {
                 <Link
                   href="/koszyk"
                   onClick={() => setOpen(false)}
-                  className="block w-full rounded-lg bg-primary px-4 py-3 text-center text-sm font-medium text-primary-foreground transition-colors duration-200 hover:bg-primary-deep motion-reduce:transition-none"
+                  className="block w-full rounded-full bg-primary px-4 py-3 text-center text-sm font-medium text-primary-foreground transition-colors duration-200 hover:bg-primary-deep motion-reduce:transition-none"
                 >
                   Przejdź do koszyka
                 </Link>

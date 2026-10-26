@@ -91,9 +91,9 @@ export default async function PotwierdzeniePage({ params }: Props) {
       />
       <div className="mb-8 flex flex-col items-center gap-3 text-center">
         {order.paymentStatus === "CAPTURED" ? (
-          <CheckCircle className="size-12 text-green-500" />
+          <CheckCircle className="size-12 text-success" aria-hidden />
         ) : (
-          <Clock className="size-12 text-amber-500" />
+          <Clock className="size-12 text-warning" aria-hidden />
         )}
         <h1 className="text-balance text-2xl">
           {order.paymentStatus === "CAPTURED" ? "Zamówienie opłacone!" : "Zamówienie złożone!"}
@@ -154,7 +154,7 @@ export default async function PotwierdzeniePage({ params }: Props) {
             <span>{formatPrice(order.shippingPln)}</span>
           </div>
           {order.discountPln > 0 && (
-            <div className="flex justify-between text-green-600">
+            <div className="flex justify-between text-success">
               <span>Rabat</span>
               <span>−{formatPrice(order.discountPln)}</span>
             </div>
