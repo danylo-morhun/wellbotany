@@ -4,15 +4,14 @@ import { useAction } from "next-safe-action/hooks";
 import { useState } from "react";
 import { toast } from "sonner";
 import { PrivacyNote } from "@/components/PrivacyNote";
+import { FieldError, inputClass } from "@/components/ui/field";
+import { fieldA11y } from "@/lib/field-a11y";
 import { sendContactMessage } from "../actions";
-
-const inputClass =
-  "w-full rounded-lg border border-border bg-card px-3 py-2 text-sm placeholder:text-muted-foreground focus:border-transparent focus:outline-none focus:ring-2 focus:ring-ring/50";
 
 export function ContactForm() {
   const [sent, setSent] = useState(false);
 
-  const { execute, isExecuting } = useAction(sendContactMessage, {
+  const { execute, isExecuting, result } = useAction(sendContactMessage, {
     onSuccess: () => {
       setSent(true);
       toast.success("Wiadomość wysłana", {
@@ -24,6 +23,20 @@ export function ContactForm() {
       toast.error("Błąd", { description: "Nie udało się wysłać wiadomości. Spróbuj ponownie." });
     },
   });
+
+  const fieldErrors = result?.validationErrors;
+  const errors = {
+    name: fieldErrors?.name?._errors?.[0],
+    email: fieldErrors?.email?._errors?.[0],
+    subject: fieldErrors?.subject?._errors?.[0],
+    message: fieldErrors?.message?._errors?.[0],
+  };
+  const a11y = {
+    name: fieldA11y("name", errors.name),
+    email: fieldA11y("email", errors.email),
+    subject: fieldA11y("subject", errors.subject),
+    message: fieldA11y("message", errors.message),
+  };
 
   if (sent) {
     return (
@@ -56,7 +69,8 @@ export function ContactForm() {
             Imię i nazwisko
           </label>
           <input
-            id="name"
+            {...a11y.name.inputProps}
+            autoComplete="name"
             name="name"
             type="text"
             required
@@ -64,19 +78,22 @@ export function ContactForm() {
             className={inputClass}
             placeholder="Jan Kowalski"
           />
+          <FieldError id={a11y.name.errorId} message={errors.name} />
         </div>
         <div>
           <label htmlFor="email" className="mb-1 block text-sm font-medium">
             Adres e-mail
           </label>
           <input
-            id="email"
+            {...a11y.email.inputProps}
+            autoComplete="email"
             name="email"
             type="email"
             required
             className={inputClass}
             placeholder="jan@example.com"
           />
+          <FieldError id={a11y.email.errorId} message={errors.email} />
         </div>
       </div>
       <div>
@@ -84,7 +101,7 @@ export function ContactForm() {
           Temat
         </label>
         <input
-          id="subject"
+          {...a11y.subject.inputProps}
           name="subject"
           type="text"
           required
@@ -92,13 +109,14 @@ export function ContactForm() {
           className={inputClass}
           placeholder="Zapytanie o zamówienie"
         />
+        <FieldError id={a11y.subject.errorId} message={errors.subject} />
       </div>
       <div>
         <label htmlFor="message" className="mb-1 block text-sm font-medium">
           Wiadomość
         </label>
         <textarea
-          id="message"
+          {...a11y.message.inputProps}
           name="message"
           rows={5}
           required
@@ -106,6 +124,7 @@ export function ContactForm() {
           className={inputClass}
           placeholder="Opisz swoje pytanie…"
         />
+        <FieldError id={a11y.message.errorId} message={errors.message} />
       </div>
       <button
         type="submit"

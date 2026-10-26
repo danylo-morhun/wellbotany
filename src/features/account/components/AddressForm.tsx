@@ -2,6 +2,9 @@
 
 import { useAction } from "next-safe-action/hooks";
 import { useState } from "react";
+import { FieldError, FormError, inputClass } from "@/components/ui/field";
+import { fieldA11y } from "@/lib/field-a11y";
+import { formatPostalCode } from "@/lib/postal-code";
 import { saveAddress } from "../actions";
 import type { AddressInput } from "../schema";
 
@@ -35,6 +38,22 @@ export function AddressForm({ initial, onDone }: Props) {
 
   const error = result?.serverError ?? (hasErrored ? "Wystąpił błąd" : null);
   const fieldErrors = result?.validationErrors;
+  const errors = {
+    firstName: fieldErrors?.firstName?._errors?.[0],
+    lastName: fieldErrors?.lastName?._errors?.[0],
+    street: fieldErrors?.street?._errors?.[0],
+    postalCode: fieldErrors?.postalCode?._errors?.[0],
+    city: fieldErrors?.city?._errors?.[0],
+    phone: fieldErrors?.phone?._errors?.[0],
+  };
+  const a11y = {
+    firstName: fieldA11y("addr-firstName", errors.firstName),
+    lastName: fieldA11y("addr-lastName", errors.lastName),
+    street: fieldA11y("addr-street", errors.street),
+    postalCode: fieldA11y("addr-postalCode", errors.postalCode),
+    city: fieldA11y("addr-city", errors.city),
+    phone: fieldA11y("addr-phone", errors.phone),
+  };
 
   function update(field: keyof AddressInput) {
     return (e: React.ChangeEvent<HTMLInputElement>) =>
@@ -50,9 +69,7 @@ export function AddressForm({ initial, onDone }: Props) {
     <form onSubmit={handleSubmit} className="space-y-4 rounded-lg border border-border p-4">
       <h3 className="font-medium">{form.id ? "Edytuj adres" : "Nowy adres"}</h3>
 
-      {error && (
-        <p className="rounded bg-destructive/10 px-3 py-2 text-sm text-destructive">{error}</p>
-      )}
+      <FormError message={error} />
 
       <div className="grid gap-4 sm:grid-cols-2">
         <div>
@@ -60,29 +77,30 @@ export function AddressForm({ initial, onDone }: Props) {
             Imię
           </label>
           <input
-            id="addr-firstName"
+            {...a11y.firstName.inputProps}
+            autoComplete="given-name"
             type="text"
             required
             value={form.firstName}
             onChange={update("firstName")}
-            className="w-full rounded-lg border border-border px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary"
+            className={inputClass}
           />
-          {fieldErrors?.firstName?._errors?.[0] && (
-            <p className="mt-1 text-xs text-destructive">{fieldErrors.firstName._errors[0]}</p>
-          )}
+          <FieldError id={a11y.firstName.errorId} message={errors.firstName} />
         </div>
         <div>
           <label className="mb-1 block text-sm font-medium" htmlFor="addr-lastName">
             Nazwisko
           </label>
           <input
-            id="addr-lastName"
+            {...a11y.lastName.inputProps}
+            autoComplete="family-name"
             type="text"
             required
             value={form.lastName}
             onChange={update("lastName")}
-            className="w-full rounded-lg border border-border px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary"
+            className={inputClass}
           />
+          <FieldError id={a11y.lastName.errorId} message={errors.lastName} />
         </div>
       </div>
 
@@ -92,10 +110,11 @@ export function AddressForm({ initial, onDone }: Props) {
         </label>
         <input
           id="addr-company"
+          autoComplete="organization"
           type="text"
           value={form.company ?? ""}
           onChange={update("company")}
-          className="w-full rounded-lg border border-border px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary"
+          className={inputClass}
         />
       </div>
 
@@ -104,16 +123,15 @@ export function AddressForm({ initial, onDone }: Props) {
           Ulica i numer
         </label>
         <input
-          id="addr-street"
+          {...a11y.street.inputProps}
+          autoComplete="address-line1"
           type="text"
           required
           value={form.street}
           onChange={update("street")}
-          className="w-full rounded-lg border border-border px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary"
+          className={inputClass}
         />
-        {fieldErrors?.street?._errors?.[0] && (
-          <p className="mt-1 text-xs text-destructive">{fieldErrors.street._errors[0]}</p>
-        )}
+        <FieldError id={a11y.street.errorId} message={errors.street} />
       </div>
 
       <div>
@@ -122,10 +140,11 @@ export function AddressForm({ initial, onDone }: Props) {
         </label>
         <input
           id="addr-apartment"
+          autoComplete="address-line2"
           type="text"
           value={form.apartment ?? ""}
           onChange={update("apartment")}
-          className="w-full rounded-lg border border-border px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary"
+          className={inputClass}
         />
       </div>
 
@@ -135,31 +154,37 @@ export function AddressForm({ initial, onDone }: Props) {
             Kod pocztowy
           </label>
           <input
-            id="addr-postalCode"
+            {...a11y.postalCode.inputProps}
+            autoComplete="postal-code"
             type="text"
+            inputMode="numeric"
             required
             placeholder="00-000"
             pattern="\d{2}-\d{3}"
+            title="Format: 00-000"
+            maxLength={6}
             value={form.postalCode}
-            onChange={update("postalCode")}
-            className="w-full rounded-lg border border-border px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary"
+            onChange={(e) =>
+              setForm((p) => ({ ...p, postalCode: formatPostalCode(e.target.value) }))
+            }
+            className={inputClass}
           />
-          {fieldErrors?.postalCode?._errors?.[0] && (
-            <p className="mt-1 text-xs text-destructive">{fieldErrors.postalCode._errors[0]}</p>
-          )}
+          <FieldError id={a11y.postalCode.errorId} message={errors.postalCode} />
         </div>
         <div>
           <label className="mb-1 block text-sm font-medium" htmlFor="addr-city">
             Miasto
           </label>
           <input
-            id="addr-city"
+            {...a11y.city.inputProps}
+            autoComplete="address-level2"
             type="text"
             required
             value={form.city}
             onChange={update("city")}
-            className="w-full rounded-lg border border-border px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary"
+            className={inputClass}
           />
+          <FieldError id={a11y.city.errorId} message={errors.city} />
         </div>
       </div>
 
@@ -168,12 +193,14 @@ export function AddressForm({ initial, onDone }: Props) {
           Telefon (opcjonalnie)
         </label>
         <input
-          id="addr-phone"
+          {...a11y.phone.inputProps}
+          autoComplete="tel"
           type="tel"
           value={form.phone ?? ""}
           onChange={update("phone")}
-          className="w-full rounded-lg border border-border px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary"
+          className={inputClass}
         />
+        <FieldError id={a11y.phone.errorId} message={errors.phone} />
       </div>
 
       <label className="flex items-center gap-2 text-sm">
