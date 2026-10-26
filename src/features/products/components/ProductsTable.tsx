@@ -1,10 +1,12 @@
 "use client";
 
 import type { ProductStatus } from "@prisma/client";
+import { PackageSearch } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useMemo } from "react";
+import { EmptyState } from "@/app/admin/components/ui";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 import { useProductSelection } from "../lib/useProductSelection";
@@ -93,9 +95,12 @@ export function ProductsTable({ products, total, filters, brands, categories }: 
                   }}
                   onChange={selection.togglePageAll}
                   aria-label="Zaznacz wszystkie na stronie"
+                  className="accent-primary"
                 />
               </th>
-              <th className="w-14 px-4 py-3" />
+              <th className="w-14 px-4 py-3">
+                <span className="sr-only">Zdjęcie</span>
+              </th>
               <th className="px-4 py-3 font-medium">Nazwa</th>
               <th className="px-4 py-3 font-medium">Status</th>
               <th className="px-4 py-3 font-medium">Kategoria</th>
@@ -121,6 +126,7 @@ export function ProductsTable({ products, total, filters, brands, categories }: 
                     checked={selection.isSelected(product.id)}
                     onChange={() => selection.toggleRow(product.id)}
                     aria-label={`Zaznacz ${product.namePl}`}
+                    className="accent-primary"
                   />
                 </td>
                 <td className="px-4 py-3">
@@ -160,6 +166,7 @@ export function ProductsTable({ products, total, filters, brands, categories }: 
                       variantId={product.variants[0].id}
                       pricePln={product.variants[0].pricePln}
                       stock={product.variants[0].stock}
+                      variantCount={product._count.variants}
                     />
                   ) : (
                     <span className="text-muted-foreground">—</span>
@@ -201,8 +208,10 @@ export function ProductsTable({ products, total, filters, brands, categories }: 
             ))}
             {products.length === 0 && (
               <tr>
-                <td colSpan={10} className="px-4 py-8 text-center text-muted-foreground">
-                  Brak produktów
+                <td colSpan={10}>
+                  <EmptyState icon={PackageSearch} title="Brak produktów">
+                    Zmień filtry albo wyszukiwaną frazę.
+                  </EmptyState>
                 </td>
               </tr>
             )}
