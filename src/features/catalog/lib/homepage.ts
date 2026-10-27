@@ -1,4 +1,5 @@
 import { unstable_cache } from "next/cache";
+import { discountPercent } from "@/lib/omnibus";
 import { prisma } from "@/lib/prisma";
 import {
   getCategories,
@@ -28,7 +29,8 @@ const AUTO_FEATURED_CATEGORY_SLUGS = [
   "witamina-k2",
 ];
 
-// Seasonal tabbed shelf — edit with the season (autumn/winter now)
+// Seasonal pick — edit with the season (autumn/winter now). Products are
+// taken round-robin from these categories; the first one is the "see all" link.
 export const SEASONAL_SHELF = {
   title: "Na jesień i zimę",
   tabs: [
@@ -37,7 +39,14 @@ export const SEASONAL_SHELF = {
     { label: "Sen", slug: "na-sen" },
   ],
 };
-const SEASONAL_TAB_SIZE = 4;
+const SEASONAL_SIZE = 4;
+
+// Promo band: one lead tile + four small items
+const PROMOS_LIMIT = 5;
+// Nowości: dense list, two/three columns
+const NEW_LIMIT = 6;
+// Over-fetch so rows already shown higher up can be dropped without a second query
+const ROW_POOL = 16;
 
 // "Popularne składniki" tiles, pictured by their first in-stock product
 const INGREDIENT_TILE_SLUGS = [
@@ -113,9 +122,37 @@ async function getAutoFeatured(manual: ProductListItem[], count: number) {
   return picked;
 }
 
+/** Round-robin across the seasonal categories, spreading brands. */
+function pickSeasonal(pools: ProductListItem[][], count: number, excludeIds: Set<string>) {
+  const usedBrands = new Set<string>();
+  const queues = pools.map((pool) =>
+    pickAcrossBrands(
+      pool.filter((p) => !excludeIds.has(p.id)),
+      count,
+    ),
+  );
+  const picked: ProductListItem[] = [];
+  for (let round = 0; picked.length < count && queues.some((q) => q.length > round); round++) {
+    for (const queue of queues) {
+      const p = queue[round];
+      if (!p || picked.length >= count || picked.some((x) => x.id === p.id)) continue;
+      // Second-choice brand repeats are fine once every pool is drained of new brands
+      if (usedBrands.has(displayBrandSlug(p)) && queue.length > round + 1) continue;
+      picked.push(p);
+      usedBrands.add(displayBrandSlug(p));
+    }
+  }
+  return picked;
+}
+
+const offerDiscount = (p: ProductListItem) => {
+  const v = p.variants[0];
+  return v ? (discountPercent(v) ?? 0) : 0;
+};
+
 export const getHomepageData = unstable_cache(
   async () => {
-    const [categories, manualFeatured, newArrivals, promos, seasonal, ingredientProducts] =
+    const [categories, manualFeatured, newPool, promoPool, seasonal, ingredientProducts] =
       await Promise.all([
         getCategories(),
         prisma.product.findMany({
@@ -125,18 +162,20 @@ export const getHomepageData = unstable_cache(
           select: productSelect,
         }),
         prisma.product.findMany({
-          where: { status: "ACTIVE", isNewArrival: true },
-          take: 8,
+          where: { ...sellable, isNewArrival: true },
+          take: ROW_POOL,
           orderBy: { createdAt: "desc" },
           select: productSelect,
         }),
         prisma.product.findMany({
           // comparePricePln is only set when a variant is discounted
           where: {
-            status: "ACTIVE",
-            variants: { some: { isActive: true, comparePricePln: { not: null } } },
+            ...sellable,
+            variants: {
+              some: { isActive: true, stock: { gt: 0 }, comparePricePln: { not: null } },
+            },
           },
-          take: 8,
+          take: ROW_POOL,
           orderBy: { updatedAt: "desc" },
           select: productSelect,
         }),
@@ -152,11 +191,24 @@ export const getHomepageData = unstable_cache(
             ...(await getAutoFeatured(manualFeatured, FEATURED_LIMIT - manualFeatured.length)),
           ];
 
-    const seasonalTabs = SEASONAL_SHELF.tabs.map((tab, i) => ({
-      ...tab,
-      category: categories.find((c) => c.slug === tab.slug) ?? null,
-      products: pickAcrossBrands(seasonal[i], SEASONAL_TAB_SIZE),
-    }));
+    // Each product appears once on the page, in the first section that wants it
+    const shown = new Set(featured.map((p) => p.id));
+    const seasonalProducts = pickSeasonal(seasonal, SEASONAL_SIZE, shown);
+    for (const p of seasonalProducts) shown.add(p.id);
+
+    // Real reductions only (Omnibus), biggest first: the lead tile is the best deal
+    const promos = promoPool
+      .filter((p) => !shown.has(p.id) && offerDiscount(p) > 0)
+      .sort((a, b) => offerDiscount(b) - offerDiscount(a))
+      .slice(0, PROMOS_LIMIT);
+    for (const p of promos) shown.add(p.id);
+
+    const newArrivals = newPool.filter((p) => !shown.has(p.id)).slice(0, NEW_LIMIT);
+
+    const seasonalCategories = SEASONAL_SHELF.tabs.flatMap((tab) => {
+      const category = categories.find((c) => c.slug === tab.slug);
+      return category && category.productCount > 0 ? [{ ...tab, category }] : [];
+    });
 
     const ingredientTiles = INGREDIENT_TILE_SLUGS.flatMap((slug, i) => {
       const category = categories.find((c) => c.slug === slug);
@@ -171,10 +223,10 @@ export const getHomepageData = unstable_cache(
       featuredHref: manualFeatured.length > 0 ? "/katalog?polecane=1" : "/katalog",
       newArrivals,
       promos,
-      seasonalTabs,
+      seasonal: { categories: seasonalCategories, products: seasonalProducts },
       ingredientTiles,
     };
   },
-  ["homepage-v5"],
+  ["homepage-v6"],
   { tags: ["categories", "products"] },
 );
