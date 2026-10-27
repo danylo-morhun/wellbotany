@@ -1,5 +1,6 @@
 "use client";
 
+import { Check } from "lucide-react";
 import { useAction } from "next-safe-action/hooks";
 import type { RefObject } from "react";
 import { useEffect, useRef, useState } from "react";
@@ -38,6 +39,7 @@ export function StickyAddToCart({
       setSucceeded(true);
       successTimer.current = setTimeout(() => setSucceeded(false), 1500);
       toast.success("Dodano do koszyka", {
+        description: productName,
         duration: 4000,
         action: {
           label: "Otwórz koszyk →",
@@ -84,9 +86,20 @@ export function StickyAddToCart({
         >
           <span
             key={stock <= 0 ? "brak" : isExecuting ? "loading" : succeeded ? "success" : "idle"}
-            className="animate-[btn-text-in_200ms_ease-out_both] motion-reduce:animate-none"
+            className="inline-flex items-center gap-1.5 animate-[btn-text-in_200ms_ease-out_both] motion-reduce:animate-none"
           >
-            {stock <= 0 ? "Brak" : isExecuting ? "…" : succeeded ? "✓ Dodano" : "Dodaj do koszyka"}
+            {stock <= 0 ? (
+              "Brak"
+            ) : isExecuting ? (
+              "…"
+            ) : succeeded ? (
+              <>
+                <Check className="size-4" aria-hidden />
+                Dodano
+              </>
+            ) : (
+              "Dodaj do koszyka"
+            )}
           </span>
         </button>
       </div>

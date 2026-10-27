@@ -32,9 +32,18 @@ type Props = {
   variants: Variant[];
   /** Shop-wide pause: shown as unavailable, button off */
   ordersPaused?: boolean;
+  /** Names the product in the confirmation toast */
+  productName?: string;
 };
 
-export function AddToCartSection({ variants, ordersPaused = false }: Props) {
+/** "Magnez ATA (60 kaps.)", the name alone, or just the variant when the name is unknown. */
+function addedLabel(name?: string, variant?: string | null): string | undefined {
+  // No-break spaces keep "(60 kaps.)" on one line in the narrow toast
+  if (name && variant) return `${name} (${variant.replace(/ /g, "\u00a0")})`;
+  return name ?? variant ?? undefined;
+}
+
+export function AddToCartSection({ variants, ordersPaused = false, productName }: Props) {
   const refresh = useRefreshStorefront();
   const defaultVariant = variants.find((v) => v.isDefault) ?? variants[0];
   const [localId, setLocalId] = useState(defaultVariant?.id ?? "");
@@ -52,7 +61,7 @@ export function AddToCartSection({ variants, ordersPaused = false }: Props) {
       setSucceeded(true);
       setTimeout(() => setSucceeded(false), 1500);
       toast.success("Dodano do koszyka", {
-        description: selected?.optionValue ?? undefined,
+        description: addedLabel(productName, selected?.optionValue),
         duration: 4000,
         action: {
           label: "Otwórz koszyk →",
@@ -180,7 +189,11 @@ export function AddToCartSection({ variants, ordersPaused = false }: Props) {
         onClick={() => execute({ variantId: selected.id, quantity })}
         className="flex w-full items-center justify-center gap-2 rounded-lg bg-primary px-4 py-3 text-sm font-medium text-primary-foreground transition-[transform,background-color,color,border-color] duration-[160ms] ease-[cubic-bezier(0.23,1,0.32,1)] hover:bg-primary-deep active:scale-[0.97] disabled:cursor-not-allowed disabled:opacity-50 motion-reduce:transition-none motion-reduce:active:scale-100"
       >
-        <ShoppingCart className="size-4" />
+        {succeeded && !isExecuting ? (
+          <Check className="size-4" aria-hidden />
+        ) : (
+          <ShoppingCart className="size-4" aria-hidden />
+        )}
         <span
           key={isExecuting ? "loading" : succeeded ? "success" : "idle"}
           className="animate-[btn-text-in_200ms_ease-out_both] motion-reduce:animate-none"
@@ -190,7 +203,7 @@ export function AddToCartSection({ variants, ordersPaused = false }: Props) {
             : isExecuting
               ? "Dodawanie…"
               : succeeded
-                ? "✓ Dodano"
+                ? "Dodano"
                 : "Dodaj do koszyka"}
         </span>
       </button>
