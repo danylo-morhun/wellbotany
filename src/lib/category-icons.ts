@@ -92,7 +92,7 @@ export function getCategoryIcon(name?: string | null): LucideIcon | null {
   return CATEGORY_ICONS.find((i) => i.name === name)?.icon ?? null;
 }
 
-// Need categories ("na-…") without an icon picked in the admin still get one
+// Categories without an icon picked in the admin still get one
 const NEED_ICON_FALLBACK: Record<string, string> = {
   "na-odpornosc": "Shield",
   "na-jelita-i-trawienie": "Salad",
@@ -112,9 +112,31 @@ const NEED_ICON_FALLBACK: Record<string, string> = {
   "na-plodnosc": "Baby",
   "na-menopauze": "Flower2",
   "na-libido": "HeartPulse",
+  // Top-level type/audience categories, so /kategorie doesn't fall back to Leaf everywhere
+  witaminy: "Pill",
+  mineraly: "FlaskConical",
+  "kwasy-omega": "Fish",
+  probiotyki: "Salad",
+  "probiotyki-i-jelita": "Salad",
+  "ziola-i-ekstrakty": "Flower2",
+  "aminokwasy-i-bialko": "Dumbbell",
+  "kolagen-i-kwas-hialuronowy": "Sparkles",
+  antyoksydanty: "ShieldCheck",
+  "dla-kobiet": "Venus",
+  "dla-mezczyzn": "Mars",
+  "dla-kobiet-w-ciazy-i-karmiacych": "Baby",
+  "dla-dzieci": "Baby",
+  "dla-seniora": "PersonStanding",
+  "dla-sportowcow": "Dumbbell",
+  kosmetyki: "Droplets",
+  zywnosc: "UtensilsCrossed",
+  "czekolady-i-czekoladki": "ChefHat",
+  "olejki-eteryczne": "Droplet",
+  akcesoria: "Package",
+  ksiazki: "BookOpen",
 };
 
-/** The admin-picked icon, else a default for known need categories. */
+/** The admin-picked icon, else a default for known categories. */
 export function categoryIconFor(category: { icon?: string | null; slug: string }): LucideIcon {
   return (
     getCategoryIcon(category.icon) ?? getCategoryIcon(NEED_ICON_FALLBACK[category.slug]) ?? Leaf

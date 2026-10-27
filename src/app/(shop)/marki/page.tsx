@@ -1,4 +1,5 @@
 import { getBrands } from "@/features/catalog/actions";
+import { pluralPl } from "@/lib/format";
 import { BrandRow } from "./BrandRow";
 
 export const metadata = {
@@ -31,7 +32,8 @@ export default async function MarkiPage() {
       <div className="mb-10 md:mb-14">
         <h1 className="font-heading text-3xl text-foreground md:text-4xl">Marki</h1>
         <p className="mt-2 text-sm text-muted-foreground">
-          {brands.length} marek · {totalProducts} produktów
+          {brands.length} {pluralPl(brands.length, "marka", "marki", "marek")} · {totalProducts}{" "}
+          {pluralPl(totalProducts, "produkt", "produkty", "produktów")}
         </p>
       </div>
 
