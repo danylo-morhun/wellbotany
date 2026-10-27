@@ -51,7 +51,7 @@ export function SeasonalShelf({ title, categories, products }: Props) {
       <div className="grid grid-cols-2 gap-3 sm:gap-4 md:grid-cols-4 lg:col-span-4">
         {products.map((p, i) => (
           // Phones: one row of two keeps the band short; the CTA leads to the rest
-          <div key={p.id} className={i >= 2 ? "max-md:hidden" : "contents"}>
+          <div key={p.id} className={i >= 2 ? "max-md:hidden md:contents" : "contents"}>
             <ProductCard product={p} headingLevel={3} />
           </div>
         ))}
