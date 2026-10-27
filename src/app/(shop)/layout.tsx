@@ -1,3 +1,6 @@
+import { CheckoutChrome } from "@/components/layout/CheckoutChrome";
+import { CheckoutFooter } from "@/components/layout/CheckoutFooter";
+import { CheckoutHeader } from "@/components/layout/CheckoutHeader";
 import { Footer } from "@/components/layout/Footer";
 import { NavBar } from "@/components/layout/NavBar";
 import { NewsletterPrompt } from "@/features/newsletter/components/NewsletterPrompt";
@@ -12,11 +15,16 @@ export default function ShopLayout({ children }: { children: React.ReactNode }) 
       >
         Przejdź do treści
       </a>
-      <NavBar />
+      {/* /zamowienie swaps the store chrome for a minimal one (see CheckoutChrome) */}
+      <CheckoutChrome checkout={<CheckoutHeader />}>
+        <NavBar />
+      </CheckoutChrome>
       <main id="main" tabIndex={-1} className="flex-1 outline-none">
         {children}
       </main>
-      <Footer />
+      <CheckoutChrome checkout={<CheckoutFooter />}>
+        <Footer />
+      </CheckoutChrome>
       <NewsletterPrompt />
     </StorefrontSessionProvider>
   );
