@@ -10,7 +10,7 @@ import { SELLER } from "@/lib/seller";
 export function PrivacyNote({
   purpose,
   consent = false,
-  className = "text-xs text-muted-foreground",
+  className = "max-w-prose text-xs text-muted-foreground",
   linkClassName = "underline hover:text-foreground",
 }: {
   /** What the data is for, as a sentence: "Dane przetwarzamy, aby …" */
