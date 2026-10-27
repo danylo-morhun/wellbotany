@@ -5,16 +5,23 @@ import { useAction } from "next-safe-action/hooks";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
 import { readFbc } from "@/components/MetaClickId";
-import { clearSavedCoupon } from "@/features/cart/lib/saved-coupon";
+import { saleSubtotalPln } from "@/features/cart/lib/pricing";
+import { clearSavedCoupon, readSavedCoupon } from "@/features/cart/lib/saved-coupon";
 import type { CartItem } from "@/features/cart/lib/session";
-import type { TierPromo } from "@/features/promotions/lib/tiered";
+import { cartDiscount, type TierPromo } from "@/features/promotions/lib/tiered";
 import { trackItems } from "@/lib/analytics";
 import { hasMarketingConsent } from "@/lib/consent";
 import type { PickupLocationKey } from "@/lib/pickup-locations";
-import { placeOrder } from "../actions";
+import { placeOrder, verifyCoupon } from "../actions";
 import { clearDraft, readDraft, saveDraft } from "../lib/draft";
 import { isOfflinePayment } from "../lib/payment";
-import { requiresAddress, type ShippingMethodKey, type ShippingRate } from "../lib/shipping";
+import {
+  cheapestPaidRate,
+  orderTotals,
+  requiresAddress,
+  type ShippingMethodKey,
+  type ShippingRate,
+} from "../lib/shipping";
 import { OrderSummarySidebar } from "./OrderSummarySidebar";
 import { StepContact } from "./StepContact";
 import { StepPayment } from "./StepPayment";
@@ -88,6 +95,8 @@ function firstValidationMessage(errors: unknown): string | undefined {
 
 const STEP_LABELS = ["Kontakt", "Dostawa", "Płatność"];
 
+export type CouponResult = { valid: boolean; discountPln: number; message: string | null };
+
 type InitialContact = Pick<
   CheckoutFormData,
   "email" | "firstName" | "lastName" | "phone" | "street" | "apartment" | "city" | "postalCode"
@@ -144,6 +153,28 @@ export function CheckoutForm({
   const [hydrated, setHydrated] = useState(false);
   const headingRef = useRef<HTMLHeadingElement>(null);
   const stepChangedByUser = useRef(false);
+  const saleSubtotal = saleSubtotalPln(items);
+
+  // Verified here, not in the payment step, so the summary on every step
+  // already reflects the code — it can move the order below the free-delivery threshold
+  const [couponResult, setCouponResult] = useState<CouponResult | null>(null);
+  const [verifyingCoupon, setVerifyingCoupon] = useState(false);
+  const { execute: executeVerify } = useAction(verifyCoupon, {
+    onSuccess: ({ data: result, input }) => {
+      if (result && !result.valid && input.code === readSavedCoupon()) clearSavedCoupon();
+      setCouponResult(result ?? null);
+      setVerifyingCoupon(false);
+    },
+    onError: () => setVerifyingCoupon(false),
+  });
+  const verifyCouponCode = useCallback(
+    (code: string) => {
+      if (!code.trim()) return;
+      setVerifyingCoupon(true);
+      executeVerify({ code, subtotal, saleSubtotal });
+    },
+    [executeVerify, subtotal, saleSubtotal],
+  );
 
   // sessionStorage exists only in the browser, so the draft is restored after mount
   // biome-ignore lint/correctness/useExhaustiveDependencies: once on mount
@@ -166,6 +197,12 @@ export function CheckoutForm({
       setFormData((prev) => ({ ...prev, ...draft.data }));
       setStep(restoredStep);
       setDraftKey((k) => k + 1);
+    }
+    // Carries over the code verified in the cart or brought in by the welcome e-mail
+    const code = draft?.data.couponCode?.trim() || readSavedCoupon();
+    if (code) {
+      setFormData((prev) => ({ ...prev, couponCode: code }));
+      verifyCouponCode(code);
     }
     setHydrated(true);
   }, []);
@@ -211,6 +248,20 @@ export function CheckoutForm({
   const update = useCallback((updates: Partial<CheckoutFormData>) => {
     setFormData((prev) => ({ ...prev, ...updates }));
   }, []);
+
+  const discount = cartDiscount(
+    promo,
+    subtotal,
+    saleSubtotal,
+    couponResult?.valid ? couponResult.discountPln : 0,
+  );
+  const selectedRate = shippingRates.find((r) => r.method === formData.shippingMethod);
+  const totals = orderTotals(
+    subtotal,
+    discount.discountPln,
+    selectedRate?.pricePln ?? 0,
+    freeShippingThresholdPln,
+  );
 
   function handlePlaceOrder() {
     setError(null);
@@ -270,13 +321,16 @@ export function CheckoutForm({
                 >
                   {n}
                 </span>
+                <span className="sr-only">
+                  Krok {n}: {label}
+                  {done && " (ukończony)"}
+                </span>
                 {/* Mobile has no room for three labels — it shows only the active one */}
                 <span
-                  className={`text-sm ${active ? "font-semibold" : "sr-only text-muted-foreground sm:not-sr-only"}`}
+                  aria-hidden
+                  className={`text-sm ${active ? "font-semibold" : "hidden text-muted-foreground sm:inline"}`}
                 >
-                  <span className="sr-only">Krok {n}: </span>
                   {label}
-                  {done && <span className="sr-only"> (ukończony)</span>}
                 </span>
                 {i < STEP_LABELS.length - 1 && (
                   <span aria-hidden className="mx-1 h-px w-4 bg-border sm:w-8" />
@@ -288,7 +342,7 @@ export function CheckoutForm({
       </nav>
 
       {(step === 1 || step === 2) && (
-        <div className="grid gap-8 lg:grid-cols-[1fr_320px]">
+        <div className="grid grid-cols-1 gap-8 lg:grid-cols-[minmax(0,1fr)_320px]">
           {step === 1 && (
             <StepContact
               key={draftKey}
@@ -302,7 +356,7 @@ export function CheckoutForm({
             <StepShipping
               headingRef={headingRef}
               data={formData}
-              subtotal={subtotal}
+              productsPln={totals.productsPln}
               freeShippingThresholdPln={freeShippingThresholdPln}
               shippingRates={shippingRates}
               onChange={update}
@@ -310,7 +364,22 @@ export function CheckoutForm({
               onNext={() => goToStep(3)}
             />
           )}
-          <OrderSummarySidebar items={items} subtotal={subtotal} />
+          <OrderSummarySidebar
+            items={items}
+            subtotal={subtotal}
+            discount={discount}
+            promoName={promo?.name}
+            couponCode={formData.couponCode}
+            freeShippingThresholdPln={freeShippingThresholdPln}
+            cheapestShippingPln={cheapestPaidRate(shippingRates)}
+            // Step 1 hasn't asked for a method yet, so it shows the estimate
+            shipping={
+              step === 2 && selectedRate
+                ? { method: selectedRate.method, pricePln: totals.shippingPln }
+                : null
+            }
+            totals={totals}
+          />
         </div>
       )}
       {step === 3 && (
@@ -322,9 +391,13 @@ export function CheckoutForm({
           onSubmit={handlePlaceOrder}
           items={items}
           subtotal={subtotal}
-          freeShippingThresholdPln={freeShippingThresholdPln}
-          promo={promo}
-          shippingRates={shippingRates}
+          discount={discount}
+          promoName={promo?.name}
+          totals={totals}
+          couponResult={couponResult}
+          verifyingCoupon={verifyingCoupon}
+          onVerifyCoupon={verifyCouponCode}
+          onCouponEdit={() => setCouponResult(null)}
           onlinePaymentsEnabled={onlinePaymentsEnabled}
           pending={isPending || redirecting}
           error={error}
