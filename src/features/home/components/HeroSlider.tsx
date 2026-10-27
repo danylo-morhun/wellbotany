@@ -190,7 +190,7 @@ function Slide({
       aria-label={`${index + 1} z ${count}: ${banner.titlePl}`}
       inert={hidden}
       aria-hidden={hidden || undefined}
-      className="relative block aspect-[3/2] w-full shrink-0 snap-start overflow-hidden bg-secondary md:aspect-[1920/710] md:max-h-[440px]"
+      className="relative block aspect-[3/2] w-full shrink-0 snap-start overflow-hidden bg-secondary md:aspect-[1920/710] md:max-h-[720px]"
     >
       <picture>
         <source media="(min-width: 768px)" srcSet={desktop.srcSet} sizes="100vw" />
@@ -201,22 +201,22 @@ function Slide({
           className="object-cover"
         />
       </picture>
-      {/* Scrim on the text side keeps the headline readable on any photo.
-          Phone: text on top (photos keep products in the lower part); desktop: left/right */}
+      {/* Light scrim on the text side: banners are shot with empty space there, so
+          it only evens out the backdrop. Phone: text on top; desktop: left/right */}
       <div
         aria-hidden
         className={cn(
           "absolute inset-0",
           light
-            ? "bg-gradient-to-b from-black/60 via-black/15 to-transparent"
-            : "bg-gradient-to-b from-white/75 via-white/20 to-transparent",
+            ? "bg-gradient-to-b from-black/45 via-black/10 to-transparent"
+            : "bg-gradient-to-b from-white/55 via-white/10 to-transparent",
           light
             ? right
-              ? "md:bg-gradient-to-l md:from-black/60 md:via-black/25"
-              : "md:bg-gradient-to-r md:from-black/60 md:via-black/25"
+              ? "md:bg-gradient-to-l md:from-black/40 md:via-black/10"
+              : "md:bg-gradient-to-r md:from-black/40 md:via-black/10"
             : right
-              ? "md:bg-gradient-to-l md:from-white/80 md:via-white/30"
-              : "md:bg-gradient-to-r md:from-white/80 md:via-white/30",
+              ? "md:bg-gradient-to-l md:from-white/50 md:via-white/10"
+              : "md:bg-gradient-to-r md:from-white/50 md:via-white/10",
         )}
       />
       <div
@@ -226,7 +226,13 @@ function Slide({
           light ? "text-white" : "text-foreground",
         )}
       >
-        <p className="text-balance font-heading text-2xl font-extrabold leading-tight tracking-tight drop-shadow-md md:text-[2.75rem] lg:text-5xl">
+        <p
+          className={cn(
+            "text-balance font-heading text-2xl font-extrabold leading-tight tracking-tight md:text-[2.75rem] lg:text-5xl",
+            // A glow behind light text only — on dark text it reads as blur
+            light && "drop-shadow-md",
+          )}
+        >
           {banner.titlePl}
         </p>
         {banner.subtitlePl && (
