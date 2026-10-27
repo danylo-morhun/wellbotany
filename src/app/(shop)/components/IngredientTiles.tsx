@@ -13,13 +13,15 @@ export function IngredientTiles({ tiles }: Props) {
   if (tiles.length === 0) return null;
 
   return (
-    <section aria-labelledby="ingredients-h" className="space-y-5">
+    // Phones already get the top ingredients as chips under the header search
+    <section aria-labelledby="ingredients-h" className="space-y-4 max-md:hidden">
       <SectionHeading
         id="ingredients-h"
         title="Popularne składniki"
         link={{ href: "/kategorie", label: "Wszystkie" }}
       />
-      <ul className="grid grid-cols-4 gap-3 md:grid-cols-8 md:gap-4">
+      {/* Two rows of four: shares its band with the brand wall on desktop */}
+      <ul className="grid grid-cols-8 gap-3 lg:grid-cols-4">
         {tiles.map(({ category, image }) => (
           <li key={category.id}>
             <Link
@@ -33,7 +35,7 @@ export function IngredientTiles({ tiles }: Props) {
                     src={image.url}
                     alt=""
                     fill
-                    sizes="(max-width: 768px) 25vw, 140px"
+                    sizes="(max-width: 1024px) 12vw, 120px"
                     className="object-contain"
                   />
                 </span>

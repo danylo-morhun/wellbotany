@@ -1,22 +1,20 @@
 import type { Metadata } from "next";
-import { BestsellerRow } from "@/app/(shop)/components/BestsellerRow";
+import { BestsellerTabs } from "@/app/(shop)/components/BestsellerTabs";
 import { BrandStrip } from "@/app/(shop)/components/BrandStrip";
 import { FadeInView } from "@/app/(shop)/components/FadeInView";
-import { GuidesRow } from "@/app/(shop)/components/GuidesRow";
+import { HelpAndGuides } from "@/app/(shop)/components/HelpAndGuides";
 import { HomeAbout } from "@/app/(shop)/components/HomeAbout";
 import { HomeBand } from "@/app/(shop)/components/HomeBand";
-import { HomeGiftSets } from "@/app/(shop)/components/HomeGiftSets";
+import { HomeHero } from "@/app/(shop)/components/HomeHero";
 import { HomeIntro } from "@/app/(shop)/components/HomeIntro";
 import { HomeNewArrivals } from "@/app/(shop)/components/HomeNewArrivals";
 import { HomePromos } from "@/app/(shop)/components/HomePromos";
 import { IngredientTiles } from "@/app/(shop)/components/IngredientTiles";
 import { NewsletterSection } from "@/app/(shop)/components/NewsletterSection";
-import { SeasonalShelf } from "@/app/(shop)/components/SeasonalShelf";
-import { WhyUs } from "@/app/(shop)/components/WhyUs";
+import { TrustStrip } from "@/app/(shop)/components/TrustStrip";
 import { getBrands } from "@/features/catalog/actions";
-import { getHomepageData, SEASONAL_SHELF } from "@/features/catalog/lib/homepage";
+import { getHomepageData } from "@/features/catalog/lib/homepage";
 import { getHomeGiftSets } from "@/features/gift-sets/lib/homepage";
-import { HeroSlider } from "@/features/home/components/HeroSlider";
 import { getHomeBanners } from "@/features/home/lib/banners";
 import { HideIfSubscribed } from "@/features/newsletter/components/HideIfSubscribed";
 
@@ -30,87 +28,69 @@ export const revalidate = 3600;
 
 export default async function HomePage() {
   const [
-    { categories, featured, featuredHref, newArrivals, promos, seasonal, ingredientTiles },
+    { categories, tabs, newArrivals, promos, ingredientTiles },
     banners,
     brands,
     { giftSets, builderActive },
   ] = await Promise.all([getHomepageData(), getHomeBanners(), getBrands(), getHomeGiftSets()]);
 
-  // Bands alternate plain/mint; spacing is tight inside a group (H1 → first row,
-  // promos → gift band) and generous between groups
+  // Gift sets no longer get a band; they take a free hero side slot
+  const giftTile =
+    giftSets.length > 0
+      ? { href: "/zestawy-prezentowe", label: "Zobacz zestawy" }
+      : builderActive
+        ? { href: "/zestawy-prezentowe/stworz", label: "Złóż własny zestaw" }
+        : null;
+
+  // Hero → trust → H1 + categories read as one opening group (tight spacing);
+  // the bands after it alternate plain/mint
   return (
     <>
-      <HeroSlider banners={banners} />
-      <HomeBand className="pt-6 pb-6 md:pt-10 md:pb-8">
+      <HomeBand className="pt-4 md:pt-6">
+        <HomeHero banners={banners} giftTile={giftTile} />
+      </HomeBand>
+      <HomeBand className="pt-4 pb-2 md:pt-5">
+        <TrustStrip />
+      </HomeBand>
+      <HomeBand className="pt-6 pb-8 md:pt-10 md:pb-14">
         <HomeIntro categories={categories} />
       </HomeBand>
-      <HomeBand className="pb-10 md:pb-16">
-        <BestsellerRow
-          id="featured-h"
-          products={featured}
-          title="Polecane produkty"
-          href={featuredHref}
-          priority
-        />
-      </HomeBand>
-      <HomeBand tone="mint" className="py-10 md:py-16">
-        <FadeInView>
-          <SeasonalShelf
-            title={SEASONAL_SHELF.title}
-            categories={seasonal.categories}
-            products={seasonal.products}
-          />
-        </FadeInView>
+      <HomeBand tone="mint" className="py-8 md:py-14">
+        <BestsellerTabs tabs={tabs} />
       </HomeBand>
       {promos.length > 0 && (
-        <HomeBand className="pt-10 pb-6 md:pt-14 md:pb-8">
+        <HomeBand className="py-8 md:py-14">
           <FadeInView>
             <HomePromos products={promos} />
           </FadeInView>
         </HomeBand>
       )}
-      <HomeBand className={promos.length > 0 ? "pb-10 md:pb-14" : "py-10 md:py-14"}>
+      <HomeBand tone="mint" className="py-8 md:py-14">
         <FadeInView>
-          <HomeGiftSets giftSets={giftSets} builderActive={builderActive} />
+          <HelpAndGuides categories={categories} />
         </FadeInView>
       </HomeBand>
-      <HomeBand tone="mint" className="py-10 md:py-14">
-        <FadeInView>
+      <HomeBand className="py-8 md:py-14">
+        <FadeInView className="grid gap-10 lg:grid-cols-2 lg:gap-12">
           <IngredientTiles tiles={ingredientTiles} />
+          <BrandStrip brands={brands} />
         </FadeInView>
       </HomeBand>
-      <HomeBand className="py-10 md:py-14">
+      <HomeBand tone="mint" className="py-8 md:py-14">
         <FadeInView>
           <HomeNewArrivals products={newArrivals} />
         </FadeInView>
       </HomeBand>
-      <HomeBand tone="mint" className="py-10 md:py-14">
-        <FadeInView>
-          <BrandStrip brands={brands} />
-        </FadeInView>
-      </HomeBand>
-      <HomeBand className="py-10 md:py-14">
-        <FadeInView>
-          <GuidesRow categories={categories} />
-        </FadeInView>
-      </HomeBand>
-      <HomeBand tone="mint" className="py-10 md:py-16">
-        <FadeInView>
-          <HomeAbout />
-        </FadeInView>
-      </HomeBand>
-      <HomeBand className="py-10 md:py-14">
-        <FadeInView>
-          <WhyUs />
-        </FadeInView>
-      </HomeBand>
       <HideIfSubscribed>
-        <HomeBand className="pb-10 md:pb-14">
+        <HomeBand className="pt-8 md:pt-14">
           <FadeInView>
             <NewsletterSection />
           </FadeInView>
         </HomeBand>
       </HideIfSubscribed>
+      <HomeBand className="py-8 md:py-14">
+        <HomeAbout />
+      </HomeBand>
     </>
   );
 }
