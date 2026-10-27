@@ -3,11 +3,16 @@ import type { CategoryItem } from "@/features/catalog/actions";
 import { categoryIconFor } from "@/lib/category-icons";
 import { pluralizeProducts } from "@/lib/format";
 import { HomeTabs } from "./HomeTabs";
+import { sectionTitleClass } from "./SectionHeading";
 
 // ≤10 per group (Baymard: show a real share of the range, each a full listing)
 const TILES_LIMIT = 10;
 
-type Props = { categories: CategoryItem[] };
+type Props = {
+  categories: CategoryItem[];
+  /** false: the H1 lives in HomeHeadline above the products; this block is plain category navigation */
+  headline?: boolean;
+};
 
 const topLevel = (categories: CategoryItem[], groups: CategoryItem["group"][]) =>
   categories
@@ -15,8 +20,9 @@ const topLevel = (categories: CategoryItem[], groups: CategoryItem["group"][]) =
     .sort((a, b) => b.productCount - a.productCount)
     .slice(0, TILES_LIMIT);
 
-/** The page's one H1 plus the one category navigation block: by need or by type. */
-export function HomeIntro({ categories }: Props) {
+/** The page's one category navigation block (by need or by type), by default
+ * under the page's H1. */
+export function HomeIntro({ categories, headline = true }: Props) {
   const needs = topLevel(categories, ["NEED"]);
   // Food and cosmetics are top-level "other" groups but are product types to a shopper
   const types = topLevel(categories, ["TYPE", "OTHER"]);
@@ -31,6 +37,17 @@ export function HomeIntro({ categories }: Props) {
       panel: <CategoryTiles items={items} />,
       link: allLink,
     }));
+
+  if (!headline) {
+    return (
+      <section aria-labelledby="categories-h" className="space-y-4">
+        <h2 id="categories-h" className={sectionTitleClass}>
+          Czego szukasz?
+        </h2>
+        {tabs.length > 0 && <HomeTabs tabs={tabs} label="Kategorie" />}
+      </section>
+    );
+  }
 
   return (
     <section aria-labelledby="home-h1" className="space-y-5 md:space-y-6">
