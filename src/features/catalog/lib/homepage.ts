@@ -1,4 +1,5 @@
 import { unstable_cache } from "next/cache";
+import { POSTS_TAG } from "@/features/blog/lib/queries";
 import { discountPercent } from "@/lib/omnibus";
 import { prisma } from "@/lib/prisma";
 import {
@@ -29,17 +30,10 @@ const AUTO_FEATURED_CATEGORY_SLUGS = [
   "witamina-k2",
 ];
 
-// Seasonal pick — edit with the season (autumn/winter now). Products are
-// taken round-robin from these categories; the first one is the "see all" link.
-export const SEASONAL_SHELF = {
-  title: "Na jesień i zimę",
-  tabs: [
-    { label: "Odporność", slug: "na-odpornosc" },
-    { label: "Witamina D", slug: "witamina-d" },
-    { label: "Sen", slug: "na-sen" },
-  ],
-};
-const SEASONAL_SIZE = 4;
+// Bestseller tabs: Polecane plus the biggest "na …" needs
+const NEED_TABS = 3;
+// Per-tab query size; four are shown, the rest lets brands spread
+const TAB_POOL = 8;
 
 // Promo band: one lead tile + four small items
 const PROMOS_LIMIT = 5;
@@ -122,27 +116,22 @@ async function getAutoFeatured(manual: ProductListItem[], count: number) {
   return picked;
 }
 
-/** Round-robin across the seasonal categories, spreading brands. */
-function pickSeasonal(pools: ProductListItem[][], count: number, excludeIds: Set<string>) {
-  const usedBrands = new Set<string>();
-  const queues = pools.map((pool) =>
-    pickAcrossBrands(
-      pool.filter((p) => !excludeIds.has(p.id)),
-      count,
-    ),
-  );
-  const picked: ProductListItem[] = [];
-  for (let round = 0; picked.length < count && queues.some((q) => q.length > round); round++) {
-    for (const queue of queues) {
-      const p = queue[round];
-      if (!p || picked.length >= count || picked.some((x) => x.id === p.id)) continue;
-      // Second-choice brand repeats are fine once every pool is drained of new brands
-      if (usedBrands.has(displayBrandSlug(p)) && queue.length > round + 1) continue;
-      picked.push(p);
-      usedBrands.add(displayBrandSlug(p));
-    }
-  }
-  return picked;
+/** Four products for one need tab: one capped query, brands spread, nothing
+ * already in an earlier row. */
+async function needTabProducts(slug: string, excludeIds: string[]) {
+  const categoryIds = await getCategoryDescendantIds([slug]);
+  if (categoryIds.length === 0) return [];
+  const pool = await prisma.product.findMany({
+    where: {
+      ...sellable,
+      id: { notIn: excludeIds },
+      categoryLinks: { some: { categoryId: { in: categoryIds } } },
+    },
+    orderBy: [{ isFeatured: "desc" }, { createdAt: "desc" }],
+    take: TAB_POOL,
+    select: productSelect,
+  });
+  return pickAcrossBrands(pool, FEATURED_LIMIT);
 }
 
 const offerDiscount = (p: ProductListItem) => {
@@ -152,36 +141,34 @@ const offerDiscount = (p: ProductListItem) => {
 
 export const getHomepageData = unstable_cache(
   async () => {
-    const [categories, manualFeatured, newPool, promoPool, seasonal, ingredientProducts] =
-      await Promise.all([
-        getCategories(),
-        prisma.product.findMany({
-          where: { status: "ACTIVE", isFeatured: true },
-          take: FEATURED_LIMIT,
-          orderBy: { updatedAt: "desc" },
-          select: productSelect,
-        }),
-        prisma.product.findMany({
-          where: { ...sellable, isNewArrival: true },
-          take: ROW_POOL,
-          orderBy: { createdAt: "desc" },
-          select: productSelect,
-        }),
-        prisma.product.findMany({
-          // comparePricePln is only set when a variant is discounted
-          where: {
-            ...sellable,
-            variants: {
-              some: { isActive: true, stock: { gt: 0 }, comparePricePln: { not: null } },
-            },
+    const [categories, manualFeatured, newPool, promoPool, ingredientProducts] = await Promise.all([
+      getCategories(),
+      prisma.product.findMany({
+        where: { status: "ACTIVE", isFeatured: true },
+        take: FEATURED_LIMIT,
+        orderBy: { updatedAt: "desc" },
+        select: productSelect,
+      }),
+      prisma.product.findMany({
+        where: { ...sellable, isNewArrival: true },
+        take: ROW_POOL,
+        orderBy: { createdAt: "desc" },
+        select: productSelect,
+      }),
+      prisma.product.findMany({
+        // comparePricePln is only set when a variant is discounted
+        where: {
+          ...sellable,
+          variants: {
+            some: { isActive: true, stock: { gt: 0 }, comparePricePln: { not: null } },
           },
-          take: ROW_POOL,
-          orderBy: { updatedAt: "desc" },
-          select: productSelect,
-        }),
-        Promise.all(SEASONAL_SHELF.tabs.map((tab) => sellableInCategory(tab.slug))),
-        Promise.all(INGREDIENT_TILE_SLUGS.map((slug) => sellableInCategory(slug))),
-      ]);
+        },
+        take: ROW_POOL,
+        orderBy: { updatedAt: "desc" },
+        select: productSelect,
+      }),
+      Promise.all(INGREDIENT_TILE_SLUGS.map((slug) => sellableInCategory(slug))),
+    ]);
 
     const featured =
       manualFeatured.length >= FEATURED_LIMIT
@@ -191,10 +178,31 @@ export const getHomepageData = unstable_cache(
             ...(await getAutoFeatured(manualFeatured, FEATURED_LIMIT - manualFeatured.length)),
           ];
 
+    // Need tabs: the biggest top-level "na …" categories (ties: menu order)
+    const needs = categories
+      .filter((c) => c.parentId === null && c.group === "NEED" && c.productCount > 0)
+      .sort((a, b) => b.productCount - a.productCount || a.sortOrder - b.sortOrder)
+      .slice(0, NEED_TABS);
+    const featuredIds = featured.map((p) => p.id);
+    const needProducts = await Promise.all(needs.map((c) => needTabProducts(c.slug, featuredIds)));
+    const tabs = [
+      {
+        id: "polecane",
+        label: "Polecane",
+        // "Zobacz wszystkie" filters by isFeatured — pointless while the row is auto-filled
+        href: manualFeatured.length > 0 ? "/katalog?polecane=1" : "/katalog",
+        products: featured,
+      },
+      ...needs.map((c, i) => ({
+        id: c.slug,
+        label: c.namePl,
+        href: `/kategoria/${c.slug}`,
+        products: needProducts[i],
+      })),
+    ].filter((tab) => tab.products.length > 0);
+
     // Each product appears once on the page, in the first section that wants it
-    const shown = new Set(featured.map((p) => p.id));
-    const seasonalProducts = pickSeasonal(seasonal, SEASONAL_SIZE, shown);
-    for (const p of seasonalProducts) shown.add(p.id);
+    const shown = new Set(tabs.flatMap((tab) => tab.products.map((p) => p.id)));
 
     // Real reductions only (Omnibus), biggest first: the lead tile is the best deal
     const promos = promoPool
@@ -205,11 +213,6 @@ export const getHomepageData = unstable_cache(
 
     const newArrivals = newPool.filter((p) => !shown.has(p.id)).slice(0, NEW_LIMIT);
 
-    const seasonalCategories = SEASONAL_SHELF.tabs.flatMap((tab) => {
-      const category = categories.find((c) => c.slug === tab.slug);
-      return category && category.productCount > 0 ? [{ ...tab, category }] : [];
-    });
-
     const ingredientTiles = INGREDIENT_TILE_SLUGS.flatMap((slug, i) => {
       const category = categories.find((c) => c.slug === slug);
       const image = ingredientProducts[i][0]?.images[0];
@@ -218,15 +221,42 @@ export const getHomepageData = unstable_cache(
 
     return {
       categories,
-      featured,
-      // "Zobacz wszystkie" filters by isFeatured — pointless while the row is auto-filled
-      featuredHref: manualFeatured.length > 0 ? "/katalog?polecane=1" : "/katalog",
+      tabs,
       newArrivals,
       promos,
-      seasonal: { categories: seasonalCategories, products: seasonalProducts },
       ingredientTiles,
     };
   },
-  ["homepage-v6"],
+  ["homepage-v7"],
   { tags: ["categories", "products"] },
 );
+
+const GUIDES_LIMIT = 3;
+const WORDS_PER_MINUTE = 200;
+
+/** Latest Poradnik posts with reading time; the body is only counted, never returned. */
+export const getHomeGuides = unstable_cache(
+  async () => {
+    const posts = await prisma.post.findMany({
+      where: { isPublished: true },
+      orderBy: { publishedAt: "desc" },
+      take: GUIDES_LIMIT,
+      select: { slug: true, titlePl: true, categorySlug: true, contentPl: true },
+    });
+    return posts.map(({ contentPl, ...post }) => ({
+      ...post,
+      readingMinutes: readingMinutes(contentPl),
+    }));
+  },
+  ["home-guides"],
+  { tags: [POSTS_TAG] },
+);
+
+/** Same count as the post editor: tags stripped, ~200 words a minute. */
+export function readingMinutes(html: string) {
+  const words = html
+    .replace(/<[^>]+>/g, " ")
+    .split(/\s+/)
+    .filter(Boolean).length;
+  return Math.max(1, Math.round(words / WORDS_PER_MINUTE));
+}
