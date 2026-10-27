@@ -20,7 +20,7 @@ type State = {
   teaserHiddenUntil?: number;
 };
 
-type Visit = { start: number; views: number; prompted?: boolean };
+type Visit = { start: number; views: number; lastPath?: string; prompted?: boolean };
 
 function readState(): State | null {
   let raw: string | null;
@@ -97,10 +97,19 @@ function writeVisit(visit: Visit) {
   } catch {}
 }
 
-/** Counts this page view; returns the session's start time and view count. */
-export function recordVisit(): Visit {
+/**
+ * Counts this page view; returns the session's start time and view count.
+ * A reload, or an effect re-run on the same path, isn't a new page.
+ */
+export function recordVisit(pathname: string): Visit {
   const prev = readVisit();
-  const visit = { ...prev, start: prev?.start ?? Date.now(), views: (prev?.views ?? 0) + 1 };
+  const isNewPage = prev?.lastPath !== pathname;
+  const visit = {
+    ...prev,
+    start: prev?.start ?? Date.now(),
+    views: (prev?.views ?? 0) + (isNewPage ? 1 : 0),
+    lastPath: pathname,
+  };
   writeVisit(visit);
   return visit;
 }
