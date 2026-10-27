@@ -48,7 +48,7 @@ function CheckboxRow({
         <Checkbox id={id} checked={checked} onCheckedChange={onChange} />
         {label}
       </span>
-      {count !== undefined && <span className="text-xs opacity-70">{count}</span>}
+      {count !== undefined && <span className="text-xs text-muted-foreground">{count}</span>}
     </label>
   );
 }
