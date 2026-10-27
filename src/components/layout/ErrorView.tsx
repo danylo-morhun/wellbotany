@@ -20,7 +20,9 @@ export function ErrorView({ error, retry, as: Root = "main" }: Props) {
 
   return (
     <Root className="flex min-h-[70dvh] flex-col items-center justify-center px-4 py-16 text-center">
-      <p className="text-7xl font-extrabold tracking-tight text-destructive/20">500</p>
+      <p aria-hidden className="text-7xl font-extrabold tracking-tight text-destructive/20">
+        500
+      </p>
       <h1 className="mt-4 text-2xl font-bold tracking-tight">Coś poszło nie tak</h1>
       <p className="mt-2 max-w-md text-muted-foreground">
         Wystąpił nieoczekiwany błąd. Spróbuj ponownie — jeśli problem się powtarza, skontaktuj się z
