@@ -38,7 +38,9 @@ export function GiftSetCartRow({
   });
 
   return (
-    <div className={`px-6 py-5 transition-opacity duration-200 ${removing ? "opacity-60" : ""}`}>
+    <div
+      className={`px-4 py-5 transition-opacity duration-200 sm:px-6 ${removing ? "opacity-60" : ""}`}
+    >
       <div className="flex items-start justify-between gap-3">
         <div className="flex items-center gap-2">
           <Gift className="size-4 text-primary" />

@@ -39,9 +39,9 @@ export function CartItemRow({ item, onRemove }: Props) {
 
   return (
     <div
-      className={`flex gap-4 px-6 py-5 transition-opacity duration-200 ${pending ? "opacity-60" : ""}`}
+      className={`flex gap-3 px-4 py-5 transition-opacity sm:gap-4 sm:px-6 duration-200 ${pending ? "opacity-60" : ""}`}
     >
-      <div className="relative size-24 shrink-0 overflow-hidden rounded-lg bg-muted">
+      <div className="relative size-20 shrink-0 overflow-hidden rounded-lg bg-muted sm:size-24">
         {image ? (
           <Image
             src={image.url}
@@ -60,7 +60,8 @@ export function CartItemRow({ item, onRemove }: Props) {
       <div className="flex min-w-0 flex-1 flex-col gap-1">
         <div className="flex items-start justify-between gap-3">
           <div className="min-w-0">
-            <p className="truncate text-sm font-semibold leading-snug text-foreground">
+            {/* Two lines: supplement names carry the dose/form that tells variants apart */}
+            <p className="line-clamp-2 break-words text-sm font-semibold leading-snug text-foreground">
               {item.variant.product.namePl}
             </p>
             {item.variant.optionValue && (
