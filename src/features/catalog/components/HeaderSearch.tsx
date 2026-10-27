@@ -22,6 +22,7 @@ type Props = {
   className?: string;
   inputClassName?: string;
   autoFocus?: boolean;
+  placeholder?: string;
   /** Called when a search leaves the page — lets a wrapping dialog close */
   onNavigate?: () => void;
 };
@@ -33,7 +34,13 @@ const SKELETON_WIDTHS = [70, 60, 50];
 const DEFAULT_INPUT_CLASS =
   "w-full rounded-full border border-input bg-muted/60 py-2.5 pl-11 pr-4 text-sm text-foreground transition-shadow duration-200 placeholder:text-muted-foreground focus:border-transparent focus:bg-card focus:shadow-card focus:outline-none focus:ring-2 focus:ring-ring/50 motion-reduce:transition-none";
 
-export function HeaderSearch({ className, inputClassName, autoFocus, onNavigate }: Props) {
+export function HeaderSearch({
+  className,
+  inputClassName,
+  autoFocus,
+  placeholder = "Szukaj produktu, marki lub składnika",
+  onNavigate,
+}: Props) {
   const router = useRouter();
   const listId = useId();
   const optionId = (i: number) => `${listId}-${i}`;
@@ -126,7 +133,7 @@ export function HeaderSearch({ className, inputClassName, autoFocus, onNavigate 
         onFocus={() => setOpen(true)}
         onBlur={() => setTimeout(() => setOpen(false), 150)}
         onKeyDown={handleKeyDown}
-        placeholder="Szukaj witamin, suplementów…"
+        placeholder={placeholder}
         aria-label="Szukaj produktów"
         role="combobox"
         aria-autocomplete="list"
