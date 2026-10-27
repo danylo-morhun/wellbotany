@@ -16,6 +16,8 @@ type Props = {
   impliedCategory?: string;
   /** Brand implied by the current route (e.g. `/marki/bicaps`) but not present in the URL's query string — shown as checked, and included when toggling other brands. */
   impliedBrand?: string;
+  /** In the mobile drawer the sheet already titles it "Filtry" */
+  inDrawer?: boolean;
 };
 
 /** Stable partition, not a full re-sort — options with zero matches under the active filters sink to the end so the list doesn't visibly reshuffle on every toggle. */
@@ -32,23 +34,43 @@ function CheckboxRow({
   onChange,
   label,
   count,
+  locked = false,
 }: {
   id: string;
   checked: boolean;
   onChange: (checked: boolean) => void;
   label: string;
   count?: number;
+  /** The page itself is this filter (e.g. the category being browsed): shown checked, can't be unchecked */
+  locked?: boolean;
 }) {
+  // Picking an option with no matches would only produce an empty list; a selected one stays clickable so it can be cleared
+  const disabled = locked || (count === 0 && !checked);
   return (
     <label
       htmlFor={id}
-      className="flex w-full cursor-pointer items-center justify-between gap-2 rounded-md px-2 py-1.5 text-sm text-foreground transition-colors hover:bg-muted"
+      className={`flex w-full items-center justify-between gap-2 rounded-md px-2 py-1.5 text-sm transition-colors ${
+        locked
+          ? "cursor-default font-medium text-foreground"
+          : disabled
+            ? "cursor-default text-muted-foreground"
+            : "cursor-pointer text-foreground hover:bg-muted"
+      }`}
     >
-      <span className="flex items-center gap-2">
-        <Checkbox id={id} checked={checked} onCheckedChange={onChange} />
-        {label}
+      <span className="flex min-w-0 items-center gap-2">
+        <Checkbox
+          id={id}
+          checked={checked}
+          onCheckedChange={onChange}
+          disabled={disabled}
+          className={locked ? "disabled:opacity-100" : undefined}
+        />
+        <span className="min-w-0 break-words">{label}</span>
+        {locked && <span className="sr-only"> (filtr tej strony)</span>}
       </span>
-      {count !== undefined && <span className="text-xs text-muted-foreground">{count}</span>}
+      {count !== undefined && (
+        <span className="shrink-0 text-xs text-muted-foreground">{count}</span>
+      )}
     </label>
   );
 }
@@ -60,6 +82,7 @@ export function FilterSidebar({
   basePath = "/katalog",
   impliedCategory,
   impliedBrand,
+  inDrawer = false,
 }: Props) {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -134,6 +157,18 @@ export function FilterSidebar({
     : sortedCategories.filter((c) => active.category.includes(c.slug) && !visibleSlugs.has(c.slug));
   const hiddenCategoryCount = sortedCategories.length - visibleCategories.length;
 
+  // Filters push to basePath (/katalog), so the category or brand the route
+  // implies has to travel in the query — otherwise picking a brand on
+  // /kategoria/mineraly would silently drop the category
+  const pushWithImplied = useCallback(
+    (params: URLSearchParams) => {
+      if (impliedCategory && !params.has("kategoria")) params.set("kategoria", impliedCategory);
+      if (impliedBrand && !params.has("marka")) params.set("marka", impliedBrand);
+      router.push(`${basePath}?${params.toString()}`, { scroll: false });
+    },
+    [router, basePath, impliedCategory, impliedBrand],
+  );
+
   const setParam = useCallback(
     (key: string, value: string | null) => {
       const params = new URLSearchParams(searchParams.toString());
@@ -143,9 +178,9 @@ export function FilterSidebar({
         params.set(key, value);
       }
       params.delete("strona");
-      router.push(`${basePath}?${params.toString()}`, { scroll: false });
+      pushWithImplied(params);
     },
-    [router, searchParams, basePath],
+    [searchParams, pushWithImplied],
   );
 
   const toggleMulti = useCallback(
@@ -199,16 +234,19 @@ export function FilterSidebar({
     if (priceMax) params.set("cenaMax", priceMax);
     else params.delete("cenaMax");
     params.delete("strona");
-    router.push(`${basePath}?${params.toString()}`, { scroll: false });
-  }, [searchParams, priceMin, priceMax, router, basePath]);
+    pushWithImplied(params);
+  }, [searchParams, priceMin, priceMax, pushWithImplied]);
 
+  // Keeps the category/brand the page is about; clears everything the shopper added
   const clearAll = useCallback(() => {
-    router.push(basePath, { scroll: false });
-  }, [router, basePath]);
+    pushWithImplied(new URLSearchParams());
+  }, [pushWithImplied]);
 
+  const addedList = (key: string, implied?: string) =>
+    (searchParams.get(key)?.split(",").filter(Boolean) ?? []).filter((s) => s !== implied);
   const hasActiveFilters =
-    active.category.length > 0 ||
-    active.brand.length > 0 ||
+    addedList("kategoria", impliedCategory).length > 0 ||
+    addedList("marka", impliedBrand).length > 0 ||
     active.tags.length > 0 ||
     Boolean(searchParams.get("cenaMin")) ||
     Boolean(searchParams.get("cenaMax")) ||
@@ -222,7 +260,7 @@ export function FilterSidebar({
       <SearchInput />
 
       <div className="flex items-center justify-between">
-        <h2 className="text-sm font-semibold text-foreground">Filtry</h2>
+        <h2 className={inDrawer ? "sr-only" : "text-sm font-semibold text-foreground"}>Filtry</h2>
         {hasActiveFilters && (
           <button
             type="button"
@@ -246,6 +284,7 @@ export function FilterSidebar({
                 onChange={() => toggleMulti("kategoria", cat.slug)}
                 label={cat.namePl}
                 count={cat.productCount}
+                locked={cat.slug === impliedCategory}
               />
             ))}
             {visibleCategories.map((cat) => (
@@ -256,6 +295,7 @@ export function FilterSidebar({
                 onChange={() => toggleMulti("kategoria", cat.slug)}
                 label={cat.namePl}
                 count={cat.productCount}
+                locked={cat.slug === impliedCategory}
               />
             ))}
           </div>
@@ -289,6 +329,7 @@ export function FilterSidebar({
                         onChange={() => toggleBrand(brand.slug)}
                         label={brand.name}
                         count={brand._count.products}
+                        locked={brand.slug === impliedBrand}
                       />
                     </div>
                     {hasLines && (
@@ -342,12 +383,12 @@ export function FilterSidebar({
               type="number"
               min={0}
               inputMode="decimal"
-              placeholder="0"
+              placeholder="od"
               value={priceMin}
               onChange={(e) => setPriceMin(e.target.value)}
               onBlur={applyPriceRange}
               onKeyDown={(e) => e.key === "Enter" && applyPriceRange()}
-              className="w-full rounded-md border border-input bg-background py-1.5 pl-2 pr-7 text-sm text-foreground [appearance:textfield] focus:border-transparent focus:outline-none focus:ring-2 focus:ring-ring/50 [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
+              className="w-full rounded-md border border-input bg-background py-1.5 pl-2 pr-7 text-sm text-foreground placeholder:text-muted-foreground [appearance:textfield] focus:border-transparent focus:outline-none focus:ring-2 focus:ring-ring/50 [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
             />
             <span className="pointer-events-none absolute right-2 top-1/2 -translate-y-1/2 text-xs text-muted-foreground">
               zł
@@ -363,12 +404,12 @@ export function FilterSidebar({
               type="number"
               min={0}
               inputMode="decimal"
-              placeholder="∞"
+              placeholder="do"
               value={priceMax}
               onChange={(e) => setPriceMax(e.target.value)}
               onBlur={applyPriceRange}
               onKeyDown={(e) => e.key === "Enter" && applyPriceRange()}
-              className="w-full rounded-md border border-input bg-background py-1.5 pl-2 pr-7 text-sm text-foreground [appearance:textfield] focus:border-transparent focus:outline-none focus:ring-2 focus:ring-ring/50 [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
+              className="w-full rounded-md border border-input bg-background py-1.5 pl-2 pr-7 text-sm text-foreground placeholder:text-muted-foreground [appearance:textfield] focus:border-transparent focus:outline-none focus:ring-2 focus:ring-ring/50 [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
             />
             <span className="pointer-events-none absolute right-2 top-1/2 -translate-y-1/2 text-xs text-muted-foreground">
               zł

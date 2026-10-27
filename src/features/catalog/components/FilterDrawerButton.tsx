@@ -19,9 +19,19 @@ type Props = {
   brands: BrandItem[];
   tags: TagItem[];
   basePath?: string;
+  /** Passed through to FilterSidebar, for category and brand pages */
+  impliedCategory?: string;
+  impliedBrand?: string;
 };
 
-export function FilterDrawerButton({ categories, brands, tags, basePath }: Props) {
+export function FilterDrawerButton({
+  categories,
+  brands,
+  tags,
+  basePath,
+  impliedCategory,
+  impliedBrand,
+}: Props) {
   const [open, setOpen] = useState(false);
   const activeCount = activeFilterCount(useSearchParams());
 
@@ -60,6 +70,9 @@ export function FilterDrawerButton({ categories, brands, tags, basePath }: Props
               brands={brands}
               tags={tags}
               basePath={basePath}
+              impliedCategory={impliedCategory}
+              impliedBrand={impliedBrand}
+              inDrawer
             />
           </div>
           <SheetFooter className="px-4 py-3">
