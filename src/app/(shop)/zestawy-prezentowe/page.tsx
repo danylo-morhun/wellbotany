@@ -2,6 +2,7 @@ import { ArrowRight, Sparkles } from "lucide-react";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { GiftSetCard } from "@/features/gift-sets/components/GiftSetCard";
+import { GIFT_SET_ITEM_IMAGES, toGiftSetListItem } from "@/features/gift-sets/lib/homepage";
 import { prisma } from "@/lib/prisma";
 
 export const metadata: Metadata = {
@@ -20,7 +21,7 @@ export default async function GiftSetsPage() {
       pricePln: true,
       comparePricePln: true,
       lowestPrice30dPln: true,
-      _count: { select: { items: true } },
+      ...GIFT_SET_ITEM_IMAGES,
     },
   });
 
@@ -57,18 +58,7 @@ export default async function GiftSetsPage() {
       {giftSets.length > 0 ? (
         <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4">
           {giftSets.map((gs) => (
-            <GiftSetCard
-              key={gs.slug}
-              giftSet={{
-                slug: gs.slug,
-                namePl: gs.namePl,
-                imageUrl: gs.imageUrl,
-                pricePln: gs.pricePln,
-                comparePricePln: gs.comparePricePln,
-                lowestPrice30dPln: gs.lowestPrice30dPln,
-                itemCount: gs._count.items,
-              }}
-            />
+            <GiftSetCard key={gs.slug} giftSet={toGiftSetListItem(gs)} />
           ))}
         </div>
       ) : (
