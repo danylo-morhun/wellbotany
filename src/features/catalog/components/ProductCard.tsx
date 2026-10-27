@@ -1,5 +1,6 @@
 import Image from "next/image";
 import Link from "next/link";
+import { DiscountBadge } from "@/components/ui/discount-badge";
 import { QuickAddButton } from "@/features/cart/components/QuickAddButton";
 import { formatPrice } from "@/lib/format";
 import { discountPercent, omnibusNote, referencePrice } from "@/lib/omnibus";
@@ -67,18 +68,21 @@ export function ProductCard({ product, priority = false, headingLevel = 2 }: Pro
             </div>
           )}
 
-          <div className="absolute left-3 top-3 flex flex-col items-start gap-1.5">
+          {!isOutOfStock && hasDiscount && discountPct != null && (
+            <DiscountBadge percent={discountPct} variant="corner" />
+          )}
+          {/* Below the discount corner when both apply */}
+          <div
+            className={`absolute left-3 flex flex-col items-start gap-1.5 ${
+              !isOutOfStock && hasDiscount ? "top-11" : "top-3"
+            }`}
+          >
             {isOutOfStock ? (
               <span className="rounded-full bg-muted-foreground/90 px-2.5 py-1 text-xs font-semibold text-background">
                 Niedostępny
               </span>
             ) : (
               <>
-                {hasDiscount && (
-                  <span className="flex size-10 items-center justify-center rounded-full bg-accent text-xs font-bold text-accent-foreground animate-pop-in motion-reduce:animate-none">
-                    -{discountPct}%
-                  </span>
-                )}
                 {product.isNewArrival && (
                   <span className="rounded-full bg-primary px-2.5 py-1 text-xs font-semibold text-primary-foreground">
                     Nowość

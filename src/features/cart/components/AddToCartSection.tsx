@@ -4,6 +4,7 @@ import { Check, Minus, Plus, ShoppingCart, Truck } from "lucide-react";
 import { useAction } from "next-safe-action/hooks";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
+import { DiscountBadge } from "@/components/ui/discount-badge";
 import { useVariantSelection } from "@/features/catalog/components/VariantSelection";
 import { useRefreshStorefront } from "@/features/session/components/StorefrontSessionProvider";
 import { trackItems } from "@/lib/analytics";
@@ -127,9 +128,7 @@ export function AddToCartSection({ variants, ordersPaused = false, productName }
             <span className="text-lg text-muted-foreground line-through">
               {formatPrice(comparePrice)}
             </span>
-            <span className="rounded-full bg-accent px-2.5 py-0.5 text-sm font-bold text-accent-foreground">
-              -{discountPct}%
-            </span>
+            {discountPct != null && <DiscountBadge percent={discountPct} size="md" />}
           </>
         )}
       </div>

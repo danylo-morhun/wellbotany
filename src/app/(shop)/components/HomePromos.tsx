@@ -1,5 +1,6 @@
 import Image from "next/image";
 import Link from "next/link";
+import { DiscountBadge } from "@/components/ui/discount-badge";
 import { QuickAddButton } from "@/features/cart/components/QuickAddButton";
 import type { ProductListItem } from "@/features/catalog/actions";
 import { resolveDisplayBrand } from "@/features/catalog/lib/brand-tree";
@@ -67,11 +68,7 @@ function PromoLead({ product, alone }: { product: ProductListItem; alone: boolea
             className="object-contain p-2 transition-transform duration-300 ease-out group-hover:scale-[1.04] motion-reduce:group-hover:scale-100"
           />
         )}
-        {pct != null && (
-          <span className="absolute left-0 top-0 flex size-12 items-center justify-center rounded-full bg-accent text-sm font-extrabold text-accent-foreground sm:size-16 sm:text-lg">
-            -{pct}%
-          </span>
-        )}
+        {pct != null && <DiscountBadge percent={pct} variant="corner" size="lg" />}
       </Link>
       <div className="flex min-w-0 flex-col">
         {brand && (

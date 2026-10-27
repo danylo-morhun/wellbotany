@@ -1,5 +1,6 @@
 import Image from "next/image";
 import Link from "next/link";
+import { DiscountBadge } from "@/components/ui/discount-badge";
 import type { ProductListItem } from "@/features/catalog/actions";
 import { resolveDisplayBrand } from "@/features/catalog/lib/brand-tree";
 import { formatPrice } from "@/lib/format";
@@ -58,9 +59,7 @@ export function HomeProductRow({ product, badge }: Props) {
                 <span className="text-xs text-muted-foreground line-through">
                   {formatPrice(ref)}
                 </span>
-                <span className="rounded-full bg-accent px-1.5 py-0.5 text-xs font-bold text-accent-foreground">
-                  -{pct}%
-                </span>
+                <DiscountBadge percent={pct} />
               </>
             )}
           </span>

@@ -1,7 +1,8 @@
 import Image from "next/image";
 import Link from "next/link";
+import { DiscountBadge } from "@/components/ui/discount-badge";
 import { formatPrice, pluralPl } from "@/lib/format";
-import { omnibusNote, referencePrice } from "@/lib/omnibus";
+import { discountPercent, omnibusNote, referencePrice } from "@/lib/omnibus";
 import { cn } from "@/lib/utils";
 
 export type GiftSetListItem = {
@@ -26,6 +27,7 @@ export function GiftSetCard({ giftSet, headingLevel = 2 }: Props) {
   const Heading = headingLevel === 3 ? "h3" : "h2";
   const struckPrice = referencePrice(giftSet);
   const lowestNote = omnibusNote(giftSet);
+  const pct = discountPercent(giftSet);
 
   return (
     <Link
@@ -33,6 +35,7 @@ export function GiftSetCard({ giftSet, headingLevel = 2 }: Props) {
       className="group flex flex-col overflow-hidden rounded-2xl bg-card shadow-card transition-[box-shadow,transform] duration-200 ease-out hover:-translate-y-0.5 hover:shadow-card-hover motion-reduce:transition-none motion-reduce:hover:translate-y-0"
     >
       <div className="relative aspect-square overflow-hidden bg-card">
+        {pct != null && <DiscountBadge percent={pct} variant="corner" />}
         {giftSet.imageUrl ? (
           <Image
             src={giftSet.imageUrl}
