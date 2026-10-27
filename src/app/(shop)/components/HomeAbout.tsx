@@ -46,7 +46,7 @@ export function HomeAbout() {
             <li key={item.href}>
               <Link
                 href={item.href}
-                className="inline-flex min-h-9 items-center rounded-full bg-secondary px-3.5 text-sm font-medium text-secondary-foreground transition-colors hover:bg-primary hover:text-primary-foreground motion-reduce:transition-none"
+                className="inline-flex min-h-9 items-center rounded-full bg-card px-3.5 text-sm font-medium text-secondary-foreground transition-colors hover:bg-primary hover:text-primary-foreground motion-reduce:transition-none"
               >
                 {item.label}
               </Link>
