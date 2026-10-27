@@ -1,7 +1,9 @@
 import { describe, expect, it } from "vitest";
 import {
   cheapestPaidRate,
+  deliveryEstimate,
   isPointService,
+  orderTotals,
   requiresAddress,
   shippingCostFor,
   sortRates,
@@ -42,5 +44,33 @@ describe("shipping rates", () => {
     expect(isPointService("inpost")).toBe(false);
     expect(requiresAddress("GLS")).toBe(true);
     expect(requiresAddress("PICKUP")).toBe(false);
+  });
+});
+
+describe("orderTotals", () => {
+  it("checks the free threshold against the subtotal after discount", () => {
+    // 210 zł − 20 zł code = 190 zł → below 200 zł, delivery is charged
+    expect(orderTotals(21000, 2000, 1299, 20000)).toEqual({
+      productsPln: 19000,
+      shippingPln: 1299,
+      totalPln: 20299,
+    });
+    expect(orderTotals(21000, 0, 1299, 20000)).toEqual({
+      productsPln: 21000,
+      shippingPln: 0,
+      totalPln: 21000,
+    });
+  });
+
+  it("always charges delivery when the threshold is off", () => {
+    expect(orderTotals(99900, 0, 1299, null).shippingPln).toBe(1299);
+  });
+});
+
+describe("deliveryEstimate", () => {
+  it("is free once the threshold is met, else from the cheapest paid rate", () => {
+    expect(deliveryEstimate(20000, 20000, 1299)).toEqual({ free: true });
+    expect(deliveryEstimate(19999, 20000, 1299)).toEqual({ free: false, fromPln: 1299 });
+    expect(deliveryEstimate(19999, 20000, null)).toEqual({ free: false, fromPln: null });
   });
 });
