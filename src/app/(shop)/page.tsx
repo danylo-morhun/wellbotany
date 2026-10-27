@@ -5,7 +5,8 @@ import { FadeInView } from "@/app/(shop)/components/FadeInView";
 import { HelpAndGuides } from "@/app/(shop)/components/HelpAndGuides";
 import { HomeAbout } from "@/app/(shop)/components/HomeAbout";
 import { HomeBand } from "@/app/(shop)/components/HomeBand";
-import { HomeHero } from "@/app/(shop)/components/HomeHero";
+import { HomeGiftSets } from "@/app/(shop)/components/HomeGiftSets";
+import { HomeHeadline } from "@/app/(shop)/components/HomeHeadline";
 import { HomeIntro } from "@/app/(shop)/components/HomeIntro";
 import { HomeNewArrivals } from "@/app/(shop)/components/HomeNewArrivals";
 import { HomePromos } from "@/app/(shop)/components/HomePromos";
@@ -15,6 +16,7 @@ import { TrustStrip } from "@/app/(shop)/components/TrustStrip";
 import { getBrands } from "@/features/catalog/actions";
 import { getHomepageData } from "@/features/catalog/lib/homepage";
 import { getHomeGiftSets } from "@/features/gift-sets/lib/homepage";
+import { HeroSlider } from "@/features/home/components/HeroSlider";
 import { getHomeBanners } from "@/features/home/lib/banners";
 import { HideIfSubscribed } from "@/features/newsletter/components/HideIfSubscribed";
 
@@ -26,6 +28,8 @@ export const metadata: Metadata = {
 // Banners open/close on their dates without an admin edit
 export const revalidate = 3600;
 
+const NEED_LINKS = 3;
+
 export default async function HomePage() {
   const [
     { categories, tabs, newArrivals, promos, ingredientTiles },
@@ -34,53 +38,62 @@ export default async function HomePage() {
     { giftSets, builderActive },
   ] = await Promise.all([getHomepageData(), getHomeBanners(), getBrands(), getHomeGiftSets()]);
 
-  // Gift sets no longer get a band; they take a free hero side slot
-  const giftTile =
-    giftSets.length > 0
-      ? { href: "/zestawy-prezentowe", label: "Zobacz zestawy" }
-      : builderActive
-        ? { href: "/zestawy-prezentowe/stworz", label: "Złóż własny zestaw" }
-        : null;
+  // Quiet need links beside the H1: the next needs after the ones that got a tab
+  const tabIds = new Set(tabs.map((t) => t.id));
+  const needLinks = categories
+    .filter(
+      (c) => c.parentId === null && c.group === "NEED" && c.productCount > 0 && !tabIds.has(c.slug),
+    )
+    .sort((a, b) => b.productCount - a.productCount || a.sortOrder - b.sortOrder)
+    .slice(0, NEED_LINKS);
 
-  // Hero → trust → H1 + categories read as one opening group (tight spacing);
-  // the bands after it alternate plain/mint
+  // Bands after the opening alternate mint/plain (DESIGN.md §5)
+  const rest = [
+    <HomeIntro key="intro" categories={categories} headline={false} />,
+    promos.length > 0 && (
+      <FadeInView key="promos">
+        <HomePromos products={promos} />
+      </FadeInView>
+    ),
+    (giftSets.length > 0 || builderActive) && (
+      <FadeInView key="gifts">
+        <HomeGiftSets giftSets={giftSets} builderActive={builderActive} />
+      </FadeInView>
+    ),
+    <FadeInView key="help">
+      <HelpAndGuides categories={categories} />
+    </FadeInView>,
+    <FadeInView key="ingredients" className="grid gap-10 lg:grid-cols-2 lg:gap-12">
+      <IngredientTiles tiles={ingredientTiles} />
+      <BrandStrip brands={brands} />
+    </FadeInView>,
+    <FadeInView key="new">
+      <HomeNewArrivals products={newArrivals} />
+    </FadeInView>,
+  ].filter(Boolean);
+
+  // Full-width slider, then products straight away: the first shelf sits right under it
   return (
     <>
-      <HomeBand className="pt-4 md:pt-6">
-        <HomeHero banners={banners} giftTile={giftTile} />
+      <HeroSlider banners={banners} />
+      <HomeBand className="pt-5 md:pt-7">
+        <HomeHeadline needs={needLinks} />
+        <div className="mt-4 md:mt-5">
+          <BestsellerTabs tabs={tabs} lead />
+        </div>
       </HomeBand>
-      <HomeBand className="pt-4 pb-2 md:pt-5">
-        <TrustStrip />
+      <HomeBand className="pt-4 pb-8 md:pt-6 md:pb-14">
+        <TrustStrip slim />
       </HomeBand>
-      <HomeBand className="pt-6 pb-8 md:pt-10 md:pb-14">
-        <HomeIntro categories={categories} />
-      </HomeBand>
-      <HomeBand tone="mint" className="py-8 md:py-14">
-        <BestsellerTabs tabs={tabs} />
-      </HomeBand>
-      {promos.length > 0 && (
-        <HomeBand className="py-8 md:py-14">
-          <FadeInView>
-            <HomePromos products={promos} />
-          </FadeInView>
+      {rest.map((node, i) => (
+        <HomeBand
+          key={(node as React.ReactElement).key}
+          tone={i % 2 === 0 ? "mint" : "plain"}
+          className="py-8 md:py-14"
+        >
+          {node}
         </HomeBand>
-      )}
-      <HomeBand tone="mint" className="py-8 md:py-14">
-        <FadeInView>
-          <HelpAndGuides categories={categories} />
-        </FadeInView>
-      </HomeBand>
-      <HomeBand className="py-8 md:py-14">
-        <FadeInView className="grid gap-10 lg:grid-cols-2 lg:gap-12">
-          <IngredientTiles tiles={ingredientTiles} />
-          <BrandStrip brands={brands} />
-        </FadeInView>
-      </HomeBand>
-      <HomeBand tone="mint" className="py-8 md:py-14">
-        <FadeInView>
-          <HomeNewArrivals products={newArrivals} />
-        </FadeInView>
-      </HomeBand>
+      ))}
       <HideIfSubscribed>
         <HomeBand className="pt-8 md:pt-14">
           <FadeInView>
