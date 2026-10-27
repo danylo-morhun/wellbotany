@@ -12,6 +12,7 @@ import { FilterDrawerButton } from "./FilterDrawerButton";
 type Props = {
   searchParams: Promise<Record<string, string | string[] | undefined>>;
   categoryOverride?: string;
+  brandOverride?: string;
   basePath?: string;
   showCategories?: boolean;
 };
@@ -20,10 +21,11 @@ type Props = {
 export async function FilterDrawerButtonData({
   searchParams,
   categoryOverride,
+  brandOverride,
   basePath,
   showCategories = true,
 }: Props) {
-  const filters = await resolveCatalogFilters(searchParams, categoryOverride);
+  const filters = await resolveCatalogFilters(searchParams, categoryOverride, brandOverride);
   const [categories, brands, tags, categoryCounts, brandCounts] = await Promise.all([
     getCategories(),
     getBrands(),
@@ -43,6 +45,8 @@ export async function FilterDrawerButtonData({
       brands={scopedBrands}
       tags={tags}
       basePath={basePath}
+      impliedCategory={categoryOverride}
+      impliedBrand={brandOverride}
     />
   );
 }
