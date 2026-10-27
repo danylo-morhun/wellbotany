@@ -6,4 +6,6 @@ export const SELLER = {
   address: "ul. Polna 102, 62-800 Kalisz",
   email: "kontakt@wellbotany.pl",
   phone: "+48 797 771 703",
+  // Phone and e-mail support hours, shown in the footer and on the home page
+  hours: "pon–pt 9:00–18:00, sob 9:00–14:00",
 } as const;
