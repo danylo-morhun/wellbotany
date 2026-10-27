@@ -2,6 +2,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { formatPrice, pluralPl } from "@/lib/format";
 import { omnibusNote, referencePrice } from "@/lib/omnibus";
+import { cn } from "@/lib/utils";
 
 export type GiftSetListItem = {
   slug: string;
@@ -11,6 +12,8 @@ export type GiftSetListItem = {
   comparePricePln: number | null;
   lowestPrice30dPln: number | null;
   itemCount: number;
+  /** Packshots of the first items — shown together when the set has no photo of its own */
+  itemImages?: string[];
 };
 
 type Props = {
@@ -38,6 +41,28 @@ export function GiftSetCard({ giftSet, headingLevel = 2 }: Props) {
             sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
             className="object-contain p-5 transition-transform duration-300 ease-out group-hover:scale-[1.05] motion-reduce:group-hover:scale-100"
           />
+        ) : giftSet.itemImages?.length ? (
+          <div className="flex h-full items-center justify-center bg-secondary/60 px-4">
+            {giftSet.itemImages.slice(0, 3).map((url, i) => (
+              <div
+                key={url}
+                className={cn(
+                  "relative aspect-square w-[36%] shrink-0 overflow-hidden rounded-xl bg-card shadow-card",
+                  i > 0 && "-ml-[6%]",
+                  // The middle packshot sits in front and slightly larger
+                  i === 1 ? "z-10 w-[42%]" : "translate-y-[6%]",
+                )}
+              >
+                <Image
+                  src={url}
+                  alt=""
+                  fill
+                  sizes="(max-width: 640px) 20vw, 12vw"
+                  className="object-contain p-1.5 transition-transform duration-300 ease-out group-hover:scale-[1.04] motion-reduce:group-hover:scale-100"
+                />
+              </div>
+            ))}
+          </div>
         ) : (
           <div className="flex h-full items-center justify-center text-muted-foreground">
             <span className="text-sm">Brak zdjęcia</span>
