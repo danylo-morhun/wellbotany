@@ -14,6 +14,8 @@ import { getShippingRates } from "@/features/checkout/lib/shipping-rates";
 import { findIngredientSlug, getIngredientLinkIndex } from "@/features/glossary/lib/queries";
 import { parseNutritionLabel, readNutritionFacts } from "@/features/products/lib/nutrition-facts";
 import { ProductReviews } from "@/features/reviews/components/ProductReviews";
+import { Stars } from "@/features/reviews/components/Stars";
+import { pluralize } from "@/features/reviews/lib/plural";
 import { getProductReviews } from "@/features/reviews/lib/queries";
 import { getShopSettings } from "@/features/settings/lib/shop-settings";
 import { WishlistButton } from "@/features/wishlist/components/WishlistButton";
@@ -28,6 +30,7 @@ import {
   getRelatedProducts,
 } from "../../../../features/catalog/actions";
 import { resolveDisplayBrand } from "../../../../features/catalog/lib/brand-tree";
+import { keyIngredientRows } from "../../../../features/catalog/lib/product-facts";
 
 type Props = {
   params: Promise<{ slug: string }>;
@@ -170,6 +173,22 @@ export default async function ProduktPage({ params }: Props) {
     (allergenInfo?.contains?.length ?? 0) > 0 || (allergenInfo?.mayContain?.length ?? 0) > 0;
   const benefitsPl = product.benefitsPl as string[] | null;
   const certifications = product.certifications as string[] | null;
+  // Buy-box dose summary: structured supplement rows only (food labels per 100 g aren't a dose)
+  const keyRows = keyIngredientRows(nutritionFacts);
+  const keyRowsHaveRws = keyRows.some((row) => row.rws);
+  const tableHasRws = showRws && tableRows.some((row) => row.rws);
+  const hasComposition =
+    Boolean(ingredients?.pl) ||
+    nutritionFacts.length > 0 ||
+    Boolean(nutritionText) ||
+    hasAllergenInfo;
+  const sectionNav = [
+    product.descriptionPl ? { id: "opis", label: "Opis" } : null,
+    hasComposition ? { id: "sklad", label: "Skład" } : null,
+    product.usageInstructionsPl ? { id: "sposob-uzycia", label: "Sposób użycia" } : null,
+    { id: "opinie", label: "Opinie" },
+  ].filter((s): s is { id: string; label: string } => s !== null);
+  const showSectionNav = sectionNav.length > 1;
 
   return (
     <>
@@ -202,18 +221,35 @@ export default async function ProduktPage({ params }: Props) {
             />
 
             <div className="space-y-6">
-              {displayBrand && (
-                <Link
-                  href={`/marki/${displayBrand.slug}`}
-                  className="text-sm font-medium text-muted-foreground hover:text-foreground"
-                >
-                  {displayBrand.name}
-                </Link>
-              )}
+              <div className="space-y-2">
+                {displayBrand && (
+                  <Link
+                    href={`/marki/${displayBrand.slug}`}
+                    className="text-sm font-medium text-muted-foreground hover:text-foreground"
+                  >
+                    {displayBrand.name}
+                  </Link>
+                )}
 
-              <h1 className="text-balance text-2xl text-foreground leading-tight">
-                {product.namePl}
-              </h1>
+                <h1 className="text-balance text-2xl text-foreground leading-tight">
+                  {product.namePl}
+                </h1>
+
+                {reviews.count > 0 && reviews.average && (
+                  <a
+                    href="#opinie"
+                    className="inline-flex min-h-6 items-center gap-2 text-sm text-muted-foreground underline-offset-4 hover:text-foreground hover:underline"
+                  >
+                    <Stars rating={reviews.average} />
+                    <span>
+                      <span className="tabular-nums">
+                        {reviews.average.toFixed(1).replace(".", ",")}
+                      </span>{" "}
+                      · {reviews.count} {pluralize(reviews.count)}
+                    </span>
+                  </a>
+                )}
+              </div>
 
               {product.shortDescPl && (
                 <p className="text-muted-foreground">{product.shortDescPl}</p>
@@ -263,11 +299,65 @@ export default async function ProduktPage({ params }: Props) {
                 </div>
               </div>
 
+              {keyRows.length > 0 && (
+                <section
+                  aria-labelledby="kluczowe-skladniki"
+                  className="rounded-xl bg-secondary/50 px-4 py-3.5"
+                >
+                  <div className="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-0.5">
+                    <h2 id="kluczowe-skladniki" className="text-sm font-semibold text-foreground">
+                      Kluczowe składniki
+                    </h2>
+                    {product.servingSize && (
+                      <p className="text-xs text-muted-foreground">Porcja: {product.servingSize}</p>
+                    )}
+                  </div>
+                  <table className="mt-2 w-full text-sm tabular-nums">
+                    <thead className="sr-only">
+                      <tr>
+                        <th scope="col">Składnik</th>
+                        <th scope="col">Dawka na porcję</th>
+                        {keyRowsHaveRws && <th scope="col">%RWS</th>}
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {keyRows.map((row) => (
+                        <tr key={row.name}>
+                          <th
+                            scope="row"
+                            className="py-1 pr-3 text-left font-normal text-foreground"
+                          >
+                            {row.name}
+                          </th>
+                          <td className="whitespace-nowrap py-1 text-right font-medium text-foreground">
+                            {row.amount}
+                          </td>
+                          {keyRowsHaveRws && (
+                            <td className="w-16 whitespace-nowrap py-1 text-right text-muted-foreground">
+                              {row.rws ?? "—"}
+                            </td>
+                          )}
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                  <div className="mt-2 flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1 text-xs text-muted-foreground">
+                    {keyRowsHaveRws ? <p>%RWS – referencyjna wartość spożycia</p> : <span />}
+                    <a
+                      href="#sklad"
+                      className="font-medium text-primary underline-offset-4 hover:underline"
+                    >
+                      Pełny skład
+                    </a>
+                  </div>
+                </section>
+              )}
+
               {product.netWeight && (
-                <dl className="grid grid-cols-2 gap-2 text-sm">
+                <dl className="grid grid-cols-[auto_minmax(0,1fr)] gap-x-6 gap-y-2 text-sm">
                   <dt className="text-muted-foreground">Masa netto</dt>
                   <dd className="font-medium">{product.netWeight}</dd>
-                  {product.servingSize && (
+                  {product.servingSize && keyRows.length === 0 && (
                     <>
                       <dt className="text-muted-foreground">Porcja</dt>
                       <dd className="font-medium">{product.servingSize}</dd>
@@ -305,143 +395,185 @@ export default async function ProduktPage({ params }: Props) {
           </div>
         </VariantSelectionProvider>
 
-        <div className="mt-12 space-y-8">
-          {product.descriptionPl && (
-            <section>
-              <h2 className="text-lg font-semibold text-foreground">Opis</h2>
-              <div
-                className="prose prose-sm mt-3 max-w-none text-muted-foreground prose-headings:font-semibold prose-headings:text-foreground prose-strong:text-foreground prose-ul:my-3 prose-li:my-1 prose-li:marker:text-primary"
-                dangerouslySetInnerHTML={{ __html: sanitizeRichText(product.descriptionPl) }}
-              />
-            </section>
+        <div
+          className={`mt-12 ${showSectionNav ? "lg:grid lg:grid-cols-[10rem_minmax(0,1fr)] lg:gap-12" : ""}`}
+        >
+          {showSectionNav && (
+            <nav
+              aria-label="Sekcje produktu"
+              className="mb-8 lg:sticky lg:top-44 lg:mb-0 lg:self-start"
+            >
+              <ul className="-mx-4 flex gap-2 overflow-x-auto px-4 pb-1 [scrollbar-width:none] sm:mx-0 sm:px-0 lg:-mx-3 lg:flex-col lg:gap-0.5 lg:overflow-visible lg:pb-0 [&::-webkit-scrollbar]:hidden">
+                {sectionNav.map((s) => (
+                  <li key={s.id} className="shrink-0">
+                    <a
+                      href={`#${s.id}`}
+                      className="flex h-10 items-center rounded-full bg-secondary px-4 text-sm font-medium text-secondary-foreground transition-colors duration-200 hover:bg-primary hover:text-primary-foreground motion-reduce:transition-none lg:h-9 lg:rounded-lg lg:bg-transparent lg:px-3 lg:text-muted-foreground lg:hover:bg-muted lg:hover:text-foreground"
+                    >
+                      {s.label}
+                    </a>
+                  </li>
+                ))}
+              </ul>
+            </nav>
           )}
 
-          {product.usageInstructionsPl && (
-            <section>
-              <h2 className="text-lg font-semibold text-foreground">Sposób użycia</h2>
-              <p className="mt-3 text-sm text-muted-foreground">{product.usageInstructionsPl}</p>
-            </section>
-          )}
+          <div className="max-w-3xl space-y-10">
+            {product.descriptionPl && (
+              <section id="opis" className="scroll-mt-28 lg:scroll-mt-44">
+                <h2 className="text-lg font-semibold text-foreground">Opis</h2>
+                <div
+                  className="prose prose-sm mt-3 max-w-none text-muted-foreground prose-headings:font-semibold prose-headings:text-foreground prose-strong:text-foreground prose-ul:my-3 prose-li:my-1 prose-li:marker:text-primary"
+                  dangerouslySetInnerHTML={{ __html: sanitizeRichText(product.descriptionPl) }}
+                />
+              </section>
+            )}
 
-          {(ingredients?.pl || nutritionFacts.length > 0 || nutritionText || hasAllergenInfo) && (
-            <section>
-              <h2 className="text-lg font-semibold text-foreground">Skład</h2>
-              {ingredients?.pl && (
-                <p className="mt-3 text-sm text-muted-foreground">{ingredients.pl}</p>
-              )}
+            {hasComposition && (
+              <section id="sklad" className="scroll-mt-28 lg:scroll-mt-44">
+                <h2 className="text-lg font-semibold text-foreground">Skład</h2>
+                {ingredients?.pl && (
+                  <p className="mt-3 text-sm text-muted-foreground">{ingredients.pl}</p>
+                )}
 
-              {nutritionText && !foodLabel && (
-                <p className="mt-4 whitespace-pre-line text-sm text-muted-foreground">
-                  {nutritionText}
-                </p>
-              )}
+                {nutritionText && !foodLabel && (
+                  <p className="mt-4 whitespace-pre-line text-sm text-muted-foreground">
+                    {nutritionText}
+                  </p>
+                )}
 
-              {tableRows.length > 0 && (
-                <div className="mt-4 overflow-x-auto">
-                  <table className="w-full text-left text-sm">
-                    <thead>
-                      <tr className="border-b border-border text-xs text-muted-foreground">
-                        <th className="py-2 font-medium">
-                          {foodLabel ? "Wartość odżywcza" : "Składnik"}
-                        </th>
-                        <th className="py-2 font-medium">
-                          {foodLabel ? `W ${foodLabel.basis}` : "Dawka na porcję"}
-                        </th>
-                        {showRws && <th className="py-2 font-medium">%RWS</th>}
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {tableRows.map((row) => (
-                        <tr key={row.name} className="border-b border-border/60 last:border-0">
-                          <td
-                            className={`py-2 ${/^w tym/i.test(row.name) ? "pl-4 text-muted-foreground" : "text-foreground"}`}
-                          >
-                            {(() => {
-                              const slug = findIngredientSlug(row.name, ingredientIndex);
-                              return slug ? (
-                                <Link
-                                  href={`/skladniki/${slug}`}
-                                  className="underline decoration-border underline-offset-2 hover:text-primary hover:decoration-primary"
-                                >
-                                  {row.name}
-                                </Link>
-                              ) : (
-                                row.name
-                              );
-                            })()}
-                          </td>
-                          <td className="py-2 text-muted-foreground">{row.amount}</td>
+                {tableRows.length > 0 && (
+                  <div className="mt-4 max-w-160 overflow-x-auto">
+                    <table className="w-full text-left text-sm tabular-nums">
+                      <thead>
+                        <tr className="border-b border-border text-xs text-muted-foreground">
+                          <th scope="col" className="py-2 pr-4 font-medium">
+                            {foodLabel ? "Wartość odżywcza" : "Składnik"}
+                          </th>
+                          <th scope="col" className="py-2 pl-4 text-right font-medium">
+                            {foodLabel ? `W ${foodLabel.basis}` : "Dawka na porcję"}
+                          </th>
                           {showRws && (
-                            <td className="py-2 text-muted-foreground">{row.rws ?? "—"}</td>
+                            <th scope="col" className="w-20 py-2 pl-4 text-right font-medium">
+                              %
+                              <abbr title="Referencyjna wartość spożycia" className="no-underline">
+                                RWS
+                              </abbr>
+                              {tableHasRws && <span aria-hidden>*</span>}
+                            </th>
                           )}
                         </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                  {foodLabel?.notes.map((note) => (
-                    <p key={note} className="mt-2 text-xs text-muted-foreground">
-                      {note}
-                    </p>
-                  ))}
-                </div>
-              )}
+                      </thead>
+                      <tbody>
+                        {tableRows.map((row) => (
+                          <tr key={row.name} className="border-b border-border/60 last:border-0">
+                            <th
+                              scope="row"
+                              className={`py-2 pr-4 font-normal ${/^w tym/i.test(row.name) ? "pl-4 text-muted-foreground" : "text-foreground"}`}
+                            >
+                              {(() => {
+                                const slug = findIngredientSlug(row.name, ingredientIndex);
+                                return slug ? (
+                                  <Link
+                                    href={`/skladniki/${slug}`}
+                                    className="underline decoration-border underline-offset-2 hover:text-primary hover:decoration-primary"
+                                  >
+                                    {row.name}
+                                  </Link>
+                                ) : (
+                                  row.name
+                                );
+                              })()}
+                            </th>
+                            <td className="whitespace-nowrap py-2 pl-4 text-right text-foreground">
+                              {row.amount}
+                            </td>
+                            {showRws && (
+                              <td className="whitespace-nowrap py-2 pl-4 text-right text-muted-foreground">
+                                {row.rws ?? "—"}
+                              </td>
+                            )}
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                    {tableHasRws && (
+                      <p className="mt-2 text-xs text-muted-foreground">
+                        * %RWS – procent referencyjnej wartości spożycia
+                      </p>
+                    )}
+                    {foodLabel?.notes.map((note) => (
+                      <p key={note} className="mt-2 text-xs text-muted-foreground">
+                        {note}
+                      </p>
+                    ))}
+                  </div>
+                )}
 
-              {hasAllergenInfo && (
-                <div className="mt-4 space-y-1 text-sm text-muted-foreground">
-                  {allergenInfo?.contains && allergenInfo.contains.length > 0 && (
-                    <p>
-                      <span className="font-medium text-foreground">Zawiera:</span>{" "}
-                      {allergenInfo.contains.join(", ")}
-                    </p>
-                  )}
-                  {allergenInfo?.mayContain && allergenInfo.mayContain.length > 0 && (
-                    <p>
-                      <span className="font-medium text-foreground">
-                        Może zawierać śladowe ilości:
-                      </span>{" "}
-                      {allergenInfo.mayContain.join(", ")}
-                    </p>
-                  )}
-                </div>
-              )}
-            </section>
-          )}
+                {hasAllergenInfo && (
+                  <div className="mt-4 space-y-1 text-sm text-muted-foreground">
+                    {allergenInfo?.contains && allergenInfo.contains.length > 0 && (
+                      <p>
+                        <span className="font-medium text-foreground">Zawiera:</span>{" "}
+                        {allergenInfo.contains.join(", ")}
+                      </p>
+                    )}
+                    {allergenInfo?.mayContain && allergenInfo.mayContain.length > 0 && (
+                      <p>
+                        <span className="font-medium text-foreground">
+                          Może zawierać śladowe ilości:
+                        </span>{" "}
+                        {allergenInfo.mayContain.join(", ")}
+                      </p>
+                    )}
+                  </div>
+                )}
+              </section>
+            )}
 
-          {product.storageInfo && (
-            <section>
-              <h2 className="text-lg font-semibold text-foreground">Przechowywanie</h2>
-              <p className="mt-3 text-sm text-muted-foreground">{product.storageInfo}</p>
-            </section>
-          )}
+            {product.usageInstructionsPl && (
+              <section id="sposob-uzycia" className="scroll-mt-28 lg:scroll-mt-44">
+                <h2 className="text-lg font-semibold text-foreground">Sposób użycia</h2>
+                <p className="mt-3 text-sm text-muted-foreground">{product.usageInstructionsPl}</p>
+              </section>
+            )}
 
-          {((healthWarnings && healthWarnings.length > 0) || product.contraindicationsPl) && (
-            <section className="rounded-2xl bg-secondary/60 p-5">
-              <h2 className="text-sm font-semibold text-foreground">Ważne informacje</h2>
-              {healthWarnings && healthWarnings.length > 0 && (
-                <ul className="mt-2 space-y-1">
-                  {healthWarnings.map((warning) => (
-                    <li key={warning} className="text-xs text-muted-foreground">
-                      {warning}
-                    </li>
-                  ))}
-                </ul>
-              )}
-              {product.contraindicationsPl && (
-                <p className="mt-3 text-xs text-muted-foreground">
-                  <span className="font-medium text-foreground">Przeciwwskazania:</span>{" "}
-                  {product.contraindicationsPl}
-                </p>
-              )}
-            </section>
-          )}
+            {product.storageInfo && (
+              <section>
+                <h2 className="text-lg font-semibold text-foreground">Przechowywanie</h2>
+                <p className="mt-3 text-sm text-muted-foreground">{product.storageInfo}</p>
+              </section>
+            )}
 
-          {product.responsibleEntity && (
-            <p className="text-xs text-muted-foreground">
-              Podmiot odpowiedzialny: {product.responsibleEntity}
-            </p>
-          )}
+            {((healthWarnings && healthWarnings.length > 0) || product.contraindicationsPl) && (
+              <section className="rounded-2xl bg-secondary/60 p-5">
+                <h2 className="text-sm font-semibold text-foreground">Ważne informacje</h2>
+                {healthWarnings && healthWarnings.length > 0 && (
+                  <ul className="mt-2 space-y-1">
+                    {healthWarnings.map((warning) => (
+                      <li key={warning} className="text-xs text-muted-foreground">
+                        {warning}
+                      </li>
+                    ))}
+                  </ul>
+                )}
+                {product.contraindicationsPl && (
+                  <p className="mt-3 text-xs text-muted-foreground">
+                    <span className="font-medium text-foreground">Przeciwwskazania:</span>{" "}
+                    {product.contraindicationsPl}
+                  </p>
+                )}
+              </section>
+            )}
 
-          <ProductReviews {...reviews} />
+            {product.responsibleEntity && (
+              <p className="text-xs text-muted-foreground">
+                Podmiot odpowiedzialny: {product.responsibleEntity}
+              </p>
+            )}
+
+            <ProductReviews {...reviews} />
+          </div>
         </div>
 
         {related.length > 0 && (
