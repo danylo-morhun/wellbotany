@@ -8,18 +8,9 @@ export function NewsletterSection() {
     <section
       id="newsletter"
       aria-labelledby="newsletter-h"
-      className="relative overflow-hidden rounded-3xl bg-band px-6 py-12 text-center text-band-foreground md:py-14"
+      className="rounded-3xl bg-band px-6 py-10 text-center text-band-foreground md:py-12"
     >
-      <div
-        className="pointer-events-none absolute -left-12 -top-12 size-48 rounded-full bg-band-foreground/5 animate-float-soft motion-reduce:animate-none"
-        aria-hidden="true"
-      />
-      <div
-        className="pointer-events-none absolute -bottom-16 -right-10 size-56 rounded-full bg-band-foreground/5 animate-float-soft motion-reduce:animate-none"
-        style={{ animationDelay: "1.5s" }}
-        aria-hidden="true"
-      />
-      <div className="relative">
+      <div>
         <h2 id="newsletter-h" className={`mb-2 ${sectionTitleClass}`}>
           -{WELCOME_DISCOUNT_PERCENT}% na pierwsze zakupy za zapis
         </h2>
