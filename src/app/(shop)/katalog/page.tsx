@@ -6,7 +6,6 @@ import { CategoryProductResults } from "@/features/catalog/components/CategoryPr
 import { FilterDrawerButtonData } from "@/features/catalog/components/FilterDrawerButtonData";
 import { FilterSidebarData } from "@/features/catalog/components/FilterSidebarData";
 import { ProductGridSkeleton } from "@/features/catalog/components/ProductGridSkeleton";
-import { SearchInput } from "@/features/catalog/components/SearchInput";
 import { buildListingSeo } from "@/lib/seo";
 import { getBrands, getCategories, getTags } from "../../../features/catalog/actions";
 
@@ -50,9 +49,6 @@ export default async function KatalogPage({ searchParams }: Props) {
         <div className="min-w-0 flex-1 space-y-6">
           <div className="lg:hidden">
             <div className="mb-3 space-y-3">
-              <Suspense>
-                <SearchInput />
-              </Suspense>
               <Suspense>
                 <FilterDrawerButtonData searchParams={searchParams} basePath="/katalog" />
               </Suspense>
