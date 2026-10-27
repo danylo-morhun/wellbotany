@@ -1,6 +1,6 @@
 "use client";
 
-import { Gift } from "lucide-react";
+import { Check, Gift } from "lucide-react";
 import { useAction } from "next-safe-action/hooks";
 import { useState } from "react";
 import { toast } from "sonner";
@@ -38,8 +38,12 @@ export function AddCuratedGiftSetButton({ giftSetId, disabled = false }: Props) 
       onClick={() => execute({ giftSetId })}
       className="flex w-full items-center justify-center gap-2 rounded-full bg-primary px-6 py-3.5 text-sm font-semibold text-primary-foreground transition-[transform,background-color] duration-[160ms] ease-[cubic-bezier(0.23,1,0.32,1)] hover:bg-primary-deep active:scale-[0.97] disabled:cursor-not-allowed disabled:opacity-50 motion-reduce:transition-none motion-reduce:active:scale-100"
     >
-      <Gift className="size-4" strokeWidth={1.75} />
-      {isExecuting ? "Dodawanie…" : succeeded ? "✓ Dodano" : "Dodaj zestaw do koszyka"}
+      {succeeded ? (
+        <Check className="size-4" strokeWidth={2} />
+      ) : (
+        <Gift className="size-4" strokeWidth={1.75} />
+      )}
+      {isExecuting ? "Dodawanie…" : succeeded ? "Dodano" : "Dodaj zestaw do koszyka"}
     </button>
   );
 }
