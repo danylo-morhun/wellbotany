@@ -142,11 +142,14 @@ export function Switch({
   onChange,
   label,
   description,
+  ariaLabel,
 }: {
   checked: boolean;
   onChange: (v: boolean) => void;
   label: string;
   description?: string;
+  /** Name for a switch without a visible label (e.g. a table cell) */
+  ariaLabel?: string;
 }) {
   return (
     <label className="flex cursor-pointer items-start justify-between gap-3 py-1">
@@ -158,6 +161,7 @@ export function Switch({
         type="button"
         role="switch"
         aria-checked={checked}
+        aria-label={ariaLabel}
         onClick={() => onChange(!checked)}
         className="relative mt-0.5 inline-flex h-5 w-9 shrink-0 items-center rounded-full bg-muted-foreground/60 transition-colors aria-checked:bg-primary focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-ring/50 motion-reduce:transition-none"
       >

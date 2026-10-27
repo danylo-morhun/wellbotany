@@ -113,6 +113,7 @@ export function ShippingRatesForm({ rows, epakaReady }: { rows: RateRow[]; epaka
                   <td className={table.td}>
                     <Switch
                       label=""
+                      ariaLabel={`Włączona: ${carrier.label}`}
                       checked={r.enabled}
                       onChange={(enabled) => update(r.method, { enabled })}
                     />
