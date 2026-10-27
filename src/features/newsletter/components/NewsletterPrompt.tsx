@@ -20,13 +20,16 @@ import {
 } from "../lib/prompt-state";
 import { NewsletterForm } from "./NewsletterForm";
 
-// Opens by itself once the visitor is browsing, not on arrival: from the 2nd
-// page view after ENGAGED_MS on the site, or on desktop exit intent. At most
-// once per session, never while the cookie banner is up or on cart/checkout/
-// account pages. Closed, it shrinks to a corner teaser and comes back after a
-// growing pause (see prompt-state); after subscribing, never again.
-const ENGAGED_MS = 10_000;
-const EXIT_INTENT_MIN_MS = 8_000;
+// Never on arrival: opens on the 2nd page view of the session (after a short
+// pause so the page paints first), or once the visitor has spent ENGAGED_MS on
+// one page and scrolled into it — whichever comes first. At most once per
+// session, never while the cookie banner is up or on cart/checkout/account
+// pages. Closed, it shrinks to a corner teaser and comes back after a growing
+// pause (see prompt-state); after subscribing, never again.
+const ENGAGED_MS = 30_000;
+const SECOND_VIEW_DELAY_MS = 3_000;
+// "Scrolled into it": half a screen down
+const ENGAGED_SCROLL_SCREENS = 0.5;
 const AFTER_CONSENT_MS = 4_000;
 const HIDDEN_PATHS = ["/koszyk", "/zamowienie", "/konto", "/logowanie", "/rejestracja"];
 
@@ -94,7 +97,7 @@ export function NewsletterPrompt() {
   }, []);
 
   useEffect(() => {
-    const visit = recordVisit();
+    const visit = recordVisit(pathname);
     // Never next to an unanswered cookie banner (consent can be withdrawn later)
     setTeaser(!needsConsentPrompt() && teaserAllowed());
     if (triggered.current || !promptAllowed() || hiddenOn(pathname)) return;
@@ -116,25 +119,30 @@ export function NewsletterPrompt() {
       setOpen(true);
     };
 
-    const elapsed = Date.now() - visit.start;
-    const timer =
-      visit.views >= 2 ? window.setTimeout(show, Math.max(0, ENGAGED_MS - elapsed)) : undefined;
+    const secondView = visit.views >= 2 ? window.setTimeout(show, SECOND_VIEW_DELAY_MS) : undefined;
 
-    const onExitIntent = (e: MouseEvent) => {
-      if (
-        e.relatedTarget === null &&
-        e.clientY <= 0 &&
-        Date.now() - visit.start >= EXIT_INTENT_MIN_MS
-      ) {
-        show();
-      }
+    // First page: needs both time on the page and some scrolling
+    let engagedTime = false;
+    let scrolled = false;
+    const maybeShow = () => {
+      if (engagedTime && scrolled) show();
     };
-    const desktop = window.matchMedia("(hover: hover) and (pointer: fine)").matches;
-    if (desktop) document.addEventListener("mouseout", onExitIntent);
+    const engaged = window.setTimeout(() => {
+      engagedTime = true;
+      maybeShow();
+    }, ENGAGED_MS);
+    const onScroll = () => {
+      if (window.scrollY < window.innerHeight * ENGAGED_SCROLL_SCREENS) return;
+      scrolled = true;
+      window.removeEventListener("scroll", onScroll);
+      maybeShow();
+    };
+    window.addEventListener("scroll", onScroll, { passive: true });
 
     return () => {
-      window.clearTimeout(timer);
-      document.removeEventListener("mouseout", onExitIntent);
+      window.clearTimeout(secondView);
+      window.clearTimeout(engaged);
+      window.removeEventListener("scroll", onScroll);
       if (consentWait) window.removeEventListener(CONSENT_CHANGE_EVENT, consentWait);
     };
   }, [pathname]);
