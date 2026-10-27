@@ -52,7 +52,7 @@ export function HomeBannersAdmin({ banners }: Props) {
     <div>
       <PageHeader
         title="Strona główna"
-        description="Slajder na górze strony — zalecane 3–4 slajdy, zmiana co 5 s"
+        description="Baner główny na górze strony + do 2 mniejszych kafli obok (kolejne aktywne slajdy, bez przewijania)"
         actions={
           <Button size="lg" onClick={() => setEditing("new")}>
             + Dodaj slajd
