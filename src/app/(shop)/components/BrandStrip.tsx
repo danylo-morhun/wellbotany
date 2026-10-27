@@ -1,6 +1,8 @@
+import Image from "next/image";
 import Link from "next/link";
 import type { BrandItem } from "@/features/catalog/actions";
 import { pluralizeProducts } from "@/lib/format";
+import { cn } from "@/lib/utils";
 import { SectionHeading } from "./SectionHeading";
 
 const BRANDS_LIMIT = 12;
@@ -8,6 +10,7 @@ const MOBILE_LIMIT = 6;
 
 type Props = { brands: BrandItem[] };
 
+/** Brand wall: one white panel split by hairlines, logo (or wordmark) per cell. */
 export function BrandStrip({ brands }: Props) {
   const top = [...brands]
     .sort((a, b) => b._count.products - a._count.products)
@@ -15,32 +18,50 @@ export function BrandStrip({ brands }: Props) {
   if (top.length === 0) return null;
 
   return (
-    <section aria-labelledby="brands-h" className="space-y-5">
+    <section aria-labelledby="brands-h" className="space-y-4">
       <SectionHeading
         id="brands-h"
         title="Nasze marki"
         link={{ href: "/marki", label: "Wszystkie marki" }}
       />
-      {/* Flex-wrap + centered so an incomplete last row looks intentional;
-          phones show the top 6 only */}
-      <ul className="flex flex-wrap justify-center gap-3">
-        {top.map((b, i) => (
-          <li
-            key={b.id}
-            className={`w-[calc(50%-0.375rem)] sm:w-[calc(33.333%-0.5rem)] lg:w-[calc(16.666%-0.625rem)] ${i >= MOBILE_LIMIT ? "max-sm:hidden" : ""}`}
-          >
-            <Link
-              href={`/marki/${b.slug}`}
-              className="flex h-16 flex-col items-center justify-center rounded-xl bg-card px-3 text-center shadow-card transition-[box-shadow,transform] duration-200 ease-out hover:-translate-y-0.5 hover:shadow-card-hover motion-reduce:transition-none motion-reduce:hover:translate-y-0"
+      {/* Each cell draws its right/bottom hairline; the list overhangs the panel by 1px
+          so the outer edge lines are clipped and an incomplete last row stays white.
+          Phones show the top 6. */}
+      <div className="overflow-hidden rounded-2xl bg-card shadow-card">
+        <ul className="-mb-px -mr-px grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6">
+          {top.map((b, i) => (
+            <li
+              key={b.id}
+              className={cn(
+                "shadow-[inset_-1px_-1px_0_var(--border)]",
+                i >= MOBILE_LIMIT && "max-sm:hidden",
+              )}
             >
-              <span className="truncate text-sm font-bold text-foreground">{b.name}</span>
-              <span className="text-xs text-muted-foreground">
-                {b._count.products} {pluralizeProducts(b._count.products)}
-              </span>
-            </Link>
-          </li>
-        ))}
-      </ul>
+              <Link
+                href={`/marki/${b.slug}`}
+                className="group flex h-full min-h-20 flex-col items-center justify-center gap-1 px-3 py-4 text-center transition-colors duration-200 hover:bg-secondary/60 motion-reduce:transition-none"
+              >
+                {b.logo ? (
+                  <Image
+                    src={b.logo}
+                    alt={b.name}
+                    width={120}
+                    height={40}
+                    className="h-9 w-auto max-w-full object-contain"
+                  />
+                ) : (
+                  <span className="max-w-full truncate font-heading text-lg font-bold tracking-tight text-foreground transition-colors group-hover:text-primary">
+                    {b.name}
+                  </span>
+                )}
+                <span className="text-xs tabular-nums text-muted-foreground">
+                  {b._count.products} {pluralizeProducts(b._count.products)}
+                </span>
+              </Link>
+            </li>
+          ))}
+        </ul>
+      </div>
     </section>
   );
 }
