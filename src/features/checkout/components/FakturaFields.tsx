@@ -2,6 +2,7 @@
 
 import { FieldError, inputClass } from "@/components/ui/field";
 import { fieldA11y } from "@/lib/field-a11y";
+import { formatPostalCode } from "@/lib/postal-code";
 import type { CheckoutFormData } from "./CheckoutForm";
 
 export function validateNip(nip: string): boolean {
@@ -12,17 +13,44 @@ export function validateNip(nip: string): boolean {
   return sum % 11 === parseInt(digits[9], 10);
 }
 
+/** Field ids in visual order, so the first invalid one can take focus. */
+export const FAKTURA_FIELDS = [
+  "billCompany",
+  "billNip",
+  "billStreet",
+  "billPostalCode",
+  "billCity",
+] as const;
+export type FakturaErrors = Partial<Record<(typeof FAKTURA_FIELDS)[number], string>>;
+
+/** Same rules the server applies to the invoice fields, plus the NIP checksum. */
+export function validateFaktura(data: CheckoutFormData): FakturaErrors {
+  if (!data.wantsFaktura) return {};
+  const errors: FakturaErrors = {};
+  if (!data.billCompany.trim()) errors.billCompany = "Podaj nazwę firmy";
+  if (!data.billNip.trim()) errors.billNip = "Podaj NIP";
+  else if (!validateNip(data.billNip)) errors.billNip = "Nieprawidłowy NIP — sprawdź cyfry";
+  if (!data.billStreet.trim()) errors.billStreet = "Podaj ulicę i numer";
+  if (!data.billPostalCode.trim()) errors.billPostalCode = "Podaj kod pocztowy";
+  else if (!/^\d{2}-\d{3}$/.test(data.billPostalCode))
+    errors.billPostalCode = "Wpisz kod w formacie 00-000";
+  if (!data.billCity.trim()) errors.billCity = "Podaj miasto";
+  return errors;
+}
+
 type Props = {
   data: CheckoutFormData;
   onChange: (updates: Partial<CheckoutFormData>) => void;
-  nipError: string | null;
-  /** Called while the NIP is edited, so a stale checksum error disappears */
-  onNipChange: () => void;
+  errors: FakturaErrors;
 };
 
 /** "Chcę fakturę VAT" checkbox with the company fields it reveals. */
-export function FakturaFields({ data, onChange, nipError, onNipChange }: Props) {
-  const nip = fieldA11y("billNip", nipError);
+export function FakturaFields({ data, onChange, errors }: Props) {
+  const company = fieldA11y("billCompany", errors.billCompany);
+  const nip = fieldA11y("billNip", errors.billNip);
+  const street = fieldA11y("billStreet", errors.billStreet);
+  const postal = fieldA11y("billPostalCode", errors.billPostalCode);
+  const city = fieldA11y("billCity", errors.billCity);
   return (
     <>
       <div className="border-t border-border pt-4">
@@ -43,84 +71,86 @@ export function FakturaFields({ data, onChange, nipError, onNipChange }: Props) 
 
           <div>
             <label className="mb-1 block text-sm font-medium" htmlFor="billCompany">
-              Nazwa firmy
+              Nazwa firmy *
             </label>
             <input
-              id="billCompany"
+              {...company.inputProps}
               type="text"
               autoComplete="billing organization"
-              required
+              aria-required
               value={data.billCompany}
               onChange={(e) => onChange({ billCompany: e.target.value })}
               className={inputClass}
             />
+            <FieldError id={company.errorId} message={errors.billCompany} />
           </div>
 
           <div>
             <label className="mb-1 block text-sm font-medium" htmlFor="billNip">
-              NIP (10 cyfr)
+              NIP (10 cyfr) *
             </label>
             <input
               {...nip.inputProps}
               type="text"
-              required
+              aria-required
               maxLength={10}
               inputMode="numeric"
               value={data.billNip}
-              onChange={(e) => {
-                onChange({ billNip: e.target.value.replace(/\D/g, "") });
-                onNipChange();
-              }}
+              onChange={(e) => onChange({ billNip: e.target.value.replace(/\D/g, "") })}
               className={inputClass}
             />
-            <FieldError id={nip.errorId} message={nipError} />
+            <FieldError id={nip.errorId} message={errors.billNip} />
           </div>
 
           <div>
             <label className="mb-1 block text-sm font-medium" htmlFor="billStreet">
-              Ulica i numer
+              Ulica i numer *
             </label>
             <input
-              id="billStreet"
+              {...street.inputProps}
               type="text"
               autoComplete="billing address-line1"
-              required
+              aria-required
               value={data.billStreet}
               onChange={(e) => onChange({ billStreet: e.target.value })}
               className={inputClass}
             />
+            <FieldError id={street.errorId} message={errors.billStreet} />
           </div>
 
           <div className="grid gap-4 sm:grid-cols-2">
             <div>
               <label className="mb-1 block text-sm font-medium" htmlFor="billPostalCode">
-                Kod pocztowy
+                Kod pocztowy *
               </label>
               <input
-                id="billPostalCode"
+                {...postal.inputProps}
                 type="text"
+                inputMode="numeric"
                 autoComplete="billing postal-code"
-                required
+                aria-required
                 placeholder="00-000"
-                pattern="\d{2}-\d{3}"
+                maxLength={6}
                 value={data.billPostalCode}
-                onChange={(e) => onChange({ billPostalCode: e.target.value })}
+                onChange={(e) => onChange({ billPostalCode: formatPostalCode(e.target.value) })}
                 className={inputClass}
               />
+              <FieldError id={postal.errorId} message={errors.billPostalCode} />
             </div>
             <div>
               <label className="mb-1 block text-sm font-medium" htmlFor="billCity">
-                Miasto
+                Miasto *
               </label>
               <input
-                id="billCity"
+                {...city.inputProps}
                 type="text"
                 autoComplete="billing address-level2"
-                required
+                aria-required
                 value={data.billCity}
                 onChange={(e) => onChange({ billCity: e.target.value })}
                 className={inputClass}
               />
+              <FieldError id={city.errorId} message={errors.billCity} />
             </div>
           </div>
         </div>

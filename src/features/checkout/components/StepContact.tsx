@@ -8,13 +8,31 @@ import { PrivacyNote } from "@/components/PrivacyNote";
 import { FieldError, inputClass } from "@/components/ui/field";
 import { fieldA11y } from "@/lib/field-a11y";
 import type { CheckoutFormData } from "./CheckoutForm";
-import { FakturaFields, validateNip } from "./FakturaFields";
+import {
+  FAKTURA_FIELDS,
+  type FakturaErrors,
+  FakturaFields,
+  validateFaktura,
+} from "./FakturaFields";
 
+// Empty, too short and wrong format each get their own message
 const schema = z.object({
-  firstName: z.string().min(2, "Min. 2 znaki"),
-  lastName: z.string().min(2, "Min. 2 znaki"),
-  email: z.string().email("Nieprawidłowy adres e-mail"),
-  phone: z.string().regex(/^[+\d\s-]{9,15}$/, "Nieprawidłowy numer telefonu"),
+  firstName: z.string().trim().min(1, "Podaj imię").min(2, "Imię musi mieć co najmniej 2 znaki"),
+  lastName: z
+    .string()
+    .trim()
+    .min(1, "Podaj nazwisko")
+    .min(2, "Nazwisko musi mieć co najmniej 2 znaki"),
+  email: z
+    .string()
+    .trim()
+    .min(1, "Podaj adres e-mail")
+    .email("Wpisz adres e-mail w formacie nazwa@domena.pl"),
+  phone: z
+    .string()
+    .trim()
+    .min(1, "Podaj numer telefonu")
+    .regex(/^[+\d\s-]{9,15}$/, "Wpisz numer telefonu, np. 600 123 456"),
 });
 
 type FormValues = z.infer<typeof schema>;
@@ -27,7 +45,10 @@ type Props = {
 };
 
 export function StepContact({ headingRef, data, onChange, onNext }: Props) {
-  const [nipError, setNipError] = useState<string | null>(null);
+  // Invoice fields live in the parent state, outside react-hook-form; checked
+  // on submit, then live while the shopper corrects them
+  const [fakturaChecked, setFakturaChecked] = useState(false);
+  const fakturaErrors: FakturaErrors = fakturaChecked ? validateFaktura(data) : {};
   const {
     register,
     handleSubmit,
@@ -35,7 +56,8 @@ export function StepContact({ headingRef, data, onChange, onNext }: Props) {
     formState: { errors },
   } = useForm<FormValues>({
     resolver: zodResolver(schema),
-    mode: "onBlur",
+    mode: "onSubmit",
+    reValidateMode: "onChange",
     defaultValues: {
       firstName: data.firstName,
       lastName: data.lastName,
@@ -50,11 +72,15 @@ export function StepContact({ headingRef, data, onChange, onNext }: Props) {
     return () => subscription.unsubscribe();
   }, [watch, onChange]);
 
-  const onSubmit = (values: FormValues) => {
-    // Faktura fields are controlled by the parent, outside react-hook-form
-    if (data.wantsFaktura && !validateNip(data.billNip)) {
-      setNipError("Nieprawidłowy NIP");
-      document.getElementById("billNip")?.focus();
+  const firstFakturaError = () => {
+    const errors = validateFaktura(data);
+    return FAKTURA_FIELDS.find((f) => errors[f]);
+  };
+
+  const onValid = (values: FormValues) => {
+    const invalid = firstFakturaError();
+    if (invalid) {
+      document.getElementById(invalid)?.focus();
       return;
     }
     onChange(values);
@@ -62,7 +88,15 @@ export function StepContact({ headingRef, data, onChange, onNext }: Props) {
   };
 
   return (
-    <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+    <form
+      noValidate
+      onSubmit={(e) => {
+        setFakturaChecked(true);
+        // react-hook-form focuses its own first invalid field; invoice errors show alongside
+        void handleSubmit(onValid)(e);
+      }}
+      className="space-y-4"
+    >
       <h2 ref={headingRef} tabIndex={-1} className="text-lg font-semibold focus:outline-none">
         Dane kontaktowe
       </h2>
@@ -74,6 +108,7 @@ export function StepContact({ headingRef, data, onChange, onNext }: Props) {
           </label>
           <input
             {...register("firstName")}
+            aria-required
             {...fieldA11y("co-firstName", errors.firstName?.message).inputProps}
             autoComplete="given-name"
             className={inputClass}
@@ -86,6 +121,7 @@ export function StepContact({ headingRef, data, onChange, onNext }: Props) {
           </label>
           <input
             {...register("lastName")}
+            aria-required
             {...fieldA11y("co-lastName", errors.lastName?.message).inputProps}
             autoComplete="family-name"
             className={inputClass}
@@ -100,6 +136,7 @@ export function StepContact({ headingRef, data, onChange, onNext }: Props) {
         </label>
         <input
           {...register("email")}
+          aria-required
           {...fieldA11y("co-email", errors.email?.message).inputProps}
           type="email"
           autoComplete="email"
@@ -114,6 +151,7 @@ export function StepContact({ headingRef, data, onChange, onNext }: Props) {
         </label>
         <input
           {...register("phone")}
+          aria-required
           {...fieldA11y("co-phone", errors.phone?.message).inputProps}
           type="tel"
           autoComplete="tel"
@@ -122,12 +160,7 @@ export function StepContact({ headingRef, data, onChange, onNext }: Props) {
         <FieldError id="co-phone-error" message={errors.phone?.message} />
       </div>
 
-      <FakturaFields
-        data={data}
-        onChange={onChange}
-        nipError={nipError}
-        onNipChange={() => setNipError(null)}
-      />
+      <FakturaFields data={data} onChange={onChange} errors={fakturaErrors} />
 
       <PrivacyNote purpose="Dane przetwarzamy, aby zrealizować zamówienie, dostarczyć je i wystawić dowód zakupu." />
 

@@ -2,8 +2,9 @@
 
 import { Store } from "lucide-react";
 import Image from "next/image";
-import { Fragment, type RefObject } from "react";
-import { inputClass } from "@/components/ui/field";
+import { Fragment, type RefObject, useState } from "react";
+import { FieldError, inputClass } from "@/components/ui/field";
+import { fieldA11y } from "@/lib/field-a11y";
 import { formatPrice } from "@/lib/format";
 import { PICKUP_HOLD_DAYS, PICKUP_LOCATION_KEYS, PICKUP_LOCATIONS } from "@/lib/pickup-locations";
 import { formatPostalCode } from "@/lib/postal-code";
@@ -18,10 +19,44 @@ import {
 import type { CheckoutFormData } from "./CheckoutForm";
 import { PointPicker } from "./PointPicker";
 
+/** Field ids in visual order, so the first invalid one can take focus. */
+const SHIPPING_FIELDS = [
+  "co-pickupLocation",
+  "co-street",
+  "co-postalCode",
+  "co-city",
+  "co-pointCode",
+] as const;
+type ShippingErrors = Partial<Record<(typeof SHIPPING_FIELDS)[number], string>>;
+
+/** Mirrors the server's per-method requirements (checkoutSchema) with the same format rules. */
+function validateShipping(data: CheckoutFormData, pointName: string | null): ShippingErrors {
+  const errors: ShippingErrors = {};
+  if (data.shippingMethod === "PICKUP" && !data.pickupLocation) {
+    errors["co-pickupLocation"] = "Wybierz punkt odbioru";
+  }
+  if (requiresAddress(data.shippingMethod)) {
+    const street = data.street.trim();
+    if (!street) errors["co-street"] = "Podaj ulicę i numer domu";
+    else if (street.length < 3) errors["co-street"] = "Wpisz pełną ulicę i numer, min. 3 znaki";
+    if (!data.postalCode.trim()) errors["co-postalCode"] = "Podaj kod pocztowy";
+    else if (!/^\d{2}-\d{3}$/.test(data.postalCode))
+      errors["co-postalCode"] = "Wpisz kod w formacie 00-000";
+    const city = data.city.trim();
+    if (!city) errors["co-city"] = "Podaj miasto";
+    else if (city.length < 2) errors["co-city"] = "Nazwa miasta musi mieć co najmniej 2 znaki";
+  }
+  if (pointName && !data.inpostMachineId.trim()) {
+    errors["co-pointCode"] = `Wybierz ${pointName} na mapie lub wpisz jego kod`;
+  }
+  return errors;
+}
+
 type Props = {
   headingRef: RefObject<HTMLHeadingElement | null>;
   data: CheckoutFormData;
-  subtotal: number;
+  /** Subtotal after discounts — what the free-delivery threshold is checked against */
+  productsPln: number;
   freeShippingThresholdPln: number | null;
   shippingRates: ShippingRate[];
   onChange: (updates: Partial<CheckoutFormData>) => void;
@@ -32,7 +67,7 @@ type Props = {
 export function StepShipping({
   headingRef,
   data,
-  subtotal,
+  productsPln,
   freeShippingThresholdPln,
   shippingRates,
   onChange,
@@ -42,8 +77,28 @@ export function StepShipping({
   const pointService = isPointService(data.shippingMethod) ? data.shippingMethod : null;
   const pointMethod = pointService && CARRIERS[pointService].point;
 
+  // Errors appear on the first "Dalej", then follow the data as it's corrected
+  const [checked, setChecked] = useState(false);
+  const errors: ShippingErrors = checked ? validateShipping(data, pointMethod?.name ?? null) : {};
+  const pickup = fieldA11y("co-pickupLocation", errors["co-pickupLocation"]);
+  const street = fieldA11y("co-street", errors["co-street"]);
+  const postal = fieldA11y("co-postalCode", errors["co-postalCode"]);
+  const city = fieldA11y("co-city", errors["co-city"]);
+  const pointCode = fieldA11y("co-pointCode", errors["co-pointCode"]);
+
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
+    const found = validateShipping(data, pointMethod?.name ?? null);
+    const first = SHIPPING_FIELDS.find((f) => found[f]);
+    if (first) {
+      setChecked(true);
+      const el =
+        first === "co-pickupLocation"
+          ? document.querySelector<HTMLInputElement>('input[name="pickupLocation"]')
+          : document.getElementById(first);
+      el?.focus();
+      return;
+    }
     onNext();
   }
 
@@ -52,9 +107,12 @@ export function StepShipping({
   const methodDetails = (
     <>
       {data.shippingMethod === "PICKUP" && (
-        <fieldset className="space-y-3 rounded-lg border border-border bg-muted/30 p-4">
+        <fieldset
+          aria-describedby={pickup.inputProps["aria-describedby"]}
+          className="space-y-3 rounded-lg border border-border bg-muted/30 p-4"
+        >
           <legend className="sr-only">Punkt odbioru</legend>
-          <p className="text-sm font-medium">Punkt odbioru</p>
+          <p className="text-sm font-medium">Punkt odbioru *</p>
           {PICKUP_LOCATION_KEYS.map((key) => {
             const location = PICKUP_LOCATIONS[key];
             return (
@@ -70,7 +128,7 @@ export function StepShipping({
                   type="radio"
                   name="pickupLocation"
                   value={key}
-                  required
+                  aria-invalid={pickup.inputProps["aria-invalid"]}
                   checked={data.pickupLocation === key}
                   onChange={() => onChange({ pickupLocation: key })}
                   className="mt-1 accent-primary"
@@ -83,6 +141,7 @@ export function StepShipping({
               </label>
             );
           })}
+          <FieldError id={pickup.errorId} message={errors["co-pickupLocation"]} />
           <p className="text-xs text-muted-foreground">
             Damy znać e-mailem, gdy zamówienie będzie gotowe do odbioru. Czeka na Ciebie{" "}
             {PICKUP_HOLD_DAYS} dni.
@@ -98,15 +157,15 @@ export function StepShipping({
               Ulica i numer *
             </label>
             <input
-              id="co-street"
+              {...street.inputProps}
               type="text"
-              required
-              minLength={3}
+              aria-required
               autoComplete="address-line1"
               value={data.street}
               onChange={(e) => onChange({ street: e.target.value })}
               className={inputClass}
             />
+            <FieldError id={street.errorId} message={errors["co-street"]} />
           </div>
           <div>
             <label htmlFor="co-apartment" className="mb-1 block text-sm font-medium">
@@ -128,12 +187,10 @@ export function StepShipping({
                 Kod pocztowy *
               </label>
               <input
-                id="co-postalCode"
+                {...postal.inputProps}
                 type="text"
                 inputMode="numeric"
-                required
-                pattern="\d{2}-\d{3}"
-                title="Format: 00-000"
+                aria-required
                 placeholder="00-000"
                 maxLength={6}
                 autoComplete="postal-code"
@@ -141,21 +198,22 @@ export function StepShipping({
                 onChange={(e) => onChange({ postalCode: formatPostalCode(e.target.value) })}
                 className={inputClass}
               />
+              <FieldError id={postal.errorId} message={errors["co-postalCode"]} />
             </div>
             <div>
               <label htmlFor="co-city" className="mb-1 block text-sm font-medium">
                 Miasto *
               </label>
               <input
-                id="co-city"
+                {...city.inputProps}
                 type="text"
-                required
-                minLength={2}
+                aria-required
                 autoComplete="address-level2"
                 value={data.city}
                 onChange={(e) => onChange({ city: e.target.value })}
                 className={inputClass}
               />
+              <FieldError id={city.errorId} message={errors["co-city"]} />
             </div>
           </div>
         </div>
@@ -197,9 +255,10 @@ export function StepShipping({
                 Lub wpisz kod punktu ręcznie
               </label>
               <input
-                id="co-pointCode"
+                {...pointCode.inputProps}
                 type="text"
-                required
+                aria-required
+                autoComplete="off"
                 placeholder={pointMethod.placeholder}
                 value={data.inpostMachineId}
                 onChange={(e) =>
@@ -210,6 +269,7 @@ export function StepShipping({
                 }
                 className={inputClass}
               />
+              <FieldError id={pointCode.errorId} message={errors["co-pointCode"]} />
             </>
           )}
         </div>
@@ -218,7 +278,7 @@ export function StepShipping({
   );
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-6">
+    <form noValidate onSubmit={handleSubmit} className="space-y-6">
       <h2 ref={headingRef} tabIndex={-1} className="text-lg font-semibold focus:outline-none">
         Metoda dostawy
       </h2>
@@ -227,7 +287,7 @@ export function StepShipping({
         <legend className="sr-only">Metoda dostawy</legend>
         {shippingRates.map((rate) => {
           const opt = { value: rate.method, label: CARRIERS[rate.method].label };
-          const cost = shippingCostFor(rate.pricePln, subtotal, freeShippingThresholdPln);
+          const cost = shippingCostFor(rate.pricePln, productsPln, freeShippingThresholdPln);
           const regularCost = rate.pricePln;
           const logo = carrierLogo(rate.method);
           return (
@@ -245,7 +305,9 @@ export function StepShipping({
                     name="shippingMethod"
                     value={opt.value}
                     checked={data.shippingMethod === opt.value}
-                    onChange={() =>
+                    onChange={() => {
+                      // A new method has its own fields; don't greet them with errors
+                      if (opt.value !== data.shippingMethod) setChecked(false);
                       onChange({
                         shippingMethod: opt.value,
                         // A point code belongs to one carrier — don't carry it across methods
@@ -258,8 +320,8 @@ export function StepShipping({
                           data.paymentMethod === "CASH_ON_DELIVERY" && {
                             paymentMethod: "BANK_TRANSFER",
                           }),
-                      })
-                    }
+                      });
+                    }}
                     className="accent-primary"
                   />
                   {/* White plate keeps brand colours readable in dark mode */}
