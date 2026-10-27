@@ -165,8 +165,49 @@ export function shippingCostFor(
   productsPln: number,
   freeShippingThresholdPln: number | null,
 ): number {
-  if (freeShippingThresholdPln !== null && productsPln >= freeShippingThresholdPln) return 0;
-  return pricePln;
+  return qualifiesForFreeShipping(productsPln, freeShippingThresholdPln) ? 0 : pricePln;
+}
+
+/** `productsPln` is the subtotal after discounts; a null threshold means free delivery is off. */
+export function qualifiesForFreeShipping(
+  productsPln: number,
+  freeShippingThresholdPln: number | null,
+): boolean {
+  return freeShippingThresholdPln !== null && productsPln >= freeShippingThresholdPln;
+}
+
+export type OrderTotals = { productsPln: number; shippingPln: number; totalPln: number };
+
+/**
+ * Products after discount, delivery and total — the same arithmetic placeOrder
+ * charges, so every summary on the way (cart, checkout sidebar, payment step)
+ * shows the amount the order will actually cost.
+ */
+export function orderTotals(
+  subtotalPln: number,
+  discountPln: number,
+  shippingPricePln: number,
+  freeShippingThresholdPln: number | null,
+): OrderTotals {
+  const productsPln = subtotalPln - discountPln;
+  const shippingPln = shippingCostFor(shippingPricePln, productsPln, freeShippingThresholdPln);
+  return { productsPln, shippingPln, totalPln: productsPln + shippingPln };
+}
+
+/**
+ * What delivery will cost before a method is picked: free once the threshold
+ * is met, otherwise the cheapest paid method ("od X zł"); null when no paid
+ * method is enabled.
+ */
+export type DeliveryEstimate = { free: true } | { free: false; fromPln: number | null };
+
+export function deliveryEstimate(
+  productsPln: number,
+  freeShippingThresholdPln: number | null,
+  cheapestPln: number | null,
+): DeliveryEstimate {
+  if (qualifiesForFreeShipping(productsPln, freeShippingThresholdPln)) return { free: true };
+  return { free: false, fromPln: cheapestPln };
 }
 
 /** Logo path for a method; null for in-store pickup. */
