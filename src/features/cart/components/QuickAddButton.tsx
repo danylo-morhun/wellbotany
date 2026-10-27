@@ -44,7 +44,7 @@ export function QuickAddButton({ variantId, disabled = false }: Props) {
         e.preventDefault();
         execute({ variantId, quantity: 1 });
       }}
-      className="flex w-full items-center justify-center gap-1.5 rounded-full bg-secondary px-3 py-2.5 text-sm font-semibold text-secondary-foreground transition-[transform,background-color,color] duration-[160ms] ease-[cubic-bezier(0.23,1,0.32,1)] hover:bg-primary hover:text-primary-foreground active:scale-[0.97] disabled:cursor-not-allowed disabled:opacity-50 motion-reduce:transition-none motion-reduce:active:scale-100"
+      className="flex w-full items-center justify-center gap-1.5 rounded-full bg-secondary px-2 py-2.5 text-sm font-semibold text-secondary-foreground transition-[transform,background-color,color] duration-[160ms] ease-[cubic-bezier(0.23,1,0.32,1)] hover:bg-primary hover:text-primary-foreground active:scale-[0.97] disabled:cursor-not-allowed disabled:opacity-50 motion-reduce:transition-none motion-reduce:active:scale-100"
     >
       {succeeded && !isExecuting ? (
         <Check className="size-4" strokeWidth={2} aria-hidden />
