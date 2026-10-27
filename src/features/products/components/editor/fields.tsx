@@ -92,7 +92,7 @@ export function Field({
               over
                 ? "text-destructive"
                 : beyondIdeal
-                  ? "text-warning-foreground"
+                  ? "text-warning-ink"
                   : "text-muted-foreground",
             )}
           >
