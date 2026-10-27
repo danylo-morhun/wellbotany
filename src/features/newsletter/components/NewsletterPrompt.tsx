@@ -7,6 +7,7 @@ import { useEffect, useRef, useState } from "react";
 import { PrivacyNote } from "@/components/PrivacyNote";
 import { captureCouponFromUrl } from "@/features/cart/lib/saved-coupon";
 import { CONSENT_CHANGE_EVENT, needsConsentPrompt } from "@/lib/consent";
+import { cn } from "@/lib/utils";
 import { WELCOME_COUPON_VALID_DAYS, WELCOME_DISCOUNT_PERCENT } from "../lib/constants";
 import {
   hideTeaser,
@@ -31,6 +32,13 @@ const HIDDEN_PATHS = ["/koszyk", "/zamowienie", "/konto", "/logowanie", "/rejest
 
 function hiddenOn(pathname: string): boolean {
   return HIDDEN_PATHS.some((p) => pathname === p || pathname.startsWith(`${p}/`));
+}
+
+// Listing pages put the filter sidebar on the left; the teaser moves right there on desktop
+function hasLeftSidebar(pathname: string): boolean {
+  return (
+    pathname === "/katalog" || pathname.startsWith("/kategoria/") || pathname.startsWith("/marki/")
+  );
 }
 
 function teaserHiddenOn(pathname: string): boolean {
@@ -147,7 +155,12 @@ export function NewsletterPrompt() {
   return (
     <>
       {showTeaser && (
-        <div className="fixed bottom-3 left-3 z-40 flex items-center rounded-full bg-primary text-primary-foreground shadow-float animate-in fade-in slide-in-from-bottom-2 duration-300 motion-reduce:animate-none sm:bottom-6 sm:left-6 print:hidden">
+        <div
+          className={cn(
+            "fixed bottom-3 left-3 z-40 flex items-center rounded-full bg-primary text-primary-foreground shadow-float animate-in fade-in slide-in-from-bottom-2 duration-300 motion-reduce:animate-none sm:bottom-6 sm:left-6 print:hidden",
+            hasLeftSidebar(pathname) && "lg:left-auto lg:right-6",
+          )}
+        >
           <button
             type="button"
             onClick={openFromTeaser}
