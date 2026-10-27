@@ -40,7 +40,7 @@ export function RichTextEditor({ value, onChange, id, labelId }: Props) {
         "aria-multiline": "true",
         ...((labelId ?? id) ? { "aria-labelledby": labelId ?? `${id}-label` } : {}),
         // Focus ring is drawn on the wrapper (focus-within) so toolbar + body read as one control
-        class: "prose prose-sm max-w-none min-h-[140px] px-3 py-2 outline-none",
+        class: "prose prose-sm dark:prose-invert max-w-none min-h-[140px] px-3 py-2 outline-none",
       },
     },
   });
