@@ -57,8 +57,9 @@ export function paymentItem(onlineEnabled: boolean, pickupEnabled: boolean): Ite
       };
 }
 
-/** Compact buying facts right under the hero. Every line comes from live settings. */
-export async function TrustStrip() {
+/** Buying facts; every line comes from live settings. `slim` is one line:
+ * headlines only, sideways scroll on phones instead of a stacked grid. */
+export async function TrustStrip({ slim = false }: { slim?: boolean }) {
   const [{ freeShippingThresholdPln, productMetaSuffixPl }, rates] = await Promise.all([
     getShopSettings(),
     getShippingRates(),
@@ -80,6 +81,26 @@ export async function TrustStrip() {
       rates.some((r) => r.method === "PICKUP"),
     ),
   ].filter((x): x is Item => Boolean(x));
+
+  if (slim) {
+    return (
+      <section aria-label="Dostawa, zwroty i płatność">
+        <ul className="-mx-4 flex gap-6 overflow-x-auto px-4 [scrollbar-width:none] xl:mx-0 xl:justify-between xl:rounded-2xl xl:bg-secondary xl:px-6 [&::-webkit-scrollbar]:hidden">
+          {items.map(({ icon: Icon, title, href }) => (
+            <li key={title} className="shrink-0">
+              <Link
+                href={href}
+                className="group flex min-h-11 items-center gap-2 whitespace-nowrap text-sm font-medium text-foreground hover:text-primary"
+              >
+                <Icon className="size-4 shrink-0 text-primary" strokeWidth={1.75} aria-hidden />
+                {title}
+              </Link>
+            </li>
+          ))}
+        </ul>
+      </section>
+    );
+  }
 
   return (
     <section aria-label="Dostawa, zwroty i płatność">
