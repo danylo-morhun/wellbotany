@@ -28,7 +28,7 @@ export function BrandStrip({ brands }: Props) {
           so the outer edge lines are clipped and an incomplete last row stays white.
           Phones show the top 6. */}
       <div className="overflow-hidden rounded-2xl bg-card shadow-card">
-        <ul className="-mb-px -mr-px grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6">
+        <ul className="-mb-px -mr-px grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-3">
           {top.map((b, i) => (
             <li
               key={b.id}
@@ -39,7 +39,7 @@ export function BrandStrip({ brands }: Props) {
             >
               <Link
                 href={`/marki/${b.slug}`}
-                className="group flex h-full min-h-20 flex-col items-center justify-center gap-1 px-3 py-4 text-center transition-colors duration-200 hover:bg-secondary/60 motion-reduce:transition-none"
+                className="group flex h-full min-h-16 flex-col items-center justify-center gap-0.5 px-3 py-3 text-center transition-colors duration-200 hover:bg-secondary/60 motion-reduce:transition-none"
               >
                 {b.logo ? (
                   <Image
@@ -47,7 +47,7 @@ export function BrandStrip({ brands }: Props) {
                     alt={b.name}
                     width={120}
                     height={40}
-                    className="h-9 w-auto max-w-full object-contain"
+                    className="h-8 w-auto max-w-full object-contain"
                   />
                 ) : (
                   <span className="max-w-full truncate font-heading text-lg font-bold tracking-tight text-foreground transition-colors group-hover:text-primary">
