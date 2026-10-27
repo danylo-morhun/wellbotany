@@ -2,7 +2,8 @@ import Image from "next/image";
 import Link from "next/link";
 import { getCategories } from "@/features/catalog/actions";
 import { childrenOf } from "@/features/catalog/lib/nav";
-import { getCategoryIcon } from "@/lib/category-icons";
+import { categoryIconFor } from "@/lib/category-icons";
+import { pluralPl } from "@/lib/format";
 
 export const metadata = {
   title: "Kategorie",
@@ -29,7 +30,8 @@ export default async function KategoriePage() {
       ) : (
         <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
           {categories.map((cat) => {
-            const Icon = getCategoryIcon(cat.icon);
+            const Icon = categoryIconFor(cat);
+            const count = counts.get(cat.id) ?? 0;
             const children = childrenOf(allCategories, cat.id);
             return (
               <div
@@ -45,18 +47,14 @@ export default async function KategoriePage() {
                       <div className="relative size-10">
                         <Image
                           src={cat.image}
-                          alt={cat.namePl}
+                          alt=""
                           fill
                           className="object-contain"
                           sizes="40px"
                         />
                       </div>
-                    ) : Icon ? (
-                      <Icon className="size-6 text-primary" />
                     ) : (
-                      <span className="text-2xl font-bold text-primary">
-                        {cat.namePl.charAt(0)}
-                      </span>
+                      <Icon className="size-6 text-primary" aria-hidden />
                     )}
                   </div>
                   <div className="min-w-0 flex-1">
@@ -64,7 +62,7 @@ export default async function KategoriePage() {
                       {cat.namePl}
                     </h2>
                     <p className="mt-0.5 text-sm text-muted-foreground">
-                      {counts.get(cat.id) ?? 0} produktów
+                      {count} {pluralPl(count, "produkt", "produkty", "produktów")}
                     </p>
                   </div>
                   <svg
