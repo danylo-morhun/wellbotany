@@ -6,9 +6,11 @@ import { discountPercent, omnibusNote, referencePrice } from "@/lib/omnibus";
 import { formatUnitPrice, variantPackQuantity } from "@/lib/unit-price";
 import type { ProductListItem } from "../actions";
 import { resolveDisplayBrand } from "../lib/brand-tree";
+import { cardMetaLine } from "../lib/product-facts";
 
 type Props = {
-  product: ProductListItem;
+  // servingSize is optional so listings that don't select it still type-check
+  product: ProductListItem & { servingSize?: string | null };
   priority?: boolean;
   /** h3 inside a page section that already has its own h2 */
   headingLevel?: 2 | 3;
@@ -24,6 +26,7 @@ export function ProductCard({ product, priority = false, headingLevel = 2 }: Pro
   const discountPct = defaultVariant ? discountPercent(defaultVariant) : null;
   const hasDiscount = comparePrice != null && discountPct != null;
   const lowestNote = defaultVariant ? omnibusNote(defaultVariant) : null;
+  const metaLine = cardMetaLine(product);
   const unitPrice = defaultVariant
     ? formatUnitPrice(
         defaultVariant.pricePln,
@@ -101,6 +104,8 @@ export function ProductCard({ product, priority = false, headingLevel = 2 }: Pro
           <Heading className="line-clamp-2 text-sm font-semibold leading-snug text-foreground transition-colors group-hover:text-primary">
             {product.namePl}
           </Heading>
+          {/* Inside the flex-1 link so the price row stays aligned across a grid row */}
+          {metaLine && <p className="mt-1 truncate text-xs text-muted-foreground">{metaLine}</p>}
         </Link>
 
         {product.tags.length > 0 && (
