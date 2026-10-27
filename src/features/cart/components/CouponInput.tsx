@@ -58,15 +58,18 @@ export function CouponInput({ subtotal, saleSubtotal, onDiscount }: Props) {
 
   return (
     <div>
+      <label htmlFor="cart-coupon" className="mb-1.5 block text-sm font-medium">
+        Kod rabatowy
+      </label>
       <div className="flex gap-2">
         <input
+          id="cart-coupon"
           value={code}
           onChange={handleChange}
           onKeyDown={(e) => e.key === "Enter" && handleVerify()}
-          placeholder="Kod rabatowy"
-          aria-label="Kod rabatowy"
+          autoComplete="off"
           aria-describedby="cart-coupon-result"
-          className="min-w-0 flex-1 rounded-lg border border-input bg-background px-3 py-2 text-sm uppercase tracking-wider placeholder:normal-case placeholder:tracking-normal focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 transition-[border-color,box-shadow] duration-150"
+          className="min-w-0 flex-1 rounded-lg border border-input bg-background px-3 py-2 text-sm uppercase tracking-wider focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 transition-[border-color,box-shadow] duration-150"
         />
         <button
           type="button"
