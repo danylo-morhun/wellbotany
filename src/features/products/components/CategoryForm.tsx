@@ -126,7 +126,7 @@ export function CategoryForm({ categories, productCounts }: Props) {
                 href={`/admin/produkty?kategoria=${cat.id}`}
                 className={cn(
                   "shrink-0 text-xs tabular-nums hover:text-primary",
-                  count === 0 ? "text-warning-foreground" : "text-muted-foreground",
+                  count === 0 ? "text-warning-ink" : "text-muted-foreground",
                 )}
               >
                 {count} prod.

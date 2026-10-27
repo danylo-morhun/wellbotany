@@ -140,7 +140,7 @@ export function TransferReconciler({ orders }: { orders: Order[] }) {
                             <CheckCircle2 className="size-3.5" aria-hidden /> Kwota się zgadza
                           </p>
                         ) : (
-                          <p className="mt-1 flex items-center gap-1 text-xs text-warning-foreground">
+                          <p className="mt-1 flex items-center gap-1 text-xs text-warning-ink">
                             <AlertTriangle className="size-3.5" aria-hidden />
                             {m.amounts.length
                               ? `Kwota w wyciągu: ${m.amounts.map(formatPrice).join(", ")} — sprawdź`
