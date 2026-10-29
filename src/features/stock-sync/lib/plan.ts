@@ -79,21 +79,25 @@ const GUARD_MAX_ZEROED_SHARE = 0.5;
  * Refuses snapshots that look broken rather than real: a full one with no
  * matched products, or one that empties most of the shelf at once (a query
  * broken by a Subiekt update returns zeros, not an error). null = fine.
+ * inStockTotal: in-stock levels of the whole location, when `current` holds
+ * only the levels a delta touches.
  */
 export function rejectReason(
   mode: StockSnapshot["mode"],
   matched: number,
   current: Map<string, number>,
   changes: Map<string, number>,
+  inStockTotal?: number,
 ): string | null {
   if (mode === "full" && matched === 0) return "full snapshot matched no products";
-  let inStock = 0;
+  let inStockSeen = 0;
   let zeroed = 0;
   for (const [id, qty] of current) {
     if (qty <= 0) continue;
-    inStock++;
+    inStockSeen++;
     if (changes.get(id) === 0) zeroed++;
   }
+  const inStock = inStockTotal ?? inStockSeen;
   if (inStock >= GUARD_MIN_IN_STOCK && zeroed / inStock > GUARD_MAX_ZEROED_SHARE) {
     return `snapshot would zero ${zeroed} of ${inStock} in-stock variants`;
   }
