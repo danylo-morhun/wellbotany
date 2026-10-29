@@ -26,7 +26,6 @@ function isStrictCspPath(pathname: string): boolean {
 // the browser's CSP, so the img falls back to alt text.
 const IMG_SRC_HOSTS = [
   "https://res.cloudinary.com",
-  "https://dcu4fybzavbhk0mv.public.blob.vercel-storage.com",
   // one gift set image still lives on the old shop
   "https://zielarniakaliska.com.pl",
 ].join(" ");
