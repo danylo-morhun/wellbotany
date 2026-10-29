@@ -6,8 +6,8 @@ const CLOUDINARY_UPLOAD = /^(https:\/\/res\.cloudinary\.com\/[^/]+\/image\/uploa
 /**
  * next/image loader: resizes + converts (AVIF/WebP) through Cloudinary
  * instead of Vercel's optimizer (Hobby quota). Cloudinary uploads get the
- * transformation prepended; any other remote image (Vercel Blob, supplier
- * CDNs) goes through Cloudinary's fetch delivery — no re-upload needed.
+ * transformation prepended; any other remote image (supplier CDNs, the old
+ * shop) goes through Cloudinary's fetch delivery — no re-upload needed.
  * Allowed fetch domains are restricted in the Cloudinary console.
  */
 export default function cloudinaryLoader({ src, width, quality }: ImageLoaderProps): string {
