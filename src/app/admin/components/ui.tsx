@@ -1,5 +1,5 @@
 import type { OrderStatus } from "@prisma/client";
-import { ChevronLeft } from "lucide-react";
+import { ArrowDownRight, ArrowUpRight, ChevronLeft } from "lucide-react";
 import Link from "next/link";
 import { Badge } from "@/components/ui/badge";
 import { ORDER_STATUS_TONE, orderStatusLabel } from "@/features/orders/lib/status-labels";
@@ -150,4 +150,53 @@ export function relativeDate(date: Date, now = new Date()): string {
     month: "short",
     year: date.getFullYear() === now.getFullYear() ? undefined : "numeric",
   });
+}
+
+/** KPI tile — with `previous` it shows the change vs the previous period */
+export function Stat({
+  label,
+  value,
+  sub,
+  current,
+  previous,
+  tone,
+}: {
+  label: string;
+  value: string;
+  sub?: string;
+  current?: number;
+  previous?: number;
+  tone?: "negative";
+}) {
+  const delta =
+    current !== undefined && previous ? Math.round(((current - previous) / previous) * 100) : null;
+  const up = delta !== null && delta >= 0;
+  const Arrow = up ? ArrowUpRight : ArrowDownRight;
+  return (
+    <div className="rounded-2xl bg-card p-4 shadow-card">
+      <p className="text-xs font-medium text-muted-foreground">{label}</p>
+      <p
+        className={cn(
+          "mt-1 truncate text-xl font-semibold tracking-tight tabular-nums",
+          tone === "negative" && "text-destructive",
+        )}
+      >
+        {value}
+      </p>
+      {delta !== null ? (
+        <p
+          className={cn(
+            "mt-0.5 flex items-center gap-0.5 text-xs font-medium",
+            up ? "text-success" : "text-destructive",
+          )}
+        >
+          <Arrow className="size-3.5" aria-hidden />
+          {up ? "+" : ""}
+          {delta}% <span className="font-normal text-muted-foreground">vs poprz. okres</span>
+        </p>
+      ) : (
+        sub && <p className="mt-0.5 text-xs text-muted-foreground">{sub}</p>
+      )}
+    </div>
+  );
 }
