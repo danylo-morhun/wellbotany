@@ -13,6 +13,7 @@ import {
   withStockAvailability,
 } from "./lib/filters";
 import { computeSubtreeCounts } from "./lib/nav";
+import { productTag } from "./lib/product-tag";
 import { ingredientTokens, type RelatedSeed, rankRelated } from "./lib/related";
 import { rankBySearchRelevance } from "./lib/search-relevance";
 
@@ -245,97 +246,99 @@ export async function getProducts(filters: CatalogFilters) {
 
 export type ProductListItem = Awaited<ReturnType<typeof getProducts>>["items"][number];
 
-export const getProduct = unstable_cache(
-  async (slug: string) =>
-    prisma.product.findFirst({
-      where: { slug, status: "ACTIVE" },
-      select: {
-        id: true,
-        slug: true,
-        namePl: true,
-        nameEn: true,
-        shortDescPl: true,
-        descriptionPl: true,
-        benefitsPl: true,
-        isNewArrival: true,
-        isFeatured: true,
-        netWeight: true,
-        servingSize: true,
-        servingsPerContainer: true,
-        storageInfo: true,
-        countryOfOrigin: true,
-        usageInstructionsPl: true,
-        ingredients: true,
-        nutritionFacts: true,
-        allergenInfo: true,
-        healthWarnings: true,
-        contraindicationsPl: true,
-        ageRestriction: true,
-        certifications: true,
-        responsibleEntity: true,
-        metaTitlePl: true,
-        metaDescPl: true,
-        brand: {
-          select: {
-            id: true,
-            name: true,
-            slug: true,
-            description: true,
-            logo: true,
-            parentBrandId: true,
-            parentBrand: { select: { name: true, slug: true } },
+// Built per slug so the entry also carries the product's own tag (productTag)
+export const getProduct = (slug: string) =>
+  unstable_cache(
+    async () =>
+      prisma.product.findFirst({
+        where: { slug, status: "ACTIVE" },
+        select: {
+          id: true,
+          slug: true,
+          namePl: true,
+          nameEn: true,
+          shortDescPl: true,
+          descriptionPl: true,
+          benefitsPl: true,
+          isNewArrival: true,
+          isFeatured: true,
+          netWeight: true,
+          servingSize: true,
+          servingsPerContainer: true,
+          storageInfo: true,
+          countryOfOrigin: true,
+          usageInstructionsPl: true,
+          ingredients: true,
+          nutritionFacts: true,
+          allergenInfo: true,
+          healthWarnings: true,
+          contraindicationsPl: true,
+          ageRestriction: true,
+          certifications: true,
+          responsibleEntity: true,
+          metaTitlePl: true,
+          metaDescPl: true,
+          brand: {
+            select: {
+              id: true,
+              name: true,
+              slug: true,
+              description: true,
+              logo: true,
+              parentBrandId: true,
+              parentBrand: { select: { name: true, slug: true } },
+            },
           },
-        },
-        category: {
-          select: {
-            id: true,
-            namePl: true,
-            slug: true,
-            parentId: true,
-            parent: { select: { namePl: true, slug: true } },
+          category: {
+            select: {
+              id: true,
+              namePl: true,
+              slug: true,
+              parentId: true,
+              parent: { select: { namePl: true, slug: true } },
+            },
           },
-        },
-        images: {
-          select: {
-            id: true,
-            url: true,
-            altPl: true,
-            sortOrder: true,
-            isMain: true,
-            variantId: true,
+          images: {
+            select: {
+              id: true,
+              url: true,
+              altPl: true,
+              sortOrder: true,
+              isMain: true,
+              variantId: true,
+            },
+            orderBy: { sortOrder: "asc" },
           },
-          orderBy: { sortOrder: "asc" },
-        },
-        variants: {
-          where: { isActive: true },
-          select: {
-            id: true,
-            sku: true,
-            ean: true,
-            optionLabel: true,
-            optionValue: true,
-            pricePln: true,
-            comparePricePln: true,
-            lowestPrice30dPln: true,
-            stock: true,
-            trackStock: true,
-            isDefault: true,
-            weightGrams: true,
+          variants: {
+            where: { isActive: true },
+            select: {
+              id: true,
+              sku: true,
+              ean: true,
+              optionLabel: true,
+              optionValue: true,
+              pricePln: true,
+              comparePricePln: true,
+              lowestPrice30dPln: true,
+              stock: true,
+              trackStock: true,
+              isDefault: true,
+              weightGrams: true,
+            },
+            orderBy: { isDefault: "desc" },
           },
-          orderBy: { isDefault: "desc" },
-        },
-        tags: {
-          select: {
-            tag: {
-              select: { id: true, namePl: true, slug: true, iconUrl: true, type: true },
+          tags: {
+            select: {
+              tag: {
+                select: { id: true, namePl: true, slug: true, iconUrl: true, type: true },
+              },
             },
           },
         },
-      },
-    }),
-  ["product-by-slug-v2"],
-  { tags: ["products"] },
-);
+      }),
+    ["product-by-slug-v2", slug],
+    { tags: ["products", productTag(slug)] },
+  )();
 
 export type ProductDetail = NonNullable<Awaited<ReturnType<typeof getProduct>>>;
 
