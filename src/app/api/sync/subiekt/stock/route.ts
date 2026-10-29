@@ -3,6 +3,7 @@
 // is set for the location.
 import { revalidateTag } from "next/cache";
 import { after, type NextRequest, NextResponse } from "next/server";
+import { productTag } from "@/features/catalog/lib/product-tag";
 import { applySnapshot } from "@/features/stock-sync/lib/apply";
 import { authenticate } from "@/features/stock-sync/lib/signature";
 import { stockSnapshotSchema } from "@/features/stock-sync/schema";
@@ -43,10 +44,15 @@ export async function POST(req: NextRequest) {
     return NextResponse.json(result, { status: 422 });
   }
 
-  if (result.changedVariants > 0) revalidateTag("products", { expire: 0 });
   if (result.restockedOrSoldOut.length > 0) {
+    // Availability flipped: listings, filters and the home page show it too
+    revalidateTag("products", { expire: 0 });
     after(() => syncProductsToMerchant(result.restockedOrSoldOut).catch(console.error));
+  } else {
+    // Only counts moved: refresh those product pages and leave the rest of
+    // the catalog cached, so every sale doesn't re-render the shop from the DB
+    for (const slug of result.changedProductSlugs) revalidateTag(productTag(slug), { expire: 0 });
   }
-  const { restockedOrSoldOut: _, ...summary } = result;
+  const { restockedOrSoldOut: _, changedProductSlugs: __, ...summary } = result;
   return NextResponse.json(summary);
 }
