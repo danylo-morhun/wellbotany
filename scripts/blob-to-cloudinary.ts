@@ -5,11 +5,13 @@
 // Dry run by default. Covers every String column of every model with an `id`
 // (plain URL fields and HTML/text that embeds them). Json columns are not
 // scanned — check them with SQL first. With --apply, old values go to
-// blob-to-cloudinary-backup-<timestamp>.json next to the map.
+// blob-to-cloudinary-backup-<timestamp>.json next to the map, then the live
+// site's caches are expired.
 import { readFileSync, writeFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { Prisma } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
+import { refreshSite } from "./lib/refresh-site";
 
 const BLOB_HOST = "blob.vercel-storage.com";
 
@@ -81,6 +83,8 @@ if (apply) {
     await (prisma as any)[key].update({ where: { id: c.id }, data: { [c.field]: c.new } });
   }
   console.log(`rewrote ${changes.length} values`);
+  // Cached pages and the product feed still carry the old URLs until expired
+  await refreshSite({ merchant: false });
 } else {
   console.log("dry run — pass --apply to write");
 }
