@@ -320,7 +320,10 @@ test("cart-value promotion: banner, cart, order snapshot", async ({ page, browse
   try {
     await setPromo(true);
     await addToCartAndOpenCheckout(page, 4990);
+    // The promo bar lives in the store header; checkout has its own minimal one
+    await page.goto("/koszyk");
     await expect(page.getByText("E2E Week:")).toBeVisible();
+    await page.goto("/zamowienie");
     await fillContact(page, guestEmail("promo"));
     await chooseShipping(page, "PICKUP");
     await page.locator('input[name="pickupLocation"][value="KALISZ_MLYNARSKA"]').check();
