@@ -34,6 +34,10 @@ export const brandSchema = z.object({
   website: z.string().url().optional().or(z.literal("")),
   countryCode: z.string().length(2).optional().or(z.literal("")),
   parentBrandId: z.string().optional(),
+  manufacturerName: z.string().max(200).optional(),
+  manufacturerAddress: z.string().max(300).optional(),
+  manufacturerContact: z.string().max(200).optional(),
+  euResponsiblePerson: z.string().max(500).optional(),
 });
 
 export const tagSchema = z.object({
