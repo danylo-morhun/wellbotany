@@ -134,6 +134,13 @@ describe("rejectReason", () => {
     const changes = new Map([...shelf.keys()].slice(0, 5).map((id) => [id, 0]));
     expect(rejectReason("delta", 5, shelf, changes)).toBeNull();
   });
+
+  it("judges a delta against the whole shelf, not just the levels it touched", () => {
+    const touched = new Map([...shelf].slice(0, 25));
+    const changes = new Map([...touched.keys()].map((id) => [id, 0]));
+    expect(rejectReason("delta", 25, touched, changes, 40)).toMatch(/zero 25 of 40/);
+    expect(rejectReason("delta", 5, new Map([...shelf].slice(0, 5)), changes, 40)).toBeNull();
+  });
 });
 
 describe("onlineStock", () => {

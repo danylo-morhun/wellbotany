@@ -1,9 +1,11 @@
 // Web orders for the shop agent to turn into Subiekt documents (EDI++ files),
 // and the agent's report of which ones staff have since entered.
+import { revalidateTag, unstable_cache } from "next/cache";
 import { PAYMENT_LABELS } from "@/features/checkout/lib/payment";
 import { shippingLabel } from "@/features/checkout/lib/shipping";
 import { pickupLocation } from "@/lib/pickup-locations";
 import { prisma } from "@/lib/prisma";
+import { SUBIEKT_ORDERS_TAG } from "./orders-tag";
 
 // Older ones were entered by hand before the sync; anything left that long needs a human anyway
 const LOOKBACK_DAYS = 90;
@@ -84,5 +86,15 @@ export async function markEnteredInSubiekt(orderNumbers: string[]): Promise<numb
     where: { orderNumber: { in: orderNumbers }, subiektEnteredAt: null },
     data: { subiektEnteredAt: new Date() },
   });
+  if (count > 0) revalidateTag(SUBIEKT_ORDERS_TAG, { expire: 0 });
   return count;
 }
+
+// The agent polls every few minutes; serve that from Next's data cache so the
+// poll doesn't wake Postgres. Order changes revalidate the tag; 15 min is the
+// backstop for a change made somewhere that doesn't.
+export const cachedPendingSubiektOrders = unstable_cache(
+  pendingSubiektOrders,
+  ["subiekt-pending-orders"],
+  { tags: [SUBIEKT_ORDERS_TAG], revalidate: 900 },
+);
