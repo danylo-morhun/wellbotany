@@ -61,7 +61,7 @@ describe("POST /api/sync/subiekt/stock", () => {
     await post({ mode: "full", items: [] });
 
     expect(applySnapshot).toHaveBeenCalledTimes(2);
-    expect(redisSet).not.toHaveBeenCalled();
+    expect(redisSet).toHaveBeenCalledTimes(2);
   });
 
   it("refreshes only the pages of products whose stock count moved", async () => {

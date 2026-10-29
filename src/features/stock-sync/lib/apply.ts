@@ -1,4 +1,5 @@
 import type { Prisma } from "@prisma/client";
+import { unstable_cache } from "next/cache";
 import { prisma } from "@/lib/prisma";
 import type { StockSnapshot } from "../schema";
 import { diffLevels, groupByValue, matchItems, onlineStock, rejectReason } from "./plan";
@@ -24,28 +25,60 @@ export type ApplyResult =
     }
   | { ok: false; error: string };
 
+// Every variant's match keys, kept in Next's data cache so a sync that touches
+// none of our products never reaches Postgres. Product edits revalidate
+// "products"; the hour is a backstop for variants added outside the admin.
+const variantKeys = unstable_cache(
+  async () => prisma.productVariant.findMany({ select: { id: true, sku: true, ean: true } }),
+  ["stock-sync-variant-keys"],
+  { tags: ["products"], revalidate: 3600 },
+);
+
 /**
  * Stores one location's Subiekt snapshot and recomputes ProductVariant.stock
  * for the variants it touches. Rejected snapshots are logged and change nothing.
+ * A delta that matches none of our variants, or changes none of their levels,
+ * returns without writing anything.
  */
 export async function applySnapshot(code: string, snapshot: StockSnapshot): Promise<ApplyResult> {
+  const { quantities, unmatched } = matchItems(snapshot.items, await variantKeys());
+  const unchanged = {
+    ok: true as const,
+    changedLevels: 0,
+    changedVariants: 0,
+    unmatched: unmatched.length,
+    restockedOrSoldOut: [],
+    changedProductSlugs: [],
+  };
+  // Sold in the shop, but nothing we sell online
+  if (snapshot.mode === "delta" && quantities.size === 0) return unchanged;
+
   const location = await prisma.stockLocation.upsert({
     where: { code },
     create: { code, name: code },
     update: {},
   });
 
-  const variants = await prisma.productVariant.findMany({
-    select: { id: true, sku: true, ean: true },
-  });
-  const { quantities, unmatched } = matchItems(snapshot.items, variants);
-
-  const existing = await prisma.stockLevel.findMany({
-    where: { locationId: location.id },
-    select: { variantId: true, quantity: true },
-  });
+  // A delta only needs the levels it touches, plus how many are in stock for the guard
+  const [existing, inStock] =
+    snapshot.mode === "delta"
+      ? await Promise.all([
+          prisma.stockLevel.findMany({
+            where: { locationId: location.id, variantId: { in: [...quantities.keys()] } },
+            select: { variantId: true, quantity: true },
+          }),
+          prisma.stockLevel.count({ where: { locationId: location.id, quantity: { gt: 0 } } }),
+        ])
+      : [
+          await prisma.stockLevel.findMany({
+            where: { locationId: location.id },
+            select: { variantId: true, quantity: true },
+          }),
+          undefined,
+        ];
   const current = new Map(existing.map((l) => [l.variantId, l.quantity]));
   const changes = diffLevels(snapshot.mode, current, quantities);
+  if (snapshot.mode === "delta" && changes.size === 0) return unchanged;
 
   const run = {
     locationId: location.id,
@@ -59,7 +92,7 @@ export async function applySnapshot(code: string, snapshot: StockSnapshot): Prom
       .map(({ symbol, ean }) => ({ symbol, ean: ean ?? null })),
   };
 
-  const error = rejectReason(snapshot.mode, quantities.size, current, changes);
+  const error = rejectReason(snapshot.mode, quantities.size, current, changes, inStock);
   if (error) {
     await prisma.syncRun.create({ data: { ...run, changedLevels: 0, changedVariants: 0, error } });
     return { ok: false, error };

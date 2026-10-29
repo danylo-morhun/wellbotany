@@ -31,10 +31,9 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ ok: false, error: "invalid payload" }, { status: 400 });
   }
 
-  // An empty delta is only the agent's heartbeat: keep it out of Postgres, so
-  // the DB isn't woken (and the whole catalog isn't read) every few minutes
+  // The agent's heartbeat lives in Redis, so syncs that change nothing never wake Postgres
+  await redis?.set(`stock-sync:heartbeat:${code}`, new Date().toISOString()).catch(console.error);
   if (parsed.data.mode === "delta" && parsed.data.items.length === 0) {
-    await redis?.set(`stock-sync:heartbeat:${code}`, new Date().toISOString()).catch(console.error);
     return NextResponse.json({ ok: true, changedLevels: 0, changedVariants: 0, unmatched: 0 });
   }
 
