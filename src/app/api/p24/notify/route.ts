@@ -1,6 +1,8 @@
+import { revalidateTag } from "next/cache";
 import { type NextRequest, NextResponse } from "next/server";
 import { CRC, verifyTransaction } from "@/features/przelewy24/lib/client";
 import { p24Sign } from "@/features/przelewy24/lib/sign";
+import { SUBIEKT_ORDERS_TAG } from "@/features/stock-sync/lib/orders-tag";
 import { prisma } from "@/lib/prisma";
 import { safeCompare } from "@/lib/timing-safe-equal";
 
@@ -72,6 +74,7 @@ export async function POST(req: NextRequest) {
       status: "PAID",
     },
   });
+  revalidateTag(SUBIEKT_ORDERS_TAG, { expire: 0 });
 
   return NextResponse.json({ status: 200 });
 }
