@@ -38,4 +38,9 @@ test("admin can log in and sees the product catalog", async ({ page }) => {
   await page.goto("/admin/marze?widok=wszystkie");
   await expect(page.getByRole("heading", { name: "Marże" })).toBeVisible();
   await expect(page.getByText("Mediana marży")).toBeVisible();
+
+  await page.goto("/admin/wyniki?okres=90");
+  await expect(page.getByRole("heading", { name: "Wyniki" })).toBeVisible();
+  await expect(page.getByText("Marża na towarach")).toBeVisible();
+  await expect(page.getByRole("link", { name: "90 dni" })).toHaveAttribute("aria-current", "page");
 });
