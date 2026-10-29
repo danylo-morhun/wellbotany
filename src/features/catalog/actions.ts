@@ -248,6 +248,14 @@ export async function getProducts(filters: CatalogFilters) {
 export type ProductListItem = Awaited<ReturnType<typeof getProducts>>["items"][number];
 
 // Built per slug so the entry also carries the product's own tag (productTag)
+// Manufacturer contact for non-food product pages (GPSR art. 19)
+const GPSR_BRAND_SELECT = {
+  manufacturerName: true,
+  manufacturerAddress: true,
+  manufacturerContact: true,
+  euResponsiblePerson: true,
+} as const;
+
 export const getProduct = (slug: string) =>
   unstable_cache(
     async () =>
@@ -287,7 +295,8 @@ export const getProduct = (slug: string) =>
               description: true,
               logo: true,
               parentBrandId: true,
-              parentBrand: { select: { name: true, slug: true } },
+              ...GPSR_BRAND_SELECT,
+              parentBrand: { select: { name: true, slug: true, ...GPSR_BRAND_SELECT } },
             },
           },
           category: {
@@ -295,6 +304,7 @@ export const getProduct = (slug: string) =>
               id: true,
               namePl: true,
               slug: true,
+              group: true,
               parentId: true,
               parent: { select: { namePl: true, slug: true } },
             },
