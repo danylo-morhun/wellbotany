@@ -1,8 +1,5 @@
-import type { OrderStatus } from "@prisma/client";
 import {
   AlertTriangle,
-  ArrowDownRight,
-  ArrowUpRight,
   CheckCircle2,
   ChevronRight,
   ImageOff,
@@ -21,8 +18,17 @@ import {
   Panel,
   relativeDate,
   SHOP_TZ,
+  Stat,
 } from "@/app/admin/components/ui";
 import { RevenueChart, type RevenueDay } from "@/features/admin/components/RevenueChart";
+import { addDays, dayKey, shopMidnight } from "@/features/analytics/lib/period";
+import {
+  marginPercent,
+  NOT_SALES,
+  profitOrderSelect,
+  summarizeProfit,
+  toProfitOrder,
+} from "@/features/analytics/lib/profit";
 import { TO_PACK_STATUSES } from "@/features/orders/lib/status-labels";
 import { lowStockWhere } from "@/features/products/lib/stock";
 import { formatPrice, pluralPl } from "@/lib/format";
@@ -32,23 +38,8 @@ import { cn } from "@/lib/utils";
 
 const DAY = 86400000;
 const RANGE_DAYS = 30;
-/** Carts never submitted and cancelled/refunded orders don't count as sales */
-const NOT_SALES: OrderStatus[] = ["PENDING", "CANCELLED", "REFUNDED"];
 const STALE_TRANSFER_DAYS = 3;
 const STALE_SHIPMENT_DAYS = 10;
-
-const dayKey = (d: Date) => d.toLocaleDateString("sv-SE", { timeZone: SHOP_TZ });
-/** "2026-10-01" shifted by whole calendar days (UTC arithmetic — no DST surprises) */
-const addDays = (key: string, n: number) =>
-  new Date(Date.parse(`${key}T00:00:00Z`) + n * DAY).toISOString().slice(0, 10);
-/** The instant a shop-local calendar day starts */
-function shopMidnight(key: string): Date {
-  const utc = new Date(`${key}T00:00:00Z`);
-  const offset =
-    new Date(utc.toLocaleString("en-US", { timeZone: SHOP_TZ })).getTime() -
-    new Date(utc.toLocaleString("en-US", { timeZone: "UTC" })).getTime();
-  return new Date(utc.getTime() - offset);
-}
 
 export default async function AdminPage() {
   const now = new Date();
@@ -76,12 +67,11 @@ export default async function AdminPage() {
   ] = await Promise.all([
     prisma.order.findMany({
       where: { ...salesWhere, createdAt: { gte: rangeStart } },
-      select: { createdAt: true, totalPln: true },
+      select: { createdAt: true, ...profitOrderSelect },
     }),
-    prisma.order.aggregate({
+    prisma.order.findMany({
       where: { ...salesWhere, createdAt: { gte: prevStart, lt: rangeStart } },
-      _sum: { totalPln: true },
-      _count: { _all: true },
+      select: profitOrderSelect,
     }),
     prisma.order.count({ where: { status: { in: TO_PACK_STATUSES } } }),
     prisma.order.count({
@@ -151,11 +141,11 @@ export default async function AdminPage() {
     ...(buckets.get(key) ?? { totalPln: 0, orders: 0 }),
   }));
 
-  const revenue = sales.reduce((s, o) => s + o.totalPln, 0);
-  const orderCount = sales.length;
-  const prevRevenue = prevSales._sum.totalPln ?? 0;
-  const aov = orderCount ? Math.round(revenue / orderCount) : 0;
-  const prevAov = prevSales._count._all ? Math.round(prevRevenue / prevSales._count._all) : 0;
+  const profit = summarizeProfit(sales.map(toProfitOrder));
+  const prevProfit = summarizeProfit(prevSales.map(toProfitOrder));
+  const revenue = profit.revenuePln;
+  const orderCount = profit.orders;
+  const margin = marginPercent(profit);
   const today = days.at(-1) ?? { totalPln: 0, orders: 0 };
 
   const todos: {
@@ -239,15 +229,26 @@ export default async function AdminPage() {
               label={`Sprzedaż (${RANGE_DAYS} dni)`}
               value={formatPrice(revenue)}
               current={revenue}
-              previous={prevRevenue}
+              previous={prevProfit.revenuePln}
             />
             <Stat
               label={`Zamówienia (${RANGE_DAYS} dni)`}
               value={String(orderCount)}
               current={orderCount}
-              previous={prevSales._count._all}
+              previous={prevProfit.orders}
             />
-            <Stat label="Średni koszyk" value={formatPrice(aov)} current={aov} previous={prevAov} />
+            <Link
+              href="/admin/wyniki"
+              className="rounded-2xl transition-shadow hover:shadow-card-hover"
+            >
+              <Stat
+                label={`Marża (${RANGE_DAYS} dni)`}
+                value={formatPrice(profit.marginPln)}
+                current={profit.marginPln}
+                previous={prevProfit.marginPln}
+                sub={margin === null ? "Brak cen zakupu" : `${margin}% · szczegóły w Wynikach`}
+              />
+            </Link>
           </div>
 
           <Panel title={`Wartość zamówień — ostatnie ${RANGE_DAYS} dni`}>
@@ -365,45 +366,6 @@ export default async function AdminPage() {
           </Panel>
         </div>
       </div>
-    </div>
-  );
-}
-
-function Stat({
-  label,
-  value,
-  sub,
-  current,
-  previous,
-}: {
-  label: string;
-  value: string;
-  sub?: string;
-  current?: number;
-  previous?: number;
-}) {
-  const delta =
-    current !== undefined && previous ? Math.round(((current - previous) / previous) * 100) : null;
-  const up = delta !== null && delta >= 0;
-  const Arrow = up ? ArrowUpRight : ArrowDownRight;
-  return (
-    <div className="rounded-2xl bg-card p-4 shadow-card">
-      <p className="text-xs font-medium text-muted-foreground">{label}</p>
-      <p className="mt-1 truncate text-xl font-semibold tracking-tight tabular-nums">{value}</p>
-      {delta !== null ? (
-        <p
-          className={cn(
-            "mt-0.5 flex items-center gap-0.5 text-xs font-medium",
-            up ? "text-success" : "text-destructive",
-          )}
-        >
-          <Arrow className="size-3.5" aria-hidden />
-          {up ? "+" : ""}
-          {delta}% <span className="font-normal text-muted-foreground">vs poprz. okres</span>
-        </p>
-      ) : (
-        sub && <p className="mt-0.5 text-xs text-muted-foreground">{sub}</p>
-      )}
     </div>
   );
 }
