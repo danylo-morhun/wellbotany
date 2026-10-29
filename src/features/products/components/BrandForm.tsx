@@ -202,6 +202,10 @@ function BrandSheet({
       website: get("website") || undefined,
       countryCode: get("countryCode").toUpperCase() || undefined,
       parentBrandId: get("parentBrandId") || undefined,
+      manufacturerName: get("manufacturerName") || undefined,
+      manufacturerAddress: get("manufacturerAddress") || undefined,
+      manufacturerContact: get("manufacturerContact") || undefined,
+      euResponsiblePerson: get("euResponsiblePerson") || undefined,
     });
   }
 
@@ -295,6 +299,61 @@ function BrandSheet({
           maxLength={2000}
         />
       </Field>
+      <fieldset className="space-y-3">
+        <legend className="text-sm font-medium">Producent (GPSR)</legend>
+        <p className="text-xs text-muted-foreground">
+          Pokazywane na stronach kosmetyków i akcesoriów tej marki (rozp. 2023/988, art. 19). Linia
+          produktów bez tych danych przejmuje je z marki nadrzędnej.
+        </p>
+        <Field
+          label="Nazwa firmy"
+          htmlFor="b-mname"
+          error={errors.manufacturerName}
+          hint="Gdy inna niż nazwa marki"
+        >
+          <TextInput
+            id="b-mname"
+            name="manufacturerName"
+            defaultValue={brand?.manufacturerName ?? ""}
+            maxLength={200}
+          />
+        </Field>
+        <Field label="Adres pocztowy" htmlFor="b-maddress" error={errors.manufacturerAddress}>
+          <TextInput
+            id="b-maddress"
+            name="manufacturerAddress"
+            defaultValue={brand?.manufacturerAddress ?? ""}
+            maxLength={300}
+            placeholder="ul. Przykładowa 1, 00-001 Warszawa, Polska"
+          />
+        </Field>
+        <Field
+          label="Kontakt elektroniczny"
+          htmlFor="b-mcontact"
+          error={errors.manufacturerContact}
+          hint="E-mail lub adres strony z formularzem kontaktowym"
+        >
+          <TextInput
+            id="b-mcontact"
+            name="manufacturerContact"
+            defaultValue={brand?.manufacturerContact ?? ""}
+            maxLength={200}
+          />
+        </Field>
+        <Field
+          label="Osoba odpowiedzialna w UE"
+          htmlFor="b-eurp"
+          error={errors.euResponsiblePerson}
+          hint="Tylko dla producenta spoza UE: nazwa, adres pocztowy i elektroniczny"
+        >
+          <TextArea
+            id="b-eurp"
+            name="euResponsiblePerson"
+            defaultValue={brand?.euResponsiblePerson ?? ""}
+            maxLength={500}
+          />
+        </Field>
+      </fieldset>
       <Field label="Logo" error={errors.logo}>
         <ImageUrlInput
           value={logo}
