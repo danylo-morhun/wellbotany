@@ -12,6 +12,8 @@ process.env.UPSTASH_REDIS_REST_TOKEN = "";
 process.env.P24_SANDBOX_BYPASS = "true";
 // Never send real e-mails from tests (email helpers no-op without a key).
 process.env.RESEND_API_KEY = "";
+// Never push test products to the real Google Merchant Center (no-op without a key).
+process.env.GOOGLE_SERVICE_ACCOUNT_KEY = "";
 
 vi.mock("next/headers", () => nextHeadersMock);
 
