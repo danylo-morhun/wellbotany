@@ -1,15 +1,7 @@
 import { Ratelimit } from "@upstash/ratelimit";
-import { Redis } from "@upstash/redis";
 import { headers } from "next/headers";
 import { ActionError } from "@/lib/action-error";
-
-const redis =
-  process.env.UPSTASH_REDIS_REST_URL && process.env.UPSTASH_REDIS_REST_TOKEN
-    ? new Redis({
-        url: process.env.UPSTASH_REDIS_REST_URL,
-        token: process.env.UPSTASH_REDIS_REST_TOKEN,
-      })
-    : null;
+import { redis } from "@/lib/redis";
 
 /** No-op (never rate-limits) when Upstash env vars are absent — e.g. local dev. */
 function makeLimiter(prefix: string, requests: number, window: `${number} ${"s" | "m" | "h"}`) {
