@@ -861,6 +861,9 @@ model OrderItem {
   unitPricePln Int // grosz, price at time of purchase (gift-set override already applied)
   vatRate      Decimal @db.Decimal(5, 2)
   totalPln     Int // unitPricePln * quantity
+  // Net purchase cost per unit at order time (variant.costPricePln snapshot);
+  // null when the variant had no cost — reports then fall back to the current cost
+  unitCostPln  Int?
 
   // Gift-set grouping snapshot — "" for a plain line item
   giftSetGroupId String   @default("")
@@ -1058,4 +1061,29 @@ model Withdrawal {
 
   @@index([orderId])
   @@index([createdAt])
+}
+
+enum ExpenseCategory {
+  ADS_GOOGLE
+  ADS_META
+  ADS_ALLEGRO
+  ADS_OTHER
+  SHIPPING
+  PACKAGING
+  SERVICES
+  OTHER
+}
+
+// Costs the shop pays outside orders (ads, shipping invoices, services),
+// entered by hand in /admin/wyniki — the profit report subtracts them
+model Expense {
+  id        String          @id @default(cuid())
+  category  ExpenseCategory
+  amountPln Int // gross grosz, as on the invoice
+  // Day the cost belongs to (e.g. last day of the billed month)
+  date      DateTime        @db.Date
+  note      String?
+  createdAt DateTime        @default(now())
+
+  @@index([date])
 }
