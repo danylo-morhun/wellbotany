@@ -5,6 +5,8 @@ import { useState } from "react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTitle } from "@/components/ui/sheet";
+import { inputClass as fieldInputClass } from "@/features/products/components/editor/fields";
+import { cn } from "@/lib/utils";
 import { saveCoupon } from "../actions";
 
 export type CouponFormValues = {
@@ -20,8 +22,7 @@ export type CouponFormValues = {
   isActive: boolean;
 };
 
-const inputClass =
-  "h-9 w-full rounded-lg border border-border bg-background px-3 text-sm focus:border-transparent focus:outline-none focus:ring-2 focus:ring-ring/50";
+const inputClass = cn(fieldInputClass, "h-9");
 
 const toDateInput = (d: Date | null) =>
   d ? new Date(d.getTime() - d.getTimezoneOffset() * 60000).toISOString().slice(0, 10) : "";
@@ -82,7 +83,15 @@ export function CouponSheet({
   }
 
   const err = (k: string) =>
-    errors[k] && <p className="mt-1 text-xs text-destructive">{errors[k]}</p>;
+    errors[k] && (
+      <p id={`${k}-error`} role="alert" className="mt-1 text-xs text-destructive">
+        {errors[k]}
+      </p>
+    );
+  const invalid = (k: string, hintId?: string) => ({
+    "aria-invalid": errors[k] ? true : undefined,
+    "aria-describedby": [errors[k] && `${k}-error`, hintId].filter(Boolean).join(" ") || undefined,
+  });
 
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
@@ -101,10 +110,11 @@ export function CouponSheet({
               required
               defaultValue={coupon?.code}
               placeholder="np. JESIEN10"
+              {...invalid("code", "code-hint")}
               className={`${inputClass} font-mono uppercase`}
             />
             {err("code")}
-            <p className="mt-1 text-xs text-muted-foreground">
+            <p id="code-hint" className="mt-1 text-xs text-muted-foreground">
               Kod działa na całe zamówienie. Promocji na konkretne produkty lub „na wszystko” nie
               ogłaszaj kodem — ustaw „Cenę przed” w produkcie, wtedy sklep sam pokaże najniższą cenę
               z 30 dni (Omnibus).
@@ -125,7 +135,7 @@ export function CouponSheet({
                   type="button"
                   onClick={() => setType(value)}
                   aria-pressed={type === value}
-                  className="h-8 rounded-md text-sm font-medium text-muted-foreground aria-pressed:bg-card aria-pressed:text-foreground aria-pressed:shadow-card"
+                  className="h-8 rounded-md text-sm font-medium text-muted-foreground focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-ring/50 aria-pressed:bg-card aria-pressed:text-foreground aria-pressed:shadow-card"
                 >
                   {label}
                 </button>
@@ -151,6 +161,7 @@ export function CouponSheet({
                       : zl(coupon.value)
                     : ""
                 }
+                {...invalid("value")}
                 className={`${inputClass} pr-10`}
               />
               <span className="pointer-events-none absolute top-1/2 right-3 -translate-y-1/2 text-sm text-muted-foreground">
@@ -217,6 +228,7 @@ export function CouponSheet({
                 name="validUntil"
                 type="date"
                 defaultValue={toDateInput(coupon?.validUntil ?? null)}
+                {...invalid("validUntil")}
                 className={inputClass}
               />
               {err("validUntil")}

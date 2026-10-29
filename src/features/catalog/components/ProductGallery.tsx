@@ -74,20 +74,6 @@ function VariantGallery({ images, productName, variantId }: Props & { variantId:
       </div>
 
       {fallback.length > 1 && (
-        <div className="mt-2 flex justify-center gap-1 lg:hidden">
-          {fallback.map((img, i) => (
-            <button
-              key={img.id}
-              type="button"
-              onClick={() => setActive(i)}
-              aria-label={`Zdjęcie ${i + 1}`}
-              className={`size-2 rounded-full transition-colors ${i === active ? "bg-primary" : "bg-muted"}`}
-            />
-          ))}
-        </div>
-      )}
-
-      {fallback.length > 1 && (
         <div className="flex gap-2 overflow-x-auto pb-1">
           {fallback.map((img, index) => (
             <button
@@ -98,6 +84,7 @@ function VariantGallery({ images, productName, variantId }: Props & { variantId:
                 index === active ? "border-primary" : "border-transparent"
               }`}
               aria-label={`Zdjęcie ${index + 1}`}
+              aria-current={index === active || undefined}
             >
               <Image
                 src={img.url}

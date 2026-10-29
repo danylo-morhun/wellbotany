@@ -8,7 +8,9 @@ export default function NotFound() {
     <>
       <NavBar />
       <main className="flex min-h-[70dvh] flex-col items-center justify-center px-4 py-16 text-center">
-        <p className="text-7xl font-extrabold tracking-tight text-primary/20">404</p>
+        <p aria-hidden className="text-7xl font-extrabold tracking-tight text-primary/20">
+          404
+        </p>
         <h1 className="mt-4 text-2xl">Nie znaleziono strony</h1>
         <p className="mt-2 max-w-md text-muted-foreground">
           Strona, której szukasz, nie istnieje lub została przeniesiona.

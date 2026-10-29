@@ -10,7 +10,7 @@ import { SELLER } from "@/lib/seller";
 export function PrivacyNote({
   purpose,
   consent = false,
-  className = "text-xs text-muted-foreground",
+  className = "max-w-prose text-xs text-muted-foreground",
   linkClassName = "underline hover:text-foreground",
 }: {
   /** What the data is for, as a sentence: "Dane przetwarzamy, aby …" */
@@ -25,8 +25,15 @@ export function PrivacyNote({
       Administratorem danych jest {SELLER.shortName}, {SELLER.address}. {purpose} Masz prawo dostępu
       do danych, ich sprostowania, usunięcia, ograniczenia przetwarzania, sprzeciwu
       {consent ? ", wycofania zgody w każdej chwili" : ""} oraz skargi do Prezesa UODO. Więcej w{" "}
-      <Link href="/polityka-prywatnosci" className={linkClassName}>
+      {/* New tab: every form this note sits in would lose what was typed */}
+      <Link
+        href="/polityka-prywatnosci"
+        target="_blank"
+        rel="noopener noreferrer"
+        className={linkClassName}
+      >
         polityce prywatności
+        <span className="sr-only"> (otwiera się w nowej karcie)</span>
       </Link>
       .
     </p>

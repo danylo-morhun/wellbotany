@@ -21,7 +21,11 @@ export function ProductActionsClient({ variants, productName, ordersPaused }: Pr
   return (
     <>
       <div ref={anchorRef}>
-        <AddToCartSection variants={variants} ordersPaused={ordersPaused} />
+        <AddToCartSection
+          variants={variants}
+          ordersPaused={ordersPaused}
+          productName={productName}
+        />
       </div>
       {defaultVariant && !ordersPaused && (
         <StickyAddToCart

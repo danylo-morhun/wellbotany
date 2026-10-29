@@ -1,9 +1,9 @@
 "use client";
 
-import { ExternalLink, Menu, Search } from "lucide-react";
+import { ExternalLink, Menu, Search, X } from "lucide-react";
 import Link from "next/link";
 import { useEffect, useState } from "react";
-import { Sheet, SheetContent, SheetTitle } from "@/components/ui/sheet";
+import { Sheet, SheetClose, SheetContent, SheetTitle } from "@/components/ui/sheet";
 import { AdminSidebarNav } from "./AdminSidebar";
 import { Kbd } from "./CommandPalette";
 import { NewMenu } from "./NewMenu";
@@ -28,16 +28,22 @@ export function AdminTopbar({
       <button
         type="button"
         onClick={() => setMenuOpen(true)}
-        className="-ml-1 flex size-9 items-center justify-center rounded-lg hover:bg-muted lg:hidden"
+        className="-ml-1 flex size-9 pointer-coarse:size-11 items-center justify-center rounded-lg hover:bg-muted lg:hidden"
         aria-label="Otwórz menu"
       >
         <Menu className="size-5" />
       </button>
       <Sheet open={menuOpen} onOpenChange={setMenuOpen}>
         <SheetContent side="left" className="w-72 overflow-y-auto bg-sidebar p-3">
-          <SheetTitle className="mb-4 px-2.5 pt-2 font-heading text-lg font-semibold">
-            Well Botany
-          </SheetTitle>
+          <div className="mb-4 flex items-center justify-between gap-2 pt-2 pl-2.5">
+            <SheetTitle className="font-heading text-lg font-semibold">Well Botany</SheetTitle>
+            <SheetClose
+              aria-label="Zamknij menu"
+              className="flex size-9 items-center justify-center rounded-lg hover:bg-muted pointer-coarse:size-11"
+            >
+              <X className="size-5" aria-hidden />
+            </SheetClose>
+          </div>
           <AdminSidebarNav badges={badges} onNavigate={() => setMenuOpen(false)} />
           <div className="mt-6 border-t border-border pt-3">{userMenu}</div>
         </SheetContent>
@@ -63,7 +69,8 @@ export function AdminTopbar({
           target="_blank"
           className="flex h-9 shrink-0 items-center gap-1.5 rounded-lg px-2.5 text-sm font-medium text-muted-foreground hover:bg-muted hover:text-foreground"
         >
-          <span className="hidden sm:inline">Sklep</span>
+          <span className="max-sm:sr-only">Sklep</span>
+          <span className="sr-only"> (otwiera się w nowej karcie)</span>
           <ExternalLink className="size-4" aria-hidden />
         </Link>
       </div>

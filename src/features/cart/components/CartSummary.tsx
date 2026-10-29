@@ -2,18 +2,30 @@
 
 import Link from "next/link";
 import { useState } from "react";
+import { DeliveryEstimateValue } from "@/features/checkout/components/DeliveryEstimateValue";
+import { deliveryEstimate, orderTotals } from "@/features/checkout/lib/shipping";
 import { cartDiscount, nextTier, type TierPromo } from "@/features/promotions/lib/tiered";
 import { formatPrice } from "@/lib/format";
 import { CouponInput } from "./CouponInput";
+import { ShippingProgress } from "./ShippingProgress";
 
 type Props = {
   subtotal: number;
   saleSubtotal: number;
   /** Live cart promotion, if any */
   promo: TierPromo | null;
+  freeShippingThresholdPln: number | null;
+  /** Cheapest paid delivery method, null when none is enabled */
+  cheapestShippingPln: number | null;
 };
 
-export function CartSummary({ subtotal, saleSubtotal, promo }: Props) {
+export function CartSummary({
+  subtotal,
+  saleSubtotal,
+  promo,
+  freeShippingThresholdPln,
+  cheapestShippingPln,
+}: Props) {
   const [couponDiscount, setCouponDiscount] = useState(0);
   const {
     discountPln: discount,
@@ -21,10 +33,13 @@ export function CartSummary({ subtotal, saleSubtotal, promo }: Props) {
     note,
   } = cartDiscount(promo, subtotal, saleSubtotal, couponDiscount);
   const next = promo ? nextTier(promo.tiers, subtotal) : null;
-  const total = subtotal - discount;
+  const { productsPln } = orderTotals(subtotal, discount, 0, freeShippingThresholdPln);
+  const delivery = deliveryEstimate(productsPln, freeShippingThresholdPln, cheapestShippingPln);
+  // Until a method is picked the total can only include delivery when it's free
+  const total = productsPln;
 
   return (
-    <div className="rounded-xl border border-border bg-card shadow-card">
+    <div className="rounded-xl bg-card shadow-card">
       <div className="border-b border-border px-6 py-4">
         <h2 className="text-base font-semibold">Podsumowanie zamówienia</h2>
       </div>
@@ -49,13 +64,24 @@ export function CartSummary({ subtotal, saleSubtotal, promo }: Props) {
             {next.tier.percent}% ({promo?.name}).
           </p>
         )}
-        <div className="flex justify-between text-sm">
+        <div className="flex items-start justify-between gap-3 text-sm">
           <span className="text-muted-foreground">Dostawa</span>
-          <span className="text-muted-foreground">Obliczana przy kasie</span>
+          <DeliveryEstimateValue
+            estimate={delivery}
+            freeShippingThresholdPln={freeShippingThresholdPln}
+          />
         </div>
+        {freeShippingThresholdPln !== null && (
+          <ShippingProgress productsPln={productsPln} threshold={freeShippingThresholdPln} />
+        )}
 
-        <div className="flex justify-between border-t border-border pt-3 text-base">
-          <span className="font-semibold">Razem</span>
+        <div className="flex items-baseline justify-between gap-3 border-t border-border pt-3 text-base">
+          <span className="font-semibold">
+            Razem
+            {!delivery.free && (
+              <span className="ml-1 text-xs font-normal text-muted-foreground">bez dostawy</span>
+            )}
+          </span>
           <span className="font-bold">{formatPrice(total)}</span>
         </div>
       </div>

@@ -7,12 +7,18 @@ import { useRouter } from "next/navigation";
 import { useAction } from "next-safe-action/hooks";
 import { useState } from "react";
 import { toast } from "sonner";
+import { ConfirmDialog } from "@/components/ConfirmDialog";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { formatPrice } from "@/lib/format";
 import { cn } from "@/lib/utils";
 import { bulkUpdateOrderStatus } from "../actions";
-import { ORDER_STATUS_LABELS, ORDER_STATUS_TONE, orderStatusLabel } from "../lib/status-labels";
+import {
+  ORDER_STATUS_LABELS,
+  ORDER_STATUS_TONE,
+  orderStatusLabel,
+  statusChangeConsequence,
+} from "../lib/status-labels";
 import { BULK_ORDER_STATUSES } from "../schema";
 
 export type OrderRow = {
@@ -33,10 +39,14 @@ export type OrderRow = {
   hasCustomerNote: boolean;
 };
 
+type BulkStatus = (typeof BULK_ORDER_STATUSES)[number];
+
 export function OrdersTable({ orders }: { orders: OrderRow[] }) {
   const router = useRouter();
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const allSelected = orders.length > 0 && selected.size === orders.length;
+  const [bulkStatus, setBulkStatus] = useState<BulkStatus | "">("");
+  const [confirming, setConfirming] = useState(false);
 
   const { execute, isPending } = useAction(bulkUpdateOrderStatus, {
     onSuccess: ({ data }) => {
@@ -47,9 +57,11 @@ export function OrdersTable({ orders }: { orders: OrderRow[] }) {
         toast.error(`${num}: ${f.error}`);
       }
       setSelected(new Set());
+      setBulkStatus("");
       router.refresh();
     },
     onError: ({ error }) => toast.error(error?.serverError ?? "Błąd aktualizacji"),
+    onSettled: () => setConfirming(false),
   });
 
   function toggle(id: string) {
@@ -80,7 +92,7 @@ export function OrdersTable({ orders }: { orders: OrderRow[] }) {
                     setSelected(allSelected ? new Set() : new Set(orders.map((o) => o.id)))
                   }
                   aria-label="Zaznacz wszystkie"
-                  className="accent-primary"
+                  className="accent-primary focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-ring/50 pointer-coarse:size-5"
                 />
               </th>
               <th className="h-10 px-3 font-medium">Zamówienie</th>
@@ -113,7 +125,7 @@ export function OrdersTable({ orders }: { orders: OrderRow[] }) {
                       checked={isSelected}
                       onChange={() => toggle(o.id)}
                       aria-label={`Zaznacz ${o.orderNumber}`}
-                      className="accent-primary"
+                      className="accent-primary focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-ring/50 pointer-coarse:size-5"
                     />
                   </td>
                   <td className="px-3 py-3">
@@ -181,33 +193,20 @@ export function OrdersTable({ orders }: { orders: OrderRow[] }) {
           <Link
             href={`/admin/zamowienia/druk?ids=${ids.join(",")}`}
             target="_blank"
-            className="flex h-8 items-center gap-1.5 rounded-lg px-2.5 font-medium hover:bg-background/10"
+            className="flex h-8 items-center gap-1.5 rounded-lg px-2.5 font-medium hover:bg-background/10 focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-background/60"
           >
             <Printer className="size-4" aria-hidden />
             Drukuj listy pakowania
           </Link>
+          {/* Applied with a button, not on change — arrow keys would fire one change per option */}
           <select
-            aria-label="Zmień status zaznaczonych"
+            aria-label="Nowy status zaznaczonych"
             disabled={isPending}
-            value=""
-            onChange={(e) => {
-              const status = e.target.value as (typeof BULK_ORDER_STATUSES)[number];
-              if (!status) return;
-              if (
-                window.confirm(
-                  `Zmienić status zaznaczonych zamówień (${selected.size}) na „${ORDER_STATUS_LABELS[status]}”? ${
-                    status === "CANCELLED"
-                      ? "Produkty wrócą na stan, a kody rabatowe zostaną zwolnione."
-                      : "Klienci dostaną odpowiednie e-maile."
-                  }`,
-                )
-              ) {
-                execute({ orderIds: ids, status });
-              }
-            }}
-            className="h-8 rounded-lg bg-background/10 px-2 font-medium text-background outline-none [&>option]:text-foreground"
+            value={bulkStatus}
+            onChange={(e) => setBulkStatus(e.target.value as BulkStatus | "")}
+            className="h-8 rounded-lg bg-background/10 px-2 font-medium text-background focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-background/60 [&>option]:text-foreground"
           >
-            <option value="">{isPending ? "Zapisywanie…" : "Zmień status…"}</option>
+            <option value="">Zmień status…</option>
             {BULK_ORDER_STATUSES.map((s) => (
               <option key={s} value={s}>
                 {ORDER_STATUS_LABELS[s]}
@@ -215,6 +214,13 @@ export function OrdersTable({ orders }: { orders: OrderRow[] }) {
               </option>
             ))}
           </select>
+          <Button
+            variant="secondary"
+            disabled={!bulkStatus || isPending}
+            onClick={() => setConfirming(true)}
+          >
+            {isPending ? "Zapisywanie…" : "Zastosuj"}
+          </Button>
           <Button
             variant="ghost"
             size="icon-sm"
@@ -226,6 +232,20 @@ export function OrdersTable({ orders }: { orders: OrderRow[] }) {
           </Button>
         </div>
       )}
+      <ConfirmDialog
+        open={confirming}
+        onOpenChange={setConfirming}
+        title={`Zmienić status zamówień (${selected.size}) na „${bulkStatus ? ORDER_STATUS_LABELS[bulkStatus] : ""}”?`}
+        description={
+          (bulkStatus && statusChangeConsequence(bulkStatus, null)) ||
+          "Zmiana obejmie wszystkie zaznaczone zamówienia."
+        }
+        confirmLabel="Zmień status"
+        tone="default"
+        pendingLabel="Zapisywanie…"
+        pending={isPending}
+        onConfirm={() => bulkStatus && execute({ orderIds: ids, status: bulkStatus })}
+      />
     </div>
   );
 }

@@ -2,7 +2,7 @@
 
 import { Popover } from "@base-ui/react/popover";
 import { Check, ChevronsUpDown, Plus, Search, X } from "lucide-react";
-import { useMemo, useRef, useState } from "react";
+import { useId, useMemo, useRef, useState } from "react";
 import { cn } from "@/lib/utils";
 import { inputClass } from "./fields";
 
@@ -38,6 +38,7 @@ function OptionList({
   const [query, setQuery] = useState("");
   const [active, setActive] = useState(0);
   const listRef = useRef<HTMLDivElement>(null);
+  const listId = useId();
   const filtered = useMemo(() => {
     const q = norm(query.trim());
     return q ? options.filter((o) => norm(o.label).includes(q)) : options;
@@ -60,6 +61,12 @@ function OptionList({
           ref={searchRef}
           value={query}
           placeholder={placeholder}
+          aria-label={placeholder}
+          role="combobox"
+          aria-expanded
+          aria-controls={listId}
+          aria-autocomplete="list"
+          aria-activedescendant={total > 0 ? `${listId}-${active}` : undefined}
           onChange={(e) => {
             setQuery(e.target.value);
             setActive(0);
@@ -84,25 +91,30 @@ function OptionList({
           className="h-10 flex-1 bg-transparent text-sm outline-none placeholder:text-muted-foreground"
         />
       </div>
-      <div ref={listRef} role="listbox" className="flex-1 overflow-y-auto p-1">
+      <div ref={listRef} id={listId} role="listbox" className="flex-1 overflow-y-auto p-1">
         {filtered.map((o, i) => {
           const showGroup = o.group && o.group !== lastGroup;
           lastGroup = o.group;
           return (
             <div key={o.id}>
               {showGroup && (
-                <p className="px-2 pt-2 pb-1 text-xs font-medium text-muted-foreground">
+                <p
+                  role="presentation"
+                  className="px-2 pt-2 pb-1 text-xs font-medium text-muted-foreground"
+                >
                   {o.group}
                 </p>
               )}
               <button
                 type="button"
                 role="option"
+                id={`${listId}-${i}`}
+                tabIndex={-1}
                 aria-selected={selected.has(o.id)}
                 data-active={i === active}
                 onMouseMove={() => setActive(i)}
                 onClick={() => choose(i)}
-                className="flex h-8 w-full items-center gap-2 rounded-md px-2 text-left text-sm data-[active=true]:bg-muted"
+                className="flex h-8 w-full items-center gap-2 rounded-md px-2 text-left text-sm data-[active=true]:bg-secondary data-[active=true]:text-secondary-foreground pointer-coarse:h-11"
               >
                 <Check
                   className={cn("size-4 shrink-0 text-primary", !selected.has(o.id) && "invisible")}
@@ -116,6 +128,10 @@ function OptionList({
         {canCreate && (
           <button
             type="button"
+            role="option"
+            id={`${listId}-${filtered.length}`}
+            tabIndex={-1}
+            aria-selected={false}
             data-active={active === filtered.length}
             onMouseMove={() => setActive(filtered.length)}
             onClick={() => choose(filtered.length)}
@@ -200,7 +216,7 @@ export function SearchSelect({
             onClick={() => onChange("")}
             className="flex size-9 shrink-0 items-center justify-center rounded-lg text-muted-foreground hover:bg-muted hover:text-foreground"
           >
-            <X className="size-4" />
+            <X className="size-4" aria-hidden />
           </button>
         )}
       </div>

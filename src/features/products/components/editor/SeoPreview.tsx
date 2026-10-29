@@ -19,9 +19,9 @@ export function SeoPreview({
   const shownDesc = description.length > 160 ? `${description.slice(0, 157)}…` : description;
   return (
     <div className="rounded-xl border border-border bg-background p-4">
-      <p className="mb-2 text-[11px] font-medium text-muted-foreground">Podgląd w Google</p>
+      <p className="mb-2 text-xs font-medium text-muted-foreground">Podgląd w Google</p>
       <div className="flex items-center gap-2">
-        <span className="flex size-7 items-center justify-center rounded-full bg-secondary text-[10px] font-bold text-primary">
+        <span className="flex size-7 items-center justify-center rounded-full bg-secondary text-xs font-bold text-primary">
           WB
         </span>
         <div className="min-w-0 leading-tight">

@@ -4,6 +4,7 @@ import type { Tag, TagType } from "@prisma/client";
 import { useAction } from "next-safe-action/hooks";
 import { useState } from "react";
 import { toast } from "sonner";
+import { PageHeader } from "@/app/admin/components/ui";
 import { ConfirmDialog } from "@/components/ConfirmDialog";
 import { Button } from "@/components/ui/button";
 import { RowActions } from "@/components/ui/row-actions";
@@ -41,17 +42,15 @@ export function TagForm({ tags }: Props) {
 
   return (
     <div>
-      <div className="mb-6 flex flex-wrap items-center justify-between gap-3">
-        <div>
-          <h1 className="font-heading text-2xl font-semibold tracking-tight">Tagi</h1>
-          <p className="mt-1 text-sm text-muted-foreground">
-            Cechy produktu widoczne w filtrach sklepu (dieta, alergeny, certyfikaty)
-          </p>
-        </div>
-        <Button size="lg" onClick={() => setEditing("new")}>
-          + Dodaj tag
-        </Button>
-      </div>
+      <PageHeader
+        title="Tagi"
+        description="Cechy produktu widoczne w filtrach sklepu (dieta, alergeny, certyfikaty)"
+        actions={
+          <Button size="lg" onClick={() => setEditing("new")}>
+            + Dodaj tag
+          </Button>
+        }
+      />
 
       <div className="space-y-6">
         {groups.map((group) => (
@@ -177,7 +176,7 @@ function TagSheet({ tag, onClose }: { tag: Tag | null; onClose: () => void }) {
         />
       </Field>
       <Field
-        label="Slug"
+        label="Adres URL"
         htmlFor="t-slug"
         error={errors.slug}
         hint={slugManual ? undefined : "Generowany z nazwy"}

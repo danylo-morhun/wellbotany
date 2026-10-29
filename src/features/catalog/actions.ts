@@ -24,6 +24,7 @@ export const PRODUCT_LIST_SELECT = {
   isNewArrival: true,
   isFeatured: true,
   netWeight: true,
+  servingSize: true,
   brand: {
     select: { name: true, slug: true, parentBrand: { select: { name: true, slug: true } } },
   },

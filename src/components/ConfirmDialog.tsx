@@ -20,6 +20,8 @@ type Props = {
   pendingLabel?: string;
   pending?: boolean;
   onConfirm: () => void;
+  // "default" for confirmations that don't destroy anything (mark paid, change status)
+  tone?: "destructive" | "default";
 };
 
 export function ConfirmDialog({
@@ -31,6 +33,7 @@ export function ConfirmDialog({
   pendingLabel = "Usuwanie…",
   pending = false,
   onConfirm,
+  tone = "destructive",
 }: Props) {
   return (
     <AlertDialog open={open} onOpenChange={onOpenChange}>
@@ -44,7 +47,11 @@ export function ConfirmDialog({
           <AlertDialogAction
             onClick={onConfirm}
             disabled={pending}
-            className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            className={
+              tone === "destructive"
+                ? "bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                : undefined
+            }
           >
             {pending ? pendingLabel : confirmLabel}
           </AlertDialogAction>

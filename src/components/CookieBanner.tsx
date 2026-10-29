@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useEffect, useId, useState } from "react";
+import { useEffect, useId, useRef, useState } from "react";
 import {
   type Consent,
   MARKETING_ENABLED,
@@ -33,6 +33,7 @@ export function CookieBanner() {
   const [choice, setChoice] = useState<Consent>(NONE);
   const analyticsId = useId();
   const marketingId = useId();
+  const bannerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     if (!needsConsentPrompt()) {
@@ -61,6 +62,11 @@ export function CookieBanner() {
     return () => window.removeEventListener(OPEN_COOKIE_SETTINGS_EVENT, open);
   }, []);
 
+  // Reopened from the footer: take keyboard focus there instead of leaving it at the page bottom
+  useEffect(() => {
+    if (reopened) bannerRef.current?.focus();
+  }, [reopened]);
+
   function respond(consent: Consent) {
     saveConsent(consent);
     setVisible(false);
@@ -73,6 +79,8 @@ export function CookieBanner() {
   return (
     <div
       id="cookie-banner"
+      ref={bannerRef}
+      tabIndex={-1}
       data-open={reopened ? "" : undefined}
       role="dialog"
       aria-modal="false"

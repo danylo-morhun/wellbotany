@@ -3,52 +3,85 @@
 import { useAction } from "next-safe-action/hooks";
 import { useRef, useState } from "react";
 import { toast } from "sonner";
+import { formatPrice } from "@/lib/format";
 import { cn } from "@/lib/utils";
 import { quickUpdateVariant } from "../actions";
+import { formatPlnInput, parsePlnInput } from "../lib/price-input";
 import { inputClass } from "./editor/fields";
 
 type Props = {
   variantId: string;
   pricePln: number;
   stock: number;
+  /** Inline edit only makes sense when the row has exactly one variant */
+  variantCount: number;
 };
 
-function formatPrice(grosz: number) {
-  return (grosz / 100).toFixed(2);
-}
+type Values = { pricePln: number; stock: number };
 
-export function InlineVariantEditor({ variantId, pricePln, stock }: Props) {
-  const [priceInput, setPriceInput] = useState(formatPrice(pricePln));
+export function InlineVariantEditor({ variantId, pricePln, stock, variantCount }: Props) {
+  const [priceInput, setPriceInput] = useState(formatPlnInput(pricePln));
   const [stockInput, setStockInput] = useState(stock);
-  const [committed, setCommitted] = useState({ pricePln, stock });
-  const pendingValues = useRef(committed);
+  const [committed, setCommitted] = useState<Values>({ pricePln, stock });
+  const pending = useRef<{ next: Values; prev: Values; undo: boolean } | null>(null);
+
+  function show(v: Values) {
+    setPriceInput(formatPlnInput(v.pricePln));
+    setStockInput(v.stock);
+  }
 
   const { execute, isPending } = useAction(quickUpdateVariant, {
     onSuccess: () => {
-      setCommitted(pendingValues.current);
-      toast.success("Zapisano");
+      const p = pending.current;
+      if (!p) return;
+      setCommitted(p.next);
+      show(p.next);
+      if (p.undo) toast.success("Przywrócono poprzednie wartości");
+      else
+        toast.success("Zapisano", {
+          action: { label: "Cofnij", onClick: () => save(p.prev, true) },
+        });
     },
     onError: ({ error }) => {
       toast.error(error?.serverError ?? "Błąd zapisu");
-      setPriceInput(formatPrice(committed.pricePln));
-      setStockInput(committed.stock);
+      show(committed);
     },
   });
 
+  function save(next: Values, undo = false) {
+    pending.current = { next, prev: committed, undo };
+    execute({ variantId, ...next });
+  }
+
   function commit() {
-    const parsedPrice = Math.round(Number(priceInput.replace(",", ".")) * 100);
-    if (!Number.isFinite(parsedPrice) || parsedPrice <= 0) {
-      setPriceInput(formatPrice(committed.pricePln));
+    const parsedPrice = parsePlnInput(priceInput);
+    if (parsedPrice === null) {
+      toast.error("Nieprawidłowa cena — wpisz kwotę większą od zera, np. 12,99");
+      setPriceInput(formatPlnInput(committed.pricePln));
       return;
     }
-    if (parsedPrice === committed.pricePln && stockInput === committed.stock) return;
-    pendingValues.current = { pricePln: parsedPrice, stock: stockInput };
-    execute({ variantId, pricePln: parsedPrice, stock: stockInput });
+    if (parsedPrice === committed.pricePln && stockInput === committed.stock) {
+      setPriceInput(formatPlnInput(parsedPrice));
+      return;
+    }
+    save({ pricePln: parsedPrice, stock: stockInput });
   }
 
   function commitOnEnter(e: React.KeyboardEvent<HTMLInputElement>) {
     // Blur runs commit(); calling it here too would double-submit
     if (e.key === "Enter") e.currentTarget.blur();
+  }
+
+  if (variantCount > 1) {
+    return (
+      <div className="text-sm tabular-nums">
+        <p>
+          {formatPrice(pricePln)} · {stock} szt.
+          <span className="sr-only"> (wariant domyślny)</span>
+        </p>
+        <p className="text-xs text-muted-foreground">Kilka wariantów — edytuj w karcie</p>
+      </div>
+    );
   }
 
   return (

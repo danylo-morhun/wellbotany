@@ -7,10 +7,12 @@ import { useRouter } from "next/navigation";
 import { useAction } from "next-safe-action/hooks";
 import { useMemo, useState } from "react";
 import { toast } from "sonner";
+import { EmptyState } from "@/app/admin/components/ui";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { bulkUpdateStock } from "../actions";
+import { inputClass } from "./editor/fields";
 import { useUnsavedChanges } from "./editor/useUnsavedChanges";
 
 interface VariantRow {
@@ -122,7 +124,7 @@ export function StockTable({ variants }: { variants: VariantRow[] }) {
             onChange={(e) => setQuery(e.target.value)}
             placeholder="Produkt, SKU, marka…"
             aria-label="Szukaj w magazynie"
-            className="h-9 w-full rounded-lg border border-border bg-card pr-3 pl-9 text-sm placeholder:text-muted-foreground focus:border-transparent focus:outline-none focus:ring-2 focus:ring-ring/50"
+            className={cn(inputClass, "h-9 bg-card pr-3 pl-9")}
           />
         </div>
         <div className="flex gap-1 rounded-lg bg-muted p-1">
@@ -132,10 +134,10 @@ export function StockTable({ variants }: { variants: VariantRow[] }) {
               type="button"
               aria-pressed={filter === t.key}
               onClick={() => setFilter(t.key)}
-              className="flex h-7 items-center gap-1.5 rounded-md px-2.5 text-sm font-medium text-muted-foreground aria-pressed:bg-card aria-pressed:text-foreground aria-pressed:shadow-card"
+              className="flex h-7 items-center gap-1.5 rounded-md px-2.5 text-sm font-medium text-muted-foreground focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-ring/50 aria-pressed:bg-card aria-pressed:text-foreground aria-pressed:shadow-card pointer-coarse:h-9"
             >
               {t.label}
-              <span className="text-xs tabular-nums opacity-70">{counts[t.key]}</span>
+              <span className="text-xs tabular-nums text-muted-foreground">{counts[t.key]}</span>
             </button>
           ))}
         </div>
@@ -203,15 +205,15 @@ export function StockTable({ variants }: { variants: VariantRow[] }) {
                     )}
                   </td>
                   <td className="py-2 pr-4">
-                    <div className="ml-auto flex w-fit items-center rounded-lg border border-border bg-background">
+                    <div className="ml-auto flex w-fit items-center rounded-lg border border-input bg-background focus-within:border-ring focus-within:ring-3 focus-within:ring-ring/50">
                       <button
                         type="button"
                         aria-label={`Zmniejsz stan ${v.sku}`}
                         onClick={() => setStock(v.id, value - 1)}
                         disabled={value === 0}
-                        className="flex size-8 items-center justify-center text-muted-foreground hover:text-foreground disabled:opacity-30"
+                        className="flex size-8 items-center justify-center text-muted-foreground hover:text-foreground focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-ring/50 disabled:opacity-30 pointer-coarse:size-11"
                       >
-                        <Minus className="size-3.5" />
+                        <Minus className="size-3.5" aria-hidden />
                       </button>
                       <input
                         type="number"
@@ -220,15 +222,15 @@ export function StockTable({ variants }: { variants: VariantRow[] }) {
                         aria-label={`Stan ${v.sku}`}
                         onChange={(e) => setStock(v.id, Number(e.target.value))}
                         onFocus={(e) => e.target.select()}
-                        className="h-8 w-16 border-x border-border bg-transparent text-center text-sm font-medium tabular-nums outline-none [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none"
+                        className="h-8 w-16 border-x border-input bg-transparent text-center pointer-coarse:h-11 text-sm font-medium tabular-nums outline-none [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none"
                       />
                       <button
                         type="button"
                         aria-label={`Zwiększ stan ${v.sku}`}
                         onClick={() => setStock(v.id, value + 1)}
-                        className="flex size-8 items-center justify-center text-muted-foreground hover:text-foreground"
+                        className="flex size-8 items-center justify-center text-muted-foreground hover:text-foreground focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-ring/50 pointer-coarse:size-11"
                       >
-                        <Plus className="size-3.5" />
+                        <Plus className="size-3.5" aria-hidden />
                       </button>
                     </div>
                   </td>
@@ -237,12 +239,7 @@ export function StockTable({ variants }: { variants: VariantRow[] }) {
             })}
           </tbody>
         </table>
-        {visible.length === 0 && (
-          <div className="flex flex-col items-center px-6 py-14 text-center">
-            <PackageX className="mb-2 size-6 text-muted-foreground" aria-hidden />
-            <p className="text-sm text-muted-foreground">Brak wariantów w tym widoku</p>
-          </div>
-        )}
+        {visible.length === 0 && <EmptyState icon={PackageX} title="Brak wariantów w tym widoku" />}
         {visible.length > 300 && (
           <p className="border-t border-border px-4 py-3 text-center text-xs text-muted-foreground">
             Pokazano 300 z {visible.length} — zawęź wyszukiwanie.

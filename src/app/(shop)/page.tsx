@@ -1,17 +1,20 @@
 import type { Metadata } from "next";
-import { BestsellerRow } from "@/app/(shop)/components/BestsellerRow";
+import { BestsellerTabs } from "@/app/(shop)/components/BestsellerTabs";
 import { BrandStrip } from "@/app/(shop)/components/BrandStrip";
 import { FadeInView } from "@/app/(shop)/components/FadeInView";
-import { GuidesRow } from "@/app/(shop)/components/GuidesRow";
+import { HelpAndGuides } from "@/app/(shop)/components/HelpAndGuides";
 import { HomeAbout } from "@/app/(shop)/components/HomeAbout";
+import { HomeBand } from "@/app/(shop)/components/HomeBand";
 import { HomeGiftSets } from "@/app/(shop)/components/HomeGiftSets";
+import { HomeHeadline } from "@/app/(shop)/components/HomeHeadline";
 import { HomeIntro } from "@/app/(shop)/components/HomeIntro";
+import { HomeNewArrivals } from "@/app/(shop)/components/HomeNewArrivals";
+import { HomePromos } from "@/app/(shop)/components/HomePromos";
 import { IngredientTiles } from "@/app/(shop)/components/IngredientTiles";
 import { NewsletterSection } from "@/app/(shop)/components/NewsletterSection";
-import { SeasonalShelf } from "@/app/(shop)/components/SeasonalShelf";
-import { WhyUs } from "@/app/(shop)/components/WhyUs";
+import { TrustStrip } from "@/app/(shop)/components/TrustStrip";
 import { getBrands } from "@/features/catalog/actions";
-import { getHomepageData, SEASONAL_SHELF } from "@/features/catalog/lib/homepage";
+import { getHomepageData } from "@/features/catalog/lib/homepage";
 import { getHomeGiftSets } from "@/features/gift-sets/lib/homepage";
 import { HeroSlider } from "@/features/home/components/HeroSlider";
 import { getHomeBanners } from "@/features/home/lib/banners";
@@ -25,76 +28,82 @@ export const metadata: Metadata = {
 // Banners open/close on their dates without an admin edit
 export const revalidate = 3600;
 
+const NEED_LINKS = 3;
+
 export default async function HomePage() {
   const [
-    { categories, featured, featuredHref, newArrivals, promos, seasonalTabs, ingredientTiles },
+    { categories, tabs, newArrivals, promos, ingredientTiles },
     banners,
     brands,
     { giftSets, builderActive },
   ] = await Promise.all([getHomepageData(), getHomeBanners(), getBrands(), getHomeGiftSets()]);
 
+  // Quiet need links beside the H1: the next needs after the ones that got a tab
+  const tabIds = new Set(tabs.map((t) => t.id));
+  const needLinks = categories
+    .filter(
+      (c) => c.parentId === null && c.group === "NEED" && c.productCount > 0 && !tabIds.has(c.slug),
+    )
+    .sort((a, b) => b.productCount - a.productCount || a.sortOrder - b.sortOrder)
+    .slice(0, NEED_LINKS);
+
+  // Bands after the opening alternate mint/plain (DESIGN.md §5)
+  const rest = [
+    <HomeIntro key="intro" categories={categories} headline={false} />,
+    promos.length > 0 && (
+      <FadeInView key="promos">
+        <HomePromos products={promos} />
+      </FadeInView>
+    ),
+    (giftSets.length > 0 || builderActive) && (
+      <FadeInView key="gifts">
+        <HomeGiftSets giftSets={giftSets} builderActive={builderActive} />
+      </FadeInView>
+    ),
+    <FadeInView key="help">
+      <HelpAndGuides categories={categories} />
+    </FadeInView>,
+    <FadeInView key="ingredients" className="grid gap-10 lg:grid-cols-2 lg:gap-12">
+      <IngredientTiles tiles={ingredientTiles} />
+      <BrandStrip brands={brands} />
+    </FadeInView>,
+    <FadeInView key="new">
+      <HomeNewArrivals products={newArrivals} />
+    </FadeInView>,
+  ].filter(Boolean);
+
+  // Full-width slider, then products straight away: the first shelf sits right under it
   return (
     <>
       <HeroSlider banners={banners} />
-      <div className="container mx-auto px-4 py-6 md:py-8">
-        <div className="space-y-12 md:space-y-16">
-          <div className="space-y-8 md:space-y-10">
-            {/* Products right under the hero so the first screen sells; the H1 and
-                need shortcuts follow */}
-            <BestsellerRow
-              id="featured-h"
-              products={featured}
-              title="Polecane produkty"
-              href={featuredHref}
-            />
-            <HomeIntro categories={categories} />
-          </div>
-          <FadeInView>
-            <SeasonalShelf title={SEASONAL_SHELF.title} tabs={seasonalTabs} />
-          </FadeInView>
-          <FadeInView>
-            <BestsellerRow
-              id="promos-h"
-              products={promos}
-              title="Promocje"
-              href="/katalog?promocje=1"
-              variant="scroll"
-            />
-          </FadeInView>
-          <FadeInView>
-            <HomeGiftSets giftSets={giftSets} builderActive={builderActive} />
-          </FadeInView>
-          <FadeInView>
-            <IngredientTiles tiles={ingredientTiles} />
-          </FadeInView>
-          <FadeInView>
-            <BestsellerRow
-              id="new-h"
-              products={newArrivals}
-              title="Nowości"
-              href="/katalog?nowosci=1"
-              variant="scroll"
-            />
-          </FadeInView>
-          <FadeInView>
-            <BrandStrip brands={brands} />
-          </FadeInView>
-          <FadeInView>
-            <GuidesRow categories={categories} />
-          </FadeInView>
-          <FadeInView>
-            <HomeAbout />
-          </FadeInView>
-          <FadeInView>
-            <WhyUs />
-          </FadeInView>
-          <HideIfSubscribed>
-            <FadeInView>
-              <NewsletterSection />
-            </FadeInView>
-          </HideIfSubscribed>
+      <HomeBand className="pt-5 md:pt-7">
+        <HomeHeadline needs={needLinks} />
+        <div className="mt-4 md:mt-5">
+          <BestsellerTabs tabs={tabs} lead />
         </div>
-      </div>
+      </HomeBand>
+      <HomeBand className="pt-4 pb-8 md:pt-6 md:pb-14">
+        <TrustStrip slim />
+      </HomeBand>
+      {rest.map((node, i) => (
+        <HomeBand
+          key={(node as React.ReactElement).key}
+          tone={i % 2 === 0 ? "mint" : "plain"}
+          className="py-8 md:py-14"
+        >
+          {node}
+        </HomeBand>
+      ))}
+      <HideIfSubscribed>
+        <HomeBand className="pt-8 md:pt-14">
+          <FadeInView>
+            <NewsletterSection />
+          </FadeInView>
+        </HomeBand>
+      </HideIfSubscribed>
+      <HomeBand className="py-8 md:py-14">
+        <HomeAbout />
+      </HomeBand>
     </>
   );
 }

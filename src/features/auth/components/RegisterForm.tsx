@@ -4,6 +4,8 @@ import { Eye, EyeOff } from "lucide-react";
 import { useAction } from "next-safe-action/hooks";
 import { useMemo, useState } from "react";
 import { PrivacyNote } from "@/components/PrivacyNote";
+import { FieldError, FormError, inputClass } from "@/components/ui/field";
+import { fieldA11y } from "@/lib/field-a11y";
 import { registerCustomer } from "../actions";
 
 const STRENGTH_LABELS = ["Bardzo słabe", "Słabe", "Średnie", "Dobre", "Silne"];
@@ -37,6 +39,22 @@ export function RegisterForm() {
 
   const serverError = result?.serverError ?? (hasErrored ? "Wystąpił błąd" : null);
   const fieldErrors = result?.validationErrors;
+  const errors = {
+    firstName: fieldErrors?.firstName?._errors?.[0],
+    lastName: fieldErrors?.lastName?._errors?.[0],
+    email: fieldErrors?.email?._errors?.[0],
+    password: fieldErrors?.password?._errors?.[0],
+    confirmPassword: fieldErrors?.confirmPassword?._errors?.[0],
+    acceptedTerms: fieldErrors?.acceptedTerms?._errors?.[0],
+  };
+  const a11y = {
+    firstName: fieldA11y("firstName", errors.firstName),
+    lastName: fieldA11y("lastName", errors.lastName),
+    email: fieldA11y("reg-email", errors.email),
+    password: fieldA11y("reg-password", errors.password),
+    confirmPassword: fieldA11y("confirmPassword", errors.confirmPassword),
+    acceptedTerms: fieldA11y("acceptedTerms", errors.acceptedTerms),
+  };
 
   function update(field: keyof typeof form) {
     return (e: React.ChangeEvent<HTMLInputElement>) =>
@@ -50,11 +68,7 @@ export function RegisterForm() {
 
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
-      {serverError && (
-        <p className="rounded-lg bg-destructive/10 px-3 py-2 text-sm text-destructive">
-          {serverError}
-        </p>
-      )}
+      <FormError message={serverError} />
 
       <div className="grid gap-4 sm:grid-cols-2">
         <div>
@@ -62,31 +76,30 @@ export function RegisterForm() {
             Imię
           </label>
           <input
-            id="firstName"
+            {...a11y.firstName.inputProps}
             type="text"
             required
             autoComplete="given-name"
             value={form.firstName}
             onChange={update("firstName")}
-            className="w-full rounded-lg border border-border px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary"
+            className={inputClass}
           />
-          {fieldErrors?.firstName?._errors?.[0] && (
-            <p className="mt-1 text-xs text-destructive">{fieldErrors.firstName._errors[0]}</p>
-          )}
+          <FieldError id={a11y.firstName.errorId} message={errors.firstName} />
         </div>
         <div>
           <label className="mb-1 block text-sm font-medium" htmlFor="lastName">
             Nazwisko
           </label>
           <input
-            id="lastName"
+            {...a11y.lastName.inputProps}
             type="text"
             required
             autoComplete="family-name"
             value={form.lastName}
             onChange={update("lastName")}
-            className="w-full rounded-lg border border-border px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary"
+            className={inputClass}
           />
+          <FieldError id={a11y.lastName.errorId} message={errors.lastName} />
         </div>
       </div>
 
@@ -95,17 +108,15 @@ export function RegisterForm() {
           E-mail
         </label>
         <input
-          id="reg-email"
+          {...a11y.email.inputProps}
           type="email"
           required
           autoComplete="email"
           value={form.email}
           onChange={update("email")}
-          className="w-full rounded-lg border border-border px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary"
+          className={inputClass}
         />
-        {fieldErrors?.email?._errors?.[0] && (
-          <p className="mt-1 text-xs text-destructive">{fieldErrors.email._errors[0]}</p>
-        )}
+        <FieldError id={a11y.email.errorId} message={errors.email} />
       </div>
 
       <div>
@@ -114,13 +125,13 @@ export function RegisterForm() {
         </label>
         <div className="relative">
           <input
-            id="reg-password"
+            {...a11y.password.inputProps}
             type={showPassword ? "text" : "password"}
             required
             autoComplete="new-password"
             value={form.password}
             onChange={update("password")}
-            className="w-full rounded-lg border border-border px-3 py-2 pr-10 text-sm focus:outline-none focus:ring-2 focus:ring-primary"
+            className={`${inputClass} pr-10`}
           />
           <button
             type="button"
@@ -146,9 +157,7 @@ export function RegisterForm() {
             <span className="text-xs text-muted-foreground">{STRENGTH_LABELS[strength]}</span>
           </div>
         )}
-        {fieldErrors?.password?._errors?.[0] && (
-          <p className="mt-1 text-xs text-destructive">{fieldErrors.password._errors[0]}</p>
-        )}
+        <FieldError id={a11y.password.errorId} message={errors.password} />
       </div>
 
       <div>
@@ -157,13 +166,13 @@ export function RegisterForm() {
         </label>
         <div className="relative">
           <input
-            id="confirmPassword"
+            {...a11y.confirmPassword.inputProps}
             type={showConfirmPassword ? "text" : "password"}
             required
             autoComplete="new-password"
             value={form.confirmPassword}
             onChange={update("confirmPassword")}
-            className="w-full rounded-lg border border-border px-3 py-2 pr-10 text-sm focus:outline-none focus:ring-2 focus:ring-primary"
+            className={`${inputClass} pr-10`}
           />
           <button
             type="button"
@@ -174,14 +183,13 @@ export function RegisterForm() {
             {showConfirmPassword ? <EyeOff className="size-4" /> : <Eye className="size-4" />}
           </button>
         </div>
-        {fieldErrors?.confirmPassword?._errors?.[0] && (
-          <p className="mt-1 text-xs text-destructive">{fieldErrors.confirmPassword._errors[0]}</p>
-        )}
+        <FieldError id={a11y.confirmPassword.errorId} message={errors.confirmPassword} />
       </div>
 
       <div>
         <label className="flex items-start gap-2 text-sm">
           <input
+            {...a11y.acceptedTerms.inputProps}
             type="checkbox"
             checked={form.acceptedTerms}
             onChange={(e) => setForm((prev) => ({ ...prev, acceptedTerms: e.target.checked }))}
@@ -194,9 +202,7 @@ export function RegisterForm() {
             </a>
           </span>
         </label>
-        {fieldErrors?.acceptedTerms?._errors?.[0] && (
-          <p className="mt-1 text-xs text-destructive">{fieldErrors.acceptedTerms._errors[0]}</p>
-        )}
+        <FieldError id={a11y.acceptedTerms.errorId} message={errors.acceptedTerms} />
       </div>
 
       <button

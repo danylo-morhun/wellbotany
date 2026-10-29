@@ -31,7 +31,7 @@ export function SortSelect({ basePath = "/katalog" }: Props) {
         id="sortuj"
         value={sort}
         onChange={(e) => handleChange(e.target.value)}
-        className="rounded-md border border-border bg-background px-3 py-1.5 text-sm text-foreground"
+        className="rounded-md border border-input bg-background px-3 py-1.5 text-sm text-foreground"
       >
         <option value="newest">Najnowsze</option>
         <option value="price_asc">Cena rosnąco</option>

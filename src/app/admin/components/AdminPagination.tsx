@@ -3,6 +3,8 @@
 import { ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight } from "lucide-react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useState } from "react";
+import { inputClass } from "@/features/products/components/editor/fields";
+import { cn } from "@/lib/utils";
 
 type Props = {
   currentPage: number;
@@ -35,7 +37,7 @@ export function AdminPagination({ currentPage, totalPages }: Props) {
   };
 
   const navButtonClass =
-    "flex size-8 items-center justify-center rounded-lg border border-border transition-colors hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/50 disabled:opacity-40";
+    "flex size-8 items-center justify-center rounded-lg border border-input transition-colors hover:bg-muted focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-ring/50 disabled:opacity-40 pointer-coarse:size-11";
 
   return (
     <div className="flex items-center justify-end gap-2 pt-4">
@@ -68,7 +70,7 @@ export function AdminPagination({ currentPage, totalPages }: Props) {
           value={jumpValue}
           onChange={(e) => setJumpValue(e.target.value)}
           onBlur={handleJumpSubmit}
-          className="w-14 rounded-lg border border-border bg-card px-2 py-1 text-center text-sm focus:border-transparent focus:outline-none focus:ring-2 focus:ring-ring/50"
+          className={cn(inputClass, "h-8 w-14 bg-card px-2 text-center")}
           aria-label="Przejdź do strony"
         />
         <span>/ {totalPages}</span>

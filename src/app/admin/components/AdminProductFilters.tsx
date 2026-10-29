@@ -2,6 +2,8 @@
 
 import type { ProductStatus } from "@prisma/client";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
+import { inputClass } from "@/features/products/components/editor/fields";
+import { cn } from "@/lib/utils";
 
 const STATUS_OPTIONS: { value: ProductStatus; label: string }[] = [
   { value: "DRAFT", label: "Szkic" },
@@ -29,8 +31,10 @@ export function AdminProductFilters({ brands, categories }: Props) {
     router.replace(`${pathname}?${params.toString()}`);
   }
 
-  const selectClass =
-    "h-9 max-w-[42vw] truncate rounded-lg border border-border bg-card px-2.5 text-sm focus:border-transparent focus:outline-none focus:ring-2 focus:ring-ring/50 sm:max-w-[220px]";
+  const selectClass = cn(
+    inputClass,
+    "h-9 w-auto max-w-[42vw] truncate bg-card px-2.5 sm:max-w-[220px]",
+  );
 
   return (
     <div className="flex flex-wrap items-center gap-2">

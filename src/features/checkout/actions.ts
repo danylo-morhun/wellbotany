@@ -27,7 +27,7 @@ import { actionClient } from "@/lib/safe-action";
 import { checkoutItemUnitPricePln, getCartForCheckout } from "./lib/cart";
 import { grantOrderAccess } from "./lib/order-access";
 import { isOfflinePayment } from "./lib/payment";
-import { requiresAddress, requiresPickupPoint, shippingCostFor } from "./lib/shipping";
+import { orderTotals, requiresAddress, requiresPickupPoint } from "./lib/shipping";
 import { getShippingRates } from "./lib/shipping-rates";
 import { checkoutSchema } from "./schema";
 
@@ -231,12 +231,12 @@ export const placeOrder = actionClient
       }
 
       // Free-delivery threshold applies to the subtotal after discounts
-      const shippingPln = shippingCostFor(
+      const { shippingPln, totalPln } = orderTotals(
+        subtotalPln,
+        discountPln,
         rate.pricePln,
-        subtotalPln - discountPln,
         freeShippingThresholdPln,
       );
-      const totalPln = subtotalPln + shippingPln - discountPln;
       const isFree = totalPln === 0;
 
       // Decrement stock atomically

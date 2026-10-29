@@ -57,14 +57,19 @@ export function CouponInput({ subtotal, saleSubtotal, onDiscount }: Props) {
   };
 
   return (
-    <div className="space-y-2">
+    <div>
+      <label htmlFor="cart-coupon" className="mb-1.5 block text-sm font-medium">
+        Kod rabatowy
+      </label>
       <div className="flex gap-2">
         <input
+          id="cart-coupon"
           value={code}
           onChange={handleChange}
           onKeyDown={(e) => e.key === "Enter" && handleVerify()}
-          placeholder="Kod rabatowy"
-          className="min-w-0 flex-1 rounded-lg border border-input bg-background px-3 py-2 text-sm uppercase tracking-wider placeholder:normal-case placeholder:tracking-normal focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 transition-[border-color,box-shadow] duration-150"
+          autoComplete="off"
+          aria-describedby="cart-coupon-result"
+          className="min-w-0 flex-1 rounded-lg border border-input bg-background px-3 py-2 text-sm uppercase tracking-wider focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 transition-[border-color,box-shadow] duration-150"
         />
         <button
           type="button"
@@ -75,15 +80,17 @@ export function CouponInput({ subtotal, saleSubtotal, onDiscount }: Props) {
           {isExecuting ? "…" : "Zastosuj"}
         </button>
       </div>
-      {couponState && (
-        <p
-          className={`text-xs font-medium ${couponState.valid ? "text-success" : "text-destructive"}`}
-        >
-          {couponState.valid
+      {/* Mounted before the result arrives, so screen readers announce it */}
+      <p
+        id="cart-coupon-result"
+        role="status"
+        className={`mt-2 text-xs font-medium empty:mt-0 ${couponState?.valid ? "text-success" : "text-destructive"}`}
+      >
+        {couponState &&
+          (couponState.valid
             ? `✓ Rabat: -${formatPrice(couponState.discountPln)}${couponState.message ? ` · ${couponState.message}` : ""}`
-            : couponState.message}
-        </p>
-      )}
+            : couponState.message)}
+      </p>
     </div>
   );
 }

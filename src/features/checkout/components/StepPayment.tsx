@@ -1,29 +1,36 @@
 "use client";
 
 import { ShieldCheck } from "lucide-react";
-import { useAction } from "next-safe-action/hooks";
-import { useEffect, useState } from "react";
+import Link from "next/link";
+import { type RefObject, useRef, useState } from "react";
+import { FieldError, FormError, inputClass } from "@/components/ui/field";
 import { groupCartItems } from "@/features/cart/lib/grouping";
-import { effectiveUnitPricePln, saleSubtotalPln } from "@/features/cart/lib/pricing";
-import { clearSavedCoupon, readSavedCoupon } from "@/features/cart/lib/saved-coupon";
+import { effectiveUnitPricePln } from "@/features/cart/lib/pricing";
 import type { CartItem } from "@/features/cart/lib/session";
-import { cartDiscount, type TierPromo } from "@/features/promotions/lib/tiered";
+import type { CartDiscount } from "@/features/promotions/lib/tiered";
+import { fieldA11y } from "@/lib/field-a11y";
 import { formatPrice } from "@/lib/format";
-import { verifyCoupon } from "../actions";
+import { cn } from "@/lib/utils";
 import { isOfflinePayment } from "../lib/payment";
-import { type ShippingRate, shippingCostFor, shippingLabel } from "../lib/shipping";
-import type { CheckoutFormData } from "./CheckoutForm";
+import { type OrderTotals, shippingLabel } from "../lib/shipping";
+import type { CheckoutFormData, CouponResult } from "./CheckoutForm";
 
 type Props = {
+  headingRef: RefObject<HTMLHeadingElement | null>;
   data: CheckoutFormData;
   onChange: (updates: Partial<CheckoutFormData>) => void;
   onBack: () => void;
   onSubmit: () => void;
   items: CartItem[];
   subtotal: number;
-  freeShippingThresholdPln: number | null;
-  promo: TierPromo | null;
-  shippingRates: ShippingRate[];
+  discount: CartDiscount;
+  promoName?: string;
+  totals: OrderTotals;
+  couponResult: CouponResult | null;
+  verifyingCoupon: boolean;
+  onVerifyCoupon: (code: string) => void;
+  /** The typed code changed, so the last verification no longer applies */
+  onCouponEdit: () => void;
   onlinePaymentsEnabled: boolean;
   pending: boolean;
   error: string | null;
@@ -39,72 +46,46 @@ const PAYMENT_OPTIONS = [
 ];
 
 export function StepPayment({
+  headingRef,
   data,
   onChange,
   onBack,
   onSubmit,
   items,
   subtotal,
-  freeShippingThresholdPln,
-  promo,
-  shippingRates,
+  discount: { discountPln: discount, source: discountSource, note: discountNote },
+  promoName,
+  totals,
+  couponResult,
+  verifyingCoupon: verifying,
+  onVerifyCoupon,
+  onCouponEdit,
   onlinePaymentsEnabled,
   pending,
   error,
 }: Props) {
-  const [couponResult, setCouponResult] = useState<{
-    valid: boolean;
-    discountPln: number;
-    message: string | null;
-  } | null>(null);
-  const [verifying, setVerifying] = useState(false);
-  const saleSubtotal = saleSubtotalPln(items);
+  const [termsError, setTermsError] = useState<string | null>(null);
+  const termsRef = useRef<HTMLInputElement>(null);
+  const terms = fieldA11y("acceptedTerms", termsError);
+  const handleVerifyCoupon = () => onVerifyCoupon(data.couponCode);
 
-  const { execute: executeVerify } = useAction(verifyCoupon, {
-    onSuccess: ({ data: result, input }) => {
-      if (result && !result.valid && input.code === readSavedCoupon()) clearSavedCoupon();
-      setCouponResult(result ?? null);
-      setVerifying(false);
-    },
-    onError: () => setVerifying(false),
-  });
-
-  // Carries over the code verified in the cart or brought in by the welcome e-mail
-  // biome-ignore lint/correctness/useExhaustiveDependencies: once when the step opens
-  useEffect(() => {
-    const code = data.couponCode.trim() || readSavedCoupon();
-    if (!code) return;
-    if (!data.couponCode.trim()) onChange({ couponCode: code });
-    setVerifying(true);
-    executeVerify({ code, subtotal, saleSubtotal });
-  }, []);
-
-  const handleVerifyCoupon = () => {
-    if (!data.couponCode.trim()) return;
-    setVerifying(true);
-    executeVerify({ code: data.couponCode, subtotal, saleSubtotal });
+  // The button stays enabled so a missed checkbox gets an explanation, not a dead button
+  const handleSubmit = () => {
+    if (!data.acceptedTerms) {
+      setTermsError("Zaakceptuj regulamin, aby złożyć zamówienie.");
+      termsRef.current?.focus();
+      return;
+    }
+    onSubmit();
   };
 
-  const {
-    discountPln: discount,
-    source: discountSource,
-    note: discountNote,
-  } = cartDiscount(
-    promo,
-    subtotal,
-    saleSubtotal,
-    couponResult?.valid ? couponResult.discountPln : 0,
-  );
-  const shippingCost = shippingCostFor(
-    shippingRates.find((r) => r.method === data.shippingMethod)?.pricePln ?? 0,
-    subtotal - discount,
-    freeShippingThresholdPln,
-  );
-  const total = subtotal + shippingCost - discount;
+  const { shippingPln: shippingCost, totalPln: total } = totals;
 
   return (
     <div className="space-y-6">
-      <h2 className="text-lg font-semibold">Płatność i podsumowanie</h2>
+      <h2 ref={headingRef} tabIndex={-1} className="text-lg font-semibold focus:outline-none">
+        Płatność i podsumowanie
+      </h2>
 
       {/* Order summary */}
       <div className="rounded-lg border border-border p-4">
@@ -154,7 +135,7 @@ export function StepPayment({
           {discount > 0 && (
             <div className="flex justify-between text-success">
               <span>
-                {discountSource === "promo" ? `Rabat ${promo?.name}` : `Rabat (${data.couponCode})`}
+                {discountSource === "promo" ? `Rabat ${promoName}` : `Rabat (${data.couponCode})`}
               </span>
               <span>-{formatPrice(discount)}</span>
             </div>
@@ -168,7 +149,7 @@ export function StepPayment({
       </div>
 
       {/* Coupon */}
-      <div className="space-y-2">
+      <div>
         <label htmlFor="couponCode" className="mb-1 block text-sm font-medium">
           Kod rabatowy (opcjonalnie)
         </label>
@@ -179,32 +160,36 @@ export function StepPayment({
             value={data.couponCode}
             onChange={(e) => {
               onChange({ couponCode: e.target.value.toUpperCase() });
-              setCouponResult(null);
+              onCouponEdit();
             }}
-            placeholder="KOD RABATOWY"
-            className="flex-1 rounded-lg border border-border px-3 py-2 text-sm uppercase focus:outline-none focus:ring-2 focus:ring-primary"
+            aria-describedby="couponCode-result"
+            className={cn(inputClass, "flex-1 uppercase")}
           />
           <button
             type="button"
             onClick={handleVerifyCoupon}
             disabled={verifying || !data.couponCode.trim()}
-            className="rounded-lg border border-border bg-secondary px-4 py-2 text-sm font-medium hover:bg-accent disabled:opacity-50"
+            className="rounded-lg border border-border bg-secondary px-4 py-2 text-sm font-medium hover:bg-muted disabled:opacity-50"
           >
             {verifying ? "…" : "Zastosuj"}
           </button>
         </div>
-        {couponResult && (
-          <p className={`text-sm ${couponResult.valid ? "text-success" : "text-destructive"}`}>
-            {couponResult.valid
+        {/* Mounted before the result arrives, so screen readers announce it */}
+        <p
+          id="couponCode-result"
+          role="status"
+          className={`mt-2 text-sm empty:mt-0 ${couponResult?.valid ? "text-success" : "text-destructive"}`}
+        >
+          {couponResult &&
+            (couponResult.valid
               ? `✓ Rabat: -${formatPrice(couponResult.discountPln)}${couponResult.message ? ` · ${couponResult.message}` : ""}`
-              : couponResult.message}
-          </p>
-        )}
+              : couponResult.message)}
+        </p>
       </div>
 
       {/* Payment method */}
-      <div>
-        <p className="mb-3 text-sm font-medium">Metoda płatności</p>
+      <fieldset>
+        <legend className="mb-3 text-sm font-medium">Metoda płatności</legend>
         <div className="space-y-2">
           {PAYMENT_OPTIONS.filter(
             (opt) =>
@@ -242,43 +227,54 @@ export function StepPayment({
             Zapłacisz przy odbiorze zamówienia w sklepie.
           </p>
         )}
+      </fieldset>
+
+      <FormError message={error} className="px-4 py-3" />
+
+      <div>
+        <label className="flex items-start gap-2 text-sm">
+          <input
+            ref={termsRef}
+            type="checkbox"
+            checked={data.acceptedTerms}
+            onChange={(e) => {
+              onChange({ acceptedTerms: e.target.checked });
+              if (e.target.checked) setTermsError(null);
+            }}
+            {...terms.inputProps}
+            className="size-5 shrink-0 accent-primary"
+          />
+          <span>
+            Akceptuję {/* New tab: leaving this page would lose the checkout form */}
+            <a
+              href="/regulamin"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="underline hover:text-foreground"
+            >
+              regulamin sklepu
+              <span className="sr-only"> (otwiera się w nowej karcie)</span>
+            </a>
+          </span>
+        </label>
+        <FieldError id={terms.errorId} message={termsError} />
       </div>
 
-      {error && (
-        <p className="rounded-lg border border-destructive/30 bg-destructive/10 px-4 py-3 text-sm text-destructive">
-          {error}
-        </p>
-      )}
-
-      <label className="flex items-start gap-2 text-sm">
-        <input
-          type="checkbox"
-          checked={data.acceptedTerms}
-          onChange={(e) => onChange({ acceptedTerms: e.target.checked })}
-          className="mt-0.5"
-        />
-        <span>
-          Akceptuję{" "}
-          <a href="/regulamin" className="underline hover:text-foreground">
-            regulamin sklepu
-          </a>
-        </span>
-      </label>
-
-      <div className="flex gap-3">
+      {/* Phones: the long legally-worded button gets the full width, Wstecz goes under it */}
+      <div className="flex flex-col-reverse gap-3 sm:flex-row">
         <button
           type="button"
           onClick={onBack}
           disabled={pending}
-          className="flex-1 rounded-lg border border-border px-4 py-3 text-sm font-medium transition-[transform,background-color] duration-[160ms] ease-[cubic-bezier(0.23,1,0.32,1)] hover:bg-muted/50 active:scale-[0.97] disabled:opacity-50 motion-reduce:active:scale-100"
+          className="flex-1 rounded-full border border-border px-4 py-3 text-sm font-medium transition-[transform,background-color] duration-[160ms] ease-[cubic-bezier(0.23,1,0.32,1)] hover:bg-muted/50 active:scale-[0.97] disabled:opacity-50 motion-reduce:active:scale-100"
         >
           Wstecz
         </button>
         <button
           type="button"
-          onClick={onSubmit}
-          disabled={pending || !data.acceptedTerms}
-          className="flex-1 rounded-lg bg-primary px-4 py-3 text-sm font-medium text-primary-foreground transition-[transform,background-color,color,border-color] duration-[160ms] ease-[cubic-bezier(0.23,1,0.32,1)] hover:bg-primary-deep active:scale-[0.97] disabled:opacity-50 motion-reduce:transition-none motion-reduce:active:scale-100"
+          onClick={handleSubmit}
+          disabled={pending}
+          className="flex-1 rounded-full bg-primary px-4 py-3 text-sm font-medium text-primary-foreground transition-[transform,background-color,color,border-color] duration-[160ms] ease-[cubic-bezier(0.23,1,0.32,1)] hover:bg-primary-deep active:scale-[0.97] disabled:opacity-50 motion-reduce:transition-none motion-reduce:active:scale-100"
         >
           {/* Wording required by art. 17 ust. 3 ustawy o prawach konsumenta */}
           {pending
@@ -286,12 +282,27 @@ export function StepPayment({
             : `Zamawiam z obowiązkiem zapłaty — ${formatPrice(total)}`}
         </button>
       </div>
-      {!isOfflinePayment(data.paymentMethod) && (
-        <p className="flex items-center justify-center gap-1.5 text-xs text-muted-foreground">
-          <ShieldCheck className="size-3.5 shrink-0" aria-hidden />
-          Płatność zabezpieczona przez Przelewy24
+      <div className="space-y-1.5 text-center text-xs text-muted-foreground">
+        {!isOfflinePayment(data.paymentMethod) && (
+          <p className="flex items-center justify-center gap-1.5">
+            <ShieldCheck className="size-3.5 shrink-0" aria-hidden />
+            Płatność zabezpieczona przez Przelewy24
+          </p>
+        )}
+        {/* Regulamin §7 / ustawa o prawach konsumenta art. 27; §8 exceptions live on /zwroty */}
+        <p className="text-pretty">
+          Masz 14 dni na odstąpienie od umowy bez podania przyczyny.{" "}
+          <Link
+            href="/zwroty"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="underline underline-offset-2 hover:text-foreground"
+          >
+            Zasady zwrotów
+            <span className="sr-only"> (otwiera się w nowej karcie)</span>
+          </Link>
         </p>
-      )}
+      </div>
     </div>
   );
 }

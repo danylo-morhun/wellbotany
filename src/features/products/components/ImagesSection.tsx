@@ -60,7 +60,7 @@ export function ImagesSection({ productId, images, variants }: Props) {
     <section className="rounded-2xl bg-card shadow-card">
       <div className="flex items-start justify-between gap-3 px-5 pt-5">
         <div>
-          <h2 className="text-[15px] font-semibold">Zdjęcia</h2>
+          <h2 className="text-base font-semibold">Zdjęcia</h2>
           <p className="mt-0.5 text-xs text-muted-foreground">
             Pierwsze zdjęcie oznaczone gwiazdką jest główne — w listingach i w Google.
           </p>
@@ -112,12 +112,12 @@ export function ImagesSection({ productId, images, variants }: Props) {
                     sizes="200px"
                   />
                   {img.isMain && (
-                    <span className="absolute top-2 left-2 flex items-center gap-1 rounded-md bg-primary px-1.5 py-0.5 text-[11px] font-medium text-primary-foreground">
+                    <span className="absolute top-2 left-2 flex items-center gap-1 rounded-md bg-primary px-1.5 py-0.5 text-xs font-medium text-primary-foreground">
                       <Star className="size-3 fill-current" aria-hidden />
                       Główne
                     </span>
                   )}
-                  <div className="absolute inset-x-2 bottom-2 flex justify-between gap-1 opacity-0 transition-opacity group-focus-within:opacity-100 group-hover:opacity-100 motion-reduce:transition-none">
+                  <div className="absolute inset-x-2 bottom-2 flex justify-between gap-1 opacity-0 transition-opacity group-focus-within:opacity-100 group-hover:opacity-100 pointer-coarse:opacity-100 motion-reduce:transition-none">
                     <div className="flex gap-1">
                       <ImgBtn
                         label="Przesuń w lewo"
@@ -164,7 +164,7 @@ export function ImagesSection({ productId, images, variants }: Props) {
                       execAlt({ imageId: img.id, productId, altPl: alt });
                   }}
                   onKeyDown={(e) => e.key === "Enter" && e.currentTarget.blur()}
-                  className="mt-1.5 h-7 w-full rounded-md border border-transparent bg-transparent px-1.5 text-xs placeholder:text-muted-foreground/70 hover:border-border focus:border-ring focus:outline-none"
+                  className="mt-1.5 h-7 w-full rounded-md border border-transparent bg-transparent px-1.5 text-xs placeholder:text-muted-foreground hover:border-input focus-visible:border-ring focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-ring/50"
                 />
                 {variants.length > 1 && (
                   <select
@@ -177,7 +177,7 @@ export function ImagesSection({ productId, images, variants }: Props) {
                         variantId: e.target.value || null,
                       })
                     }
-                    className="h-7 w-full truncate rounded-md border border-border bg-card px-1.5 text-xs"
+                    className="h-7 w-full truncate rounded-md border border-input bg-card px-1.5 text-xs focus-visible:border-ring focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-ring/50"
                   >
                     <option value="">Wszystkie warianty</option>
                     {variants.map((v) => (
@@ -227,7 +227,7 @@ function ImgBtn({
       aria-label={label}
       title={label}
       className={cn(
-        "flex size-7 items-center justify-center rounded-md bg-background/90 text-foreground shadow-sm backdrop-blur hover:bg-background disabled:opacity-40 [&_svg]:size-3.5",
+        "flex size-7 items-center justify-center rounded-md pointer-coarse:size-8 bg-background/90 text-foreground shadow-sm backdrop-blur hover:bg-background disabled:opacity-40 [&_svg]:size-3.5",
         destructive && "text-destructive",
       )}
       {...props}

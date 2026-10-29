@@ -1,6 +1,8 @@
 "use client";
 
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
+import { inputClass } from "@/features/products/components/editor/fields";
+import { cn } from "@/lib/utils";
 
 type Props = {
   param: string;
@@ -31,7 +33,10 @@ export function AdminSelectFilter({ param, label, allLabel, options }: Props) {
       value={value}
       onChange={(e) => onChange(e.target.value)}
       data-active={value ? true : undefined}
-      className="h-9 max-w-[220px] truncate rounded-lg border border-border bg-card px-2.5 text-sm focus:border-transparent focus:outline-none focus:ring-2 focus:ring-ring/50 data-active:border-primary/40 data-active:bg-secondary/60"
+      className={cn(
+        inputClass,
+        "h-9 w-auto max-w-[220px] truncate bg-card px-2.5 data-active:border-primary/40 data-active:bg-secondary/60",
+      )}
     >
       <option value="">{allLabel}</option>
       {options.map((o) => (

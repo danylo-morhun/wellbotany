@@ -1,9 +1,21 @@
 "use client";
 
+import { cloneElement, createContext, isValidElement, useContext, useId } from "react";
 import { cn } from "@/lib/utils";
 
-export const inputClass =
-  "w-full rounded-lg border border-border bg-background px-3 text-sm transition-[border-color,box-shadow] placeholder:text-muted-foreground/70 focus:border-ring focus:outline-none focus:ring-3 focus:ring-ring/15 aria-invalid:border-destructive motion-reduce:transition-none";
+/** Focus ring shared by every admin input, select and textarea */
+export const focusRing =
+  "focus-visible:border-ring focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-ring/50";
+
+export const inputClass = cn(
+  "w-full rounded-lg border border-input bg-background px-3 text-sm transition-[border-color,box-shadow] placeholder:text-muted-foreground aria-invalid:border-destructive motion-reduce:transition-none",
+  focusRing,
+);
+
+type FieldA11y = { "aria-invalid"?: true; "aria-describedby"?: string };
+
+// Lets inputs nested in a Field announce its error/hint without each form wiring ids
+const FieldContext = createContext<FieldA11y>({});
 
 export function Section({
   id,
@@ -24,7 +36,7 @@ export function Section({
     <section id={id} className={cn("scroll-mt-24 rounded-2xl bg-card shadow-card", className)}>
       <div className="flex items-start justify-between gap-3 px-5 pt-5">
         <div>
-          <h2 className="text-[15px] font-semibold">{title}</h2>
+          <h2 className="text-base font-semibold">{title}</h2>
           {description && <p className="mt-0.5 text-xs text-muted-foreground">{description}</p>}
         </div>
         {actions && <div className="flex shrink-0 items-center gap-2">{actions}</div>}
@@ -53,10 +65,24 @@ export function Field({
 }) {
   const over = counter && counter.value > counter.max;
   const beyondIdeal = counter?.ideal && counter.value > counter.ideal;
+  const msgId = useId();
+  const a11y: FieldA11y = {
+    "aria-invalid": error ? true : undefined,
+    "aria-describedby": error || hint ? msgId : undefined,
+  };
+  // Native controls passed straight in (select, raw input) get the same wiring
+  const control =
+    isValidElement<FieldA11y>(children) && typeof children.type === "string"
+      ? cloneElement(children, { ...a11y, ...children.props })
+      : children;
   return (
     <div className={className}>
       <div className="mb-1.5 flex items-baseline justify-between gap-2">
-        <label htmlFor={htmlFor} className="text-sm font-medium">
+        <label
+          htmlFor={htmlFor}
+          id={htmlFor ? `${htmlFor}-label` : undefined}
+          className="text-sm font-medium"
+        >
           {label}
         </label>
         {counter && (
@@ -66,7 +92,7 @@ export function Field({
               over
                 ? "text-destructive"
                 : beyondIdeal
-                  ? "text-warning-foreground"
+                  ? "text-warning-ink"
                   : "text-muted-foreground",
             )}
           >
@@ -74,23 +100,37 @@ export function Field({
           </span>
         )}
       </div>
-      {children}
+      <FieldContext value={a11y}>{control}</FieldContext>
       {error ? (
-        <p className="mt-1 text-xs text-destructive">{error}</p>
+        <p id={msgId} role="alert" className="mt-1 text-xs text-destructive">
+          {error}
+        </p>
       ) : (
-        hint && <p className="mt-1 text-xs text-muted-foreground">{hint}</p>
+        hint && (
+          <p id={msgId} className="mt-1 text-xs text-muted-foreground">
+            {hint}
+          </p>
+        )
       )}
     </div>
   );
 }
 
+/** aria-invalid/aria-describedby from the enclosing Field, if any */
+export function useFieldA11y(): FieldA11y {
+  return useContext(FieldContext);
+}
+
 export function TextInput({ className, ...props }: React.ComponentProps<"input">) {
-  return <input className={cn(inputClass, "h-9", className)} {...props} />;
+  const a11y = useFieldA11y();
+  return <input {...a11y} className={cn(inputClass, "h-9", className)} {...props} />;
 }
 
 export function TextArea({ className, ...props }: React.ComponentProps<"textarea">) {
+  const a11y = useFieldA11y();
   return (
     <textarea
+      {...a11y}
       className={cn(inputClass, "field-sizing-content min-h-16 py-2", className)}
       {...props}
     />
@@ -102,11 +142,14 @@ export function Switch({
   onChange,
   label,
   description,
+  ariaLabel,
 }: {
   checked: boolean;
   onChange: (v: boolean) => void;
   label: string;
   description?: string;
+  /** Name for a switch without a visible label (e.g. a table cell) */
+  ariaLabel?: string;
 }) {
   return (
     <label className="flex cursor-pointer items-start justify-between gap-3 py-1">
@@ -118,8 +161,9 @@ export function Switch({
         type="button"
         role="switch"
         aria-checked={checked}
+        aria-label={ariaLabel}
         onClick={() => onChange(!checked)}
-        className="relative mt-0.5 inline-flex h-5 w-9 shrink-0 items-center rounded-full bg-muted-foreground/30 transition-colors aria-checked:bg-primary motion-reduce:transition-none"
+        className="relative mt-0.5 inline-flex h-5 w-9 shrink-0 items-center rounded-full bg-muted-foreground/60 transition-colors aria-checked:bg-primary focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-ring/50 motion-reduce:transition-none"
       >
         <span
           className={cn(

@@ -12,7 +12,7 @@ const dateFormat = new Intl.DateTimeFormat("pl-PL", { dateStyle: "medium" });
 
 export function ProductReviews({ average, count, items }: Props) {
   return (
-    <section aria-labelledby="opinie-heading">
+    <section id="opinie" aria-labelledby="opinie-heading" className="scroll-mt-28 lg:scroll-mt-44">
       <h2 id="opinie-heading" className="text-lg font-semibold text-foreground">
         Opinie klientów
       </h2>
@@ -21,7 +21,8 @@ export function ProductReviews({ average, count, items }: Props) {
           <div className="mt-3 flex items-center gap-3">
             <Stars rating={average} className="size-5" />
             <span className="text-sm text-muted-foreground">
-              {average.toFixed(1).replace(".", ",")} / 5 · {count} {pluralize(count)}
+              <span className="tabular-nums">{average.toFixed(1).replace(".", ",")}</span> / 5 ·{" "}
+              {count} {pluralize(count)}
             </span>
           </div>
           <ul className="mt-4 space-y-4">

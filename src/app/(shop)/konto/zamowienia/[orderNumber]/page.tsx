@@ -178,7 +178,7 @@ export default async function OrderDetailPage({
               <span>{formatPrice(order.subtotalPln)}</span>
             </div>
             {order.discountPln > 0 && (
-              <div className="flex justify-between text-green-700">
+              <div className="flex justify-between text-success">
                 <span>
                   Rabat {order.promotionName ?? (order.couponCode ? `(${order.couponCode})` : "")}
                 </span>

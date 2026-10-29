@@ -3,6 +3,7 @@
 import { Eye, EyeOff } from "lucide-react";
 import { useAction } from "next-safe-action/hooks";
 import { useState } from "react";
+import { FormError, inputClass } from "@/components/ui/field";
 import { loginCustomer } from "../actions";
 
 type Props = { callbackUrl?: string };
@@ -23,9 +24,7 @@ export function LoginForm({ callbackUrl }: Props) {
 
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
-      {error && (
-        <p className="rounded-lg bg-destructive/10 px-3 py-2 text-sm text-destructive">{error}</p>
-      )}
+      <FormError message={error} />
 
       <div>
         <label className="mb-1 block text-sm font-medium" htmlFor="email">
@@ -38,7 +37,7 @@ export function LoginForm({ callbackUrl }: Props) {
           autoComplete="email"
           value={email}
           onChange={(e) => setEmail(e.target.value)}
-          className="w-full rounded-lg border border-border px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary"
+          className={inputClass}
         />
       </div>
 
@@ -59,7 +58,7 @@ export function LoginForm({ callbackUrl }: Props) {
             autoComplete="current-password"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
-            className="w-full rounded-lg border border-border px-3 py-2 pr-10 text-sm focus:outline-none focus:ring-2 focus:ring-primary"
+            className={`${inputClass} pr-10`}
           />
           <button
             type="button"

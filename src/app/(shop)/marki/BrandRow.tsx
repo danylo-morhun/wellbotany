@@ -4,6 +4,7 @@ import { ArrowUpRight, ChevronDown } from "lucide-react";
 import Link from "next/link";
 import { useState } from "react";
 import type { BrandItem } from "@/features/catalog/actions";
+import { pluralPl } from "@/lib/format";
 
 /** Two independent click zones for a brand with product lines (e.g. Formeds): the name navigates to its combined listing, the chevron expands the line list in place — so it can't be one big `<Link>` like a leaf brand's row. Links go to the full catalog pre-filtered by this brand (not the dedicated `/marki/[slug]` landing page) — that page stays static/SEO-only, so browsing further there (e.g. picking a different brand) wouldn't leave its header and URL stuck on the wrong name. */
 export function BrandRow({ brand }: { brand: BrandItem }) {
@@ -21,7 +22,8 @@ export function BrandRow({ brand }: { brand: BrandItem }) {
             {brand.name}
           </span>
           <span className="flex shrink-0 items-center gap-2 text-sm text-muted-foreground">
-            {brand._count.products} produktów
+            {brand._count.products}{" "}
+            {pluralPl(brand._count.products, "produkt", "produkty", "produktów")}
             <ArrowUpRight
               className="size-4 -translate-x-1 opacity-0 transition-[transform,opacity] duration-200 ease-out group-hover:translate-x-0 group-hover:opacity-100 motion-reduce:transition-none"
               aria-hidden="true"

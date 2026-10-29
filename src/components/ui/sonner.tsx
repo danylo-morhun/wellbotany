@@ -7,6 +7,8 @@ export function Toaster() {
   return (
     <Sonner
       position="bottom-right"
+      // Phones: lift toasts above the sticky add-to-cart bar
+      mobileOffset={{ bottom: "5rem" }}
       theme={resolvedTheme === "dark" ? "dark" : "light"}
       toastOptions={{
         classNames: {

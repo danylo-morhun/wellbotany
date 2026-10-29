@@ -2,17 +2,26 @@
 
 import { useRouter } from "next/navigation";
 import { useAction } from "next-safe-action/hooks";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
 import { readFbc } from "@/components/MetaClickId";
-import { clearSavedCoupon } from "@/features/cart/lib/saved-coupon";
+import { saleSubtotalPln } from "@/features/cart/lib/pricing";
+import { clearSavedCoupon, readSavedCoupon } from "@/features/cart/lib/saved-coupon";
 import type { CartItem } from "@/features/cart/lib/session";
-import type { TierPromo } from "@/features/promotions/lib/tiered";
+import { cartDiscount, type TierPromo } from "@/features/promotions/lib/tiered";
 import { trackItems } from "@/lib/analytics";
 import { hasMarketingConsent } from "@/lib/consent";
 import type { PickupLocationKey } from "@/lib/pickup-locations";
-import { placeOrder } from "../actions";
-import { requiresAddress, type ShippingMethodKey, type ShippingRate } from "../lib/shipping";
+import { placeOrder, verifyCoupon } from "../actions";
+import { clearDraft, readDraft, saveDraft } from "../lib/draft";
+import { isOfflinePayment } from "../lib/payment";
+import {
+  cheapestPaidRate,
+  orderTotals,
+  requiresAddress,
+  type ShippingMethodKey,
+  type ShippingRate,
+} from "../lib/shipping";
 import { OrderSummarySidebar } from "./OrderSummarySidebar";
 import { StepContact } from "./StepContact";
 import { StepPayment } from "./StepPayment";
@@ -86,6 +95,8 @@ function firstValidationMessage(errors: unknown): string | undefined {
 
 const STEP_LABELS = ["Kontakt", "Dostawa", "Płatność"];
 
+export type CouponResult = { valid: boolean; discountPln: number; message: string | null };
+
 type InitialContact = Pick<
   CheckoutFormData,
   "email" | "firstName" | "lastName" | "phone" | "street" | "apartment" | "city" | "postalCode"
@@ -137,10 +148,86 @@ export function CheckoutForm({
   });
   const [error, setError] = useState<string | null>(null);
   const [redirecting, setRedirecting] = useState(false);
+  // Bumped when a draft is restored, so StepContact remounts with the restored values
+  const [draftKey, setDraftKey] = useState(0);
+  const [hydrated, setHydrated] = useState(false);
+  const headingRef = useRef<HTMLHeadingElement>(null);
+  const stepChangedByUser = useRef(false);
+  const saleSubtotal = saleSubtotalPln(items);
+
+  // Verified here, not in the payment step, so the summary on every step
+  // already reflects the code — it can move the order below the free-delivery threshold
+  const [couponResult, setCouponResult] = useState<CouponResult | null>(null);
+  const [verifyingCoupon, setVerifyingCoupon] = useState(false);
+  const { execute: executeVerify } = useAction(verifyCoupon, {
+    onSuccess: ({ data: result, input }) => {
+      if (result && !result.valid && input.code === readSavedCoupon()) clearSavedCoupon();
+      setCouponResult(result ?? null);
+      setVerifyingCoupon(false);
+    },
+    onError: () => setVerifyingCoupon(false),
+  });
+  const verifyCouponCode = useCallback(
+    (code: string) => {
+      if (!code.trim()) return;
+      setVerifyingCoupon(true);
+      executeVerify({ code, subtotal, saleSubtotal });
+    },
+    [executeVerify, subtotal, saleSubtotal],
+  );
+
+  // sessionStorage exists only in the browser, so the draft is restored after mount
+  // biome-ignore lint/correctness/useExhaustiveDependencies: once on mount
+  useEffect(() => {
+    const draft = readDraft(cartId, INITIAL_DATA);
+    if (draft) {
+      const { shippingMethod, paymentMethod } = draft.data;
+      let restoredStep = draft.step;
+      // Methods may have been switched off since the draft was saved
+      if (shippingMethod && !shippingRates.some((r) => r.method === shippingMethod)) {
+        delete draft.data.shippingMethod;
+        delete draft.data.inpostMachineId;
+        delete draft.data.inpostMachineName;
+        // The address or point belonged to that method — let the shopper choose again
+        restoredStep = Math.min(restoredStep, 2);
+      }
+      if (paymentMethod && !onlinePaymentsEnabled && !isOfflinePayment(paymentMethod)) {
+        delete draft.data.paymentMethod;
+      }
+      setFormData((prev) => ({ ...prev, ...draft.data }));
+      setStep(restoredStep);
+      setDraftKey((k) => k + 1);
+    }
+    // Carries over the code verified in the cart or brought in by the welcome e-mail
+    const code = draft?.data.couponCode?.trim() || readSavedCoupon();
+    if (code) {
+      setFormData((prev) => ({ ...prev, couponCode: code }));
+      verifyCouponCode(code);
+    }
+    setHydrated(true);
+  }, []);
+
+  useEffect(() => {
+    if (hydrated) saveDraft(cartId, step, formData);
+  }, [hydrated, cartId, step, formData]);
+
+  // Focus follows the step the shopper moved to (not the first render or a restore)
+  // biome-ignore lint/correctness/useExhaustiveDependencies: runs after each step change
+  useEffect(() => {
+    if (!stepChangedByUser.current) return;
+    stepChangedByUser.current = false;
+    headingRef.current?.focus();
+  }, [step]);
+
+  function goToStep(n: number) {
+    stepChangedByUser.current = true;
+    setStep(n);
+  }
 
   const { execute, isPending } = useAction(placeOrder, {
     onSuccess: ({ data }) => {
       clearSavedCoupon();
+      clearDraft();
       if (data?.redirectUrl) {
         setRedirecting(true);
         window.location.href = data.redirectUrl;
@@ -158,9 +245,23 @@ export function CheckoutForm({
     },
   });
 
-  function update(updates: Partial<CheckoutFormData>) {
+  const update = useCallback((updates: Partial<CheckoutFormData>) => {
     setFormData((prev) => ({ ...prev, ...updates }));
-  }
+  }, []);
+
+  const discount = cartDiscount(
+    promo,
+    subtotal,
+    saleSubtotal,
+    couponResult?.valid ? couponResult.discountPln : 0,
+  );
+  const selectedRate = shippingRates.find((r) => r.method === formData.shippingMethod);
+  const totals = orderTotals(
+    subtotal,
+    discount.discountPln,
+    selectedRate?.pricePln ?? 0,
+    freeShippingThresholdPln,
+  );
 
   function handlePlaceOrder() {
     setError(null);
@@ -196,63 +297,107 @@ export function CheckoutForm({
   return (
     <div className="relative">
       {/* Step indicator */}
-      <div className="mb-8 flex items-center justify-center gap-2">
-        {STEP_LABELS.map((label, i) => {
-          const n = i + 1;
-          const active = step === n;
-          const done = step > n;
-          return (
-            <div key={label} className="flex items-center gap-2">
-              <div
-                className={`flex size-7 items-center justify-center rounded-full text-xs font-semibold ${
-                  active
-                    ? "bg-primary text-primary-foreground"
-                    : done
-                      ? "bg-primary/20 text-primary"
-                      : "bg-muted text-muted-foreground"
-                }`}
+      <nav aria-label="Etapy zamówienia" className="mb-8">
+        <ol className="flex items-center justify-center gap-2">
+          {STEP_LABELS.map((label, i) => {
+            const n = i + 1;
+            const active = step === n;
+            const done = step > n;
+            return (
+              <li
+                key={label}
+                aria-current={active ? "step" : undefined}
+                className="flex items-center gap-2"
               >
-                {n}
-              </div>
-              <span className={`text-sm ${active ? "font-semibold" : "text-muted-foreground"}`}>
-                {label}
-              </span>
-              {i < STEP_LABELS.length - 1 && <div className="mx-1 h-px w-8 bg-border" />}
-            </div>
-          );
-        })}
-      </div>
+                <span
+                  aria-hidden
+                  className={`flex size-7 items-center justify-center rounded-full text-xs font-semibold ${
+                    active
+                      ? "bg-primary text-primary-foreground"
+                      : done
+                        ? "border border-primary bg-background text-primary"
+                        : "bg-muted text-muted-foreground"
+                  }`}
+                >
+                  {n}
+                </span>
+                <span className="sr-only">
+                  Krok {n}: {label}
+                  {done && " (ukończony)"}
+                </span>
+                {/* Mobile has no room for three labels — it shows only the active one */}
+                <span
+                  aria-hidden
+                  className={`text-sm ${active ? "font-semibold" : "hidden text-muted-foreground sm:inline"}`}
+                >
+                  {label}
+                </span>
+                {i < STEP_LABELS.length - 1 && (
+                  <span aria-hidden className="mx-1 h-px w-4 bg-border sm:w-8" />
+                )}
+              </li>
+            );
+          })}
+        </ol>
+      </nav>
 
       {(step === 1 || step === 2) && (
-        <div className="grid gap-8 lg:grid-cols-[1fr_320px]">
+        <div className="grid grid-cols-1 gap-8 lg:grid-cols-[minmax(0,1fr)_320px]">
           {step === 1 && (
-            <StepContact data={formData} onChange={update} onNext={() => setStep(2)} />
+            <StepContact
+              key={draftKey}
+              headingRef={headingRef}
+              data={formData}
+              onChange={update}
+              onNext={() => goToStep(2)}
+            />
           )}
           {step === 2 && (
             <StepShipping
+              headingRef={headingRef}
               data={formData}
-              subtotal={subtotal}
+              productsPln={totals.productsPln}
               freeShippingThresholdPln={freeShippingThresholdPln}
               shippingRates={shippingRates}
               onChange={update}
-              onBack={() => setStep(1)}
-              onNext={() => setStep(3)}
+              onBack={() => goToStep(1)}
+              onNext={() => goToStep(3)}
             />
           )}
-          <OrderSummarySidebar items={items} subtotal={subtotal} />
+          <OrderSummarySidebar
+            items={items}
+            subtotal={subtotal}
+            discount={discount}
+            promoName={promo?.name}
+            couponCode={formData.couponCode}
+            freeShippingThresholdPln={freeShippingThresholdPln}
+            cheapestShippingPln={cheapestPaidRate(shippingRates)}
+            // Step 1 hasn't asked for a method yet, so it shows the estimate
+            shipping={
+              step === 2 && selectedRate
+                ? { method: selectedRate.method, pricePln: totals.shippingPln }
+                : null
+            }
+            totals={totals}
+          />
         </div>
       )}
       {step === 3 && (
         <StepPayment
+          headingRef={headingRef}
           data={formData}
           onChange={update}
-          onBack={() => setStep(2)}
+          onBack={() => goToStep(2)}
           onSubmit={handlePlaceOrder}
           items={items}
           subtotal={subtotal}
-          freeShippingThresholdPln={freeShippingThresholdPln}
-          promo={promo}
-          shippingRates={shippingRates}
+          discount={discount}
+          promoName={promo?.name}
+          totals={totals}
+          couponResult={couponResult}
+          verifyingCoupon={verifyingCoupon}
+          onVerifyCoupon={verifyCouponCode}
+          onCouponEdit={() => setCouponResult(null)}
           onlinePaymentsEnabled={onlinePaymentsEnabled}
           pending={isPending || redirecting}
           error={error}

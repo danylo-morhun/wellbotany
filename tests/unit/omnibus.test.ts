@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { discountPercent, omnibusNote } from "@/lib/omnibus";
+import { discountPercent, omnibusNote, referencePrice } from "@/lib/omnibus";
 
 describe("omnibusNote", () => {
   it("describes the lowest price before a reduction", () => {
@@ -41,6 +41,23 @@ describe("discountPercent", () => {
     ).toBe(null);
     expect(
       discountPercent({ pricePln: 8000, comparePricePln: null, lowestPrice30dPln: 10000 }),
+    ).toBe(null);
+  });
+});
+
+describe("referencePrice", () => {
+  it("strikes the 30-day low the percent is measured from, not the regular price", () => {
+    expect(
+      referencePrice({ pricePln: 10000, comparePricePln: 20000, lowestPrice30dPln: 12500 }),
+    ).toBe(12500);
+  });
+
+  it("is null without a real reduction", () => {
+    expect(
+      referencePrice({ pricePln: 8000, comparePricePln: 10000, lowestPrice30dPln: 7500 }),
+    ).toBe(null);
+    expect(
+      referencePrice({ pricePln: 8000, comparePricePln: null, lowestPrice30dPln: 10000 }),
     ).toBe(null);
   });
 });

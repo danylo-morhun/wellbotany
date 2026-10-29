@@ -25,7 +25,7 @@ export function RevenueChart({ days }: { days: RevenueDay[] }) {
   return (
     <figure>
       <div className="relative flex h-48 gap-3">
-        <div className="flex w-12 shrink-0 flex-col justify-between text-right text-[11px] text-muted-foreground tabular-nums">
+        <div className="flex w-12 shrink-0 flex-col justify-between text-right text-xs text-muted-foreground tabular-nums">
           {ticks.map((t) => (
             <span key={t} className="-translate-y-1/2 last:translate-y-1/2">
               {formatAxis(t)}
@@ -40,30 +40,55 @@ export function RevenueChart({ days }: { days: RevenueDay[] }) {
               style={{ top: `${(i / (ticks.length - 1)) * 100}%` }}
             />
           ))}
-          {/* biome-ignore lint/a11y/noStaticElementInteractions: hover-only tooltip; data is in the sr-only table */}
+          {/* One tab stop; arrow keys move between days (roving tabindex) */}
+          {/* biome-ignore lint/a11y/useSemanticElements: a fieldset would imply a form; this is a chart */}
           <div
+            role="group"
+            aria-label="Wartość zamówień dziennie — strzałki zmieniają dzień"
             className="absolute inset-0 flex items-end gap-0.5"
-            onMouseLeave={() => setHover(null)}
+            onPointerLeave={(e) => e.pointerType === "mouse" && setHover(null)}
+            onBlur={(e) => !e.currentTarget.contains(e.relatedTarget) && setHover(null)}
           >
             {days.map((d, i) => (
-              // biome-ignore lint/a11y/noStaticElementInteractions: hover-only tooltip; data is in the sr-only table
-              <div
+              <button
                 key={d.key}
-                onMouseEnter={() => setHover(i)}
-                className="flex h-full flex-1 items-end justify-center"
+                type="button"
+                tabIndex={i === (hover ?? days.length - 1) ? 0 : -1}
+                aria-label={`${d.label}: ${formatPrice(d.totalPln)}, ${d.orders} ${pluralPl(d.orders, "zamówienie", "zamówienia", "zamówień")}`}
+                onPointerEnter={() => setHover(i)}
+                onPointerDown={() => setHover(i)}
+                onFocus={() => setHover(i)}
+                onKeyDown={(e) => {
+                  const next =
+                    e.key === "ArrowRight"
+                      ? i + 1
+                      : e.key === "ArrowLeft"
+                        ? i - 1
+                        : e.key === "Home"
+                          ? 0
+                          : e.key === "End"
+                            ? days.length - 1
+                            : null;
+                  if (next === null || next < 0 || next >= days.length) return;
+                  e.preventDefault();
+                  const buttons = e.currentTarget.parentElement?.querySelectorAll("button");
+                  buttons?.[next]?.focus();
+                }}
+                className="flex h-full flex-1 items-end justify-center rounded-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/50"
               >
-                <div
+                <span
                   className="w-full max-w-6 rounded-t-[4px] bg-primary transition-opacity duration-100 motion-reduce:transition-none"
                   style={{
                     height: d.totalPln ? `max(2px, ${(d.totalPln / max) * 100}%)` : 0,
                     opacity: hover === null || hover === i ? 1 : 0.45,
                   }}
                 />
-              </div>
+              </button>
             ))}
           </div>
           {hovered && hover !== null && (
             <div
+              aria-hidden
               className="pointer-events-none absolute -top-2 z-10 -translate-x-1/2 -translate-y-full rounded-lg bg-popover px-3 py-2 text-xs whitespace-nowrap shadow-float"
               style={{ left: `${((hover + 0.5) / days.length) * 100}%` }}
             >
@@ -76,7 +101,7 @@ export function RevenueChart({ days }: { days: RevenueDay[] }) {
           )}
         </div>
       </div>
-      <div className="mt-2 flex justify-between pl-15 text-[11px] text-muted-foreground">
+      <div className="mt-2 flex justify-between pl-15 text-xs text-muted-foreground">
         <span>{days[0]?.label}</span>
         <span>{days[Math.floor(days.length / 2)]?.label}</span>
         <span>{days.at(-1)?.label}</span>

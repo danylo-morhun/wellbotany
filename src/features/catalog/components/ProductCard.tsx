@@ -1,14 +1,17 @@
 import Image from "next/image";
 import Link from "next/link";
+import { DiscountBadge } from "@/components/ui/discount-badge";
 import { QuickAddButton } from "@/features/cart/components/QuickAddButton";
 import { formatPrice } from "@/lib/format";
-import { discountPercent, omnibusNote } from "@/lib/omnibus";
+import { discountPercent, omnibusNote, referencePrice } from "@/lib/omnibus";
 import { formatUnitPrice, variantPackQuantity } from "@/lib/unit-price";
 import type { ProductListItem } from "../actions";
 import { resolveDisplayBrand } from "../lib/brand-tree";
+import { cardMetaLine } from "../lib/product-facts";
 
 type Props = {
-  product: ProductListItem;
+  // servingSize is optional so listings that don't select it still type-check
+  product: ProductListItem & { servingSize?: string | null };
   priority?: boolean;
   /** h3 inside a page section that already has its own h2 */
   headingLevel?: 2 | 3;
@@ -20,10 +23,11 @@ export function ProductCard({ product, priority = false, headingLevel = 2 }: Pro
   const defaultVariant = product.variants[0];
   const mainImage = product.images[0];
   const isOutOfStock = defaultVariant ? defaultVariant.stock <= 0 : true;
-  const comparePrice = defaultVariant?.comparePricePln ?? null;
+  const comparePrice = defaultVariant ? referencePrice(defaultVariant) : null;
   const discountPct = defaultVariant ? discountPercent(defaultVariant) : null;
   const hasDiscount = comparePrice != null && discountPct != null;
   const lowestNote = defaultVariant ? omnibusNote(defaultVariant) : null;
+  const metaLine = cardMetaLine(product);
   const unitPrice = defaultVariant
     ? formatUnitPrice(
         defaultVariant.pricePln,
@@ -64,18 +68,21 @@ export function ProductCard({ product, priority = false, headingLevel = 2 }: Pro
             </div>
           )}
 
-          <div className="absolute left-3 top-3 flex flex-col items-start gap-1.5">
+          {!isOutOfStock && hasDiscount && discountPct != null && (
+            <DiscountBadge percent={discountPct} variant="corner" />
+          )}
+          {/* Below the discount corner when both apply */}
+          <div
+            className={`absolute left-3 flex flex-col items-start gap-1.5 ${
+              !isOutOfStock && hasDiscount ? "top-11" : "top-3"
+            }`}
+          >
             {isOutOfStock ? (
               <span className="rounded-full bg-muted-foreground/90 px-2.5 py-1 text-xs font-semibold text-background">
                 Niedostępny
               </span>
             ) : (
               <>
-                {hasDiscount && (
-                  <span className="flex size-10 items-center justify-center rounded-full bg-accent text-[11px] font-bold text-accent-foreground animate-pop-in motion-reduce:animate-none">
-                    -{discountPct}%
-                  </span>
-                )}
                 {product.isNewArrival && (
                   <span className="rounded-full bg-primary px-2.5 py-1 text-xs font-semibold text-primary-foreground">
                     Nowość
@@ -101,6 +108,8 @@ export function ProductCard({ product, priority = false, headingLevel = 2 }: Pro
           <Heading className="line-clamp-2 text-sm font-semibold leading-snug text-foreground transition-colors group-hover:text-primary">
             {product.namePl}
           </Heading>
+          {/* Inside the flex-1 link so the price row stays aligned across a grid row */}
+          {metaLine && <p className="mt-1 truncate text-xs text-muted-foreground">{metaLine}</p>}
         </Link>
 
         {product.tags.length > 0 && (
@@ -116,7 +125,7 @@ export function ProductCard({ product, priority = false, headingLevel = 2 }: Pro
           </div>
         )}
 
-        <div className="mt-3 flex items-baseline gap-2">
+        <div className="mt-3 flex flex-wrap items-baseline gap-x-2">
           {defaultVariant ? (
             <>
               <span className="text-base font-bold text-foreground">

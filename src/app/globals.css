@@ -130,16 +130,26 @@
   --accent-foreground: oklch(0.25 0.06 50);
 
   --destructive: oklch(0.577 0.245 27.325);
+  --destructive-foreground: oklch(1 0 0);
   --border: oklch(0.92 0.01 180);
-  --input: oklch(0.92 0.01 180);
+  /* Field outlines need 3:1 against white (WCAG 1.4.11); --border stays for dividers */
+  --input: oklch(0.65 0.01 180);
   --ring: oklch(0.6 0.13 165);
 
-  --success: oklch(0.55 0.14 160);
+  /* Dark enough for text on white and on mint (bg-secondary) */
+  --success: oklch(0.5 0.12 160);
   --success-foreground: oklch(0.99 0 0);
   --warning: oklch(0.78 0.15 95);
   --warning-foreground: oklch(0.25 0.06 95);
   --info: oklch(0.58 0.14 240);
   --info-foreground: oklch(0.99 0 0);
+
+  /* Status text on its own tint (bg-x/10–25): pulled toward --foreground to keep 4.5:1 */
+  --primary-ink: color-mix(in oklch, var(--primary) 75%, var(--foreground));
+  --success-ink: color-mix(in oklch, var(--success) 75%, var(--foreground));
+  --info-ink: color-mix(in oklch, var(--info) 75%, var(--foreground));
+  --destructive-ink: color-mix(in oklch, var(--destructive) 75%, var(--foreground));
+  --warning-ink: var(--warning-foreground);
 
   --radius: 0.75rem;
 
@@ -178,20 +188,22 @@
   --secondary-foreground: oklch(0.88 0.03 168);
 
   --muted: oklch(0.25 0.012 175);
-  --muted-foreground: oklch(0.68 0.015 175);
+  --muted-foreground: oklch(0.7 0.015 175);
 
   --accent: oklch(0.72 0.14 60);
   --accent-foreground: oklch(0.18 0.05 50);
 
   --destructive: oklch(0.66 0.21 25);
+  --destructive-foreground: oklch(0.16 0.02 25);
   --border: oklch(0.3 0.012 175);
-  --input: oklch(0.3 0.012 175);
+  --input: oklch(0.52 0.012 175);
   --ring: oklch(0.74 0.13 165);
 
   --success: oklch(0.72 0.13 160);
   --success-foreground: oklch(0.16 0.02 170);
   --warning: oklch(0.8 0.14 95);
   --warning-foreground: oklch(0.2 0.05 95);
+  --warning-ink: var(--warning);
   --info: oklch(0.7 0.12 240);
   --info-foreground: oklch(0.15 0.02 240);
 
@@ -258,6 +270,23 @@ html[data-cookie-consent] #cookie-banner:not([data-open]) {
   html:not([data-cookie-consent]) body:has(#cookie-banner),
   body:has(#cookie-banner[data-open]) {
     padding-bottom: 19rem;
+  }
+}
+
+/* Safety net for reduced motion: components still add their own motion-reduce fallbacks */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+  [data-fade-in="pending"],
+  [data-fade-in="visible"] {
+    opacity: 1;
+    transform: none;
   }
 }
 

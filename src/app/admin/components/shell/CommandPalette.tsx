@@ -248,12 +248,18 @@ export function CommandPalette() {
     }
   }
 
-  let lastGroup = "";
+  // Consecutive commands of one group, keeping their index in `commands` for arrow-key nav
+  const groups: { name: string; items: { cmd: Command; index: number }[] }[] = [];
+  commands.forEach((cmd, index) => {
+    const last = groups.at(-1);
+    if (last?.name === cmd.group) last.items.push({ cmd, index });
+    else groups.push({ name: cmd.group, items: [{ cmd, index }] });
+  });
 
   return (
     <Dialog.Root open={open} onOpenChange={onOpenChange}>
       <Dialog.Portal>
-        <Dialog.Backdrop className="fixed inset-0 z-50 bg-foreground/20 backdrop-blur-[2px] transition-opacity duration-150 data-[ending-style]:opacity-0 data-[starting-style]:opacity-0 motion-reduce:transition-none" />
+        <Dialog.Backdrop className="fixed inset-0 z-50 bg-black/30 backdrop-blur-[2px] transition-opacity duration-150 data-[ending-style]:opacity-0 data-[starting-style]:opacity-0 motion-reduce:transition-none" />
         <Dialog.Popup className="fixed top-[12vh] left-1/2 z-50 flex max-h-[70vh] w-[calc(100vw-2rem)] max-w-xl -translate-x-1/2 flex-col overflow-hidden rounded-2xl bg-popover text-popover-foreground shadow-float outline-none transition-[opacity,transform] duration-150 data-[ending-style]:scale-[0.98] data-[ending-style]:opacity-0 data-[starting-style]:scale-[0.98] data-[starting-style]:opacity-0 motion-reduce:transition-none">
           <Dialog.Title className="sr-only">Wyszukaj lub przejdź</Dialog.Title>
           <div className="flex items-center gap-2.5 border-b border-border px-4">
@@ -276,6 +282,9 @@ export function CommandPalette() {
               <span className="size-3.5 animate-spin rounded-full border-2 border-muted-foreground/30 border-t-muted-foreground motion-reduce:animate-none" />
             )}
           </div>
+          <p className="sr-only" aria-live="polite">
+            {loading ? "Szukanie…" : `Wyniki: ${commands.length}`}
+          </p>
           <div
             ref={listRef}
             id="admin-command-list"
@@ -285,54 +294,76 @@ export function CommandPalette() {
             {commands.length === 0 && !loading && (
               <p className="px-3 py-8 text-center text-sm text-muted-foreground">Brak wyników</p>
             )}
-            {commands.map((cmd, index) => {
-              const showGroup = cmd.group !== lastGroup;
-              lastGroup = cmd.group;
-              const Icon = cmd.icon;
-              return (
-                <div key={cmd.id}>
-                  {showGroup && (
-                    <p className="px-3 pt-2 pb-1 text-xs font-medium text-muted-foreground">
-                      {cmd.group}
-                    </p>
-                  )}
-                  <div
-                    id={`cmd-${cmd.id}`}
-                    role="option"
-                    tabIndex={-1}
-                    aria-selected={index === active}
-                    data-index={index}
-                    onMouseMove={() => setActive(index)}
-                    onClick={() => run(cmd)}
-                    onKeyDown={() => {}}
-                    className={cn(
-                      "flex h-10 cursor-pointer items-center gap-3 rounded-lg px-3 text-sm",
-                      index === active && "bg-muted",
-                    )}
-                  >
-                    {cmd.image ? (
-                      <span className="relative size-6 shrink-0 overflow-hidden rounded bg-muted">
-                        <Image src={cmd.image} alt="" fill sizes="24px" className="object-cover" />
-                      </span>
-                    ) : Icon ? (
-                      <Icon className="size-4 shrink-0 text-muted-foreground" aria-hidden />
-                    ) : null}
-                    <span className="min-w-0 flex-1 truncate">{cmd.label}</span>
-                    {cmd.hint && (
-                      <span className="shrink-0 truncate text-xs text-muted-foreground">
-                        {cmd.hint}
-                      </span>
-                    )}
-                    {index === active && (
-                      <CornerDownLeft
-                        className="size-3.5 shrink-0 text-muted-foreground"
-                        aria-hidden
-                      />
-                    )}
-                  </div>
-                </div>
-              );
-            })}
+            {groups.map((group, g) => (
+              // biome-ignore lint/a11y/useSemanticElements: ARIA group is what a listbox allows; fieldset isn't
+              <div key={group.items[0].cmd.id} role="group" aria-labelledby={`cmd-group-${g}`}>
+                <p
+                  id={`cmd-group-${g}`}
+                  className="px-3 pt-2 pb-1 text-xs font-medium text-muted-foreground"
+                >
+                  {group.name}
+                </p>
+                {group.items.map(({ cmd, index }) => {
+                  const Icon = cmd.icon;
+                  return (
+                    <div
+                      key={cmd.id}
+                      id={`cmd-${cmd.id}`}
+                      role="option"
+                      tabIndex={-1}
+                      aria-selected={index === active}
+                      data-index={index}
+                      onMouseMove={() => setActive(index)}
+                      onClick={() => run(cmd)}
+                      onKeyDown={() => {}}
+                      className={cn(
+                        "flex h-10 cursor-pointer items-center gap-3 rounded-lg px-3 text-sm pointer-coarse:h-12",
+                        index === active && "bg-secondary font-medium text-secondary-foreground",
+                      )}
+                    >
+                      {cmd.image ? (
+                        <span className="relative size-6 shrink-0 overflow-hidden rounded bg-muted">
+                          <Image
+                            src={cmd.image}
+                            alt=""
+                            fill
+                            sizes="24px"
+                            className="object-cover"
+                          />
+                        </span>
+                      ) : Icon ? (
+                        <Icon
+                          className={cn(
+                            "size-4 shrink-0",
+                            index === active ? "text-primary-ink" : "text-muted-foreground",
+                          )}
+                          aria-hidden
+                        />
+                      ) : null}
+                      <span className="min-w-0 flex-1 truncate">{cmd.label}</span>
+                      {cmd.hint && (
+                        <span
+                          className={cn(
+                            "shrink-0 truncate text-xs font-normal",
+                            index === active
+                              ? "text-secondary-foreground"
+                              : "text-muted-foreground",
+                          )}
+                        >
+                          {cmd.hint}
+                        </span>
+                      )}
+                      {index === active && (
+                        <CornerDownLeft
+                          className="size-3.5 shrink-0 text-muted-foreground"
+                          aria-hidden
+                        />
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+            ))}
           </div>
           <div className="flex items-center gap-4 border-t border-border px-4 py-2 text-xs text-muted-foreground">
             <span>
@@ -353,7 +384,7 @@ export function CommandPalette() {
 
 export function Kbd({ children }: { children: React.ReactNode }) {
   return (
-    <kbd className="inline-flex h-5 min-w-5 items-center justify-center rounded border border-border bg-muted px-1 font-sans text-[11px] font-medium text-muted-foreground">
+    <kbd className="inline-flex h-5 min-w-5 items-center justify-center rounded border border-border bg-muted px-1 font-sans text-xs font-medium text-muted-foreground">
       {children}
     </kbd>
   );

@@ -26,7 +26,7 @@ export function ThemeToggle() {
       type="button"
       onClick={() => setTheme(isDark ? "light" : "dark")}
       aria-label={isDark ? "Włącz jasny motyw" : "Włącz ciemny motyw"}
-      className="rounded-full p-2.5 text-muted-foreground transition-colors hover:bg-secondary hover:text-primary"
+      className="rounded-full p-2.5 text-muted-foreground transition-colors hover:bg-secondary hover:text-primary-ink"
     >
       <span
         key={isDark ? "dark" : "light"}

@@ -14,7 +14,7 @@ export function Breadcrumbs({ items }: Props) {
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: toJsonLdScript(jsonLd) }}
       />
-      <nav aria-label="Breadcrumb">
+      <nav aria-label="Ścieżka nawigacji">
         <ol className="flex flex-wrap items-center gap-1 text-sm text-muted-foreground">
           {items.map((item, index) => {
             const isLast = index === items.length - 1;
