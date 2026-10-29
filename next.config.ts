@@ -35,7 +35,6 @@ const nextConfig: NextConfig = {
     imageSizes: [96, 256, 384],
     remotePatterns: [
       { protocol: "https", hostname: "res.cloudinary.com" },
-      { protocol: "https", hostname: "dcu4fybzavbhk0mv.public.blob.vercel-storage.com" },
       // one gift set image still lives on the old shop
       { protocol: "https", hostname: "zielarniakaliska.com.pl" },
     ],
