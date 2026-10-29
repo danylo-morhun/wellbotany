@@ -1,6 +1,7 @@
 import {
   Award,
   BookOpen,
+  ChartColumn,
   ClipboardList,
   FolderTree,
   Gift,
@@ -49,6 +50,7 @@ export const NAV_GROUPS: NavGroup[] = [
         badge: "orders",
         shortcut: "o",
       },
+      { href: "/admin/wyniki", label: "Wyniki", icon: ChartColumn, shortcut: "w" },
       { href: "/admin/klienci", label: "Klienci", icon: Users, shortcut: "c" },
       { href: "/admin/kupony", label: "Kupony", icon: TicketPercent },
       { href: "/admin/dostawa", label: "Dostawa", icon: Truck },
