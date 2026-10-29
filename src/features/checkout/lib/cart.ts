@@ -30,6 +30,7 @@ export async function getCartForCheckout(cartId: string) {
               comparePricePln: true,
               lowestPrice30dPln: true,
               vatRate: true,
+              costPricePln: true,
               optionValue: true,
               stock: true,
               product: { select: { namePl: true } },
