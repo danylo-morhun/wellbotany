@@ -7,6 +7,7 @@ import {
   type LucideIcon,
   Mail,
   PackageCheck,
+  RefreshCwOff,
   Star,
   Store,
   Truck,
@@ -31,6 +32,7 @@ import {
 } from "@/features/analytics/lib/profit";
 import { TO_PACK_STATUSES } from "@/features/orders/lib/status-labels";
 import { lowStockWhere } from "@/features/products/lib/stock";
+import { syncProblem } from "@/features/stock-sync/lib/health";
 import { formatPrice, pluralPl } from "@/lib/format";
 import { PICKUP_HOLD_DAYS } from "@/lib/pickup-locations";
 import { prisma } from "@/lib/prisma";
@@ -64,6 +66,7 @@ export default async function AdminPage() {
     activeNoImage,
     recentOrders,
     topProducts,
+    lastSync,
   ] = await Promise.all([
     prisma.order.findMany({
       where: { ...salesWhere, createdAt: { gte: rangeStart } },
@@ -121,7 +124,12 @@ export default async function AdminPage() {
       orderBy: { _sum: { quantity: "desc" } },
       take: 6,
     }),
+    prisma.syncRun.findFirst({
+      orderBy: { createdAt: "desc" },
+      select: { createdAt: true, error: true },
+    }),
   ]);
+  const sync = lastSync ? syncProblem(lastSync, now) : null;
 
   // Bucket by shop-local day so late-evening orders land on the right date
   const buckets = new Map<string, { totalPln: number; orders: number }>();
@@ -155,6 +163,16 @@ export default async function AdminPage() {
     icon: LucideIcon;
     urgent?: boolean;
   }[] = [
+    {
+      count: sync ? 1 : 0,
+      label:
+        sync === "error"
+          ? "Subiekt: ostatni stan odrzucony — sprawdź magazyn"
+          : `Subiekt nie przysyła stanów (ostatnio: ${relativeDate(lastSync?.createdAt ?? now, now)})`,
+      href: "/admin/magazyn",
+      icon: RefreshCwOff,
+      urgent: true,
+    },
     {
       count: toPack,
       label: "Zamówienia do spakowania",
