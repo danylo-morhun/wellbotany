@@ -6,10 +6,12 @@
 // promotion), price 0 on either side, and suspicious jumps (> +50% / < −30%
 // against the current DB price) — those need a human. PriceHistory and
 // lowestPrice30dPln are written by the DB trigger, not here. With --apply,
-// old prices go to prices-from-subiekt-backup-<timestamp>.json next to the CSV.
+// old prices go to prices-from-subiekt-backup-<timestamp>.json next to the CSV,
+// then the live site's caches are expired and Merchant Center is resynced.
 import { readFileSync, writeFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { prisma } from "@/lib/prisma";
+import { refreshSite } from "./lib/refresh-site";
 
 const MAX_RISE = 0.5;
 const MAX_DROP = 0.3;
@@ -93,6 +95,8 @@ if (apply) {
     });
   }
   console.log(`changed ${updates.length} prices`);
+  // Pages show the new prices and Google gets them now, not after the night run
+  await refreshSite({ merchant: true });
 } else {
   console.log("dry run — pass --apply to write");
 }
