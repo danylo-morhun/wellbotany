@@ -12,7 +12,9 @@ import { VariantSelectionProvider } from "@/features/catalog/components/VariantS
 import { cheapestPaidRate } from "@/features/checkout/lib/shipping";
 import { getShippingRates } from "@/features/checkout/lib/shipping-rates";
 import { findIngredientSlug, getIngredientLinkIndex } from "@/features/glossary/lib/queries";
+import { contactHref, manufacturerInfo } from "@/features/products/lib/gpsr";
 import { parseNutritionLabel, readNutritionFacts } from "@/features/products/lib/nutrition-facts";
+import { productKind } from "@/features/products/lib/product-kind";
 import { ProductReviews } from "@/features/reviews/components/ProductReviews";
 import { getProductReviews } from "@/features/reviews/lib/queries";
 import { getShopSettings } from "@/features/settings/lib/shop-settings";
@@ -150,6 +152,10 @@ export default async function ProduktPage({ params }: Props) {
   ];
 
   const healthWarnings = product.healthWarnings as string[] | null;
+  // GPSR art. 19 — food and supplements are outside GPSR and carry responsibleEntity instead
+  const manufacturer =
+    productKind(product.category) === "nonFood" ? manufacturerInfo(product.brand) : null;
+  const manufacturerHref = manufacturer?.contact ? contactHref(manufacturer.contact) : null;
   const ingredients = product.ingredients as {
     pl?: string;
     en?: string;
@@ -438,6 +444,29 @@ export default async function ProduktPage({ params }: Props) {
             <p className="text-xs text-muted-foreground">
               Podmiot odpowiedzialny: {product.responsibleEntity}
             </p>
+          )}
+
+          {manufacturer && (
+            <div className="space-y-1 text-xs text-muted-foreground">
+              <p>
+                Producent: {[manufacturer.name, manufacturer.address].filter(Boolean).join(", ")}
+              </p>
+              {manufacturer.contact && (
+                <p>
+                  Kontakt z producentem:{" "}
+                  {manufacturerHref ? (
+                    <a href={manufacturerHref} className="underline hover:text-foreground">
+                      {manufacturer.contact}
+                    </a>
+                  ) : (
+                    manufacturer.contact
+                  )}
+                </p>
+              )}
+              {manufacturer.euResponsiblePerson && (
+                <p>Osoba odpowiedzialna w UE: {manufacturer.euResponsiblePerson}</p>
+              )}
+            </div>
           )}
 
           <ProductReviews {...reviews} />

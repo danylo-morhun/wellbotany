@@ -245,6 +245,14 @@ export async function getProducts(filters: CatalogFilters) {
 
 export type ProductListItem = Awaited<ReturnType<typeof getProducts>>["items"][number];
 
+// Manufacturer contact for non-food product pages (GPSR art. 19)
+const GPSR_BRAND_SELECT = {
+  manufacturerName: true,
+  manufacturerAddress: true,
+  manufacturerContact: true,
+  euResponsiblePerson: true,
+} as const;
+
 export const getProduct = unstable_cache(
   async (slug: string) =>
     prisma.product.findFirst({
@@ -283,7 +291,8 @@ export const getProduct = unstable_cache(
             description: true,
             logo: true,
             parentBrandId: true,
-            parentBrand: { select: { name: true, slug: true } },
+            ...GPSR_BRAND_SELECT,
+            parentBrand: { select: { name: true, slug: true, ...GPSR_BRAND_SELECT } },
           },
         },
         category: {
@@ -291,6 +300,7 @@ export const getProduct = unstable_cache(
             id: true,
             namePl: true,
             slug: true,
+            group: true,
             parentId: true,
             parent: { select: { namePl: true, slug: true } },
           },
