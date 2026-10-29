@@ -1,7 +1,8 @@
 name: Uptime
 
-# Lightweight availability check. Only CDN-cached pages, so it never wakes the
-# Neon compute (free-plan quota). A failed run emails the repo owner.
+# Lightweight availability check. CDN-cached pages plus one ISR product page
+# (re-rendered from the DB only after a cache invalidation), so it barely
+# touches the Neon compute (free-plan quota). A failed run emails the repo owner.
 # Note: GitHub pauses scheduled workflows after 60 days without repo activity.
 
 on:
@@ -19,7 +20,12 @@ jobs:
       - name: Check storefront
         run: |
           fail=0
-          for url in https://wellbotany.pl/ https://wellbotany.pl/regulamin; do
+          # Home and regulamin stay cached even with the DB down — a product
+          # page doesn't, so it catches a dead database (2026-10-26 outage)
+          product=$(curl -s --max-time 20 https://wellbotany.pl/sitemap/products.xml \
+            | grep -o '<loc>https://wellbotany.pl/produkt/[^<]*' | head -1 | sed 's/<loc>//')
+          [ -n "$product" ] || { echo "no product in sitemap"; fail=1; }
+          for url in https://wellbotany.pl/ https://wellbotany.pl/regulamin $product; do
             code=000
             for _ in 1 2 3; do
               code=$(curl -s -o /dev/null -w "%{http_code}" --max-time 20 "$url")
@@ -30,3 +36,10 @@ jobs:
             [ "$code" = 200 ] || fail=1
           done
           exit $fail
+
+      - name: Check shop agent heartbeat
+        # 503 when Xylem has been silent for 15+ min during shop hours (Redis only, no DB)
+        run: |
+          body=$(curl -s --max-time 20 -w "\n%{http_code}" https://wellbotany.pl/api/sync/subiekt/health?code=sklep1)
+          echo "$body"
+          [ "$(echo "$body" | tail -1)" = 200 ]
