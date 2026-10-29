@@ -154,6 +154,14 @@ model Brand {
   logo          String?
   website       String?
   countryCode   String? // ISO 3166-1 alpha-2, e.g. "PL", "DE"
+  // GPSR art. 19 (Reg. 2023/988): non-food product pages show the
+  // manufacturer's name, postal and electronic address — and for a non-EU
+  // manufacturer the EU responsible person. A product line inherits these
+  // from its parentBrand when left empty.
+  manufacturerName    String? // legal name when it differs from the brand name
+  manufacturerAddress String?
+  manufacturerContact String? // e-mail or contact page URL
+  euResponsiblePerson String? // name, postal + electronic address
   // A manufacturer's product line (e.g. ForMeds' BICAPS, PRENACAPS) is
   // still its own Brand row — parentBrand just groups it under the
   // manufacturer for browsing, mirroring Category's "CategoryTree".
