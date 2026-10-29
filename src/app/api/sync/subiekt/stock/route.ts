@@ -5,6 +5,7 @@ import { revalidateTag } from "next/cache";
 import { after, type NextRequest, NextResponse } from "next/server";
 import { productTag } from "@/features/catalog/lib/product-tag";
 import { applySnapshot } from "@/features/stock-sync/lib/apply";
+import { heartbeatKey } from "@/features/stock-sync/lib/heartbeat";
 import { authenticate } from "@/features/stock-sync/lib/signature";
 import { stockSnapshotSchema } from "@/features/stock-sync/schema";
 import { syncProductsToMerchant } from "@/lib/merchant";
@@ -32,7 +33,7 @@ export async function POST(req: NextRequest) {
   }
 
   // The agent's heartbeat lives in Redis, so syncs that change nothing never wake Postgres
-  await redis?.set(`stock-sync:heartbeat:${code}`, new Date().toISOString()).catch(console.error);
+  await redis?.set(heartbeatKey(code), new Date().toISOString()).catch(console.error);
   if (parsed.data.mode === "delta" && parsed.data.items.length === 0) {
     return NextResponse.json({ ok: true, changedLevels: 0, changedVariants: 0, unmatched: 0 });
   }
