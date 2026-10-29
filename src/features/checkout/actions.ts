@@ -310,6 +310,7 @@ export const placeOrder = actionClient
                 unitPricePln,
                 vatRate: item.variant.vatRate,
                 totalPln: unitPricePln * item.quantity,
+                unitCostPln: item.variant.costPricePln,
                 giftSetGroupId: item.giftSetGroupId,
                 giftSetId: item.giftSetId,
                 giftSetLabel: item.giftSetLabel,
