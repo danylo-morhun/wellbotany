@@ -54,7 +54,11 @@ describe("POST /api/sync/subiekt/stock", () => {
     expect(res.status).toBe(401);
   });
 
-  it("sets stock from Subiekt, holds back web orders Subiekt hasn't seen", async () => {
+  // One long scenario: ~85 sequential queries (3 syncs + an order). Against a
+  // remote DB (~100 ms per round trip) that is ~15 s, past the 15 s default.
+  it("sets stock from Subiekt, holds back web orders Subiekt hasn't seen", {
+    timeout: 60_000,
+  }, async () => {
     const ean = `59${Date.now()}`.slice(0, 13);
     const a = await variant(0, ean);
     const b = await variant(0);
