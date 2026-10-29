@@ -4,6 +4,7 @@ import { revalidatePath, updateTag } from "next/cache";
 import { syncCancellation } from "@/features/orders/lib/cancellation";
 import { buildTrackingUrl } from "@/features/orders/lib/tracking-url";
 import { requestOrderReview } from "@/features/reviews/lib/request";
+import { SUBIEKT_ORDERS_TAG } from "@/features/stock-sync/lib/orders-tag";
 import { ActionError } from "@/lib/action-error";
 import { sendPickupReadyEmail, sendTrackingEmail } from "@/lib/email/order-emails";
 import { prisma } from "@/lib/prisma";
@@ -62,6 +63,7 @@ async function applyOrderStatus(input: UpdateOrderStatusInput) {
   });
   revalidatePath("/admin/zamowienia");
   revalidatePath(`/admin/zamowienia/${input.orderId}`);
+  updateTag(SUBIEKT_ORDERS_TAG);
   if (stockChanged) {
     // Stock and coupon use came back (or were taken again)
     updateTag("products");
@@ -128,6 +130,7 @@ async function applyMarkPaid(orderId: string) {
       }),
     },
   });
+  updateTag(SUBIEKT_ORDERS_TAG);
   revalidatePath(`/admin/zamowienia/${orderId}`);
 }
 
@@ -148,6 +151,7 @@ export const markOrderInSubiekt = adminActionClient
       where: { id: orderId },
       data: { subiektEnteredAt: entered ? new Date() : null },
     });
+    updateTag(SUBIEKT_ORDERS_TAG);
     revalidatePath(`/admin/zamowienia/${orderId}`);
     return { success: true };
   });
