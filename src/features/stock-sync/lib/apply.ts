@@ -20,6 +20,7 @@ export type ApplyResult =
       changedVariants: number;
       unmatched: number;
       restockedOrSoldOut: string[];
+      changedProductSlugs: string[];
     }
   | { ok: false; error: string };
 
@@ -92,7 +93,10 @@ export async function applySnapshot(code: string, snapshot: StockSnapshot): Prom
         }
       }
 
-      const { changedVariants, restockedOrSoldOut } = await recomputeStock(tx, recompute);
+      const { changedVariants, restockedOrSoldOut, changedProductSlugs } = await recomputeStock(
+        tx,
+        recompute,
+      );
 
       await tx.stockLocation.update({
         where: { id: location.id },
@@ -106,6 +110,7 @@ export async function applySnapshot(code: string, snapshot: StockSnapshot): Prom
         changedVariants,
         unmatched: unmatched.length,
         restockedOrSoldOut,
+        changedProductSlugs,
       };
     },
     { timeout: 30_000 },
@@ -118,7 +123,7 @@ export async function applySnapshot(code: string, snapshot: StockSnapshot): Prom
  */
 async function recomputeStock(tx: Prisma.TransactionClient, variantIds: string[]) {
   const targets = new Map<string, number>();
-  const before = new Map<string, { stock: number; productId: string }>();
+  const before = new Map<string, { stock: number; productId: string; slug: string }>();
 
   for (const part of chunks(variantIds)) {
     const [levels, pending, rows] = await Promise.all([
@@ -140,7 +145,7 @@ async function recomputeStock(tx: Prisma.TransactionClient, variantIds: string[]
       }),
       tx.productVariant.findMany({
         where: { id: { in: part }, trackStock: true },
-        select: { id: true, stock: true, productId: true },
+        select: { id: true, stock: true, productId: true, product: { select: { slug: true } } },
       }),
     ]);
 
@@ -159,7 +164,7 @@ async function recomputeStock(tx: Prisma.TransactionClient, variantIds: string[]
       const target = onlineStock(levelsOf.get(v.id) ?? [], pendingOf.get(v.id) ?? 0);
       if (target !== v.stock) {
         targets.set(v.id, target);
-        before.set(v.id, v);
+        before.set(v.id, { stock: v.stock, productId: v.productId, slug: v.product.slug });
       }
     }
   }
@@ -189,5 +194,11 @@ async function recomputeStock(tx: Prisma.TransactionClient, variantIds: string[]
     const prev = before.get(id);
     if (prev && prev.stock > 0 !== target > 0) restockedOrSoldOut.add(prev.productId);
   }
-  return { changedVariants, restockedOrSoldOut: [...restockedOrSoldOut] };
+  // Every product whose stock moved — its page shows the new stock
+  const changedProductSlugs = new Set([...before.values()].map((v) => v.slug));
+  return {
+    changedVariants,
+    restockedOrSoldOut: [...restockedOrSoldOut],
+    changedProductSlugs: [...changedProductSlugs],
+  };
 }
