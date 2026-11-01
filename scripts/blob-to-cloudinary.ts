@@ -40,7 +40,9 @@ async function main() {
 
   for (const model of Prisma.dmmf.datamodel.models) {
     if (!model.fields.some((f) => f.name === "id")) continue;
-    const fields = model.fields.filter((f) => f.kind === "scalar" && f.type === "String");
+    const fields = model.fields.filter(
+      (f) => f.kind === "scalar" && f.type === "String" && !f.isList,
+    );
     // biome-ignore lint/suspicious/noExplicitAny: model delegates are picked by name at runtime
     const delegate = (prisma as any)[model.name[0].toLowerCase() + model.name.slice(1)];
 
