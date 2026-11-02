@@ -9,7 +9,8 @@ import { prisma } from "@/lib/prisma";
 import { stripHtml } from "@/lib/seo";
 import { feedUnitPricing, variantPackQuantity } from "@/lib/unit-price";
 
-export const revalidate = 3600;
+// Daily, like Merchant Center's fetch; price/stock changes go out through the API push
+export const revalidate = 86400;
 
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? "https://wellbotany.pl";
 

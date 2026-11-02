@@ -24,8 +24,9 @@ const STATIC_ROUTES = [
   "/cookies",
 ];
 
-// New products/categories show up without a redeploy
-export const revalidate = 3600;
+// New products/categories show up without a redeploy. Daily: each sitemap file
+// queries the DB directly, and hourly refreshes kept waking Neon for crawlers
+export const revalidate = 86400;
 
 // One file per page type so Search Console reports indexing per type;
 // served at /sitemap/<id>.xml, listed by the index in sitemap_index.xml/route.ts

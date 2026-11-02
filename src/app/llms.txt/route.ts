@@ -6,7 +6,7 @@ import { MIN_LISTED_PRODUCTS } from "@/features/catalog/lib/nav";
 
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? "https://wellbotany.pl";
 
-export const revalidate = 3600;
+export const revalidate = 86400;
 
 export async function GET() {
   const [posts, categories] = await Promise.all([getPublishedPosts(), getCategories()]);
