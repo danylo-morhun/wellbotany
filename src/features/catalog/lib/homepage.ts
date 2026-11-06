@@ -8,6 +8,7 @@ import {
   PRODUCT_LIST_SELECT,
   type ProductListItem,
 } from "../actions";
+import { STOCK_LISTINGS_TAG } from "./product-tag";
 
 // Same shape as listings, so ProductCard gets everything it needs
 const productSelect = PRODUCT_LIST_SELECT;
@@ -228,7 +229,7 @@ export const getHomepageData = unstable_cache(
     };
   },
   ["homepage-v7"],
-  { tags: ["categories", "products"] },
+  { tags: ["categories", "products", STOCK_LISTINGS_TAG] },
 );
 
 const GUIDES_LIMIT = 3;

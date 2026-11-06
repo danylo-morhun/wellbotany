@@ -13,7 +13,7 @@ import {
   withStockAvailability,
 } from "./lib/filters";
 import { computeSubtreeCounts } from "./lib/nav";
-import { productTag } from "./lib/product-tag";
+import { productTag, STOCK_LISTINGS_TAG } from "./lib/product-tag";
 import { ingredientTokens, type RelatedSeed, rankRelated } from "./lib/related";
 import { rankBySearchRelevance } from "./lib/search-relevance";
 
@@ -88,7 +88,7 @@ export const getSearchableProducts = unstable_cache(
       select: PRODUCT_SEARCH_SELECT,
     }),
   ["searchable-products"],
-  { tags: ["products"] },
+  { tags: ["products", STOCK_LISTINGS_TAG] },
 );
 
 /** Resolves ranked candidate ids to full display data, in the same order. */
