@@ -91,10 +91,11 @@ export async function markEnteredInSubiekt(orderNumbers: string[]): Promise<numb
 }
 
 // The agent polls every few minutes; serve that from Next's data cache so the
-// poll doesn't wake Postgres. Order changes revalidate the tag; 15 min is the
-// backstop for a change made somewhere that doesn't.
+// poll doesn't wake Postgres. Every change that shows up in this list (new
+// order, status, payment, Subiekt mark) revalidates the tag; a day is the
+// backstop for a change made somewhere that doesn't (e.g. SQL by hand).
 export const cachedPendingSubiektOrders = unstable_cache(
   pendingSubiektOrders,
   ["subiekt-pending-orders"],
-  { tags: [SUBIEKT_ORDERS_TAG], revalidate: 900 },
+  { tags: [SUBIEKT_ORDERS_TAG], revalidate: 86_400 },
 );
