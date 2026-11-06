@@ -96,7 +96,7 @@ export default async function PotwierdzeniePage({ params }: Props) {
           <Clock className="size-12 text-warning" aria-hidden />
         )}
         <h1 className="text-balance text-2xl">
-          {order.paymentStatus === "CAPTURED" ? "Zamówienie opłacone!" : "Zamówienie złożone!"}
+          {order.paymentStatus === "CAPTURED" ? "Zamówienie opłacone" : "Zamówienie złożone"}
         </h1>
         <p className="text-muted-foreground">
           Numer zamówienia:{" "}
