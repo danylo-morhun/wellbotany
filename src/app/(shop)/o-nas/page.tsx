@@ -8,14 +8,14 @@ export const metadata: Metadata = {
   title: "O nas",
   alternates: { canonical: "/o-nas" },
   description:
-    "Poznaj Well Botany — polski sklep z certyfikowanymi suplementami diety, witaminami i produktami bio.",
+    "Well Botany to polski sklep z suplementami diety, witaminami i produktami bio. Przy każdym produkcie podajemy pełny skład i dawkę.",
 };
 
 const values = [
   {
     icon: ShieldCheck,
-    title: "Certyfikowana jakość",
-    text: "Suplementy diety w naszej ofercie są zgłoszone do Głównego Inspektoratu Sanitarnego, a wszystkie produkty pochodzą od sprawdzonych producentów.",
+    title: "Zgłoszone do GIS",
+    text: "Każdy suplement diety w ofercie jest zgłoszony do Głównego Inspektoratu Sanitarnego.",
   },
   {
     icon: Leaf,
@@ -40,15 +40,13 @@ export default async function ONasPage() {
         <section className="space-y-3 text-muted-foreground">
           <p>
             Well Botany to polski sklep internetowy z suplementami diety, witaminami, ziołami i
-            produktami bio. Stawiamy na przejrzysty skład, rzetelne opisy i poradniki, które
-            pomagają świadomie wybierać.
+            produktami bio. Przy każdym produkcie podajemy pełny skład i dawkę w porcji, a w
+            poradniku wyjaśniamy, jak wybrać suplement.
           </p>
           <p>
-            W ofercie znajdziesz m.in. ekologiczne zioła, certyfikowane herbaty, przyprawy, zdrową
-            żywność, suplementy diety, kosmetyki naturalne i olejki eteryczne. Współpracujemy ze
-            sprawdzonymi producentami, stawiając na jakość, uczciwy skład i rzetelne informacje o
-            każdym produkcie — od dawkowania po kraj pochodzenia. Sprzedajemy wyłącznie produkty
-            wprowadzone do obrotu w Polsce zgodnie z przepisami.
+            W ofercie są m.in. zioła, herbaty, przyprawy, zdrowa żywność, suplementy diety,
+            kosmetyki naturalne i olejki eteryczne. Sprzedajemy wyłącznie produkty wprowadzone do
+            obrotu w Polsce zgodnie z przepisami.
           </p>
         </section>
 
@@ -78,11 +76,11 @@ export default async function ONasPage() {
         <section>
           <h2 className="mb-3 text-xl">Masz pytania?</h2>
           <p className="text-muted-foreground">
-            Nasz zespół chętnie doradzi w wyborze produktów —{" "}
+            Pomożemy wybrać produkt.{" "}
             <Link href="/kontakt" className="text-primary underline-offset-4 hover:underline">
-              skontaktuj się z nami
+              Napisz lub zadzwoń
             </Link>{" "}
-            lub zajrzyj do{" "}
+            albo zajrzyj do{" "}
             <Link href="/faq" className="text-primary underline-offset-4 hover:underline">
               najczęściej zadawanych pytań
             </Link>
