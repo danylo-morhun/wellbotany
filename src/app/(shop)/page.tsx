@@ -28,8 +28,6 @@ export const metadata: Metadata = {
 // Banners open/close on their dates without an admin edit
 export const revalidate = 3600;
 
-const NEED_LINKS = 3;
-
 export default async function HomePage() {
   const [
     { categories, tabs, newArrivals, promos, ingredientTiles },
@@ -37,15 +35,6 @@ export default async function HomePage() {
     brands,
     { giftSets, builderActive },
   ] = await Promise.all([getHomepageData(), getHomeBanners(), getBrands(), getHomeGiftSets()]);
-
-  // Quiet need links beside the H1: the next needs after the ones that got a tab
-  const tabIds = new Set(tabs.map((t) => t.id));
-  const needLinks = categories
-    .filter(
-      (c) => c.parentId === null && c.group === "NEED" && c.productCount > 0 && !tabIds.has(c.slug),
-    )
-    .sort((a, b) => b.productCount - a.productCount || a.sortOrder - b.sortOrder)
-    .slice(0, NEED_LINKS);
 
   // Bands after the opening alternate mint/plain (DESIGN.md §5)
   const rest = [
@@ -77,7 +66,7 @@ export default async function HomePage() {
     <>
       <HeroSlider banners={banners} />
       <HomeBand className="pt-5 md:pt-7">
-        <HomeHeadline needs={needLinks} />
+        <HomeHeadline />
         <div className="mt-4 md:mt-5">
           <BestsellerTabs tabs={tabs} lead />
         </div>
