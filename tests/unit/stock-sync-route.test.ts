@@ -83,7 +83,7 @@ describe("POST /api/sync/subiekt/stock", () => {
     expect(await res.json()).not.toHaveProperty("changedProductSlugs");
   });
 
-  it("refreshes the whole catalog when a product sold out or came back", async () => {
+  it("adds the availability lists when a product sold out or came back", async () => {
     applySnapshot.mockResolvedValue({
       ok: true,
       changedLevels: 1,
@@ -95,6 +95,9 @@ describe("POST /api/sync/subiekt/stock", () => {
 
     await post({ mode: "delta", items: [{ symbol: "A1", quantity: 0 }] });
 
-    expect(revalidateTag.mock.calls.map(([tag]) => tag)).toEqual(["products"]);
+    expect(revalidateTag.mock.calls.map(([tag]) => tag)).toEqual([
+      "product:magnez",
+      "stock-listings",
+    ]);
   });
 });
