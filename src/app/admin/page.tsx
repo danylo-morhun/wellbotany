@@ -33,9 +33,11 @@ import {
 import { TO_PACK_STATUSES } from "@/features/orders/lib/status-labels";
 import { lowStockWhere } from "@/features/products/lib/stock";
 import { syncProblem } from "@/features/stock-sync/lib/health";
+import { heartbeatKey } from "@/features/stock-sync/lib/heartbeat";
 import { formatPrice, pluralPl } from "@/lib/format";
 import { PICKUP_HOLD_DAYS } from "@/lib/pickup-locations";
 import { prisma } from "@/lib/prisma";
+import { redis } from "@/lib/redis";
 import { cn } from "@/lib/utils";
 
 const DAY = 86400000;
@@ -67,6 +69,7 @@ export default async function AdminPage() {
     recentOrders,
     topProducts,
     lastSync,
+    lastBeat,
   ] = await Promise.all([
     prisma.order.findMany({
       where: { ...salesWhere, createdAt: { gte: rangeStart } },
@@ -126,10 +129,15 @@ export default async function AdminPage() {
     }),
     prisma.syncRun.findFirst({
       orderBy: { createdAt: "desc" },
-      select: { createdAt: true, error: true },
+      select: { error: true },
     }),
+    // The shop agent (location code as in the uptime check); undefined without Redis
+    redis
+      ? redis.get<string>(heartbeatKey("sklep1")).catch(() => null)
+      : Promise.resolve(undefined),
   ]);
-  const sync = lastSync ? syncProblem(lastSync, now) : null;
+  // No Redis (local dev): nothing to judge silence by
+  const sync = lastBeat === undefined ? null : syncProblem(lastBeat, lastSync, now);
 
   // Bucket by shop-local day so late-evening orders land on the right date
   const buckets = new Map<string, { totalPln: number; orders: number }>();
@@ -168,7 +176,9 @@ export default async function AdminPage() {
       label:
         sync === "error"
           ? "Subiekt: ostatni stan odrzucony — sprawdź magazyn"
-          : `Subiekt nie przysyła stanów (ostatnio: ${relativeDate(lastSync?.createdAt ?? now, now)})`,
+          : lastBeat
+            ? `Subiekt nie przysyła stanów (ostatnio: ${relativeDate(new Date(lastBeat), now)})`
+            : "Subiekt nie przysyła stanów",
       href: "/admin/magazyn",
       icon: RefreshCwOff,
       urgent: true,
