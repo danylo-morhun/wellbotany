@@ -8,12 +8,11 @@ import { discountPercent, omnibusNote, referencePrice } from "@/lib/omnibus";
 
 type Props = {
   product: ProductListItem;
-  /** "new" adds the teal Nowość pill; promo signals show whenever there is a real reduction */
-  badge?: "new";
 };
 
-/** Small horizontal product card for the dense homepage lists (Promocje extras, Nowości). */
-export function HomeProductRow({ product, badge }: Props) {
+/** Small horizontal product card for the dense homepage lists (Promocje extras, Nowości).
+ * No "Nowość" pill: the section title already says it. */
+export function HomeProductRow({ product }: Props) {
   const variant = product.variants[0];
   const image = product.images[0];
   const brand = product.brand ? resolveDisplayBrand(product.brand) : null;
@@ -38,14 +37,7 @@ export function HomeProductRow({ product, badge }: Props) {
         )}
       </span>
       <span className="flex min-w-0 flex-1 flex-col gap-0.5">
-        <span className="flex items-center gap-2 text-xs text-muted-foreground">
-          {badge === "new" && (
-            <span className="rounded-full bg-primary px-2 py-0.5 font-semibold text-primary-foreground">
-              Nowość
-            </span>
-          )}
-          {brand && <span className="truncate">{brand.name}</span>}
-        </span>
+        {brand && <span className="truncate text-xs text-muted-foreground">{brand.name}</span>}
         <h3 className="line-clamp-2 text-sm font-semibold leading-snug text-foreground transition-colors group-hover:text-primary">
           {product.namePl}
         </h3>

@@ -20,7 +20,7 @@ export function HomeNewArrivals({ products }: Props) {
       <ul className="grid gap-3 sm:grid-cols-2 sm:gap-4 lg:grid-cols-3">
         {products.map((p, i) => (
           <li key={p.id} className={i >= MOBILE_LIMIT ? "max-sm:hidden" : undefined}>
-            <HomeProductRow product={p} badge="new" />
+            <HomeProductRow product={p} />
           </li>
         ))}
       </ul>
