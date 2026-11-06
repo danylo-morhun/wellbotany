@@ -5,7 +5,7 @@ import { ContactForm } from "@/features/contact/components/ContactForm";
 export const metadata: Metadata = {
   title: "Kontakt",
   alternates: { canonical: "/kontakt" },
-  description: "Skontaktuj się z nami — e-mail, telefon, godziny obsługi.",
+  description: "Telefon, e-mail i godziny obsługi sklepu Well Botany.",
 };
 
 export default function KontaktPage() {
