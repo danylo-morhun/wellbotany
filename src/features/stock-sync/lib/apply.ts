@@ -27,11 +27,12 @@ export type ApplyResult =
 
 // Every variant's match keys, kept in Next's data cache so a sync that touches
 // none of our products never reaches Postgres. Product edits revalidate
-// "products"; the hour is a backstop for variants added outside the admin.
+// "products" and so do the bulk scripts (scripts/lib/refresh-site.ts); the
+// day is a backstop for variants added by hand in SQL.
 const variantKeys = unstable_cache(
   async () => prisma.productVariant.findMany({ select: { id: true, sku: true, ean: true } }),
   ["stock-sync-variant-keys"],
-  { tags: ["products"], revalidate: 3600 },
+  { tags: ["products"], revalidate: 86_400 },
 );
 
 /**
