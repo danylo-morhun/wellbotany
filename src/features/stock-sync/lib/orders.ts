@@ -5,6 +5,7 @@ import { PAYMENT_LABELS } from "@/features/checkout/lib/payment";
 import { shippingLabel } from "@/features/checkout/lib/shipping";
 import { pickupLocation } from "@/lib/pickup-locations";
 import { prisma } from "@/lib/prisma";
+import { noteOrdersChanged } from "./levels-cache";
 import { SUBIEKT_ORDERS_TAG } from "./orders-tag";
 
 // Older ones were entered by hand before the sync; anything left that long needs a human anyway
@@ -86,7 +87,10 @@ export async function markEnteredInSubiekt(orderNumbers: string[]): Promise<numb
     where: { orderNumber: { in: orderNumbers }, subiektEnteredAt: null },
     data: { subiektEnteredAt: new Date() },
   });
-  if (count > 0) revalidateTag(SUBIEKT_ORDERS_TAG, { expire: 0 });
+  if (count > 0) {
+    revalidateTag(SUBIEKT_ORDERS_TAG, { expire: 0 });
+    await noteOrdersChanged();
+  }
   return count;
 }
 
