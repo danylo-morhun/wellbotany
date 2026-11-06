@@ -20,6 +20,12 @@ vi.mock("@/lib/redis", () => ({
   },
 }));
 
+// The fake Redis would switch the checkout rate limiter on — keep it off as in other tests
+vi.mock("@/lib/rate-limit", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("@/lib/rate-limit")>()),
+  assertNotRateLimited: async () => {},
+}));
+
 const { POST } = await import("@/app/api/sync/subiekt/stock/route");
 const { markEnteredInSubiekt } = await import("@/features/stock-sync/lib/orders");
 
