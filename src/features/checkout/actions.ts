@@ -12,6 +12,7 @@ import { isTierPromoLive, pickDiscount, tierDiscountPln } from "@/features/promo
 import { paymentUrl, registerTransaction } from "@/features/przelewy24/lib/client";
 import { isP24Enabled } from "@/features/przelewy24/lib/config";
 import { assertOrdersOpen, getShopSettings } from "@/features/settings/lib/shop-settings";
+import { noteOrdersChanged } from "@/features/stock-sync/lib/levels-cache";
 import { SUBIEKT_ORDERS_TAG } from "@/features/stock-sync/lib/orders-tag";
 import { ActionError } from "@/lib/action-error";
 import { auth } from "@/lib/auth";
@@ -335,6 +336,7 @@ export const placeOrder = actionClient
     // Stock went down — product pages show "Ostatnie N szt." / "Niedostępny"
     updateTag("products");
     updateTag(SUBIEKT_ORDERS_TAG);
+    await noteOrdersChanged();
     revalidatePath("/zestawy-prezentowe", "layout");
 
     const clientIp = await getClientIp();
