@@ -139,48 +139,45 @@ export function AddToCartSection({ variants, ordersPaused = false, productName }
         <p className="-mt-3 text-sm text-muted-foreground">{selected.omnibusNote}</p>
       )}
 
-      <div className="space-y-1">
-        <p className={`text-sm ${available ? "text-success" : "text-muted-foreground"}`}>
-          {ordersPaused
-            ? "Chwilowo niedostępny"
-            : selected.stock > 0
-              ? selected.stock <= 5
-                ? `Ostatnie ${selected.stock} szt.`
-                : "Dostępny"
-              : "Niedostępny"}
-        </p>
-        {available && (
+      {/* Unavailable is said once, on the button; a quantity picker for it would be a dead control */}
+      {available && (
+        <div className="space-y-1">
+          <p className="text-sm text-success">
+            {selected.stock <= 5 ? `Ostatnie ${selected.stock} szt.` : "Dostępny"}
+          </p>
           <p className="flex items-center gap-1.5 text-xs text-muted-foreground">
             <Truck className="size-3.5 shrink-0" aria-hidden />
             Wysyłka w 24–48 h · paczkomat, punkt odbioru lub kurier
           </p>
-        )}
-      </div>
-
-      <div className="flex items-center gap-3">
-        <span className="text-sm font-medium">Ilość:</span>
-        <div className="flex items-center rounded-md border">
-          <button
-            type="button"
-            onClick={() => setQuantity((q) => Math.max(1, q - 1))}
-            disabled={quantity <= 1}
-            aria-label="Zmniejsz ilość"
-            className="flex size-9 items-center justify-center transition-[transform,background-color] duration-[160ms] ease-[cubic-bezier(0.23,1,0.32,1)] hover:bg-muted active:scale-[0.97] disabled:opacity-40 motion-reduce:active:scale-100"
-          >
-            <Minus className="size-4" />
-          </button>
-          <span className="w-8 text-center text-sm font-semibold">{quantity}</span>
-          <button
-            type="button"
-            onClick={() => setQuantity((q) => Math.min(selected.stock, q + 1))}
-            disabled={quantity >= selected.stock}
-            aria-label="Zwiększ ilość"
-            className="flex size-9 items-center justify-center transition-[transform,background-color] duration-[160ms] ease-[cubic-bezier(0.23,1,0.32,1)] hover:bg-muted active:scale-[0.97] disabled:opacity-40 motion-reduce:active:scale-100"
-          >
-            <Plus className="size-4" />
-          </button>
         </div>
-      </div>
+      )}
+
+      {available && (
+        <div className="flex items-center gap-3">
+          <span className="text-sm font-medium">Ilość:</span>
+          <div className="flex items-center rounded-md border">
+            <button
+              type="button"
+              onClick={() => setQuantity((q) => Math.max(1, q - 1))}
+              disabled={quantity <= 1}
+              aria-label="Zmniejsz ilość"
+              className="flex size-9 items-center justify-center transition-[transform,background-color] duration-[160ms] ease-[cubic-bezier(0.23,1,0.32,1)] hover:bg-muted active:scale-[0.97] disabled:opacity-40 motion-reduce:active:scale-100"
+            >
+              <Minus className="size-4" />
+            </button>
+            <span className="w-8 text-center text-sm font-semibold">{quantity}</span>
+            <button
+              type="button"
+              onClick={() => setQuantity((q) => Math.min(selected.stock, q + 1))}
+              disabled={quantity >= selected.stock}
+              aria-label="Zwiększ ilość"
+              className="flex size-9 items-center justify-center transition-[transform,background-color] duration-[160ms] ease-[cubic-bezier(0.23,1,0.32,1)] hover:bg-muted active:scale-[0.97] disabled:opacity-40 motion-reduce:active:scale-100"
+            >
+              <Plus className="size-4" />
+            </button>
+          </div>
+        </div>
+      )}
 
       <button
         type="button"
@@ -190,20 +187,22 @@ export function AddToCartSection({ variants, ordersPaused = false, productName }
       >
         {succeeded && !isExecuting ? (
           <Check className="size-4" aria-hidden />
-        ) : (
+        ) : available ? (
           <ShoppingCart className="size-4" aria-hidden />
-        )}
+        ) : null}
         <span
           key={isExecuting ? "loading" : succeeded ? "success" : "idle"}
           className="animate-[btn-text-in_200ms_ease-out_both] motion-reduce:animate-none"
         >
           {ordersPaused
-            ? "Zamówienia wstrzymane"
-            : isExecuting
-              ? "Dodawanie…"
-              : succeeded
-                ? "Dodano"
-                : "Dodaj do koszyka"}
+            ? "Chwilowo niedostępny"
+            : selected.stock <= 0
+              ? "Niedostępny"
+              : isExecuting
+                ? "Dodawanie…"
+                : succeeded
+                  ? "Dodano"
+                  : "Dodaj do koszyka"}
         </span>
       </button>
     </div>
