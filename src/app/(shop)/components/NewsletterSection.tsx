@@ -15,8 +15,8 @@ export function NewsletterSection() {
           -{WELCOME_DISCOUNT_PERCENT}% na pierwsze zakupy za zapis
         </h2>
         <p className="mx-auto max-w-md text-band-foreground/75">
-          Zapisz się do newslettera, a kod rabatowy wyślemy na Twój e-mail. Potem tylko promocje,
-          nowości i porady — bez spamu.
+          Zapisz się do newslettera, a kod rabatowy wyślemy na Twój e-mail. Potem piszemy o
+          promocjach i nowościach. Wypisać się możesz w każdej chwili.
         </p>
         <NewsletterForm />
         <PrivacyNote
