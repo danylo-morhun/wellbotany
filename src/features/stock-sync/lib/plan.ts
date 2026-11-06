@@ -128,3 +128,27 @@ export function groupByValue(values: Map<string, number>): Map<number, string[]>
   }
   return groups;
 }
+
+// A full snapshot goes to Postgres at least this often even when the cached
+// levels say nothing changed: it re-applies safety stock / sellsOnline edits
+// and settles any drift between the cache and the DB.
+export const LEVELS_VERIFY_MS = 24 * 60 * 60 * 1000;
+
+/**
+ * True when the cached levels show this snapshot changes nothing, so it can be
+ * answered without Postgres. A full one with no matches is never skipped —
+ * the guard has to see it.
+ */
+export function unchangedPerCache(
+  mode: StockSnapshot["mode"],
+  cached: { levels: Map<string, number>; verifiedAt: Date } | null,
+  incoming: Map<string, number>,
+  now: Date,
+): boolean {
+  if (!cached) return false;
+  if (mode === "full") {
+    if (incoming.size === 0) return false;
+    if (!(now.getTime() - cached.verifiedAt.getTime() < LEVELS_VERIFY_MS)) return false;
+  }
+  return diffLevels(mode, cached.levels, incoming).size === 0;
+}
