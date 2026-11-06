@@ -2,7 +2,15 @@ import type { Prisma } from "@prisma/client";
 import { unstable_cache } from "next/cache";
 import { prisma } from "@/lib/prisma";
 import type { StockSnapshot } from "../schema";
-import { diffLevels, groupByValue, matchItems, onlineStock, rejectReason } from "./plan";
+import { dropLevels, readLevels, writeLevels } from "./levels-cache";
+import {
+  diffLevels,
+  groupByValue,
+  matchItems,
+  onlineStock,
+  rejectReason,
+  unchangedPerCache,
+} from "./plan";
 
 // Postgres caps bind parameters at 32767 — keep every IN list well below it
 const CHUNK = 5000;
@@ -39,7 +47,9 @@ const variantKeys = unstable_cache(
  * Stores one location's Subiekt snapshot and recomputes ProductVariant.stock
  * for the variants it touches. Rejected snapshots are logged and change nothing.
  * A delta that matches none of our variants, or changes none of their levels,
- * returns without writing anything.
+ * returns without writing anything; when the levels cached in Redis already
+ * show that (deltas, and fulls within a day of the last checked one), it
+ * returns without touching Postgres at all.
  */
 export async function applySnapshot(code: string, snapshot: StockSnapshot): Promise<ApplyResult> {
   const { quantities, unmatched } = matchItems(snapshot.items, await variantKeys());
@@ -53,6 +63,9 @@ export async function applySnapshot(code: string, snapshot: StockSnapshot): Prom
   };
   // Sold in the shop, but nothing we sell online
   if (snapshot.mode === "delta" && quantities.size === 0) return unchanged;
+
+  const cached = await readLevels(code);
+  if (unchangedPerCache(snapshot.mode, cached, quantities, new Date())) return unchanged;
 
   const location = await prisma.stockLocation.upsert({
     where: { code },
@@ -79,7 +92,11 @@ export async function applySnapshot(code: string, snapshot: StockSnapshot): Prom
         ];
   const current = new Map(existing.map((l) => [l.variantId, l.quantity]));
   const changes = diffLevels(snapshot.mode, current, quantities);
-  if (snapshot.mode === "delta" && changes.size === 0) return unchanged;
+  if (snapshot.mode === "delta" && changes.size === 0) {
+    // The cache disagreed with the DB — fix it so the same delta doesn't come back here
+    if (cached) await writeLevels(code, { ...cached, levels: patched(cached.levels, quantities) });
+    return unchanged;
+  }
 
   const run = {
     locationId: location.id,
@@ -105,7 +122,9 @@ export async function applySnapshot(code: string, snapshot: StockSnapshot): Prom
       ? [...new Set([...current.keys(), ...quantities.keys()])]
       : [...changes.keys()];
 
-  return prisma.$transaction(
+  // Dropped first: if the transaction fails halfway, the next snapshot goes to Postgres
+  await dropLevels(code);
+  const result = await prisma.$transaction(
     async (tx) => {
       const created = [...changes].filter(([id]) => !current.has(id));
       const updated = new Map([...changes].filter(([id]) => current.has(id)));
@@ -149,6 +168,21 @@ export async function applySnapshot(code: string, snapshot: StockSnapshot): Prom
     },
     { timeout: 30_000 },
   );
+
+  // What the DB now holds. A full read every level, so it rebuilds the cache
+  // (and counts as checked); a delta read only its own, so it can only patch
+  // a cache that exists.
+  if (snapshot.mode === "full") {
+    await writeLevels(code, { verifiedAt: new Date(), levels: patched(current, changes) });
+  } else if (cached) {
+    await writeLevels(code, { ...cached, levels: patched(cached.levels, quantities) });
+  }
+  return result;
+}
+
+/** Levels after a write: every one the snapshot named now equals it, changed or not. */
+function patched(levels: Map<string, number>, updates: Map<string, number>) {
+  return new Map([...levels, ...updates]);
 }
 
 /**
