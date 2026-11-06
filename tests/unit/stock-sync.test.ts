@@ -2,9 +2,11 @@ import { describe, expect, it } from "vitest";
 import {
   diffLevels,
   groupByValue,
+  LEVELS_VERIFY_MS,
   matchItems,
   onlineStock,
   rejectReason,
+  unchangedPerCache,
 } from "@/features/stock-sync/lib/plan";
 import {
   MAX_CLOCK_SKEW_MS,
@@ -176,5 +178,52 @@ describe("groupByValue", () => {
         [0, ["b"]],
       ]),
     );
+  });
+});
+
+describe("unchangedPerCache", () => {
+  const now = new Date("2026-11-06T12:00:00Z");
+  const cached = (levels: [string, number][], ageMs = 0) => ({
+    levels: new Map(levels),
+    verifiedAt: new Date(now.getTime() - ageMs),
+  });
+
+  it("needs a cache", () => {
+    expect(unchangedPerCache("delta", null, new Map([["a", 1]]), now)).toBe(false);
+  });
+
+  it("skips a delta whose levels match the cache", () => {
+    const c = cached(
+      [
+        ["a", 1],
+        ["b", 2],
+      ],
+      LEVELS_VERIFY_MS * 2,
+    );
+    expect(unchangedPerCache("delta", c, new Map([["a", 1]]), now)).toBe(true);
+    expect(unchangedPerCache("delta", c, new Map([["a", 3]]), now)).toBe(false);
+    expect(unchangedPerCache("delta", c, new Map([["new", 1]]), now)).toBe(false);
+  });
+
+  it("skips a full only within a day of the last checked one", () => {
+    const levels: [string, number][] = [
+      ["a", 1],
+      ["b", 0],
+    ];
+    const incoming = new Map([["a", 1]]);
+    expect(unchangedPerCache("full", cached(levels, 1000), incoming, now)).toBe(true);
+    expect(unchangedPerCache("full", cached(levels, LEVELS_VERIFY_MS), incoming, now)).toBe(false);
+  });
+
+  it("does not skip a full that drops an in-stock variant", () => {
+    const c = cached([
+      ["a", 1],
+      ["b", 2],
+    ]);
+    expect(unchangedPerCache("full", c, new Map([["a", 1]]), now)).toBe(false);
+  });
+
+  it("never skips a full with no matches, so the guard sees it", () => {
+    expect(unchangedPerCache("full", cached([["a", 0]]), new Map(), now)).toBe(false);
   });
 });
