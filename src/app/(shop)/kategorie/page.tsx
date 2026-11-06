@@ -8,7 +8,8 @@ import { pluralPl } from "@/lib/format";
 export const metadata = {
   title: "Kategorie",
   alternates: { canonical: "/kategorie" },
-  description: "Przeglądaj produkty według kategorii — suplementy, witaminy i produkty bio.",
+  description:
+    "Suplementy, witaminy i produkty bio według kategorii i potrzeb: odporność, sen, stawy, trawienie.",
 };
 
 export default async function KategoriePage() {
