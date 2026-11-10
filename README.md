@@ -1,44 +1,85 @@
-# Well Botany
+# wellbotany
 
-[![CI](https://github.com/danylo-morhun/wellbotany/actions/workflows/ci.yml/badge.svg)](https://github.com/danylo-morhun/wellbotany/actions/workflows/ci.yml)
+online shop for herbs, supplements and organic food in Poland. it has a storefront, checkout,
+customer accounts and an admin panel. the shop is in Polish only.
 
-Online shop for supplements, herbs and organic food in Poland: storefront, checkout, customer accounts and an admin panel. Polish only.
+live at [wellbotany.pl](https://wellbotany.pl).
 
-[wellbotany.pl](https://wellbotany.pl)
+## features
 
-Also inside: gift-set builder, verified-buyer reviews, newsletter with a welcome code, guides, epaka shipments and labels, bank-transfer matching, margins report.
+| area      | what it does                                                                                    |
+| :-------- | :---------------------------------------------------------------------------------------------- |
+| catalog   | categories, brands, ingredients, tags, search, favorites, a glossary and guides                 |
+| checkout  | delivery to pickup points or by courier, bank transfer or cash on pickup, coupons               |
+| gift sets | ready-made sets and a builder for custom ones                                                   |
+| accounts  | order history, saved addresses, reviews from verified buyers, online withdrawal from a purchase |
+| marketing | newsletter with a welcome code, Google Ads and Meta conversions, Google Merchant Center feed    |
+| admin     | products, stock, orders, bank transfer matching, coupons, reviews, margins report, content      |
 
-## How it works
+## how it works
 
-- **Checkout** — one DB transaction: atomic order number, stock and coupon limits as conditional updates, so nothing oversells. A cart-value discount („-5% od 150 zł”) and coupons never stack — the bigger one wins
-- **Prices (EU Omnibus)** — Postgres triggers log every price change and keep the 30-day low; every strikethrough and % goes through one helper that counts from that low
-- **Consumer law** — order confirmation e-mail carries the full pre-contract info, withdrawal notice and form; online withdrawal at `/odstapienie` with an acknowledgement e-mail
-- **Payments** — bank transfer and pay-at-pickup are live; Przelewy24 is built behind a flag (webhook checks the SHA-384 signature in constant time, the amount, then verifies with P24)
-- **Consent and ads** — cookie banner with equal buttons and per-category consent, logged server-side; Google tags load only after consent (Consent Mode v2, no remarketing); Meta only via server-side Conversions API without product data
-- **Security** — strict CSP with per-request nonces on checkout, account and admin; other pages stay static; signed cookie for order pages; rate limits via Upstash
-- **Shipping** — epaka.pl for pickup points, shipments and labels; own Leaflet point map behind a server proxy
-- **Stock** — the shop's Subiekt GT stock is pushed by a separate Windows agent ([xylem](https://github.com/danylo-morhun/xylem), private) to `/api/sync/subiekt/stock`
-- **Merchant Center** — price and stock pushed on every admin edit, plus a daily cron; JWT signed with `node:crypto`, no SDK
-- **CI/CD** — each CI run gets its own Neon branch; deploy runs migrations only when they changed (with approval), smoke-tests, and rolls back on failure
+checkout runs in one database transaction. the order number, stock and coupon limits are
+updated with conditional writes, so the shop cannot sell more than it has. a cart value
+discount and a coupon never stack, the bigger one wins.
 
-## Stack
+Postgres triggers record every price change and keep the lowest price of the last 30 days,
+as the EU Omnibus directive requires. every crossed-out price and discount percentage
+is counted from that price.
 
-Next.js 16, React 19, Prisma, Neon Postgres, Auth.js, Tailwind 4, Resend, Cloudinary, Sentry, Upstash, Vercel.
+the order confirmation email contains the full pre-contract information and the
+withdrawal form. a purchase can also be withdrawn online at `/odstapienie`.
 
-## Run locally
+Przelewy24 payments are built but turned off. they turn on with `P24_ENABLED=true`.
+the webhook checks the signature, the amount, and then verifies the payment with Przelewy24.
 
-Needs Node 24 and pnpm 10.
+the cookie banner asks for consent per category and stores it on the server. Google tags
+load only after consent, with Consent Mode v2. Meta gets events only from the server,
+through the Conversions API, without product data.
+
+checkout, account and admin pages use a strict content security policy with a nonce per request.
+other pages stay static. order pages are protected by a signed cookie, and forms are
+rate limited with Upstash.
+
+shipments, labels and pickup points go through epaka.pl. the pickup point map is drawn with
+Leaflet behind a server proxy.
+
+stock comes from the shop's Subiekt GT. a separate Windows service,
+[xylem](https://github.com/danylo-morhun/xylem) (private), sends it to `/api/sync/subiekt/stock`.
+
+price and stock go to Google Merchant Center after every edit in the admin panel
+and once a day by cron.
+
+## stack
+
+Next.js 16, React 19, Prisma, Neon Postgres, Auth.js, Tailwind 4, Resend, Cloudinary,
+Sentry, Upstash, Vercel.
+
+## CI
+
+| when         | what runs                                                                     |
+| :----------- | :---------------------------------------------------------------------------- |
+| pull request | Biome, type check, Vitest, build and Playwright on a fresh Neon branch        |
+| every night  | deploy of new commits on main: migrations, Vercel build, smoke test, rollback |
+| every 30 min | uptime check                                                                  |
+
+migrations run only when they changed and need manual approval.
+an urgent fix can be deployed by hand from the Actions tab.
+
+## run locally
+
+requires Node 24 and pnpm 10.
 
 ```bash
 pnpm install
-cp .env.example .env   # point DATABASE_URL at a dev branch, never production
+cp .env.example .env    # point DATABASE_URL at a dev branch, never at production
 pnpm db:generate
 pnpm exec prisma migrate deploy
-pnpm dev               # http://localhost:3000
+pnpm dev
 ```
 
-Tests: `pnpm test` (Vitest), `pnpm test:e2e` (Playwright — builds and starts the app on :3000, or reuses whatever already runs there; needs `DATABASE_URL` of a non-production DB).
+the app runs on port 3000. `pnpm test` runs Vitest. `pnpm test:e2e` runs Playwright and
+needs a non-production `DATABASE_URL`, because the tests create and delete rows.
 
-## License
+## license
 
 MIT
