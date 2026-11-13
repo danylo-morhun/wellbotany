@@ -18,6 +18,9 @@ const nextConfig: NextConfig = {
   // for it costs nothing noticeable.
   htmlLimitedBots: /.*/,
   poweredByHeader: false,
+  // nginx in front gzips (conf.d/10-gzip.conf) — compressing in Node too would
+  // spend the single event loop on every HTML response for nothing.
+  compress: false,
   experimental: {
     // Storefront pages are static now, so the build prerenders hundreds of
     // them — at the default concurrency each build worker's Prisma pool
