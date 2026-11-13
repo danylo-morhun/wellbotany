@@ -102,6 +102,20 @@ export async function fetchProductsByIds(ids: string[]) {
   return ids.map((id) => byId.get(id)).filter((row): row is NonNullable<typeof row> => row != null);
 }
 
+// Listing results (/katalog, /kategoria, /marki, filters, pagination) are the
+// same for every visitor until products or stock change — cache them under
+// the tags those writes already revalidate, so a crawler walking filter
+// combinations hits Postgres once per combination, not once per request.
+// Free-text search stays uncached: its keys are unbounded.
+const LISTING_CACHE = { tags: ["products", STOCK_LISTINGS_TAG], revalidate: 3600 };
+
+const queryProductsCached = unstable_cache(queryProducts, ["catalog-products"], LISTING_CACHE);
+
+export const getProducts = cache(
+  (filters: CatalogFilters): ReturnType<typeof queryProducts> =>
+    filters.search ? queryProducts(filters) : queryProductsCached(filters),
+);
+
 function hasStructuralFilter(filters: CatalogFilters): boolean {
   return Boolean(
     filters.category?.length ||
@@ -116,7 +130,7 @@ function hasStructuralFilter(filters: CatalogFilters): boolean {
   );
 }
 
-export async function getProducts(filters: CatalogFilters) {
+async function queryProducts(filters: CatalogFilters) {
   const categoryIds = filters.category?.length
     ? await getCategoryDescendantIds(filters.category)
     : undefined;
@@ -507,9 +521,8 @@ export const resolveCatalogFilters = cache(
   },
 );
 
-/** Product counts per category (including its subtree, matching what selecting the checkbox actually filters to) under the currently active filters (excluding the category filter itself) — filter-dependent, so `cache()`d per-request rather than `unstable_cache`d, so checkbox counts track the active combination. */
-export const getCategoryFacetCounts = cache(
-  async (filters: CatalogFilters): Promise<Map<string, number>> => {
+const queryCategoryFacetCounts = unstable_cache(
+  async (filters: CatalogFilters): Promise<[string, number][]> => {
     const brandIds = filters.brand?.length ? await getBrandDescendantIds(filters.brand) : undefined;
     const where = buildFacetWhere(filters, "category", undefined, brandIds);
     const [links, categories] = await Promise.all([
@@ -519,13 +532,20 @@ export const getCategoryFacetCounts = cache(
       }),
       getCategories(),
     ]);
-    return computeSubtreeCounts(categories, links);
+    return [...computeSubtreeCounts(categories, links)];
   },
+  ["catalog-category-facets"],
+  LISTING_CACHE,
 );
 
-/** Product counts per brand (rolled up through `subBrands`, matching what selecting a parent's checkbox actually filters to) under the currently active filters (excluding the brand filter itself) — filter-dependent, so `cache()`d per-request rather than `unstable_cache`d, so checkbox counts track the active combination. */
-export const getBrandFacetCounts = cache(
-  async (filters: CatalogFilters): Promise<Map<string, number>> => {
+/** Product counts per category (including its subtree, matching what selecting the checkbox actually filters to) under the currently active filters (excluding the category filter itself). Cached per filter combination (see LISTING_CACHE); a Map isn't JSON, so the cache holds entries. */
+export const getCategoryFacetCounts = cache(
+  async (filters: CatalogFilters): Promise<Map<string, number>> =>
+    new Map(await queryCategoryFacetCounts(filters)),
+);
+
+const queryBrandFacetCounts = unstable_cache(
+  async (filters: CatalogFilters): Promise<[string, number][]> => {
     const categoryIds = filters.category?.length
       ? await getCategoryDescendantIds(filters.category)
       : undefined;
@@ -550,8 +570,16 @@ export const getBrandFacetCounts = cache(
       ...b,
       _count: { products: directCounts.get(b.id) ?? 0 },
     }));
-    return computeBrandSubtreeCounts(scopedBrands);
+    return [...computeBrandSubtreeCounts(scopedBrands)];
   },
+  ["catalog-brand-facets"],
+  LISTING_CACHE,
+);
+
+/** Product counts per brand (rolled up through `subBrands`, matching what selecting a parent's checkbox actually filters to) under the currently active filters (excluding the brand filter itself). Cached per filter combination like the category facets. */
+export const getBrandFacetCounts = cache(
+  async (filters: CatalogFilters): Promise<Map<string, number>> =>
+    new Map(await queryBrandFacetCounts(filters)),
 );
 
 /** Rewrites `_count.products` (top-level and every `subBrands` entry) to the filter-scoped facet counts — `getBrands()`'s own counts are unscoped ("all time"), so the sidebar needs this applied on top before rendering checkboxes. */
