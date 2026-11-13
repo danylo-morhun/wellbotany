@@ -111,6 +111,36 @@ function withCsp(req: NextRequest): NextResponse {
   return response;
 }
 
+// Admin lives on its own host when ADMIN_HOST is set (self-hosted prod:
+// admin.wellbotany.pl), so its login cookie never rides along on storefront
+// requests. Unset (Vercel, dev, CI) = admin stays at /admin on the shop host.
+const ADMIN_HOST = process.env.ADMIN_HOST;
+// What the admin host may serve besides /admin: its login page, API routes
+// (auth, uploads, server actions post to their own page) and public files.
+const ADMIN_HOST_PATHS = ["/admin", "/logowanie", "/api/"];
+
+function adminHostRedirect(req: NextRequest): NextResponse | null {
+  if (!ADMIN_HOST) return null;
+  const { pathname, search } = req.nextUrl;
+  const host = req.headers.get("host");
+  const isAdminPath = pathname === "/admin" || pathname.startsWith("/admin/");
+
+  if (host !== ADMIN_HOST) {
+    return isAdminPath
+      ? NextResponse.redirect(`https://${ADMIN_HOST}${pathname}${search}`, 308)
+      : null;
+  }
+  if (pathname === "/") return NextResponse.redirect(new URL("/admin", req.url), 307);
+  const allowed =
+    ADMIN_HOST_PATHS.some(
+      (p) => pathname === p || pathname.startsWith(p.endsWith("/") ? p : `${p}/`),
+    ) || /\.[a-z0-9]+$/i.test(pathname);
+  if (allowed) return null;
+  // Storefront links clicked inside the admin open on the shop host
+  const site = process.env.NEXT_PUBLIC_SITE_URL ?? "https://wellbotany.pl";
+  return NextResponse.redirect(`${site}${pathname}${search}`, 307);
+}
+
 const guardedProxy = auth((req) => {
   const isLoggedIn = !!req.auth;
   const isKonto = req.nextUrl.pathname.startsWith("/konto");
@@ -137,6 +167,8 @@ const guardedProxy = auth((req) => {
 // makes CDNs skip caching — so only the guarded sections go through it and
 // public storefront pages stay cacheable.
 export default function proxy(req: NextRequest, event: NextFetchEvent) {
+  const hostRedirect = adminHostRedirect(req);
+  if (hostRedirect) return hostRedirect;
   const { pathname } = req.nextUrl;
   if (pathname.startsWith("/konto") || pathname.startsWith("/admin")) {
     // Auth.js types the 2nd arg for route handlers; here it only forwards it
