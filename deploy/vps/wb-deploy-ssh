@@ -1,0 +1,11 @@
+#!/bin/bash
+# Forced command for the GitHub Actions key (authorized_keys: command="/usr/local/bin/wb-deploy-ssh",restrict).
+# The CI key can only run wb-deploy subcommands, never a shell.
+set -euo pipefail
+read -r cmd arg extra <<<"${SSH_ORIGINAL_COMMAND:-}"
+[ -z "${extra:-}" ] || { echo "too many args" >&2; exit 2; }
+case "$cmd" in
+  prepare|migrate|deploy) exec /usr/local/bin/wb-deploy "$cmd" "$arg" ;;
+  rollback|revision) exec /usr/local/bin/wb-deploy "$cmd" ;;
+  *) echo "not allowed: $cmd" >&2; exit 2 ;;
+esac
