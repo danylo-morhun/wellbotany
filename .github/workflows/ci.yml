@@ -26,84 +26,43 @@ jobs:
       - run: pnpm biome check .
       - run: pnpm tsc --noEmit
 
-  # next build statically prerenders pages that query Postgres directly
-  # (e.g. src/app/sitemap.ts, /kategoria/[slug]), so both the build and the
-  # test suite need a reachable database. Each CI run gets its own ephemeral
-  # Neon branch (created from production).
-  #
-  # The branch's connection string can't be passed as a *job* output — GitHub
-  # Actions silently drops job outputs that look like they contain a secret
-  # ("Skip output ... since it may contain secret"), which is exactly what a
-  # Postgres URL with an embedded password is. So this job only creates the
-  # branch and runs migrations; unit-test and build each re-run
-  # create-branch-action for the same branch_name afterwards (it returns the
-  # existing branch instead of creating a new one) and keep the connection
-  # string as a step output local to their own job.
-  provision-db:
-    name: Provision Ephemeral Database
+  unit-test:
+    name: Unit Tests (Vitest)
     needs: lint-and-typecheck
     runs-on: ubuntu-latest
     steps:
-      - name: Create Neon branch
-        id: create-branch
-        uses: neondatabase/create-branch-action@v6
-        with:
-          project_id: ${{ vars.NEON_PROJECT_ID }}
-          branch_name: ci-${{ github.run_id }}
-          api_key: ${{ secrets.NEON_API_KEY }}
-      - uses: actions/checkout@v7
-      - uses: ./.github/actions/setup
-      - run: pnpm exec prisma migrate deploy
-        env:
-          DATABASE_URL: ${{ steps.create-branch.outputs.db_url_pooled }}
-          DIRECT_URL: ${{ steps.create-branch.outputs.db_url }}
-
-  unit-test:
-    name: Unit Tests (Vitest)
-    needs: provision-db
-    runs-on: ubuntu-latest
-    steps:
-      - name: Get Neon branch connection
-        id: create-branch
-        uses: neondatabase/create-branch-action@v6
-        with:
-          project_id: ${{ vars.NEON_PROJECT_ID }}
-          branch_name: ci-${{ github.run_id }}
-          api_key: ${{ secrets.NEON_API_KEY }}
       - uses: actions/checkout@v7
       - uses: ./.github/actions/setup
       - run: pnpm exec vitest run tests/unit
-        env:
-          DATABASE_URL: ${{ steps.create-branch.outputs.db_url_pooled }}
-          DIRECT_URL: ${{ steps.create-branch.outputs.db_url }}
 
+  # next build prerenders pages that query Postgres (sitemap, /kategoria/[slug]…),
+  # so the build needs a database with the production schema. A throwaway
+  # Postgres 18 (same major as prod) gets prisma/ci-baseline.sql (prod schema +
+  # migration history, no data), then `migrate deploy` applies this branch's new
+  # migrations exactly as the Deploy workflow will on prod — a broken migration
+  # fails here, not at deploy time.
   build:
     name: Production Build Verification
-    needs: provision-db
+    needs: lint-and-typecheck
     runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:18
+        env:
+          POSTGRES_USER: ci
+          POSTGRES_PASSWORD: ci
+          POSTGRES_DB: wellbotany
+        ports: ["5432:5432"]
+        options: >-
+          --health-cmd "pg_isready -U ci" --health-interval 5s --health-timeout 5s --health-retries 10
+    env:
+      DATABASE_URL: postgresql://ci:ci@localhost:5432/wellbotany
+      DIRECT_URL: postgresql://ci:ci@localhost:5432/wellbotany
     steps:
-      - name: Get Neon branch connection
-        id: create-branch
-        uses: neondatabase/create-branch-action@v6
-        with:
-          project_id: ${{ vars.NEON_PROJECT_ID }}
-          branch_name: ci-${{ github.run_id }}
-          api_key: ${{ secrets.NEON_API_KEY }}
       - uses: actions/checkout@v7
       - uses: ./.github/actions/setup
+      - name: Restore the production schema baseline
+        run: psql "$DIRECT_URL" -q -v ON_ERROR_STOP=1 -f prisma/ci-baseline.sql
+      - name: Apply new migrations
+        run: pnpm exec prisma migrate deploy
       - run: pnpm build
-        env:
-          DATABASE_URL: ${{ steps.create-branch.outputs.db_url_pooled }}
-          DIRECT_URL: ${{ steps.create-branch.outputs.db_url }}
-
-  cleanup-db:
-    name: Delete Ephemeral Database
-    needs: [provision-db, unit-test, build]
-    if: always()
-    runs-on: ubuntu-latest
-    steps:
-      - uses: neondatabase/delete-branch-action@v3
-        with:
-          project_id: ${{ vars.NEON_PROJECT_ID }}
-          branch: ci-${{ github.run_id }}
-          api_key: ${{ secrets.NEON_API_KEY }}
