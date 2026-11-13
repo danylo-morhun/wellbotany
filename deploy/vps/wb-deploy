@@ -1,0 +1,90 @@
+#!/bin/bash
+# Self-hosted deploy for the cyber_Folks VPS. Installed as /usr/local/bin/wb-deploy,
+# run as `deploy`. Each commit builds into its own release dir; going live is a
+# symlink switch + service restart (~1 s), so a failed build never touches prod.
+#
+#   wb-deploy prepare <sha>   fetch, install, build into releases/<sha> (idempotent)
+#   wb-deploy migrate <sha>   prepare + prisma migrate deploy (prod DB)
+#   wb-deploy deploy <sha>    prepare, refuse if migrations pending, switch, restart
+#   wb-deploy rollback        switch back to the previous release
+#   wb-deploy revision        print the live commit
+set -euo pipefail
+
+BASE=/srv/wellbotany
+REPO=$BASE/repo
+RELEASES=$BASE/releases
+SHARED=$BASE/shared
+ENV_FILE=$SHARED/.env.production.local
+STATIC=$SHARED/static            # union of every release's hashed assets (nginx alias)
+KEEP=3
+export COREPACK_ENABLE_DOWNLOAD_PROMPT=0 NEXT_TELEMETRY_DISABLED=1 CI=1
+
+log() { echo "[wb-deploy] $*"; }
+valid_sha() { [[ "$1" =~ ^[0-9a-f]{7,40}$ ]] || { echo "bad sha: $1" >&2; exit 2; }; }
+
+full_sha() {
+  git -C "$REPO" fetch -q origin
+  git -C "$REPO" rev-parse --verify "$1^{commit}"
+}
+
+prepare() {
+  local sha; sha=$(full_sha "$1"); local dir=$RELEASES/$sha
+  if [ -f "$dir/.prepared" ]; then log "release $sha already built"; echo "$dir"; return; fi
+  rm -rf "$dir"; git -C "$REPO" worktree prune
+  git -C "$REPO" worktree add -q --detach "$dir" "$sha"
+  ln -sf "$ENV_FILE" "$dir/.env.production.local"
+  cd "$dir"
+  log "install"; pnpm install --frozen-lockfile --prod=false >/dev/null
+  pnpm exec prisma generate >/dev/null
+  log "build $sha"; pnpm build > "$dir/build.log" 2>&1 || { tail -40 "$dir/build.log" >&2; exit 1; }
+  touch "$dir/.prepared"
+  echo "$dir"
+}
+
+with_db_env() { set -a; . "$ENV_FILE"; set +a; }
+
+migrate() {
+  local dir; dir=$(prepare "$1" | tail -1); cd "$dir"; with_db_env
+  pnpm exec prisma migrate deploy
+}
+
+pending_migrations() {
+  local dir=$1; ( cd "$dir"; with_db_env; ! pnpm exec prisma migrate status >/dev/null 2>&1 )
+}
+
+switch_to() {
+  local dir=$1
+  local prev=""; [ -L "$BASE/current" ] && prev=$(readlink -f "$BASE/current")
+  mkdir -p "$STATIC"; cp -a --update=none "$dir/.next/static/." "$STATIC/"
+  ln -sfn "$dir" "$BASE/current.new" && mv -T "$BASE/current.new" "$BASE/current"
+  if [ -n "$prev" ] && [ "$prev" != "$dir" ]; then ln -sfn "$prev" "$BASE/previous"; fi
+  sudo systemctl restart wellbotany
+  for _ in $(seq 1 30); do curl -fs -o /dev/null http://127.0.0.1:3000/robots.txt && break; sleep 1; done
+  curl -fs -o /dev/null http://127.0.0.1:3000/robots.txt || { log "app not answering after restart"; exit 1; }
+  log "live: $(basename "$dir")"
+}
+
+prune() {
+  local live prev=""; live=$(readlink -f "$BASE/current"); [ -L "$BASE/previous" ] && prev=$(readlink -f "$BASE/previous")
+  ls -1dt "$RELEASES"/*/ 2>/dev/null | sed 's#/$##' | tail -n +$((KEEP + 1)) | while read -r d; do
+    [ "$d" = "$live" ] || [ "$d" = "$prev" ] || { git -C "$REPO" worktree remove --force "$d" 2>/dev/null || rm -rf "$d"; }
+  done
+  git -C "$REPO" worktree prune
+  find "$STATIC" -type f -mtime +30 -delete 2>/dev/null || true
+}
+
+cmd=${1:-}; arg=${2:-}
+case "$cmd" in
+  prepare) valid_sha "$arg"; prepare "$arg" >/dev/null ;;
+  migrate) valid_sha "$arg"; migrate "$arg" ;;
+  deploy)
+    valid_sha "$arg"; dir=$(prepare "$arg" | tail -1)
+    if pending_migrations "$dir"; then log "migrations pending — run 'migrate $arg' first"; exit 3; fi
+    switch_to "$dir"; prune ;;
+  rollback)
+    prev=""; [ -L "$BASE/previous" ] && prev=$(readlink -f "$BASE/previous")
+    [ -n "$prev" ] && [ -d "$prev" ] || { log "no previous release"; exit 1; }
+    switch_to "$prev" ;;
+  revision) basename "$(readlink -f "$BASE/current")" ;;
+  *) echo "usage: wb-deploy prepare|migrate|deploy <sha> | rollback | revision" >&2; exit 2 ;;
+esac
