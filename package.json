@@ -9,7 +9,6 @@
   "scripts": {
     "dev": "next dev --webpack",
     "build": "next build",
-    "vercel-build": "prisma generate && next build",
     "start": "next start",
     "db:generate": "prisma generate",
     "db:migrate": "prisma migrate dev",
