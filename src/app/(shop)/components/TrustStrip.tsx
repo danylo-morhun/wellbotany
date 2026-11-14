@@ -75,7 +75,12 @@ export async function TrustStrip({ slim = false }: { slim?: boolean }) {
     },
     dispatch && { icon: Clock, title: dispatch, href: "/dostawa" },
     delivery,
-    { icon: RotateCcw, title: "14 dni na zwrot", text: "Bez podania przyczyny", href: "/zwroty" },
+    {
+      icon: RotateCcw,
+      title: "14 dni na odstąpienie",
+      text: "Bez podania przyczyny",
+      href: "/zwroty",
+    },
     paymentItem(
       isP24Enabled(),
       rates.some((r) => r.method === "PICKUP"),
