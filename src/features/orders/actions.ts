@@ -8,6 +8,7 @@ import { noteOrdersChanged } from "@/features/stock-sync/lib/levels-cache";
 import { SUBIEKT_ORDERS_TAG } from "@/features/stock-sync/lib/orders-tag";
 import { ActionError } from "@/lib/action-error";
 import { sendPickupReadyEmail, sendTrackingEmail } from "@/lib/email/order-emails";
+import { sendOrderCancelledEmail } from "@/lib/email/payment-reminder-emails";
 import { prisma } from "@/lib/prisma";
 import { adminActionClient } from "@/lib/safe-action";
 import {
@@ -79,6 +80,10 @@ async function applyOrderStatus(input: UpdateOrderStatusInput) {
   }
   if (shouldSendPickupEmail) {
     await sendPickupReadyEmail(input.orderId).catch(console.error);
+  }
+  // Cancelled → tell the customer (regulamin §5: withdrawal for non-payment is announced by e-mail)
+  if (input.status === "CANCELLED" && existing.status !== "CANCELLED") {
+    await sendOrderCancelledEmail(input.orderId).catch(console.error);
   }
   // Delivered (or collected in store) → ask once for a product review
   if (input.status === "DELIVERED" && existing.status !== "DELIVERED") {
