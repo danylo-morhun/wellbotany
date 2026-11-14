@@ -1,3 +1,0 @@
--- AlterEnum
-ALTER TYPE "ShippingMethod" ADD VALUE 'INPOST_KURIER';
-ALTER TYPE "ShippingMethod" ADD VALUE 'ORLEN_PACZKA';
