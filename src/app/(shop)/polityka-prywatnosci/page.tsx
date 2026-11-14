@@ -19,13 +19,13 @@ export const metadata: Metadata = {
 const purposes = [
   {
     title: "Złożenie zamówienia w Sklepie",
-    goal: "realizacja Twojego zamówienia",
+    goal: "realizacja Twojego zamówienia, w tym wiadomości o jego statusie i przypomnienie o płatności",
     basis: [
       "umowa sprzedaży (art. 6 ust. 1 lit. b RODO)",
       "obowiązek prawny związany z rachunkowością (art. 6 ust. 1 lit. c RODO)",
     ],
     duration:
-      "przez okres obowiązywania umowy, do wygaśnięcia obowiązku prawnego dot. rachunkowości, a dodatkowo do upływu okresu, w którym możliwe jest dochodzenie roszczeń.",
+      "przez okres obowiązywania umowy, a dokumenty księgowe (np. faktury) — przez 5 lat od końca roku kalendarzowego, w którym upłynął termin płatności podatku; dodatkowo do upływu okresu, w którym możliwe jest dochodzenie roszczeń.",
     consequence: "nie będziesz mieć możliwości złożenia zamówienia",
   },
   {
@@ -60,8 +60,11 @@ const purposes = [
   },
   {
     title: "Opinie o produktach",
-    goal: "publikacja Twojej opinii z wybranym przez Ciebie podpisem i potwierdzenie, że pochodzi od osoby, która kupiła produkt",
-    basis: ["Twoja zgoda wyrażona przez wysłanie opinii (art. 6 ust. 1 lit. a RODO)"],
+    goal: "jednorazowa prośba e-mailem o opinię po dostarczeniu zamówienia oraz publikacja Twojej opinii z wybranym przez Ciebie podpisem i potwierdzenie, że pochodzi od osoby, która kupiła produkt",
+    basis: [
+      "prośba o opinię — nasz prawnie uzasadniony interes w poznaniu opinii klientów (art. 6 ust. 1 lit. f RODO); możesz się temu sprzeciwić, pisząc do nas",
+      "publikacja opinii — Twoja zgoda wyrażona przez wysłanie opinii (art. 6 ust. 1 lit. a RODO)",
+    ],
     duration: "do wycofania zgody — usuniemy wtedy opinię ze Sklepu.",
     consequence: "brak — opinia jest dobrowolna",
   },
@@ -85,6 +88,14 @@ const purposes = [
         },
       ]
     : []),
+  {
+    title: "Bezpieczeństwo Sklepu i ochrona przed nadużyciami",
+    goal: "zapewnienie bezpieczeństwa i ciągłości działania Sklepu, wykrywanie błędów oraz ochrona przed nadużyciami (m.in. ograniczanie liczby prób logowania i zamówień z jednego adresu IP) — przetwarzamy przy tym adres IP, dane przeglądarki i informacje o błędach",
+    basis: ["nasz prawnie uzasadniony interes (art. 6 ust. 1 lit. f RODO)"],
+    duration:
+      "logi serwera do 14 dni, dzienniki aplikacji do 1 miesiąca, liczniki prób do 1 godziny, raporty błędów do 90 dni.",
+    consequence: "brak możliwości korzystania ze Sklepu",
+  },
   {
     title: "Ustalenie, dochodzenie lub obrona roszczeń",
     goal: "ustalenie, dochodzenie lub obrona roszczeń związanych z zawartą umową lub usługami",
@@ -190,6 +201,16 @@ export default function PolitykaPrywatnosciPage() {
             przetwarzania danych opartego na naszym prawnie uzasadnionym interesie (art. 21 ust. 1
             RODO) oraz prawo złożenia skargi do Prezesa Urzędu Ochrony Danych Osobowych, jeśli
             uznasz, że Twoje dane są przetwarzane niezgodnie z prawem.
+          </p>
+          <p className="mt-2 text-muted-foreground">
+            Jeżeli przetwarzamy Twoje dane na podstawie zgody, możesz ją w każdej chwili wycofać.
+            Wycofanie zgody nie wpływa na zgodność z prawem przetwarzania, którego dokonano przed
+            jej wycofaniem.
+          </p>
+          <p className="mt-2 text-muted-foreground">
+            Nie podejmujemy wobec Ciebie decyzji opartych wyłącznie na zautomatyzowanym
+            przetwarzaniu, w tym profilowaniu, które wywoływałyby wobec Ciebie skutki prawne lub w
+            podobny sposób istotnie na Ciebie wpływały.
           </p>
         </section>
 
