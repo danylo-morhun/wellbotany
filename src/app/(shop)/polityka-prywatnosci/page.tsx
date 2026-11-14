@@ -99,7 +99,7 @@ const recipients = [
   {
     action: "każde działanie w związku ze Sklepem",
     recipient:
-      "dostawcy hostingu i infrastruktury Sklepu: cyber_Folks S.A. (serwer i baza danych Sklepu, centrum danych w Polsce), Upstash Inc. (ochrona przed nadużyciami — limit zapytań na adres IP), Functional Software Inc. — Sentry (rejestr błędów), Cloudinary Ltd. (zdjęcia produktów)",
+      "dostawcy hostingu i infrastruktury Sklepu: cyber_Folks S.A. (serwer i baza danych Sklepu, centrum danych w Polsce), Upstash Inc. (ochrona przed nadużyciami — limit zapytań na adres IP), Functional Software Inc. — Sentry (rejestr błędów), Cloudinary Ltd. (zdjęcia produktów), Backblaze Inc. (zaszyfrowane kopie zapasowe bazy danych, centrum danych w UE)",
   },
   {
     action: "złożenie zamówienia w Sklepie",
@@ -276,7 +276,7 @@ export default function PolitykaPrywatnosciPage() {
             </table>
           </div>
           <p className="mt-2 text-xs text-muted-foreground">
-            Część odbiorców to firmy z siedzibą w USA (Upstash, Sentry, Resend,{" "}
+            Część odbiorców to firmy z siedzibą w USA (Upstash, Sentry, Resend, Backblaze,{" "}
             {META_ENABLED ? "Google, Meta" : "Google"}), więc dane mogą być przekazywane do USA — na
             podstawie decyzji Komisji Europejskiej stwierdzającej odpowiedni stopień ochrony (EU-US
             Data Privacy Framework) wobec firm, które się w nim certyfikowały, a w pozostałych
