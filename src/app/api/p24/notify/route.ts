@@ -1,6 +1,7 @@
 import { revalidateTag } from "next/cache";
 import { type NextRequest, NextResponse } from "next/server";
 import { CRC, verifyTransaction } from "@/features/przelewy24/lib/client";
+import { orderNumberFromSession } from "@/features/przelewy24/lib/session";
 import { p24Sign } from "@/features/przelewy24/lib/sign";
 import { noteOrdersChanged } from "@/features/stock-sync/lib/levels-cache";
 import { SUBIEKT_ORDERS_TAG } from "@/features/stock-sync/lib/orders-tag";
@@ -47,7 +48,7 @@ export async function POST(req: NextRequest) {
   }
 
   const order = await prisma.order.findUnique({
-    where: { orderNumber: sessionId },
+    where: { orderNumber: orderNumberFromSession(sessionId) },
     select: { id: true, totalPln: true, paymentStatus: true },
   });
 
@@ -55,7 +56,8 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "order not found" }, { status: 404 });
   }
 
-  // Idempotent — already confirmed
+  // Idempotent — already confirmed. A second paid attempt is left unverified,
+  // so P24 returns that money to the payer.
   if (order.paymentStatus === "CAPTURED") {
     return NextResponse.json({ status: 200 });
   }
