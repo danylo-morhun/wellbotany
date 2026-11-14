@@ -835,11 +835,13 @@ model Order {
 
   items OrderItem[]
 
-  createdAt   DateTime  @default(now())
-  updatedAt   DateTime  @updatedAt
-  paidAt      DateTime?
-  shippedAt   DateTime?
-  deliveredAt DateTime?
+  createdAt             DateTime  @default(now())
+  updatedAt             DateTime  @updatedAt
+  paidAt                DateTime?
+  // Unpaid prepaid order: when the reminder with the extra 7-day deadline went out
+  paymentReminderSentAt DateTime?
+  shippedAt             DateTime?
+  deliveredAt           DateTime?
 
   // Set once the order is entered in Subiekt GT. Until then its items are
   // subtracted from the stock the Subiekt sync reports (Subiekt still counts them).
