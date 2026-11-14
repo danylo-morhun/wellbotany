@@ -23,6 +23,7 @@ import { SeoPreview } from "@/features/products/components/editor/SeoPreview";
 import { useUnsavedChanges } from "@/features/products/components/editor/useUnsavedChanges";
 import type { FaqRow } from "@/lib/faq-text";
 import { sanitizeRichText } from "@/lib/sanitize";
+import { shopUrl } from "@/lib/shop-url";
 import { slugify } from "@/lib/slugify";
 import { cn } from "@/lib/utils";
 import { deletePost, savePost } from "../actions";
@@ -327,7 +328,7 @@ export function PostForm({ post, categories }: Props) {
             </Field>
             {post?.isPublished && (
               <a
-                href={`/poradnik/${post.slug}`}
+                href={shopUrl(`/poradnik/${post.slug}`)}
                 target="_blank"
                 rel="noreferrer"
                 className="inline-flex items-center gap-1 text-sm font-medium text-primary hover:underline"
