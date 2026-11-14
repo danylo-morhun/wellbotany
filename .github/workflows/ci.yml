@@ -37,10 +37,9 @@ jobs:
 
   # next build prerenders pages that query Postgres (sitemap, /kategoria/[slug]…),
   # so the build needs a database with the production schema. A throwaway
-  # Postgres 18 (same major as prod) gets prisma/ci-baseline.sql (prod schema +
-  # migration history, no data), then `migrate deploy` applies this branch's new
-  # migrations exactly as the Deploy workflow will on prod — a broken migration
-  # fails here, not at deploy time.
+  # Postgres 18 (same major as prod) is built from the migration history alone
+  # (`migrate deploy`, as the Deploy workflow runs it on prod) — a broken
+  # migration fails here, not at deploy time.
   build:
     name: Production Build Verification
     needs: lint-and-typecheck
@@ -61,8 +60,6 @@ jobs:
     steps:
       - uses: actions/checkout@v7
       - uses: ./.github/actions/setup
-      - name: Restore the production schema baseline
-        run: psql "$DIRECT_URL" -q -v ON_ERROR_STOP=1 -f prisma/ci-baseline.sql
-      - name: Apply new migrations
+      - name: Build the schema from migrations
         run: pnpm exec prisma migrate deploy
       - run: pnpm build
