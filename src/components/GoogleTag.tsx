@@ -11,6 +11,8 @@ export function GoogleTag() {
   const [loaderId, setLoaderId] = useState<string | null>(null);
 
   useEffect(() => {
+    // No analytics on the admin host (admin.wellbotany.pl)
+    if (window.location.hostname.startsWith("admin.")) return;
     const apply = () => {
       const { analytics, ads } = allowedGoogleTags();
       // gtag.js can't be unloaded — a change of mind flips the consent state
