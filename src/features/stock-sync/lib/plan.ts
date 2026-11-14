@@ -16,12 +16,9 @@ export const IGNORED_SYMBOLS = new Set([
   "5903148622033", // BIOCAPS C Complex Max 60 kaps; symbol equals BICAPS Witamina C 45 sasz. barcode
 ]);
 
-/**
- * Subiekt products → our variants: EAN first, then tw_Symbol = sku (case-insensitive),
- * then tw_Symbol = our EAN (shops often keep the barcode in the symbol, not in tw_PodstKodKresk).
- * Two Subiekt products landing on one variant are summed.
- */
-export function matchItems(items: StockItem[], variants: VariantKey[]) {
+export type VariantIndex = { byEan: Map<string, string>; bySku: Map<string, string> };
+
+export function variantIndex(variants: VariantKey[]): VariantIndex {
   const byEan = new Map<string, string>();
   const bySku = new Map<string, string>();
   for (const v of variants) {
@@ -29,19 +26,33 @@ export function matchItems(items: StockItem[], variants: VariantKey[]) {
     if (ean) byEan.set(ean, v.id);
     bySku.set(v.sku.trim().toLowerCase(), v.id);
   }
+  return { byEan, bySku };
+}
 
+/**
+ * One Subiekt product → our variant id: EAN first, then tw_Symbol = sku (case-insensitive),
+ * then tw_Symbol = our EAN (shops often keep the barcode in the symbol, not in tw_PodstKodKresk).
+ */
+export function findVariant(
+  index: VariantIndex,
+  item: { symbol: string; ean?: string | null },
+): string | undefined {
+  if (IGNORED_SYMBOLS.has(item.symbol)) return undefined;
+  const ean = normalizeEan(item.ean);
+  return (
+    (ean && index.byEan.get(ean)) ||
+    index.bySku.get(item.symbol.toLowerCase()) ||
+    (EAN_LIKE.test(item.symbol) ? index.byEan.get(item.symbol) : undefined)
+  );
+}
+
+/** Subiekt products → our variants (see findVariant). Two Subiekt products landing on one variant are summed. */
+export function matchItems(items: StockItem[], variants: VariantKey[]) {
+  const index = variantIndex(variants);
   const quantities = new Map<string, number>();
   const unmatched: StockItem[] = [];
   for (const item of items) {
-    if (IGNORED_SYMBOLS.has(item.symbol)) {
-      unmatched.push(item);
-      continue;
-    }
-    const ean = normalizeEan(item.ean);
-    const id =
-      (ean && byEan.get(ean)) ||
-      bySku.get(item.symbol.toLowerCase()) ||
-      (EAN_LIKE.test(item.symbol) ? byEan.get(item.symbol) : undefined);
+    const id = findVariant(index, item);
     if (!id) {
       unmatched.push(item);
       continue;
