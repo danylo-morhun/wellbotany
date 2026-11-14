@@ -2,7 +2,7 @@
 
 import { Eye, EyeOff } from "lucide-react";
 import { useAction } from "next-safe-action/hooks";
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { FormError, inputClass } from "@/components/ui/field";
 import { loginCustomer } from "../actions";
 
@@ -12,14 +12,28 @@ export function LoginForm({ callbackUrl }: Props) {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
+  const [code, setCode] = useState("");
+  // Admin accounts: after the password the action asks for the TOTP code
+  const [needsCode, setNeedsCode] = useState(false);
+  const codeRef = useRef<HTMLInputElement>(null);
+  useEffect(() => {
+    if (needsCode) codeRef.current?.focus();
+  }, [needsCode]);
 
-  const { execute, isPending, hasErrored, result } = useAction(loginCustomer);
+  const { execute, isPending, hasErrored, result } = useAction(loginCustomer, {
+    onSuccess: ({ data }) => {
+      if (data?.needsCode) setNeedsCode(true);
+    },
+  });
 
-  const error = result?.serverError ?? (hasErrored ? "Wystąpił błąd" : null);
+  const error =
+    result?.serverError ??
+    result?.validationErrors?.code?._errors?.[0] ??
+    (hasErrored ? "Wystąpił błąd" : null);
 
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    execute({ email, password, callbackUrl });
+    execute({ email, password, callbackUrl, code: needsCode ? code : undefined });
   }
 
   return (
@@ -70,6 +84,29 @@ export function LoginForm({ callbackUrl }: Props) {
           </button>
         </div>
       </div>
+
+      {needsCode && (
+        <div>
+          <label className="mb-1 block text-sm font-medium" htmlFor="totp-code">
+            Kod z aplikacji uwierzytelniającej
+          </label>
+          <input
+            id="totp-code"
+            inputMode="numeric"
+            autoComplete="one-time-code"
+            pattern="\d{3} ?\d{3}"
+            maxLength={7}
+            required
+            ref={codeRef}
+            value={code}
+            onChange={(e) => setCode(e.target.value)}
+            className={`${inputClass} tracking-[0.3em]`}
+          />
+          <p className="mt-1 text-xs text-muted-foreground">
+            6 cyfr z Google Authenticator, Authy lub innej aplikacji, w której dodano Well Botany.
+          </p>
+        </div>
+      )}
 
       <button
         type="submit"

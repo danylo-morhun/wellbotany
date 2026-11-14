@@ -3,6 +3,11 @@ import { z } from "zod";
 export const loginSchema = z.object({
   email: z.string().email("Nieprawidłowy adres e-mail"),
   password: z.string().min(1, "Hasło jest wymagane"),
+  /** Admin TOTP code — asked for only after the password checks out */
+  code: z
+    .string()
+    .regex(/^\d{3} ?\d{3}$/, "Kod ma 6 cyfr")
+    .optional(),
   callbackUrl: z.string().optional(),
 });
 
