@@ -33,8 +33,7 @@ export default defineConfig({
       AUTH_TRUST_HOST: "true",
       DATABASE_URL: process.env.DATABASE_URL,
       DIRECT_URL: process.env.DIRECT_URL ?? process.env.DATABASE_URL,
-      UPSTASH_REDIS_REST_URL: "",
-      UPSTASH_REDIS_REST_TOKEN: "",
+      REDIS_URL: "",
       SENTRY_DSN: "",
       NEXT_PUBLIC_SENTRY_DSN: "",
       ...(process.env.E2E_EMAIL

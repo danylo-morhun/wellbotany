@@ -4,10 +4,9 @@ import { nextHeadersMock } from "./mocks/next-headers";
 
 config({ path: ".env.local", quiet: true });
 
-// Tests must not depend on (or pollute) the shared Upstash rate-limit counters —
-// clearing these forces src/lib/rate-limit.ts's limiters to their no-op path.
-process.env.UPSTASH_REDIS_REST_URL = "";
-process.env.UPSTASH_REDIS_REST_TOKEN = "";
+// Tests must not depend on (or pollute) Redis rate-limit counters —
+// clearing it forces src/lib/rate-limit.ts's limiters to their no-op path.
+process.env.REDIS_URL = "";
 // Skip the real Przelewy24 API call in placeOrder.
 process.env.P24_SANDBOX_BYPASS = "true";
 // Never send real e-mails from tests (email helpers no-op without a key).
