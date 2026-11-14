@@ -5,7 +5,7 @@ import { notFound } from "next/navigation";
 import { hashedContact } from "@/features/ads/lib/user-data";
 import { BankTransferDetails } from "@/features/checkout/components/BankTransferDetails";
 import { TrackPurchase } from "@/features/checkout/components/TrackPurchase";
-import { hasOrderAccess } from "@/features/checkout/lib/order-access";
+import { hasOrderAccess, isOrderAccessToken } from "@/features/checkout/lib/order-access";
 import { isOfflinePayment, PAYMENT_LABELS } from "@/features/checkout/lib/payment";
 import { shippingLabel } from "@/features/checkout/lib/shipping";
 import { RetryPaymentButton } from "@/features/przelewy24/components/RetryPaymentButton";
@@ -15,15 +15,19 @@ import { formatPrice } from "@/lib/format";
 import { PICKUP_HOLD_DAYS, pickupLocation } from "@/lib/pickup-locations";
 import { prisma } from "@/lib/prisma";
 
-type Props = { params: Promise<{ orderNumber: string }> };
+type Props = {
+  params: Promise<{ orderNumber: string }>;
+  searchParams: Promise<{ dostep?: string }>;
+};
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { orderNumber } = await params;
   return { title: `Zamówienie ${orderNumber}`, robots: { index: false, follow: false } };
 }
 
-export default async function PotwierdzeniePage({ params }: Props) {
+export default async function PotwierdzeniePage({ params, searchParams }: Props) {
   const { orderNumber } = await params;
+  const { dostep } = await searchParams;
 
   const order = await prisma.order.findUnique({
     where: { orderNumber },
@@ -68,7 +72,8 @@ export default async function PotwierdzeniePage({ params }: Props) {
   const canView =
     session?.user?.role === "ADMIN" ||
     (!!order.customerId && order.customerId === session?.user?.id) ||
-    (await hasOrderAccess(order.orderNumber));
+    (await hasOrderAccess(order.orderNumber)) ||
+    isOrderAccessToken(order.orderNumber, dostep);
   if (!canView) notFound();
 
   const pickup = pickupLocation(order.pickupLocation);
@@ -134,7 +139,7 @@ export default async function PotwierdzeniePage({ params }: Props) {
                 Płatność przerwana lub nieudana? Możesz zapłacić ponownie — jeśli właśnie
                 zapłaciłeś, odśwież stronę za chwilę.
               </p>
-              <RetryPaymentButton orderNumber={order.orderNumber} />
+              <RetryPaymentButton orderNumber={order.orderNumber} accessToken={dostep} />
             </>
           )}
         </div>

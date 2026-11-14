@@ -2,7 +2,7 @@
 
 import { headers } from "next/headers";
 import { z } from "zod";
-import { hasOrderAccess } from "@/features/checkout/lib/order-access";
+import { hasOrderAccess, isOrderAccessToken } from "@/features/checkout/lib/order-access";
 import { isOfflinePayment } from "@/features/checkout/lib/payment";
 import { ActionError } from "@/lib/action-error";
 import { auth } from "@/lib/auth";
@@ -15,8 +15,13 @@ import { retrySessionId } from "./lib/session";
 
 /** "Zapłać ponownie" on the confirmation page: a new P24 transaction for an unpaid order. */
 export const retryOnlinePayment = actionClient
-  .schema(z.object({ orderNumber: z.string().min(1).max(32) }))
-  .action(async ({ parsedInput: { orderNumber } }) => {
+  .schema(
+    z.object({
+      orderNumber: z.string().min(1).max(32),
+      accessToken: z.string().max(128).optional(),
+    }),
+  )
+  .action(async ({ parsedInput: { orderNumber, accessToken } }) => {
     if (!isP24Enabled()) throw new ActionError("Płatności online są wyłączone.");
     await assertNotRateLimited(checkoutLimiter, await getClientIp());
 
@@ -36,7 +41,8 @@ export const retryOnlinePayment = actionClient
     const canPay =
       !!order &&
       ((!!order.customerId && order.customerId === session?.user?.id) ||
-        (await hasOrderAccess(orderNumber)));
+        (await hasOrderAccess(orderNumber)) ||
+        isOrderAccessToken(orderNumber, accessToken));
     if (!order || !canPay) throw new ActionError("Nie znaleziono zamówienia.");
     if (
       order.paymentStatus === "CAPTURED" ||

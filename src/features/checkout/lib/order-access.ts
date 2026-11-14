@@ -32,3 +32,15 @@ export async function hasOrderAccess(orderNumber: string): Promise<boolean> {
   const token = cookieStore.get(`order_${orderNumber}`)?.value;
   return !!token && safeCompare(token, sign(orderNumber));
 }
+
+/**
+ * Same signature as the cookie, for links in e-mails (payment reminder): opens
+ * the order page from any device. `?dostep=<token>`.
+ */
+export function orderAccessToken(orderNumber: string): string {
+  return sign(orderNumber);
+}
+
+export function isOrderAccessToken(orderNumber: string, token: string | undefined): boolean {
+  return !!token && safeCompare(token, sign(orderNumber));
+}
