@@ -1,7 +1,8 @@
 name: Uptime
 
 # Lightweight availability check: two cached pages plus one ISR product page,
-# which fails when the database is down. A failed run emails the repo owner.
+# /api/health (DB, Redis, backup age) and the shop agent heartbeat.
+# A failed run emails the repo owner.
 # Note: GitHub pauses scheduled workflows after 60 days without repo activity.
 
 on:
@@ -35,6 +36,13 @@ jobs:
             [ "$code" = 200 ] || fail=1
           done
           exit $fail
+
+      - name: Check database, Redis and backups
+        # 503 when the DB or Redis don't answer or the nightly dump / B2 copy is over 27 h old
+        run: |
+          body=$(curl -s --max-time 20 -w "\n%{http_code}" https://wellbotany.pl/api/health)
+          echo "$body"
+          [ "$(echo "$body" | tail -1)" = 200 ]
 
       - name: Check shop agent heartbeat
         # 503 when Xylem has been silent for 15+ min during shop hours (Redis only, no DB)
