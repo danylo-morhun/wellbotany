@@ -3,6 +3,7 @@
 import bcrypt from "bcryptjs";
 import { cookies } from "next/headers";
 import { AuthError } from "next-auth";
+import { openTotpSecret, verifyTotp } from "@/features/auth/lib/totp";
 import { CART_COOKIE_NAME, mergeGuestCart } from "@/features/cart/lib/session";
 import { mergeGuestWishlist, WISHLIST_COOKIE_NAME } from "@/features/wishlist/lib/session";
 import { ActionError } from "@/lib/action-error";
@@ -30,13 +31,36 @@ export const loginCustomer = actionClient
     // Verify credentials before signIn to allow pre-signIn merge
     const customer = await prisma.customer.findUnique({
       where: { email: input.email },
-      select: { id: true, passwordHash: true },
+      select: {
+        id: true,
+        passwordHash: true,
+        isAdmin: true,
+        totpSecret: true,
+        totpEnabledAt: true,
+        totpLastStep: true,
+      },
     });
     if (!customer?.passwordHash) {
       throw new ActionError("Nieprawidłowy e-mail lub hasło");
     }
     const valid = await bcrypt.compare(input.password, customer.passwordHash);
     if (!valid) throw new ActionError("Nieprawidłowy e-mail lub hasło");
+
+    // Admins with TOTP: password first, then the form asks for the code. The
+    // check here only gives a clear message — authorize() enforces it again.
+    const totpOn = customer.isAdmin && customer.totpEnabledAt && customer.totpSecret;
+    if (totpOn && !input.code) return { needsCode: true as const };
+    if (
+      totpOn &&
+      input.code &&
+      verifyTotp(
+        openTotpSecret(customer.totpSecret as string),
+        input.code,
+        customer.totpLastStep,
+      ) === null
+    ) {
+      throw new ActionError("Nieprawidłowy lub już użyty kod — wpisz aktualny kod z aplikacji");
+    }
 
     // Merge guest cart/wishlist before signIn redirect
     const cookieStore = await cookies();
@@ -49,7 +73,9 @@ export const loginCustomer = actionClient
       await signIn("credentials", {
         email: input.email,
         password: input.password,
-        redirectTo: afterSignIn(input.callbackUrl),
+        code: input.code ?? "",
+        // An admin without TOTP has no admin rights until it is set up
+        redirectTo: customer.isAdmin && !totpOn ? "/logowanie/2fa" : afterSignIn(input.callbackUrl),
       });
     } catch (err) {
       if (err instanceof AuthError) throw new ActionError("Nieprawidłowy e-mail lub hasło");
