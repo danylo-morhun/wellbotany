@@ -1,5 +1,5 @@
 import type { Metadata, Viewport } from "next";
-import { Geist_Mono, Onest, Plus_Jakarta_Sans } from "next/font/google";
+import localFont from "next/font/local";
 import { ThemeProvider } from "next-themes";
 import { CookieBanner } from "@/components/CookieBanner";
 import { GoogleTag } from "@/components/GoogleTag";
@@ -14,23 +14,25 @@ import {
 } from "@/lib/seo";
 import "./globals.css";
 
-const jakarta = Plus_Jakarta_Sans({
+// Self-hosted variable fonts (latin + latin-ext), see ./fonts/README.md
+const jakarta = localFont({
+  src: "./fonts/PlusJakartaSans.woff2",
   variable: "--font-sans",
-  subsets: ["latin", "latin-ext"],
-  weight: ["400", "500", "600", "700", "800"],
+  weight: "400 800",
 });
 
-const geistMono = Geist_Mono({
+const geistMono = localFont({
+  src: "./fonts/GeistMono.woff2",
   variable: "--font-mono",
-  subsets: ["latin"],
+  weight: "100 900",
   // Admin-only (SKUs, tables) — don't preload it on every storefront page
   preload: false,
 });
 
-const onest = Onest({
+const onest = localFont({
+  src: "./fonts/Onest.woff2",
   variable: "--font-display",
-  subsets: ["latin", "latin-ext"],
-  weight: ["500", "600", "700"],
+  weight: "500 700",
   // Headings only — a preload competes with CSS and the LCP image; swap is fine
   preload: false,
 });
