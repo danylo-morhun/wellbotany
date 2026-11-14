@@ -113,7 +113,7 @@ function withCsp(req: NextRequest): NextResponse {
 
 // Admin lives on its own host when ADMIN_HOST is set (self-hosted prod:
 // admin.wellbotany.pl), so its login cookie never rides along on storefront
-// requests. Unset (Vercel, dev, CI) = admin stays at /admin on the shop host.
+// requests. Unset (dev, CI) = admin stays at /admin on the shop host.
 const ADMIN_HOST = process.env.ADMIN_HOST;
 // What the admin host may serve besides /admin: its login page, API routes
 // (auth, uploads, server actions post to their own page) and public files.

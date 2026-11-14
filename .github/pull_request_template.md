@@ -11,4 +11,4 @@
 - [ ] `pnpm tsc --noEmit` and `pnpm biome check .`
 - [ ] `pnpm exec vitest run tests/unit`
 - [ ] UI / checkout touched → e2e on the dev DB (`docs` backlog §1 recipe)
-- [ ] DB migration → tested on a Neon branch, rollback noted
+- [ ] DB migration → applied to a local copy of prod (`pg_restore` of a backup), rollback noted

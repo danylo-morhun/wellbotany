@@ -51,15 +51,15 @@ and once a day by cron.
 
 ## stack
 
-Next.js 16, React 19, Prisma, Neon Postgres, Auth.js, Tailwind 4, Resend, Cloudinary,
-Sentry, Upstash, Vercel.
+Next.js 16, React 19, Prisma, PostgreSQL 18, Auth.js, Tailwind 4, Resend, Cloudinary,
+Sentry, Upstash. self-hosted on a VPS (nginx, systemd).
 
 ## CI
 
 | when         | what runs                                                                     |
 | :----------- | :---------------------------------------------------------------------------- |
-| pull request | Biome, type check, Vitest, build and Playwright on a fresh Neon branch        |
-| every night  | deploy of new commits on main: migrations, Vercel build, smoke test, rollback |
+| pull request | Biome, type check, Vitest, build against a throwaway Postgres                 |
+| every night  | deploy of new commits on main over SSH: migrations, build, smoke test, rollback |
 | every 30 min | uptime check                                                                  |
 
 migrations run only when they changed and need manual approval.
