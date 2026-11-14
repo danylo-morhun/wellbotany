@@ -17,7 +17,13 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ ok: false, error: "redis not configured" }, { status: 503 });
   }
 
-  const lastBeat = await redis.get<string>(heartbeatKey(code));
+  let lastBeat: string | null;
+  try {
+    lastBeat = await redis.get<string>(heartbeatKey(code));
+  } catch (e) {
+    console.error(e);
+    return NextResponse.json({ ok: false, error: "redis unavailable" }, { status: 503 });
+  }
   const problem = heartbeatProblem(lastBeat, new Date());
   return NextResponse.json(
     { ok: !problem, lastBeat, ...(problem && { error: problem }) },
