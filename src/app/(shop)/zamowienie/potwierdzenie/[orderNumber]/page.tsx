@@ -8,6 +8,8 @@ import { TrackPurchase } from "@/features/checkout/components/TrackPurchase";
 import { hasOrderAccess } from "@/features/checkout/lib/order-access";
 import { isOfflinePayment, PAYMENT_LABELS } from "@/features/checkout/lib/payment";
 import { shippingLabel } from "@/features/checkout/lib/shipping";
+import { RetryPaymentButton } from "@/features/przelewy24/components/RetryPaymentButton";
+import { isP24Enabled } from "@/features/przelewy24/lib/config";
 import { auth } from "@/lib/auth";
 import { formatPrice } from "@/lib/format";
 import { PICKUP_HOLD_DAYS, pickupLocation } from "@/lib/pickup-locations";
@@ -126,6 +128,15 @@ export default async function PotwierdzeniePage({ params }: Props) {
           Czekamy na potwierdzenie płatności (
           {PAYMENT_LABELS[order.paymentMethod] ?? order.paymentMethod}). Po zaksięgowaniu
           rozpoczniemy realizację zamówienia.
+          {order.status === "PAYMENT_PENDING" && isP24Enabled() && (
+            <>
+              <p className="mt-2">
+                Płatność przerwana lub nieudana? Możesz zapłacić ponownie — jeśli właśnie
+                zapłaciłeś, odśwież stronę za chwilę.
+              </p>
+              <RetryPaymentButton orderNumber={order.orderNumber} />
+            </>
+          )}
         </div>
       )}
 
