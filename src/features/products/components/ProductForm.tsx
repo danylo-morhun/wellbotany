@@ -18,6 +18,7 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { toBrandOptions } from "@/features/catalog/lib/brand-tree";
+import { shopUrl } from "@/lib/shop-url";
 import { slugify } from "@/lib/slugify";
 import { cn } from "@/lib/utils";
 import { saveBrand, saveCategory, saveProduct } from "../actions";
@@ -980,7 +981,7 @@ export function ProductForm({
             </Field>
             {product?.status === "ACTIVE" && (
               <a
-                href={`/produkt/${product.slug}`}
+                href={shopUrl(`/produkt/${product.slug}`)}
                 target="_blank"
                 rel="noreferrer"
                 className="-mt-1 inline-flex items-center gap-1 text-sm font-medium text-primary hover:underline"

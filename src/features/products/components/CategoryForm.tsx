@@ -17,6 +17,7 @@ import {
 import { FormSheet } from "@/features/admin/components/FormSheet";
 import { getCategoryIcon } from "@/lib/category-icons";
 import type { FaqRow } from "@/lib/faq-text";
+import { shopUrl } from "@/lib/shop-url";
 import { slugify } from "@/lib/slugify";
 import { cn } from "@/lib/utils";
 import { deleteCategory, saveCategory } from "../actions";
@@ -269,7 +270,7 @@ function CategorySheet({
           <>
             {productCount} {productCount === 1 ? "produkt" : "produktów"} ·{" "}
             <a
-              href={`/kategoria/${category.slug}`}
+              href={shopUrl(`/kategoria/${category.slug}`)}
               target="_blank"
               rel="noopener"
               className="text-primary hover:underline"

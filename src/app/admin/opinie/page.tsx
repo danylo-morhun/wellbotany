@@ -7,6 +7,7 @@ import { EmptyState, PageHeader, relativeDate } from "@/app/admin/components/ui"
 import { ModerationButtons } from "@/features/reviews/components/ModerationButtons";
 import { Stars } from "@/features/reviews/components/Stars";
 import { prisma } from "@/lib/prisma";
+import { shopUrl } from "@/lib/shop-url";
 import { cn } from "@/lib/utils";
 
 export const metadata: Metadata = { title: "Opinie" };
@@ -113,7 +114,7 @@ export default async function AdminReviewsPage({ searchParams }: Props) {
                 <div className="flex flex-wrap items-start justify-between gap-3">
                   <div className="min-w-0">
                     <Link
-                      href={`/produkt/${r.product.slug}`}
+                      href={shopUrl(`/produkt/${r.product.slug}`)}
                       target="_blank"
                       className="font-medium hover:text-primary"
                     >

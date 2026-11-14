@@ -10,6 +10,7 @@ import { ImagesSection } from "@/features/products/components/ImagesSection";
 import { ProductForm } from "@/features/products/components/ProductForm";
 import { VariantsTable } from "@/features/products/components/VariantsTable";
 import { prisma } from "@/lib/prisma";
+import { shopUrl } from "@/lib/shop-url";
 
 const STATUS_BADGE: Record<
   ProductStatus,
@@ -67,7 +68,7 @@ export default async function AdminEditProductPage({ params }: Props) {
         actions={
           product.status === "ACTIVE" && (
             <Link
-              href={`/produkt/${product.slug}`}
+              href={shopUrl(`/produkt/${product.slug}`)}
               target="_blank"
               className={buttonVariants({ variant: "outline", size: "lg" })}
             >

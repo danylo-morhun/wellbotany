@@ -4,6 +4,7 @@ import { ExternalLink, Menu, Search, X } from "lucide-react";
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { Sheet, SheetClose, SheetContent, SheetTitle } from "@/components/ui/sheet";
+import { shopUrl } from "@/lib/shop-url";
 import { AdminSidebarNav } from "./AdminSidebar";
 import { Kbd } from "./CommandPalette";
 import { NewMenu } from "./NewMenu";
@@ -65,7 +66,7 @@ export function AdminTopbar({
       <div className="ml-auto flex items-center gap-1">
         <NewMenu />
         <Link
-          href="/"
+          href={shopUrl("/")}
           target="_blank"
           className="flex h-9 shrink-0 items-center gap-1.5 rounded-lg px-2.5 text-sm font-medium text-muted-foreground hover:bg-muted hover:text-foreground"
         >
