@@ -11,6 +11,8 @@ What runs on the production server, kept here so it can be rebuilt.
 - systemd: `wellbotany.service` (`next start` from `current` on 127.0.0.1:3000),
   `wb-pg-backup.timer` (nightly pg_dump), `wb-merchant-sync.timer` (daily Merchant resync),
   `wb-warm-cache.service` (renders every sitemap URL after each deploy; started by `wb-deploy`).
+  `wb-payment-reminders.timer` (10:00 Warsaw → `/api/cron/payment-reminders`: reminder after 3 working
+  days unpaid, shop summary when the extra 7 days end).
 - `wb-pg-backup` → `/usr/local/bin/wb-pg-backup`: dump → `/var/backups/wellbotany` (14 days)
   → B2 via rclone crypt; touches `.backup-ok` / `.offsite-ok`, which `/api/health` checks
   (`BACKUP_DIR` in the env file, Uptime alerts after 27 h).

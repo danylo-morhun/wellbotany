@@ -1,0 +1,9 @@
+[Unit]
+Description=Payment reminders daily at 10:00 Warsaw
+
+[Timer]
+OnCalendar=*-*-* 10:00 Europe/Warsaw
+Persistent=true
+
+[Install]
+WantedBy=timers.target
