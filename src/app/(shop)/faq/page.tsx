@@ -104,7 +104,7 @@ function buildGroups(
           ? [
               {
                 q: "Płatność się nie powiodła – co teraz?",
-                a: "Zamówienie zostaje zapisane. Napisz do nas z numerem zamówienia – pomożemy dokończyć płatność lub zmienić ją na przelew tradycyjny.",
+                a: "Zamówienie zostaje zapisane. Na stronie zamówienia, na którą wracasz z Przelewy24, kliknij „Zapłać teraz”, aby spróbować ponownie. Możesz też napisać do nas z numerem zamówienia – pomożemy zmienić płatność na przelew tradycyjny.",
               },
             ]
           : []),
@@ -119,7 +119,7 @@ function buildGroups(
         },
         {
           q: "Jak zwrócić zamówienie?",
-          a: "Napisz na kontakt@wellbotany.pl z numerem zamówienia i listą zwracanych produktów. W odpowiedzi podamy adres zwrotny. Koszt odesłania ponosi kupujący, chyba że towar jest wadliwy.",
+          a: "Wypełnij formularz na stronie Odstąpienie od umowy (wystarczy numer zamówienia i e-mail) albo napisz na kontakt@wellbotany.pl. Następnie w ciągu 14 dni odeślij produkty na adres: ul. Polna 102, 62-800 Kalisz. Koszt odesłania ponosi kupujący, chyba że towar jest niezgodny z umową.",
         },
         {
           q: "Kiedy otrzymam zwrot pieniędzy?",
