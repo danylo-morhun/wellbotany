@@ -1,0 +1,12 @@
+[Unit]
+Description=Well Botany: fill the ISR cache after a deploy
+After=wellbotany.service
+Requisite=wellbotany.service
+
+[Service]
+Type=oneshot
+User=deploy
+ExecStart=/usr/local/bin/wb-warm-cache
+Nice=10
+IOSchedulingClass=idle
+TimeoutStartSec=30min
