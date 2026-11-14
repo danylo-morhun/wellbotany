@@ -77,7 +77,7 @@ export function OrdersTable({ orders }: { orders: OrderRow[] }) {
 
   return (
     <div className="relative">
-      <div className="overflow-x-auto rounded-2xl bg-card shadow-card">
+      <div className="relative overflow-x-auto rounded-2xl bg-card shadow-card">
         <table className="w-full text-sm">
           <thead className="border-b border-border text-left text-xs text-muted-foreground">
             <tr>
