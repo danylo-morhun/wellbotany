@@ -144,16 +144,16 @@ model Category {
 }
 
 model Brand {
-  id            String    @id @default(cuid())
-  slug          String    @unique
-  name          String
-  description   String?
+  id                  String    @id @default(cuid())
+  slug                String    @unique
+  name                String
+  description         String?
   // Longer brand text under the product grid (HTML, same allow-list as
   // product descriptions) — /marki/[slug] page 1 only
-  contentPl     String?   @db.Text
-  logo          String?
-  website       String?
-  countryCode   String? // ISO 3166-1 alpha-2, e.g. "PL", "DE"
+  contentPl           String?   @db.Text
+  logo                String?
+  website             String?
+  countryCode         String? // ISO 3166-1 alpha-2, e.g. "PL", "DE"
   // GPSR art. 19 (Reg. 2023/988): non-food product pages show the
   // manufacturer's name, postal and electronic address — and for a non-EU
   // manufacturer the EU responsible person. A product line inherits these
@@ -165,12 +165,12 @@ model Brand {
   // A manufacturer's product line (e.g. ForMeds' BICAPS, PRENACAPS) is
   // still its own Brand row — parentBrand just groups it under the
   // manufacturer for browsing, mirroring Category's "CategoryTree".
-  parentBrandId String?
-  parentBrand   Brand?    @relation("BrandTree", fields: [parentBrandId], references: [id])
-  subBrands     Brand[]   @relation("BrandTree")
-  products      Product[]
-  createdAt     DateTime  @default(now())
-  updatedAt     DateTime  @updatedAt
+  parentBrandId       String?
+  parentBrand         Brand?    @relation("BrandTree", fields: [parentBrandId], references: [id])
+  subBrands           Brand[]   @relation("BrandTree")
+  products            Product[]
+  createdAt           DateTime  @default(now())
+  updatedAt           DateTime  @updatedAt
 
   @@index([slug])
   @@index([parentBrandId])
@@ -548,8 +548,8 @@ model GiftSet {
   descriptionPl String? @db.Text
   imageUrl      String?
 
-  pricePln        Int // fixed sale price of the whole set, in grosz
-  comparePricePln Int? // reference "sum of components" price, strikethrough
+  pricePln          Int // fixed sale price of the whole set, in grosz
+  comparePricePln   Int? // reference "sum of components" price, strikethrough
   // Omnibus: written only by the DB trigger record_gift_set_price (see
   // migration 20261005120000_gift_set_price_history) — never set it from app code.
   lowestPrice30dPln Int?
@@ -712,24 +712,24 @@ model GiftPackaging {
 // ─── DISCOUNTS ────────────────────────────────────────────────────────────────
 
 model Coupon {
-  id          String     @id @default(cuid())
-  code        String     @unique
-  type        CouponType
+  id               String                @id @default(cuid())
+  code             String                @unique
+  type             CouponType
   // PERCENTAGE: 0–100 (percent off)
   // FIXED_AMOUNT: grosz off (e.g. 1000 = 10.00 PLN off)
-  value       Int
-  minOrderPln Int? // minimum order total in grosz to apply coupon
-  maxUsages   Int? // null = unlimited
+  value            Int
+  minOrderPln      Int? // minimum order total in grosz to apply coupon
+  maxUsages        Int? // null = unlimited
   // Kaskada rabatowa guard: true = no discount on lines already on sale
   // (variant or curated gift set with comparePricePln above the price)
-  excludeSaleItems Boolean @default(true)
-  usageCount  Int        @default(0)
-  validFrom   DateTime?
-  validUntil  DateTime?
-  isActive    Boolean    @default(true)
-  orders      Order[]
+  excludeSaleItems Boolean               @default(true)
+  usageCount       Int                   @default(0)
+  validFrom        DateTime?
+  validUntil       DateTime?
+  isActive         Boolean               @default(true)
+  orders           Order[]
   // Set on the personal welcome code a newsletter sign-up receives
-  subscriber  NewsletterSubscriber?
+  subscriber       NewsletterSubscriber?
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -810,9 +810,9 @@ model Order {
   totalPln    Int // final amount charged
 
   // Coupon applied
-  couponId   String?
-  coupon     Coupon? @relation(fields: [couponId], references: [id])
-  couponCode String? // snapshot (coupon record may change later)
+  couponId      String?
+  coupon        Coupon? @relation(fields: [couponId], references: [id])
+  couponCode    String? // snapshot (coupon record may change later)
   // Cart-value promotion that gave discountPln instead of a coupon (snapshot)
   promotionName String?
 
@@ -831,7 +831,7 @@ model Order {
   trackingNumber String?
   trackingUrl    String?
   // epaka.pl order id once the shipment is created from the admin; label PDF is fetched by it
-  epakaOrderId Int?
+  epakaOrderId   Int?
 
   items OrderItem[]
 
@@ -1021,11 +1021,45 @@ model StockLocation {
   safetyStock Int       @default(1) // held back per variant for walk-in sales between syncs
   lastSyncAt  DateTime?
 
-  levels StockLevel[]
-  runs   SyncRun[]
+  // Subiekt catalog (agent's catalog cycle): price level names, index 0 = level 1
+  priceLevelNames String[]  @default([])
+  catalogSyncedAt DateTime?
+
+  levels   StockLevel[]
+  runs     SyncRun[]
+  products SubiektProduct[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+}
+
+// Subiekt GT product card as the shop agent reports it — a reference copy for
+// purchase costs and the "Subiekt vs sklep" report. Never shown to customers;
+// products themselves are only touched through costPricePln (with safeguards).
+model SubiektProduct {
+  locationId String
+  location   StockLocation @relation(fields: [locationId], references: [id], onDelete: Cascade)
+  symbol     String // tw_Symbol
+
+  ean                 String? // tw_PodstKodKresk
+  name                String
+  unit                String?
+  vatRate             Decimal?  @db.Decimal(5, 2)
+  purchaseNetPln      Int? // tc_CenaNetto0, grosz
+  pricesGrossPln      Int[] // tc_CenaBrutto1..10, grosz, 0 = empty
+  weightGrams         Int?
+  supplierSymbol      String?
+  supplierName        String?
+  supplierProductCode String? // tw_DostSymbol
+  minStock            Int?
+  lastDeliveryAt      DateTime?
+  lastDeliveryNetPln  Int?
+  blocked             Boolean   @default(false)
+
+  updatedAt DateTime @updatedAt
+
+  @@id([locationId, symbol])
+  @@index([ean])
 }
 
 // Available quantity in Subiekt (stock minus reservations, never negative)
