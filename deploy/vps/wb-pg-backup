@@ -1,0 +1,14 @@
+#!/bin/bash
+# Daily custom-format dump of the shop DB; keeps 14 days. Pulled off-box by the owner Mac (launchd) and copied to Backblaze B2.
+set -euo pipefail
+dir=/var/backups/wellbotany
+f="$dir/wellbotany-$(date +%F).dump"
+sudo -u postgres pg_dump -Fc --no-owner --no-acl wellbotany > "$f.tmp"
+pg_restore -l "$f.tmp" >/dev/null   # sanity: archive readable
+mv "$f.tmp" "$f"; chown deploy:deploy "$f"; chmod 600 "$f"
+touch "$dir/.backup-ok"   # read by /api/health (Uptime)
+find "$dir" -name "wellbotany-*.dump" -mtime +14 -delete
+# off-site: client-side encrypted copy to Backblaze B2 (EU), Object Lock 30 d, lifecycle 90 d
+rclone --config /etc/wellbotany/rclone.conf copy "$f" b2crypt: --retries 5 -q
+touch "$dir/.offsite-ok"
+echo "backup ok: $f $(stat -c %s "$f") bytes"
