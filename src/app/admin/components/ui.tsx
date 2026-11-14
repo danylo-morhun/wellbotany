@@ -109,7 +109,8 @@ export function EmptyState({
 
 /** Shared dense-table classes so every admin list reads the same */
 export const table = {
-  wrap: "overflow-x-auto rounded-2xl bg-card shadow-card",
+  // relative: contains sr-only (absolute) text so it can't stretch the page below the scroller
+  wrap: "relative overflow-x-auto rounded-2xl bg-card shadow-card",
   table: "w-full text-sm",
   thead: "border-b border-border bg-card text-left text-xs text-muted-foreground",
   th: "h-10 px-4 font-medium whitespace-nowrap",

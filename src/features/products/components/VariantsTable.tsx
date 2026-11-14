@@ -99,7 +99,7 @@ export function VariantsTable({ productId, variants }: Props) {
           Brak wariantów — produkt nie może zostać kupiony.
         </p>
       ) : (
-        <div className="mt-4 overflow-x-auto">
+        <div className="relative mt-4 overflow-x-auto">
           <table className="w-full text-sm">
             <thead className="border-y border-border text-left text-xs text-muted-foreground">
               <tr>

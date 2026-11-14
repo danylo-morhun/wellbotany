@@ -82,7 +82,7 @@ export function ProductsTable({ products, total, filters, brands, categories }: 
         </div>
       )}
 
-      <div className="max-h-[70vh] overflow-auto rounded-2xl bg-card shadow-card">
+      <div className="relative max-h-[70vh] overflow-auto rounded-2xl bg-card shadow-card">
         <table className="w-full text-sm">
           <thead className="sticky top-0 z-10 bg-card text-xs text-muted-foreground">
             <tr className="border-b border-border text-left">
