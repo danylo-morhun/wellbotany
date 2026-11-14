@@ -156,6 +156,12 @@ export default function RegulaminPage() {
             rachunek bankowy przypisany do karty Kupującego.
           </p>
           <p className="mt-2 text-muted-foreground">
+            Jeżeli zamówienie z płatnością z góry nie zostanie opłacone w tym terminie, Sprzedawca
+            wyśle Kupującemu e-mailem przypomnienie, wyznaczając dodatkowy termin 7 dni na zapłatę.
+            Po bezskutecznym upływie dodatkowego terminu Sprzedawca może odstąpić od umowy, o czym
+            poinformuje Kupującego e-mailem. Do czasu zapłaty zamówienie nie jest realizowane.
+          </p>
+          <p className="mt-2 text-muted-foreground">
             Kupujący dokonując zakupów akceptuje stosowanie faktur elektronicznych przez Sprzedawcę.
             Kupujący ma prawo wycofać swoją akceptację.
           </p>
@@ -320,7 +326,36 @@ export default function RegulaminPage() {
         </section>
 
         <section>
-          <h2 className="mb-3 text-xl">§10 Dane osobowe</h2>
+          <h2 className="mb-3 text-xl">§10 Usługi świadczone drogą elektroniczną</h2>
+          <ol className="list-inside list-decimal space-y-2 text-muted-foreground">
+            <li>
+              Sprzedawca świadczy nieodpłatnie drogą elektroniczną następujące usługi: Konto,
+              Newsletter (wysyłka informacji o promocjach, nowościach i poradach na podany adres
+              e-mail), formularz kontaktowy, formularz odstąpienia od umowy oraz możliwość
+              wystawienia opinii o kupionym produkcie.
+            </li>
+            <li>
+              Umowa o korzystanie z formularza kontaktowego, formularza odstąpienia od umowy i
+              formularza opinii zawierana jest na czas korzystania z formularza i rozwiązuje się z
+              chwilą jego wysłania lub zaprzestania jego wypełniania.
+            </li>
+            <li>
+              Umowa o Newsletter zawierana jest na czas nieokreślony z chwilą zapisu. Kupujący może
+              w każdej chwili, bez ponoszenia kosztów, zrezygnować z Newslettera za pomocą linku
+              „wypisz się” zamieszczonego w każdej wiadomości lub wiadomością na adres wskazany w
+              §2.
+            </li>
+            <li>Zasady korzystania z Konta określa Regulamin prowadzenia Konta poniżej.</li>
+            <li>
+              Reklamacje dotyczące usług świadczonych drogą elektroniczną można składać na adres
+              pocztowy lub elektroniczny wskazany w §2. Sprzedawca udzieli odpowiedzi na reklamację
+              w terminie 14 dni od jej otrzymania.
+            </li>
+          </ol>
+        </section>
+
+        <section>
+          <h2 className="mb-3 text-xl">§11 Dane osobowe</h2>
           <p className="text-muted-foreground">
             Administratorem danych osobowych przekazanych przez Kupującego jest Sprzedawca.
             Szczegółowe informacje dotyczące przetwarzania danych osobowych — w tym o celach,
@@ -336,9 +371,15 @@ export default function RegulaminPage() {
         </section>
 
         <section>
-          <h2 className="mb-3 text-xl">§11 Zastrzeżenia</h2>
+          <h2 className="mb-3 text-xl">§12 Zastrzeżenia</h2>
           <ul className="list-inside list-disc space-y-2 text-muted-foreground">
             <li>Zakazane jest dostarczanie przez Kupującego treści o charakterze bezprawnym.</li>
+            <li>
+              Informacje o produktach, w tym o suplementach diety, nie stanowią porady medycznej.
+              Suplement diety nie może być stosowany jako substytut zróżnicowanej diety; w razie
+              wątpliwości przed zastosowaniem produktu warto skonsultować się z lekarzem lub
+              farmaceutą.
+            </li>
             <li>
               Każde złożone w Sklepie zamówienie stanowi odrębną umowę sprzedaży i wymaga osobnej
               akceptacji Regulaminu.
@@ -397,6 +438,14 @@ export default function RegulaminPage() {
               leczniczych.
             </li>
           </ol>
+        </section>
+
+        <section>
+          <h2 className="mb-3 text-xl">Postanowienia końcowe</h2>
+          <p className="text-muted-foreground">
+            Regulamin obowiązuje od dnia 15 listopada 2026 r. Do zamówień złożonych przed zmianą
+            Regulaminu stosuje się Regulamin w brzmieniu obowiązującym w dniu złożenia zamówienia.
+          </p>
         </section>
 
         <p className="text-muted-foreground">
