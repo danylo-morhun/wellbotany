@@ -2,6 +2,7 @@
 
 import QRCode from "qrcode";
 import { z } from "zod";
+import { loginPath } from "@/features/auth/lib/login-path";
 import { ActionError } from "@/lib/action-error";
 import { auth, signOut } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
@@ -55,5 +56,5 @@ export const confirmTotpSetup = actionClient
       data: { totpEnabledAt: new Date(), totpLastStep: step },
     });
     // The current session carries no admin rights — sign in again with a code
-    await signOut({ redirectTo: "/logowanie?2fa=wlaczona" });
+    await signOut({ redirectTo: `${await loginPath()}?2fa=wlaczona` });
   });

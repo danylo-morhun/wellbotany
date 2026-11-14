@@ -3,6 +3,7 @@
 import bcrypt from "bcryptjs";
 import { cookies } from "next/headers";
 import { AuthError } from "next-auth";
+import { loginPath } from "@/features/auth/lib/login-path";
 import { openTotpSecret, verifyTotp } from "@/features/auth/lib/totp";
 import { CART_COOKIE_NAME, mergeGuestCart } from "@/features/cart/lib/session";
 import { mergeGuestWishlist, WISHLIST_COOKIE_NAME } from "@/features/wishlist/lib/session";
@@ -75,7 +76,8 @@ export const loginCustomer = actionClient
         password: input.password,
         code: input.code ?? "",
         // An admin without TOTP has no admin rights until it is set up
-        redirectTo: customer.isAdmin && !totpOn ? "/logowanie/2fa" : afterSignIn(input.callbackUrl),
+        redirectTo:
+          customer.isAdmin && !totpOn ? `${await loginPath()}/2fa` : afterSignIn(input.callbackUrl),
       });
     } catch (err) {
       if (err instanceof AuthError) throw new ActionError("Nieprawidłowy e-mail lub hasło");
