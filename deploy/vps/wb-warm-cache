@@ -1,0 +1,19 @@
+#!/bin/bash
+# Renders every sitemap URL once after a deploy, so the ISR cache of the new
+# release is full before crawlers and shoppers arrive. Started by wb-deploy via
+# wb-warm-cache.service (low priority, 2 at a time, straight to the app).
+set -euo pipefail
+APP=http://127.0.0.1:3000
+get() { curl -s -o /dev/null -w "%{http_code}\n" --max-time 30 \
+  -H "Host: wellbotany.pl" -H "X-Forwarded-Proto: https" "$APP$1"; }
+export -f get; export APP
+
+urls=$(curl -fs --max-time 30 -H "Host: wellbotany.pl" "$APP/sitemap_index.xml" \
+  | grep -o 'https://wellbotany.pl/[^<]*\.xml' | sed 's#https://wellbotany.pl##' \
+  | while read -r map; do
+      curl -fs --max-time 30 -H "Host: wellbotany.pl" "$APP$map" | grep -o '<loc>[^<]*' | sed 's#<loc>https://wellbotany.pl##'
+    done)
+
+start=$(date +%s)
+codes=$(printf '%s\n' "$urls" | xargs -P 2 -I{} bash -c 'get "$@"' _ {} | sort | uniq -c | tr -s ' ' | tr '\n' ',')
+echo "warmed $(printf '%s\n' "$urls" | wc -l) urls in $(( $(date +%s) - start )) s: ${codes%,}"
