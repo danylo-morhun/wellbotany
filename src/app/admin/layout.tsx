@@ -12,6 +12,7 @@ import { lowStockWhere } from "@/features/products/lib/stock";
 import { auth, signOut } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import "./admin.css";
+import { loginPath } from "@/features/auth/lib/login-path";
 
 export const metadata: Metadata = {
   title: { default: "Panel admina", template: "%s · Admin | Well Botany" },
@@ -33,7 +34,7 @@ export default async function AdminLayout({ children }: { children: React.ReactN
 
   async function logout() {
     "use server";
-    await signOut({ redirectTo: "/logowanie" });
+    await signOut({ redirectTo: await loginPath() });
   }
   const userMenu = (
     <AdminUserMenu
