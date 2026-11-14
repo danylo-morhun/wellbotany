@@ -1,17 +1,37 @@
-import { Ratelimit } from "@upstash/ratelimit";
 import { headers } from "next/headers";
 import { ActionError } from "@/lib/action-error";
 import { redis } from "@/lib/redis";
 
-/** No-op (never rate-limits) when Upstash env vars are absent — e.g. local dev. */
-function makeLimiter(prefix: string, requests: number, window: `${number} ${"s" | "m" | "h"}`) {
-  if (!redis) return null;
-  return new Ratelimit({
-    redis,
-    prefix: `ratelimit:${prefix}`,
-    limiter: Ratelimit.slidingWindow(requests, window),
-    analytics: true,
-  });
+const UNIT_MS = { s: 1000, m: 60_000, h: 3_600_000 } as const;
+
+/**
+ * Fixed-window limiter in Redis: `requests` per window per identifier.
+ * Fails open — if Redis is down the request goes through (nginx still caps
+ * /api/auth/ per IP).
+ */
+export type Limiter = { limit(identifier: string): Promise<{ success: boolean }> };
+
+/** No-op (never rate-limits) when REDIS_URL is unset — e.g. tests. */
+function makeLimiter(
+  prefix: string,
+  requests: number,
+  window: `${number} ${keyof typeof UNIT_MS}`,
+): Limiter | null {
+  const client = redis;
+  if (!client) return null;
+  const [amount, unit] = window.split(" ") as [string, keyof typeof UNIT_MS];
+  const windowMs = Number(amount) * UNIT_MS[unit];
+  return {
+    async limit(identifier) {
+      try {
+        const count = await client.incrWindow(`ratelimit:${prefix}:${identifier}`, windowMs);
+        return { success: count <= requests };
+      } catch (e) {
+        console.error("rate limit skipped:", e);
+        return { success: true };
+      }
+    },
+  };
 }
 
 export const loginLimiter = makeLimiter("login", 10, "1 m");
@@ -31,7 +51,7 @@ export async function getClientIp(): Promise<string> {
 }
 
 export async function assertNotRateLimited(
-  limiter: Ratelimit | null,
+  limiter: Limiter | null,
   identifier: string,
 ): Promise<void> {
   if (!limiter) return;
