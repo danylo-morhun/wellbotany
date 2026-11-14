@@ -1,8 +1,8 @@
 import Redis from "ioredis";
 
 // Redis on the VPS (localhost). Values are stored as JSON so callers get back
-// what they set. Every call fails fast when Redis is down: callers treat it as
-// a cache / limiter and carry on without it.
+// what they set. Callers treat it as a cache / limiter and carry on without it
+// when a call fails.
 
 type Client = {
   get<T>(key: string): Promise<T | null>;
@@ -24,15 +24,12 @@ const parse = (raw: string | null) => {
 
 function connect(url: string): Client {
   const io = new Redis(url, {
-    lazyConnect: true,
+    // Commands sent before the connection is up wait for it; while Redis is
+    // down they fail after one reconnect attempt instead of hanging
     connectTimeout: 2000,
     maxRetriesPerRequest: 1,
-    // Don't queue commands while disconnected — fail at once instead
-    enableOfflineQueue: false,
   });
   io.on("error", (e) => console.error("redis:", e.message));
-  // lazyConnect + no offline queue: connect up front, commands fail until it's up
-  io.connect().catch(() => {});
 
   return {
     get: async (key) => parse(await io.get(key)),
@@ -48,10 +45,13 @@ function connect(url: string): Client {
   };
 }
 
+// One connection per process: route chunks each evaluate this module, and dev
+// reloads re-run it.
 const globalForRedis = globalThis as unknown as { redis?: Client | null };
 
-/** null when REDIS_URL is unset — e.g. tests and CI. */
-export const redis: Client | null =
-  globalForRedis.redis ?? (process.env.REDIS_URL ? connect(process.env.REDIS_URL) : null);
+if (globalForRedis.redis === undefined) {
+  globalForRedis.redis = process.env.REDIS_URL ? connect(process.env.REDIS_URL) : null;
+}
 
-if (process.env.NODE_ENV !== "production") globalForRedis.redis = redis;
+/** null when REDIS_URL is unset — e.g. tests and CI. */
+export const redis: Client | null = globalForRedis.redis;
