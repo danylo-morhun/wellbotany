@@ -411,6 +411,13 @@ model Customer {
 
   isAdmin Boolean @default(false)
 
+  // Admin TOTP (RFC 6238). Secret is AES-GCM encrypted with a key derived from
+  // AUTH_SECRET (src/features/auth/lib/totp.ts); enabledAt null = not set up yet.
+  // lastStep = time step of the last accepted code (no replays).
+  totpSecret    String?
+  totpEnabledAt DateTime?
+  totpLastStep  Int?
+
   // Link to auth provider (NextAuth / Supabase Auth user ID)
   authUserId String? @unique
 
