@@ -39,7 +39,8 @@ jobs:
   # so the build needs a database with the production schema. A throwaway
   # Postgres 18 (same major as prod) is built from the migration history alone
   # (`migrate deploy`, as the Deploy workflow runs it on prod) — a broken
-  # migration fails here, not at deploy time.
+  # migration fails here, not at deploy time — and must then match
+  # schema.prisma, so a model change without a migration fails too.
   build:
     name: Production Build Verification
     needs: lint-and-typecheck
@@ -62,4 +63,6 @@ jobs:
       - uses: ./.github/actions/setup
       - name: Build the schema from migrations
         run: pnpm exec prisma migrate deploy
+      - name: Check schema.prisma matches the migrations
+        run: pnpm exec prisma migrate diff --from-url "$DIRECT_URL" --to-schema-datamodel prisma/schema.prisma --exit-code
       - run: pnpm build
