@@ -1,4 +1,5 @@
 import { type NextFetchEvent, type NextRequest, NextResponse } from "next/server";
+import { ADMIN_LOGIN_PATH } from "@/features/auth/lib/admin-login-path";
 import { auth } from "@/lib/auth";
 import { COOKIE_CONSENT_SCRIPT_HASH } from "@/lib/cookie-consent-script";
 import { THEME_INIT_SCRIPT_HASH } from "@/lib/theme-script";
@@ -15,6 +16,7 @@ const STRICT_CSP_PATHS = [
   "/rejestracja",
   "/ulubione",
   "/admin",
+  ADMIN_LOGIN_PATH,
 ];
 
 function isStrictCspPath(pathname: string): boolean {
@@ -117,18 +119,27 @@ function withCsp(req: NextRequest): NextResponse {
 const ADMIN_HOST = process.env.ADMIN_HOST;
 // What the admin host may serve besides /admin: its login page, API routes
 // (auth, uploads, server actions post to their own page) and public files.
-const ADMIN_HOST_PATHS = ["/admin", "/logowanie", "/api/"];
+// /admin-login is the admin host's own login page (no shop chrome);
+// /logowanie there redirects to it.
+const ADMIN_HOST_PATHS = ["/admin", ADMIN_LOGIN_PATH, "/api/"];
+
+const isUnder = (pathname: string, prefix: string) =>
+  pathname === prefix || pathname.startsWith(`${prefix}/`);
+const isAdminPath = (pathname: string) => isUnder(pathname, "/admin");
 
 function adminHostRedirect(req: NextRequest): NextResponse | null {
   if (!ADMIN_HOST) return null;
   const { pathname, search } = req.nextUrl;
   const host = req.headers.get("host");
-  const isAdminPath = pathname === "/admin" || pathname.startsWith("/admin/");
 
   if (host !== ADMIN_HOST) {
-    return isAdminPath
+    return isAdminPath(pathname) || isUnder(pathname, ADMIN_LOGIN_PATH)
       ? NextResponse.redirect(`https://${ADMIN_HOST}${pathname}${search}`, 308)
       : null;
+  }
+  if (isUnder(pathname, "/logowanie")) {
+    const rest = pathname.slice("/logowanie".length);
+    return NextResponse.redirect(new URL(`${ADMIN_LOGIN_PATH}${rest}${search}`, req.url), 307);
   }
   if (pathname === "/") return NextResponse.redirect(new URL("/admin", req.url), 307);
   const allowed =
@@ -144,7 +155,7 @@ function adminHostRedirect(req: NextRequest): NextResponse | null {
 const guardedProxy = auth((req) => {
   const isLoggedIn = !!req.auth;
   const isKonto = req.nextUrl.pathname.startsWith("/konto");
-  const isAdmin = req.nextUrl.pathname.startsWith("/admin");
+  const isAdmin = isAdminPath(req.nextUrl.pathname);
 
   if (isKonto && !isLoggedIn) {
     const loginUrl = new URL("/logowanie", req.url);
@@ -154,7 +165,8 @@ const guardedProxy = auth((req) => {
   }
 
   if (isAdmin && req.auth?.user?.role !== "ADMIN") {
-    const loginUrl = new URL("/logowanie", req.url);
+    const onAdminHost = !!ADMIN_HOST && req.headers.get("host") === ADMIN_HOST;
+    const loginUrl = new URL(onAdminHost ? ADMIN_LOGIN_PATH : "/logowanie", req.url);
     // Keep the query so e.g. /admin/zamowienia?widok=… survives the login round-trip
     loginUrl.searchParams.set("callbackUrl", req.nextUrl.pathname + req.nextUrl.search);
     return NextResponse.redirect(loginUrl);
@@ -170,7 +182,7 @@ export default function proxy(req: NextRequest, event: NextFetchEvent) {
   const hostRedirect = adminHostRedirect(req);
   if (hostRedirect) return hostRedirect;
   const { pathname } = req.nextUrl;
-  if (pathname.startsWith("/konto") || pathname.startsWith("/admin")) {
+  if (pathname.startsWith("/konto") || isAdminPath(pathname)) {
     // Auth.js types the 2nd arg for route handlers; here it only forwards it
     // to the callback above, which doesn't use it.
     return guardedProxy(req, event as never);
