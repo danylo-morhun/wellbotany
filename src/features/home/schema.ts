@@ -31,6 +31,7 @@ export const homeBannerSchema = z
     altPl: optionalText(160),
     textPosition: z.enum(["LEFT", "RIGHT"]),
     textTone: z.enum(["LIGHT", "DARK"]),
+    textInImage: z.boolean().default(false),
     isActive: z.boolean(),
     startsAt: optionalDate("00:00:00"),
     endsAt: optionalDate("23:59:59"),
