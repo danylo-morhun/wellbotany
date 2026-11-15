@@ -1,4 +1,5 @@
 import { publicImageUrl } from "@/lib/image-loader";
+import { SOCIAL_LINKS } from "@/lib/seller";
 
 export const DEFAULT_OG_IMAGE = {
   url: "/og-image.jpg",
@@ -90,6 +91,7 @@ export function buildOrganizationJsonLd() {
     legalName: "Zielarnia Kaliska II Sp. z o.o.",
     url: siteUrl,
     logo: `${siteUrl}/branding/logo-horizontal.svg`,
+    sameAs: SOCIAL_LINKS.map((social) => social.href),
     email: "kontakt@wellbotany.pl",
     telephone: "+48797771703",
     vatID: "PL6182203142",
