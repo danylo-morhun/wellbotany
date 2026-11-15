@@ -165,7 +165,12 @@ function Slide({
   priority: boolean;
   hidden: boolean;
 }) {
-  const alt = banner.altPl ?? banner.titlePl;
+  // Text drawn on the image: screen readers get it from alt
+  const alt =
+    banner.altPl ??
+    (banner.textInImage
+      ? [banner.titlePl, banner.subtitlePl, banner.ctaLabelPl].filter(Boolean).join(". ")
+      : banner.titlePl);
   const common = { alt, priority, fill: true, sizes: "100vw" } as const;
   const desktop = getImageProps({ ...common, src: banner.imageDesktopUrl }).props;
   const mobile = getImageProps({
@@ -201,50 +206,56 @@ function Slide({
           className="object-cover"
         />
       </picture>
-      {/* Light scrim on the text side: banners are shot with empty space there, so
+      {!banner.textInImage && (
+        <>
+          {/* Light scrim on the text side: banners are shot with empty space there, so
           it only evens out the backdrop. Phone: text on top; desktop: left/right */}
-      <div
-        aria-hidden
-        className={cn(
-          "absolute inset-0",
-          light
-            ? "bg-gradient-to-b from-black/45 via-black/10 to-transparent"
-            : "bg-gradient-to-b from-white/55 via-white/10 to-transparent",
-          light
-            ? right
-              ? "md:bg-gradient-to-l md:from-black/40 md:via-black/10"
-              : "md:bg-gradient-to-r md:from-black/40 md:via-black/10"
-            : right
-              ? "md:bg-gradient-to-l md:from-white/50 md:via-white/10"
-              : "md:bg-gradient-to-r md:from-white/50 md:via-white/10",
-        )}
-      />
-      <div
-        className={cn(
-          "absolute inset-x-4 top-4 flex flex-col items-start gap-2 md:inset-x-auto md:top-1/2 md:w-[min(30%,420px)] md:-translate-y-1/2 md:gap-4",
-          right ? "md:right-[7%]" : "md:left-[7%]",
-          light ? "text-white" : "text-foreground",
-        )}
-      >
-        <p
-          className={cn(
-            "text-balance font-heading text-2xl font-extrabold leading-tight tracking-tight md:text-[2.75rem] lg:text-5xl",
-            // A glow behind light text only — on dark text it reads as blur
-            light && "drop-shadow-md",
-          )}
-        >
-          {banner.titlePl}
-        </p>
-        {banner.subtitlePl && (
-          <p className="hidden max-w-[44ch] text-lg font-medium md:block">{banner.subtitlePl}</p>
-        )}
-        {banner.ctaLabelPl && (
-          <span className="mt-1 inline-flex items-center gap-1.5 rounded-full bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground shadow-card md:px-6 md:py-3 md:text-base">
-            {banner.ctaLabelPl}
-            <ChevronRight className="size-4" aria-hidden />
-          </span>
-        )}
-      </div>
+          <div
+            aria-hidden
+            className={cn(
+              "absolute inset-0",
+              light
+                ? "bg-gradient-to-b from-black/45 via-black/10 to-transparent"
+                : "bg-gradient-to-b from-white/55 via-white/10 to-transparent",
+              light
+                ? right
+                  ? "md:bg-gradient-to-l md:from-black/40 md:via-black/10"
+                  : "md:bg-gradient-to-r md:from-black/40 md:via-black/10"
+                : right
+                  ? "md:bg-gradient-to-l md:from-white/50 md:via-white/10"
+                  : "md:bg-gradient-to-r md:from-white/50 md:via-white/10",
+            )}
+          />
+          <div
+            className={cn(
+              "absolute inset-x-4 top-4 flex flex-col items-start gap-2 md:inset-x-auto md:top-1/2 md:w-[min(30%,420px)] md:-translate-y-1/2 md:gap-4",
+              right ? "md:right-[7%]" : "md:left-[7%]",
+              light ? "text-white" : "text-foreground",
+            )}
+          >
+            <p
+              className={cn(
+                "text-balance font-heading text-2xl font-extrabold leading-tight tracking-tight md:text-[2.75rem] lg:text-5xl",
+                // A glow behind light text only — on dark text it reads as blur
+                light && "drop-shadow-md",
+              )}
+            >
+              {banner.titlePl}
+            </p>
+            {banner.subtitlePl && (
+              <p className="hidden max-w-[44ch] text-lg font-medium md:block">
+                {banner.subtitlePl}
+              </p>
+            )}
+            {banner.ctaLabelPl && (
+              <span className="mt-1 inline-flex items-center gap-1.5 rounded-full bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground shadow-card md:px-6 md:py-3 md:text-base">
+                {banner.ctaLabelPl}
+                <ChevronRight className="size-4" aria-hidden />
+              </span>
+            )}
+          </div>
+        </>
+      )}
     </Link>
   );
 }
