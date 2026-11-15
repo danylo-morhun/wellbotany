@@ -13,6 +13,7 @@ import { RowActions } from "@/components/ui/row-actions";
 import { FormSheet } from "@/features/admin/components/FormSheet";
 import { Field, Segmented, Switch, TextInput } from "@/features/products/components/editor/fields";
 import { ImageUrlInput } from "@/features/products/components/editor/ImageUrlInput";
+import { cn } from "@/lib/utils";
 import { deleteHomeBanner, saveHomeBanner } from "../actions";
 
 /** Date → "2026-10-01" for <input type="date"> (local day, not UTC) */
@@ -117,6 +118,7 @@ function BannerSheet({ banner, onClose }: { banner: HomeBanner | null; onClose: 
     banner?.textPosition ?? "RIGHT",
   );
   const [textTone, setTextTone] = useState<BannerTextTone>(banner?.textTone ?? "LIGHT");
+  const [textInImage, setTextInImage] = useState(banner?.textInImage ?? false);
   const [isActive, setIsActive] = useState(banner?.isActive ?? true);
   const [errors, setErrors] = useState<Record<string, string>>({});
 
@@ -153,6 +155,7 @@ function BannerSheet({ banner, onClose }: { banner: HomeBanner | null; onClose: 
       altPl: text("altPl"),
       textPosition,
       textTone,
+      textInImage,
       isActive,
       startsAt: text("startsAt"),
       endsAt: text("endsAt"),
@@ -165,7 +168,8 @@ function BannerSheet({ banner, onClose }: { banner: HomeBanner | null; onClose: 
       dirty={
         imageDesktopUrl !== (banner?.imageDesktopUrl ?? "") ||
         imageMobileUrl !== (banner?.imageMobileUrl ?? "") ||
-        isActive !== (banner?.isActive ?? true)
+        isActive !== (banner?.isActive ?? true) ||
+        textInImage !== (banner?.textInImage ?? false)
       }
       title={banner ? `Edytuj slajd` : "Nowy slajd"}
       onClose={onClose}
@@ -176,7 +180,11 @@ function BannerSheet({ banner, onClose }: { banner: HomeBanner | null; onClose: 
       <Field
         label="Zdjęcie — komputer"
         error={errors.imageDesktopUrl}
-        hint="Poziome ok. 2,7:1, np. 1920×710 px, bez napisów — tytuł dodaje sklep"
+        hint={
+          textInImage
+            ? "Poziome ok. 2,7:1, np. 1920×710 px, z tytułem i przyciskiem na grafice"
+            : "Poziome ok. 2,7:1, np. 1920×710 px, bez napisów — tytuł dodaje sklep"
+        }
       >
         <ImageUrlInput value={imageDesktopUrl} onChange={setImageDesktopUrl} />
       </Field>
@@ -187,6 +195,12 @@ function BannerSheet({ banner, onClose }: { banner: HomeBanner | null; onClose: 
       >
         <ImageUrlInput value={imageMobileUrl} onChange={setImageMobileUrl} />
       </Field>
+      <Switch
+        label="Tekst na grafice"
+        description="Tytuł i przycisk są narysowane na zdjęciu — sklep niczego nie nakłada. Wpisz je i tak: trafią do opisu dla czytników ekranu."
+        checked={textInImage}
+        onChange={setTextInImage}
+      />
       <Field label="Tytuł" htmlFor="hb-title" error={errors.titlePl}>
         <TextInput
           id="hb-title"
@@ -231,7 +245,7 @@ function BannerSheet({ banner, onClose }: { banner: HomeBanner | null; onClose: 
           />
         </Field>
       </div>
-      <div className="grid grid-cols-2 gap-3">
+      <div className={cn("grid grid-cols-2 gap-3", textInImage && "hidden")}>
         <Field label="Tekst po stronie">
           <Segmented
             label="Tekst po stronie"
