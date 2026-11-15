@@ -7,7 +7,7 @@ import { PAYMENT_LABELS } from "@/features/checkout/lib/payment";
 import { carrierLogo, shippingLabel } from "@/features/checkout/lib/shipping";
 import { getShippingRates } from "@/features/checkout/lib/shipping-rates";
 import { isP24Enabled } from "@/features/przelewy24/lib/config";
-import { SELLER } from "@/lib/seller";
+import { SELLER, SOCIAL_LINKS } from "@/lib/seller";
 
 // Same sources as checkout, so the footer can't drift from what's offered
 const ONLINE_PAYMENTS = ["BLIK", "PRZELEWY24", "APPLE_PAY", "GOOGLE_PAY"].map(
@@ -102,6 +102,20 @@ export async function Footer() {
                 <Clock className="size-4 shrink-0" strokeWidth={1.75} aria-hidden />
                 {SELLER.hours}
               </li>
+            </ul>
+            <ul className="mt-5 flex gap-5 text-sm">
+              {SOCIAL_LINKS.map((social) => (
+                <li key={social.href}>
+                  <a
+                    href={social.href}
+                    target="_blank"
+                    rel="me noopener noreferrer"
+                    className="font-medium text-band-foreground/75 underline-offset-4 transition-colors hover:text-band-foreground hover:underline"
+                  >
+                    {social.label}
+                  </a>
+                </li>
+              ))}
             </ul>
           </div>
 
