@@ -9,3 +9,11 @@ export const SELLER = {
   // Phone and e-mail support hours, shown in the footer and on the home page
   hours: "pon–pt 9:00–18:00, sob 9:00–14:00",
 } as const;
+
+// Shop social profiles: footer links + Organization JSON-LD sameAs
+export const SOCIAL_LINKS = [
+  { label: "Instagram", href: "https://www.instagram.com/wellbotany/" },
+  { label: "Facebook", href: "https://www.facebook.com/wellbotany" },
+  { label: "TikTok", href: "https://www.tiktok.com/@wellbotany" },
+  { label: "LinkedIn", href: "https://www.linkedin.com/company/wellbotany/" },
+] as const;
