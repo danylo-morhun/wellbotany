@@ -677,6 +677,7 @@ model HomeBanner {
 
   textPosition BannerTextPosition @default(RIGHT)
   textTone     BannerTextTone     @default(LIGHT)
+  textInImage  Boolean            @default(false) // title + button drawn on the image: the shop overlays nothing
 
   isActive  Boolean   @default(true)
   startsAt  DateTime?
