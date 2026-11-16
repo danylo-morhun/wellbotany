@@ -4,6 +4,7 @@ import {
   pairVariants,
   percentChange,
   planCostUpdates,
+  planPriceUpdates,
 } from "@/features/stock-sync/lib/catalog-plan";
 import { variantIndex } from "@/features/stock-sync/lib/plan";
 import type { CatalogItem } from "@/features/stock-sync/schema";
@@ -76,6 +77,61 @@ describe("planCostUpdates", () => {
     const plan = planCostUpdates(items, variantIndex(all), all);
     expect(plan.guard).toMatch(/30 of 30/);
     expect(plan.apply).toEqual(new Map([["e", 700]]));
+  });
+});
+
+describe("planPriceUpdates", () => {
+  const priced = (symbol: string, price: number, ean?: string): CatalogItem => ({
+    ...card(symbol, undefined, ean),
+    pricesGross: [price, 1500],
+  });
+  const ours = [
+    { id: "v1", sku: "A", ean: "5900000000017", pricePln: 2000, comparePricePln: null },
+    { id: "v2", sku: "B", ean: null, pricePln: 1000, comparePricePln: null },
+    { id: "v3", sku: "C", ean: null, pricePln: 1000, comparePricePln: 1500 },
+    { id: "v4", sku: "D", ean: null, pricePln: 1000, comparePricePln: null },
+  ];
+  const idx = variantIndex(ours);
+
+  it("follows level 1, skips promos, zero prices and unchanged ones", () => {
+    const plan = planPriceUpdates(
+      [priced("X", 2200, "5900000000017"), priced("B", 1000), priced("C", 1100), priced("D", 0)],
+      idx,
+      ours,
+    );
+    expect(plan.apply).toEqual(new Map([["v1", 2200]]));
+    expect(plan.review).toEqual([]);
+    expect(plan.guard).toBeNull();
+  });
+
+  it("sends big jumps and conflicting cards to review", () => {
+    const plan = planPriceUpdates(
+      [priced("B", 1600), priced("A", 2100), priced("X", 2200, "5900000000017")],
+      idx,
+      ours,
+    );
+    expect(plan.apply.size).toBe(0);
+    expect(plan.review.map((r) => [r.variantId, r.reason])).toEqual([
+      ["v2", "change-too-large"],
+      ["v1", "ambiguous"],
+    ]);
+  });
+
+  it("holds back a mass change", () => {
+    const many = Array.from({ length: 25 }, (_, i) => ({
+      id: `m${i}`,
+      sku: `M${i}`,
+      ean: null,
+      pricePln: 1000,
+      comparePricePln: null,
+    }));
+    const plan = planPriceUpdates(
+      many.map((v) => priced(v.sku, 1100)),
+      variantIndex(many),
+      many,
+    );
+    expect(plan.apply.size).toBe(0);
+    expect(plan.guard).toMatch(/25 of 25 sale prices/);
   });
 });
 
@@ -177,7 +233,7 @@ describe("POST /api/sync/subiekt/catalog", async () => {
   });
 
   it("applies a valid delta", async () => {
-    applyCatalog.mockResolvedValue({ ok: true, stored: 1, removed: 1 });
+    applyCatalog.mockResolvedValue({ ok: true, stored: 1, removed: 1, priceChangedProducts: [] });
     const res = await post({
       mode: "delta",
       agentVersion: "0.2.0",

@@ -81,6 +81,82 @@ export function planCostUpdates(
   return { apply: guard ? fills : new Map([...fills, ...changes]), review, guard };
 }
 
+// Site sale price follows Subiekt's retail level (owner 2026-11-16: the shop's
+// prices already carry the ~30 % margin she wants). Level 1 = "Detaliczna-B2B".
+export const PRICE_LEVEL = 1;
+// Same reasoning as costs: a jump this big is likelier a typo or a pack-size mix-up
+export const PRICE_MAX_CHANGE = 0.5;
+
+export type PricePlan = {
+  /** variantId → new pricePln (gross, grosz) */
+  apply: Map<string, number>;
+  review: {
+    variantId: string;
+    current: number;
+    incoming: number;
+    reason: "change-too-large" | "ambiguous";
+  }[];
+  /** Set when the bulk guard held back every change */
+  guard: string | null;
+};
+
+type VariantPrice = { id: string; pricePln: number; comparePricePln: number | null };
+
+/**
+ * New sale prices from Subiekt (tc_CenaBrutto<PRICE_LEVEL>, gross) for our variants.
+ * Never touches a variant with a running site promotion (comparePricePln set):
+ * moving its price would break the Omnibus "lowest price in 30 days" shown next to it.
+ * A missing or zero Subiekt price leaves ours as is.
+ */
+export function planPriceUpdates(
+  items: CatalogItem[],
+  index: VariantIndex,
+  variants: VariantPrice[],
+  level = PRICE_LEVEL,
+): PricePlan {
+  const current = new Map(variants.map((v) => [v.id, v]));
+
+  const incoming = new Map<string, number | null>();
+  for (const item of items) {
+    const price = item.pricesGross[level - 1];
+    if (!price) continue;
+    const id = findVariant(index, item);
+    if (!id || !current.has(id)) continue;
+    const seen = incoming.get(id);
+    incoming.set(id, seen === undefined || seen === price ? price : null);
+  }
+
+  const changes = new Map<string, number>();
+  const review: PricePlan["review"] = [];
+  for (const [id, price] of incoming) {
+    const variant = current.get(id);
+    if (!variant || variant.comparePricePln !== null) continue;
+    const now = variant.pricePln;
+    if (price === null) {
+      const first = items.find((i) => findVariant(index, i) === id && i.pricesGross[level - 1]);
+      review.push({
+        variantId: id,
+        current: now,
+        incoming: first?.pricesGross[level - 1] ?? 0,
+        reason: "ambiguous",
+      });
+    } else if (price !== now) {
+      if (now > 0 && Math.abs(price - now) / now > PRICE_MAX_CHANGE) {
+        review.push({ variantId: id, current: now, incoming: price, reason: "change-too-large" });
+      } else {
+        changes.set(id, price);
+      }
+    }
+  }
+
+  const guard =
+    changes.size >= GUARD_MIN_CHANGES && changes.size / Math.max(1, incoming.size) > GUARD_MAX_SHARE
+      ? `catalog would change ${changes.size} of ${incoming.size} sale prices at once`
+      : null;
+
+  return { apply: guard ? new Map() : changes, review, guard };
+}
+
 export type ReportVariant = {
   id: string;
   sku: string;
