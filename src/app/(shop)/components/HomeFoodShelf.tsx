@@ -17,11 +17,11 @@ export function HomeFoodShelf({ products, categories }: Props) {
       <div>
         <SectionHeading
           id="food-h"
-          title="Zdrowa żywność i słodycze"
-          link={{ href: "/kategoria/zywnosc", label: "Zobacz wszystkie" }}
+          title="Słodko, ale z dobrym składem"
+          link={{ href: "/kategoria/zywnosc", label: "Zdrowa żywność" }}
         />
         <p className="mt-1 text-sm text-muted-foreground">
-          Czekolady, przekąski, kawa, herbata i słodziki – obok suplementów, w jednej paczce.
+          Czekolady, przekąski, kawa i herbata — dorzuć do paczki z suplementami.
         </p>
       </div>
       {categories.length > 0 && (
