@@ -35,8 +35,8 @@ export function toGiftSetListItem<T extends WithItemImages>({ _count, items, ...
   };
 }
 
-// Builder tile + 3 sets = one row on desktop, 2×2 on phones
-const HOME_GIFT_SETS_LIMIT = 3;
+// One row of sets on desktop, 2×2 on phones; the builder gets a strip below
+const HOME_GIFT_SETS_LIMIT = 4;
 
 export const getHomeGiftSets = unstable_cache(
   async (): Promise<{ giftSets: GiftSetListItem[]; builderActive: boolean }> => {
@@ -62,6 +62,6 @@ export const getHomeGiftSets = unstable_cache(
       builderActive: (settings ?? DEFAULT_GIFT_BUILDER_POLICY).isActive,
     };
   },
-  ["home-gift-sets-v2"],
+  ["home-gift-sets-v3"],
   { tags: [GIFT_SETS_TAG] },
 );
