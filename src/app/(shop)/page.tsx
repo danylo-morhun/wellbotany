@@ -6,6 +6,7 @@ import { HelpAndGuides } from "@/app/(shop)/components/HelpAndGuides";
 import { HomeAbout } from "@/app/(shop)/components/HomeAbout";
 import { HomeBand } from "@/app/(shop)/components/HomeBand";
 import { HomeCampaign } from "@/app/(shop)/components/HomeCampaign";
+import { HomeFoodShelf } from "@/app/(shop)/components/HomeFoodShelf";
 import { HomeGiftSets } from "@/app/(shop)/components/HomeGiftSets";
 import { HomeHeadline } from "@/app/(shop)/components/HomeHeadline";
 import { HomeIntro } from "@/app/(shop)/components/HomeIntro";
@@ -23,7 +24,7 @@ import { campaignToRender } from "@/features/home/lib/campaign";
 import { HideIfSubscribed } from "@/features/newsletter/components/HideIfSubscribed";
 
 export const metadata: Metadata = {
-  title: { absolute: "Suplementy diety, witaminy i zioła – sklep Well Botany" },
+  title: { absolute: "Suplementy diety, zioła i zdrowa żywność – sklep Well Botany" },
   alternates: { canonical: "/" },
 };
 
@@ -32,7 +33,17 @@ export const revalidate = 3600;
 
 export default async function HomePage() {
   const [
-    { categories, tabs, newArrivals, promos, campaignProducts, ingredientTiles },
+    {
+      categories,
+      tabs,
+      newArrivals,
+      promos,
+      campaignProducts,
+      ingredientTiles,
+      foodShelf,
+      foodCategories,
+      productCount,
+    },
     banners,
     brands,
     { giftSets, builderActive },
@@ -43,6 +54,9 @@ export default async function HomePage() {
 
   // Bands after the opening alternate mint/plain (DESIGN.md §5)
   const rest = [
+    <FadeInView key="food">
+      <HomeFoodShelf products={foodShelf} categories={foodCategories} />
+    </FadeInView>,
     <HomeIntro key="intro" categories={categories} headline={false} />,
     !campaign && promos.length > 0 && (
       <FadeInView key="promos">
@@ -71,7 +85,7 @@ export default async function HomePage() {
     <>
       <HeroSlider banners={banners} />
       <HomeBand className="pt-5 md:pt-7">
-        <HomeHeadline />
+        <HomeHeadline productCount={productCount} />
         <div className="mt-4 md:mt-5">
           <BestsellerTabs tabs={tabs} lead />
         </div>
