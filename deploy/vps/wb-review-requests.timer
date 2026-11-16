@@ -1,0 +1,9 @@
+[Unit]
+Description=Review requests daily at 11:00 Warsaw
+
+[Timer]
+OnCalendar=*-*-* 11:00 Europe/Warsaw
+Persistent=true
+
+[Install]
+WantedBy=timers.target
