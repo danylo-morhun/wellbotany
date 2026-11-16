@@ -13,8 +13,8 @@ import { STOCK_LISTINGS_TAG } from "./product-tag";
 // Same shape as listings, so ProductCard gets everything it needs
 const productSelect = PRODUCT_LIST_SELECT;
 
-// One row on desktop, 2×2 on phones — more pushed everything else below the fold
-const FEATURED_LIMIT = 4;
+// Two rows on desktop, three rows of two on phones (BestsellerTabs hides the rest)
+const FEATURED_LIMIT = 8;
 
 // Slots the owner hasn't hand-picked (isFeatured) get one in-stock product per
 // popular ingredient category, in this order — so "Polecane" is never empty.
@@ -33,8 +33,25 @@ const AUTO_FEATURED_CATEGORY_SLUGS = [
 
 // Bestseller tabs: Polecane plus the biggest "na …" needs
 const NEED_TABS = 3;
-// Per-tab query size; four are shown, the rest lets brands spread
-const TAB_POOL = 8;
+// Per-tab query size; eight are shown, the rest lets brands spread
+const TAB_POOL = 24;
+
+// Food shelf: the range most visitors don't expect from a supplement shop.
+// Round-robin over these categories so one shelf shows chocolate, snacks,
+// coffee and sweeteners instead of 8 bars.
+const FOOD_TAB_SLUG = "zywnosc";
+const FOOD_SHELF_SLUGS = [
+  "czekolady-i-czekoladki",
+  "chipsy-i-przekaski-slone",
+  "kawa-i-herbata",
+  "batony",
+  "przekaski-owocowe",
+  "ciastka-i-wafle",
+  "slodziki",
+  "przyprawy-i-sol",
+  "slodycze",
+];
+const FOOD_SHELF_LIMIT = 8;
 
 // Promo band: one lead tile + four small items
 const PROMOS_LIMIT = 5;
@@ -43,7 +60,7 @@ const CAMPAIGN_LIMIT = 8;
 // Every discounted product, so the biggest reductions can be picked
 const PROMO_POOL = 120;
 // Nowości: dense list, two/three columns
-const NEW_LIMIT = 6;
+const NEW_LIMIT = 9;
 // Over-fetch so rows already shown higher up can be dropped without a second query
 const ROW_POOL = 16;
 
@@ -121,7 +138,7 @@ async function getAutoFeatured(manual: ProductListItem[], count: number) {
   return picked;
 }
 
-/** Four products for one need tab: one capped query, brands spread, nothing
+/** Eight products for one need tab: one capped query, brands spread, nothing
  * already in an earlier row. */
 async function needTabProducts(slug: string, excludeIds: string[]) {
   const categoryIds = await getCategoryDescendantIds([slug]);
@@ -174,6 +191,7 @@ export const getHomepageData = unstable_cache(
       }),
       Promise.all(INGREDIENT_TILE_SLUGS.map((slug) => sellableInCategory(slug))),
     ]);
+    const productCount = await prisma.product.count({ where: sellable });
 
     const featured =
       manualFeatured.length >= FEATURED_LIMIT
@@ -189,7 +207,11 @@ export const getHomepageData = unstable_cache(
       .sort((a, b) => b.productCount - a.productCount || a.sortOrder - b.sortOrder)
       .slice(0, NEED_TABS);
     const featuredIds = featured.map((p) => p.id);
-    const needProducts = await Promise.all(needs.map((c) => needTabProducts(c.slug, featuredIds)));
+    const food = categories.find((c) => c.slug === FOOD_TAB_SLUG && c.productCount > 0);
+    const [needProducts, foodTabProducts] = await Promise.all([
+      Promise.all(needs.map((c) => needTabProducts(c.slug, featuredIds))),
+      food ? needTabProducts(food.slug, featuredIds) : Promise.resolve([]),
+    ]);
     const tabs = [
       {
         id: "polecane",
@@ -198,6 +220,17 @@ export const getHomepageData = unstable_cache(
         href: manualFeatured.length > 0 ? "/katalog?polecane=1" : "/katalog",
         products: featured,
       },
+      // Second, so the first screen says "not only supplements"
+      ...(food
+        ? [
+            {
+              id: food.slug,
+              label: food.namePl,
+              href: `/kategoria/${food.slug}`,
+              products: foodTabProducts,
+            },
+          ]
+        : []),
       ...needs.map((c, i) => ({
         id: c.slug,
         label: c.namePl,
@@ -219,6 +252,33 @@ export const getHomepageData = unstable_cache(
     const promos = reductions.filter((p) => !shown.has(p.id)).slice(0, PROMOS_LIMIT);
     for (const p of promos) shown.add(p.id);
 
+    // Food shelf: one product per food category in turn, nothing shown above
+    const foodBrands = new Set<string>();
+    const foodPools = await Promise.all(
+      FOOD_SHELF_SLUGS.map(async (slug) => {
+        const pool = await sellableInCategory(slug, [...shown]);
+        // Brands spread inside each category, the shelf's brands spread across them
+        return pickAcrossBrands(pool, pool.length, foodBrands);
+      }),
+    );
+    const foodShelf: ProductListItem[] = [];
+    for (let round = 0; foodShelf.length < FOOD_SHELF_LIMIT && round < CANDIDATE_POOL; round++) {
+      let added = false;
+      for (const pool of foodPools) {
+        const p = pool.filter((x) => !shown.has(x.id) && !foodShelf.includes(x))[0];
+        if (!p || foodShelf.length >= FOOD_SHELF_LIMIT) continue;
+        foodShelf.push(p);
+        shown.add(p.id);
+        added = true;
+      }
+      if (!added) break;
+    }
+    const foodCategories = categories.filter(
+      (c) =>
+        c.productCount > 0 &&
+        (c.slug === "czekolady-i-czekoladki" || (food != null && c.parentId === food.id)),
+    );
+
     const newArrivals = newPool.filter((p) => !shown.has(p.id)).slice(0, NEW_LIMIT);
 
     const ingredientTiles = INGREDIENT_TILE_SLUGS.flatMap((slug, i) => {
@@ -234,9 +294,12 @@ export const getHomepageData = unstable_cache(
       promos,
       campaignProducts,
       ingredientTiles,
+      foodShelf,
+      foodCategories,
+      productCount,
     };
   },
-  ["homepage-v8"],
+  ["homepage-v9"],
   { tags: ["categories", "products", STOCK_LISTINGS_TAG] },
 );
 
