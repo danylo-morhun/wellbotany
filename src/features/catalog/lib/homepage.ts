@@ -39,9 +39,10 @@ const TAB_POOL = 24;
 // Food shelf: the range most visitors don't expect from a supplement shop.
 // Round-robin over these categories so one shelf shows chocolate, snacks,
 // coffee and sweeteners instead of 8 bars.
-const FOOD_TAB_SLUG = "zywnosc";
+const FOOD_SLUG = "zywnosc";
+const CHOCOLATE_SLUG = "czekolady-i-czekoladki";
 const FOOD_SHELF_SLUGS = [
-  "czekolady-i-czekoladki",
+  CHOCOLATE_SLUG,
   "chipsy-i-przekaski-slone",
   "kawa-i-herbata",
   "batony",
@@ -53,11 +54,8 @@ const FOOD_SHELF_SLUGS = [
 ];
 const FOOD_SHELF_LIMIT = 8;
 
-// "Promocje" tab first once a row of real reductions exists
-export const PROMO_TAB_ID = "promocje";
-const PROMO_TAB_MIN = 4;
-// Promo band: one lead tile + four small items
-const PROMOS_LIMIT = 5;
+// "Teraz taniej": two rows of four, biggest real reductions first
+const DEALS_LIMIT = 8;
 // Campaign section (Black Week…): two rows of four, biggest reductions first
 const CAMPAIGN_LIMIT = 8;
 // Every discounted product, so the biggest reductions can be picked
@@ -159,6 +157,36 @@ async function needTabProducts(slug: string, excludeIds: string[]) {
   return pickAcrossBrands(pool, FEATURED_LIMIT);
 }
 
+// "Zielarz poleca": hand-picked, with a note on what to read on the label.
+// Label facts only — no health claims (DESIGN / README Matcha). First three in stock show.
+const HERBALIST_PICKS = [
+  {
+    slug: "witamina-d3-2000-j-m-x-120-kaps",
+    note: "Patrz na µg w porcji, nie tylko na IU w nazwie.",
+  },
+  { slug: "bicaps-mag-chelate", note: "Liczy się mg magnezu w porcji, nie masa całej soli." },
+  {
+    slug: "czekolada-gorzka-85-bio-100-g-meybona",
+    note: "Kakao na pierwszym miejscu w składzie — tak wygląda dobra gorzka.",
+  },
+  {
+    slug: "ashwagandha-ksm-66-bio",
+    note: "KSM-66 to nazwa konkretnego ekstraktu — szukaj jej na etykiecie.",
+  },
+];
+const HERBALIST_LIMIT = 3;
+
+async function getHerbalistPicks() {
+  const products = await prisma.product.findMany({
+    where: { ...sellable, slug: { in: HERBALIST_PICKS.map((p) => p.slug) } },
+    select: productSelect,
+  });
+  return HERBALIST_PICKS.flatMap(({ slug, note }) => {
+    const product = products.find((p) => p.slug === slug);
+    return product ? [{ product, note }] : [];
+  }).slice(0, HERBALIST_LIMIT);
+}
+
 const offerDiscount = (p: ProductListItem) => {
   const v = p.variants[0];
   return v ? (discountPercent(v) ?? 0) : 0;
@@ -209,22 +237,17 @@ export const getHomepageData = unstable_cache(
       .filter((c) => c.parentId === null && c.group === "NEED" && c.productCount > 0)
       .sort((a, b) => b.productCount - a.productCount || a.sortOrder - b.sortOrder)
       .slice(0, NEED_TABS);
-    const featuredIds = featured.map((p) => p.id);
-    const food = categories.find((c) => c.slug === FOOD_TAB_SLUG && c.productCount > 0);
-    const [needProducts, foodTabProducts] = await Promise.all([
-      Promise.all(needs.map((c) => needTabProducts(c.slug, featuredIds))),
-      food ? needTabProducts(food.slug, featuredIds) : Promise.resolve([]),
-    ]);
-    // Real reductions only (Omnibus), biggest first: the lead tile is the best deal
+    // Real reductions only (Omnibus), biggest first
     const reductions = promoPool
       .filter((p) => offerDiscount(p) > 0)
       .sort((a, b) => offerDiscount(b) - offerDiscount(a));
-    // Promocje opens the page when there are enough real reductions to fill a row
-    const promoTab = reductions.length >= PROMO_TAB_MIN ? reductions.slice(0, FEATURED_LIMIT) : [];
+    const deals = reductions.slice(0, DEALS_LIMIT);
+    const picks = await getHerbalistPicks();
+
+    // Each product appears once on the page, in the first section that wants it
+    const shown = new Set([...deals, ...picks.map((p) => p.product), ...featured].map((p) => p.id));
+    const needProducts = await Promise.all(needs.map((c) => needTabProducts(c.slug, [...shown])));
     const tabs = [
-      ...(promoTab.length > 0
-        ? [{ id: PROMO_TAB_ID, label: "Promocje", href: "/katalog?promocje=1", products: promoTab }]
-        : []),
       {
         id: "polecane",
         label: "Polecane",
@@ -232,17 +255,6 @@ export const getHomepageData = unstable_cache(
         href: manualFeatured.length > 0 ? "/katalog?polecane=1" : "/katalog",
         products: featured,
       },
-      // Second, so the first screen says "not only supplements"
-      ...(food
-        ? [
-            {
-              id: food.slug,
-              label: food.namePl,
-              href: `/kategoria/${food.slug}`,
-              products: foodTabProducts,
-            },
-          ]
-        : []),
       ...needs.map((c, i) => ({
         id: c.slug,
         label: c.namePl,
@@ -250,15 +262,14 @@ export const getHomepageData = unstable_cache(
         products: needProducts[i],
       })),
     ].filter((tab) => tab.products.length > 0);
-
-    // Each product appears once on the page, in the first section that wants it
-    const shown = new Set(tabs.flatMap((tab) => tab.products.map((p) => p.id)));
+    for (const tab of tabs) for (const p of tab.products) shown.add(p.id);
+    const food = categories.find((c) => c.slug === FOOD_SLUG);
+    const chocolate = categories.find((c) => c.slug === CHOCOLATE_SLUG);
+    const foodCount = (food?.productCount ?? 0) + (chocolate?.productCount ?? 0);
 
     // A campaign shows the best ones even if a tab above has them too: the
     // page decides at render time whether a campaign is on
     const campaignProducts = reductions.slice(0, CAMPAIGN_LIMIT);
-    const promos = reductions.filter((p) => !shown.has(p.id)).slice(0, PROMOS_LIMIT);
-    for (const p of promos) shown.add(p.id);
 
     // Food shelf: one product per food category in turn, nothing shown above
     const foodBrands = new Set<string>();
@@ -284,7 +295,7 @@ export const getHomepageData = unstable_cache(
     const foodCategories = categories.filter(
       (c) =>
         c.productCount > 0 &&
-        (c.slug === "czekolady-i-czekoladki" || (food != null && c.parentId === food.id)),
+        (c.slug === CHOCOLATE_SLUG || (food != null && c.parentId === food.id)),
     );
 
     const newArrivals = newPool.filter((p) => !shown.has(p.id)).slice(0, NEW_LIMIT);
@@ -299,15 +310,17 @@ export const getHomepageData = unstable_cache(
       categories,
       tabs,
       newArrivals,
-      promos,
+      deals,
+      picks,
       campaignProducts,
       ingredientTiles,
       foodShelf,
       foodCategories,
       productCount,
+      foodCount,
     };
   },
-  ["homepage-v10"],
+  ["homepage-v11"],
   { tags: ["categories", "products", STOCK_LISTINGS_TAG] },
 );
 
