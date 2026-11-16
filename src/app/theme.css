@@ -10,6 +10,14 @@
   --shadow-float: var(--elevation-float);
   --color-primary-deep: var(--primary-deep);
   --color-band: var(--band);
+  --color-matcha-forest: var(--matcha-forest);
+  --color-matcha-forest-foreground: var(--matcha-forest-foreground);
+  --color-matcha-paper: var(--matcha-paper);
+  --color-matcha-ground: var(--matcha-ground);
+  --color-matcha-tint: var(--matcha-tint);
+  --color-matcha-lime: var(--matcha-lime);
+  --color-matcha-ink: var(--matcha-ink);
+  --color-matcha-muted: var(--matcha-muted);
   --color-band-foreground: var(--band-foreground);
   --color-background: var(--background);
   --color-foreground: var(--foreground);

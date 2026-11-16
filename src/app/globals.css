@@ -129,6 +129,16 @@
   --accent: oklch(0.75 0.15 60);
   --accent-foreground: oklch(0.25 0.06 50);
 
+  /* "Matcha" — the social posts' palette, for the homepage's seasonal bands */
+  --matcha-forest: #1f4d3a;
+  --matcha-forest-foreground: #f3f1e6;
+  --matcha-paper: #f3f1e6;
+  --matcha-ground: #e6ebd3;
+  --matcha-tint: #cbd7ae;
+  --matcha-lime: #cfe09b;
+  --matcha-ink: #1f3326;
+  --matcha-muted: #4a6152;
+
   --destructive: oklch(0.577 0.245 27.325);
   --destructive-foreground: oklch(1 0 0);
   --border: oklch(0.92 0.01 180);
@@ -192,6 +202,15 @@
 
   --accent: oklch(0.72 0.14 60);
   --accent-foreground: oklch(0.18 0.05 50);
+
+  --matcha-forest: #173a2c;
+  --matcha-forest-foreground: #f3f1e6;
+  --matcha-paper: oklch(0.23 0.02 140);
+  --matcha-ground: oklch(0.26 0.03 130);
+  --matcha-tint: oklch(0.32 0.04 125);
+  --matcha-lime: #cfe09b;
+  --matcha-ink: oklch(0.95 0.01 120);
+  --matcha-muted: oklch(0.78 0.02 140);
 
   --destructive: oklch(0.66 0.21 25);
   --destructive-foreground: oklch(0.16 0.02 25);
