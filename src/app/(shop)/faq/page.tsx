@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { getShippingRates } from "@/features/checkout/lib/shipping-rates";
 import { isP24Enabled } from "@/features/przelewy24/lib/config";
 import { getShopSettings } from "@/features/settings/lib/shop-settings";
 import { formatPriceCompact } from "@/lib/format";
@@ -20,6 +21,7 @@ type Faq = { q: string; a: string };
 function buildGroups(
   freeShipping: string | null,
   onlinePayments: boolean,
+  pickup: boolean,
 ): { title: string; items: Faq[] }[] {
   return [
     {
@@ -66,10 +68,14 @@ function buildGroups(
           q: "Czy wysyłacie za granicę?",
           a: "Obecnie realizujemy dostawy wyłącznie na terenie Polski.",
         },
-        {
-          q: "Jak działa odbiór osobisty?",
-          a: `Wybierz odbiór osobisty w koszyku. Gdy zamówienie będzie gotowe, wyślemy e-mail – paczka czeka na odbiór ${PICKUP_HOLD_DAYS} dni. Adresy i godziny punktów znajdziesz na stronie Dostawa i płatność.`,
-        },
+        ...(pickup
+          ? [
+              {
+                q: "Jak działa odbiór osobisty?",
+                a: `Wybierz odbiór osobisty w koszyku. Gdy zamówienie będzie gotowe, wyślemy e-mail – paczka czeka na odbiór ${PICKUP_HOLD_DAYS} dni. Adresy i godziny punktów znajdziesz na stronie Dostawa i płatność.`,
+              },
+            ]
+          : []),
         {
           q: "Paczka dotarła uszkodzona – co zrobić?",
           a: "Jeśli to możliwe, sporządź z kurierem protokół szkody lub zrób zdjęcia opakowania i zawartości. Następnie napisz do nas z numerem zamówienia – zajmiemy się reklamacją.",
@@ -82,11 +88,11 @@ function buildGroups(
         onlinePayments
           ? {
               q: "Jakie są formy płatności?",
-              a: "Online przez Przelewy24: BLIK, karty płatnicze (Visa, Mastercard), Apple Pay, Google Pay i szybkie przelewy. Możesz też zapłacić tradycyjnym przelewem, a przy odbiorze osobistym – na miejscu.",
+              a: `Online przez Przelewy24: BLIK, karty płatnicze (Visa, Mastercard), Apple Pay, Google Pay i szybkie przelewy z większości polskich banków.${pickup ? " Przy odbiorze osobistym możesz też zapłacić na miejscu." : ""}`,
             }
           : {
               q: "Jakie są formy płatności?",
-              a: "Przelew tradycyjny na nasz rachunek bankowy – dane do przelewu otrzymasz po złożeniu zamówienia i w e-mailu. Przy odbiorze osobistym możesz też zapłacić na miejscu, gotówką lub kartą.",
+              a: `Przelew tradycyjny na nasz rachunek bankowy – dane do przelewu otrzymasz po złożeniu zamówienia i w e-mailu.${pickup ? " Przy odbiorze osobistym możesz też zapłacić na miejscu, gotówką lub kartą." : ""}`,
             },
         ...(onlinePayments
           ? [
@@ -96,15 +102,19 @@ function buildGroups(
               },
             ]
           : []),
-        {
-          q: "Ile mam czasu na opłacenie zamówienia przelewem tradycyjnym?",
-          a: "Prosimy o wpłatę w ciągu 3 dni roboczych. Dane do przelewu otrzymasz po złożeniu zamówienia i w e-mailu. Zamówienie realizujemy po zaksięgowaniu wpłaty.",
-        },
+        ...(onlinePayments
+          ? []
+          : [
+              {
+                q: "Ile mam czasu na opłacenie zamówienia przelewem tradycyjnym?",
+                a: "Prosimy o wpłatę w ciągu 3 dni roboczych. Dane do przelewu otrzymasz po złożeniu zamówienia i w e-mailu. Zamówienie realizujemy po zaksięgowaniu wpłaty.",
+              },
+            ]),
         ...(onlinePayments
           ? [
               {
                 q: "Płatność się nie powiodła – co teraz?",
-                a: "Zamówienie zostaje zapisane. Na stronie zamówienia, na którą wracasz z Przelewy24, kliknij „Zapłać teraz”, aby spróbować ponownie. Możesz też napisać do nas z numerem zamówienia – pomożemy zmienić płatność na przelew tradycyjny.",
+                a: "Zamówienie zostaje zapisane. Na stronie zamówienia, na którą wracasz z Przelewy24, kliknij „Zapłać teraz”, aby spróbować ponownie. Jeśli to nie pomoże, napisz do nas z numerem zamówienia – pomożemy.",
               },
             ]
           : []),
@@ -185,10 +195,14 @@ function buildGroups(
 }
 
 export default async function FaqPage() {
-  const { freeShippingThresholdPln } = await getShopSettings();
+  const [{ freeShippingThresholdPln }, rates] = await Promise.all([
+    getShopSettings(),
+    getShippingRates(),
+  ]);
   const groups = buildGroups(
     freeShippingThresholdPln !== null ? formatPriceCompact(freeShippingThresholdPln) : null,
     isP24Enabled(),
+    rates.some((r) => r.method === "PICKUP"),
   );
   const jsonLd = buildFaqJsonLd(groups.flatMap((group) => group.items));
 

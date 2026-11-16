@@ -14,7 +14,7 @@ import { hasMarketingConsent } from "@/lib/consent";
 import type { PickupLocationKey } from "@/lib/pickup-locations";
 import { placeOrder, verifyCoupon } from "../actions";
 import { clearDraft, readDraft, saveDraft } from "../lib/draft";
-import { isOfflinePayment } from "../lib/payment";
+import { defaultPaymentMethod, isPaymentMethodAvailable } from "../lib/payment";
 import {
   cheapestPaidRate,
   orderTotals,
@@ -144,6 +144,7 @@ export function CheckoutForm({
   const [formData, setFormData] = useState<CheckoutFormData>({
     ...INITIAL_DATA,
     shippingMethod: shippingRates[0]?.method ?? INITIAL_DATA.shippingMethod,
+    paymentMethod: defaultPaymentMethod(onlinePaymentsEnabled),
     ...initialContact,
   });
   const [error, setError] = useState<string | null>(null);
@@ -191,7 +192,7 @@ export function CheckoutForm({
         // The address or point belonged to that method — let the shopper choose again
         restoredStep = Math.min(restoredStep, 2);
       }
-      if (paymentMethod && !onlinePaymentsEnabled && !isOfflinePayment(paymentMethod)) {
+      if (paymentMethod && !isPaymentMethodAvailable(paymentMethod, onlinePaymentsEnabled)) {
         delete draft.data.paymentMethod;
       }
       setFormData((prev) => ({ ...prev, ...draft.data }));
@@ -359,6 +360,7 @@ export function CheckoutForm({
               productsPln={totals.productsPln}
               freeShippingThresholdPln={freeShippingThresholdPln}
               shippingRates={shippingRates}
+              fallbackPaymentMethod={defaultPaymentMethod(onlinePaymentsEnabled)}
               onChange={update}
               onBack={() => goToStep(1)}
               onNext={() => goToStep(3)}

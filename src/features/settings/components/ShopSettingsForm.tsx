@@ -126,7 +126,7 @@ export function ShopSettingsForm({ settings }: Props) {
             maxLength={40}
             value={metaSuffix}
             onChange={(e) => setMetaSuffix(e.target.value)}
-            placeholder="np. Wysyłka w 24–48 h."
+            placeholder="np. Wysyłka w ciągu 2 dni roboczych."
           />
         </Field>
       </Section>

@@ -54,9 +54,9 @@ export async function Footer() {
       (hasNewArrivals || l.href !== "/katalog?nowosci=1"),
   );
   // Pay-at-pickup exists only while in-store pickup is offered (as in StepPayment)
+  // Traditional transfer is only a fallback while Przelewy24 is off (isPaymentMethodAvailable)
   const paymentMethods = [
-    ...(isP24Enabled() ? ONLINE_PAYMENTS : []),
-    PAYMENT_LABELS.BANK_TRANSFER,
+    ...(isP24Enabled() ? ONLINE_PAYMENTS : [PAYMENT_LABELS.BANK_TRANSFER]),
     ...(shippingRates.some((r) => r.method === "PICKUP")
       ? [`${PAYMENT_LABELS.CASH_ON_DELIVERY} w sklepie`]
       : []),

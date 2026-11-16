@@ -147,7 +147,7 @@ export function AddToCartSection({ variants, ordersPaused = false, productName }
           </p>
           <p className="flex items-center gap-1.5 text-xs text-muted-foreground">
             <Truck className="size-3.5 shrink-0" aria-hidden />
-            Wysyłka w 24–48 h · paczkomat, punkt odbioru lub kurier
+            Wysyłka w ciągu 2 dni roboczych · paczkomat, punkt odbioru lub kurier
           </p>
         </div>
       )}

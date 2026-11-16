@@ -11,7 +11,7 @@ import type { CartDiscount } from "@/features/promotions/lib/tiered";
 import { fieldA11y } from "@/lib/field-a11y";
 import { formatPrice } from "@/lib/format";
 import { cn } from "@/lib/utils";
-import { isOfflinePayment } from "../lib/payment";
+import { isOfflinePayment, isPaymentMethodAvailable } from "../lib/payment";
 import { type OrderTotals, shippingLabel } from "../lib/shipping";
 import type { CheckoutFormData, CouponResult } from "./CheckoutForm";
 
@@ -194,7 +194,7 @@ export function StepPayment({
           {PAYMENT_OPTIONS.filter(
             (opt) =>
               (opt.value !== "CASH_ON_DELIVERY" || data.shippingMethod === "PICKUP") &&
-              (onlinePaymentsEnabled || isOfflinePayment(opt.value)),
+              isPaymentMethodAvailable(opt.value, onlinePaymentsEnabled),
           ).map((opt) => (
             <label
               key={opt.value}

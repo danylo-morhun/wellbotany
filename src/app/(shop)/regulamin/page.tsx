@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { getShippingRates } from "@/features/checkout/lib/shipping-rates";
 import { isP24Enabled } from "@/features/przelewy24/lib/config";
 
 export const dynamic = "force-static";
@@ -37,8 +38,9 @@ const definitions = [
   },
 ];
 
-export default function RegulaminPage() {
+export default async function RegulaminPage() {
   const onlinePayments = isP24Enabled();
+  const pickup = (await getShippingRates()).some((r) => r.method === "PICKUP");
   return (
     <div className="container mx-auto max-w-3xl px-4 py-12">
       <h1 className="mb-2 text-3xl">Regulamin sklepu internetowego</h1>
@@ -144,11 +146,13 @@ export default function RegulaminPage() {
                 (Visa, Mastercard), Apple Pay, Google Pay lub szybkim przelewem online,
               </li>
             )}
-            <li>zwykłym przelewem na rachunek bankowy Sprzedawcy,</li>
-            <li>
-              gotówką lub kartą przy odbiorze osobistym w sklepie Sprzedawcy — wyłącznie przy
-              wyborze odbioru osobistego.
-            </li>
+            {!onlinePayments && <li>zwykłym przelewem na rachunek bankowy Sprzedawcy,</li>}
+            {pickup && (
+              <li>
+                gotówką lub kartą przy odbiorze osobistym w sklepie Sprzedawcy — wyłącznie przy
+                wyborze odbioru osobistego.
+              </li>
+            )}
           </ul>
           <p className="mt-2 text-muted-foreground">
             W przypadku wybrania płatności z góry, za zamówienie należy zapłacić w terminie 3 Dni
@@ -183,9 +187,10 @@ export default function RegulaminPage() {
             <li>Towar dostarczany jest wyłącznie na terytorium Rzeczypospolitej Polskiej.</li>
             <li>
               Dostawa realizowana jest przez przewoźników dostępnych do wyboru w koszyku podczas
-              składania zamówienia. Kupujący może również odebrać zamówienie osobiście w punkcie
-              odbioru Sprzedawcy w Kaliszu. Aktualna lista metod dostawy, koszty i terminy są podane
-              na stronie{" "}
+              składania zamówienia.
+              {pickup &&
+                " Kupujący może również odebrać zamówienie osobiście w punkcie odbioru Sprzedawcy w Kaliszu."}{" "}
+              Aktualna lista metod dostawy, koszty i terminy są podane na stronie{" "}
               <Link href="/dostawa" className="text-primary underline-offset-4 hover:underline">
                 Dostawa i płatność
               </Link>
