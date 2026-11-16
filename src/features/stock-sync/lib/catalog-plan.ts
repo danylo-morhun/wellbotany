@@ -149,9 +149,12 @@ export function planPriceUpdates(
     }
   }
 
+  // Share of all priced variants, not of this snapshot: a delta holds only changed
+  // cards, so a normal batch of edits in Subiekt would look like 100 % changes
+  const priced = variants.filter((v) => v.pricePln > 0).length;
   const guard =
-    changes.size >= GUARD_MIN_CHANGES && changes.size / Math.max(1, incoming.size) > GUARD_MAX_SHARE
-      ? `catalog would change ${changes.size} of ${incoming.size} sale prices at once`
+    changes.size >= GUARD_MIN_CHANGES && changes.size / Math.max(1, priced) > GUARD_MAX_SHARE
+      ? `catalog would change ${changes.size} of ${priced} sale prices at once`
       : null;
 
   return { apply: guard ? new Map() : changes, review, guard };

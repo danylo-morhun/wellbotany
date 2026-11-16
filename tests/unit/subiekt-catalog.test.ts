@@ -133,6 +133,23 @@ describe("planPriceUpdates", () => {
     expect(plan.apply.size).toBe(0);
     expect(plan.guard).toMatch(/25 of 25 sale prices/);
   });
+
+  it("lets a delta of many edits through when they are a small share of the shop", () => {
+    const shop = Array.from({ length: 100 }, (_, i) => ({
+      id: `s${i}`,
+      sku: `S${i}`,
+      ean: null,
+      pricePln: 1000,
+      comparePricePln: null,
+    }));
+    const plan = planPriceUpdates(
+      shop.slice(0, 25).map((v) => priced(v.sku, 1100)),
+      variantIndex(shop),
+      shop,
+    );
+    expect(plan.apply.size).toBe(25);
+    expect(plan.guard).toBeNull();
+  });
 });
 
 describe("report", () => {
