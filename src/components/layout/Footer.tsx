@@ -61,14 +61,11 @@ export async function Footer() {
       (hasPromos || l.href !== "/katalog?promocje=1") &&
       (hasNewArrivals || l.href !== "/katalog?nowosci=1"),
   );
-  // Pay-at-pickup exists only while in-store pickup is offered (as in StepPayment)
+  // Online payments only (store pickup and pay-at-pickup are off since 14.11).
   // Traditional transfer is only a fallback while Przelewy24 is off (isPaymentMethodAvailable)
-  const paymentMethods = [
-    ...(isP24Enabled() ? ONLINE_PAYMENTS : [{ label: PAYMENT_LABELS.BANK_TRANSFER, logo: null }]),
-    ...(shippingRates.some((r) => r.method === "PICKUP")
-      ? [{ label: `${PAYMENT_LABELS.CASH_ON_DELIVERY} w sklepie`, logo: null }]
-      : []),
-  ];
+  const paymentMethods = isP24Enabled()
+    ? ONLINE_PAYMENTS
+    : [{ label: PAYMENT_LABELS.BANK_TRANSFER, logo: null }];
 
   return (
     <footer className="mt-16 bg-band text-band-foreground print:hidden">
