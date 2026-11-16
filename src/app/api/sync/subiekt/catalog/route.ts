@@ -1,10 +1,13 @@
 // Product cards from the Subiekt GT agent (prices, purchase cost, VAT, supplier),
-// a few times a day. Stored as a reference copy; only purchase costs flow into
-// products. Same signature and secret as /stock.
-import { type NextRequest, NextResponse } from "next/server";
+// a few times a day. Stored as a reference copy; purchase costs and the retail
+// sale price flow into products. Same signature and secret as /stock.
+import { revalidateTag } from "next/cache";
+import { after, type NextRequest, NextResponse } from "next/server";
+import { productTag, STOCK_LISTINGS_TAG } from "@/features/catalog/lib/product-tag";
 import { applyCatalog } from "@/features/stock-sync/lib/catalog-apply";
 import { authenticate } from "@/features/stock-sync/lib/signature";
 import { catalogSnapshotSchema } from "@/features/stock-sync/schema";
+import { syncProductsToMerchant } from "@/lib/merchant";
 
 export const maxDuration = 120;
 
@@ -30,5 +33,13 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ ok: false, error: "full catalog with no cards" }, { status: 422 });
   }
 
-  return NextResponse.json(await applyCatalog(code, parsed.data));
+  const { priceChangedProducts, ...result } = await applyCatalog(code, parsed.data);
+  if (priceChangedProducts.length > 0) {
+    for (const p of priceChangedProducts) revalidateTag(productTag(p.slug), { expire: 0 });
+    // Listings, search and the home page show prices too
+    revalidateTag(STOCK_LISTINGS_TAG, { expire: 0 });
+    const ids = priceChangedProducts.map((p) => p.id);
+    after(() => syncProductsToMerchant(ids).catch(console.error));
+  }
+  return NextResponse.json(result);
 }
