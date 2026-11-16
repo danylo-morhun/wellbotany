@@ -8,11 +8,19 @@ import { carrierLogo, shippingLabel } from "@/features/checkout/lib/shipping";
 import { getShippingRates } from "@/features/checkout/lib/shipping-rates";
 import { isP24Enabled } from "@/features/przelewy24/lib/config";
 import { SELLER, SOCIAL_LINKS } from "@/lib/seller";
+import { SocialIcon } from "./SocialIcon";
 
 // Same sources as checkout, so the footer can't drift from what's offered
-const ONLINE_PAYMENTS = ["BLIK", "PRZELEWY24", "APPLE_PAY", "GOOGLE_PAY"].map(
-  (m) => PAYMENT_LABELS[m],
-);
+const PAYMENT_LOGOS: Record<string, string> = {
+  BLIK: "/images/payments/blik.svg",
+  PRZELEWY24: "/images/payments/przelewy24.svg",
+  APPLE_PAY: "/images/payments/apple-pay.svg",
+  GOOGLE_PAY: "/images/payments/google-pay.svg",
+};
+const ONLINE_PAYMENTS = ["BLIK", "PRZELEWY24", "APPLE_PAY", "GOOGLE_PAY"].map((m) => ({
+  label: PAYMENT_LABELS[m],
+  logo: PAYMENT_LOGOS[m] ?? null,
+}));
 
 const footerLinks = {
   sklep: [
@@ -56,9 +64,9 @@ export async function Footer() {
   // Pay-at-pickup exists only while in-store pickup is offered (as in StepPayment)
   // Traditional transfer is only a fallback while Przelewy24 is off (isPaymentMethodAvailable)
   const paymentMethods = [
-    ...(isP24Enabled() ? ONLINE_PAYMENTS : [PAYMENT_LABELS.BANK_TRANSFER]),
+    ...(isP24Enabled() ? ONLINE_PAYMENTS : [{ label: PAYMENT_LABELS.BANK_TRANSFER, logo: null }]),
     ...(shippingRates.some((r) => r.method === "PICKUP")
-      ? [`${PAYMENT_LABELS.CASH_ON_DELIVERY} w sklepie`]
+      ? [{ label: `${PAYMENT_LABELS.CASH_ON_DELIVERY} w sklepie`, logo: null }]
       : []),
   ];
 
@@ -104,16 +112,18 @@ export async function Footer() {
                 {SELLER.hours}
               </li>
             </ul>
-            <ul className="mt-5 flex gap-5 text-sm">
+            <ul className="mt-5 flex gap-2 text-sm">
               {SOCIAL_LINKS.map((social) => (
                 <li key={social.href}>
                   <a
                     href={social.href}
                     target="_blank"
                     rel="me noopener noreferrer"
-                    className="font-medium text-band-foreground/75 underline-offset-4 transition-colors hover:text-band-foreground hover:underline"
+                    aria-label={social.label}
+                    title={social.label}
+                    className="flex size-11 items-center justify-center rounded-full bg-band-foreground/10 text-band-foreground/85 transition-colors hover:bg-band-foreground/20 hover:text-band-foreground"
                   >
-                    {social.label}
+                    <SocialIcon name={social.label} className="size-5" />
                   </a>
                 </li>
               ))}
@@ -156,10 +166,22 @@ export async function Footer() {
             <ul className="mt-3 flex flex-wrap gap-2">
               {paymentMethods.map((m) => (
                 <li
-                  key={m}
-                  className="flex h-8 items-center rounded-full bg-band-foreground/10 px-3 text-xs font-medium text-band-foreground/85"
+                  key={m.label}
+                  className={`flex h-8 items-center gap-2 rounded-full bg-band-foreground/10 py-1 text-xs font-medium text-band-foreground/85 ${m.logo ? "pl-1 pr-3" : "px-3"}`}
                 >
-                  {m}
+                  {m.logo && (
+                    // White plate, as for carriers: brand colours stay true on the dark band
+                    <span className="flex h-6 w-14 shrink-0 items-center justify-center rounded-full bg-white px-2">
+                      <Image
+                        src={m.logo}
+                        alt=""
+                        width={56}
+                        height={24}
+                        className="h-5 w-full object-contain"
+                      />
+                    </span>
+                  )}
+                  {m.label}
                 </li>
               ))}
             </ul>
