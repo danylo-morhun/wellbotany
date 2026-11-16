@@ -8,7 +8,7 @@ export const metadata: Metadata = {
   title: "O nas",
   alternates: { canonical: "/o-nas" },
   description:
-    "Well Botany to polski sklep z suplementami diety, witaminami i produktami bio. Przy każdym produkcie podajemy pełny skład i dawkę.",
+    "Well Botany to polski sklep z suplementami diety, witaminami, ziołami i zdrową żywnością. Przy każdym produkcie podajemy pełny skład i dawkę.",
 };
 
 const values = [
@@ -40,8 +40,8 @@ export default async function ONasPage() {
         <section className="space-y-3 text-muted-foreground">
           <p>
             Well Botany to polski sklep internetowy z suplementami diety, witaminami, ziołami i
-            produktami bio. Przy każdym produkcie podajemy pełny skład i dawkę w porcji, a w
-            poradniku wyjaśniamy, jak wybrać suplement.
+            zdrową żywnością – od czekolad i przekąsek po kawę i herbatę. Przy każdym produkcie
+            podajemy pełny skład i dawkę w porcji, a w poradniku wyjaśniamy, jak wybrać suplement.
           </p>
           <p>
             W ofercie są m.in. zioła, herbaty, przyprawy, zdrowa żywność, suplementy diety,

@@ -43,7 +43,7 @@ export const metadata: Metadata = {
     template: "%s | Well Botany",
   },
   description:
-    "Sklep z suplementami diety, witaminami i produktami bio. Szeroki wybór, wysyłka do paczkomatu, punktu odbioru lub kurierem.",
+    "Sklep z suplementami diety, ziołami i zdrową żywnością: czekolady, przekąski, kawa i herbata. Wysyłka do paczkomatu, punktu odbioru lub kurierem.",
   metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL ?? "https://wellbotany.pl"),
   openGraph: {
     type: "website",
@@ -51,14 +51,14 @@ export const metadata: Metadata = {
     siteName: "Well Botany",
     title: "Well Botany — Suplementy i produkty bio",
     description:
-      "Sklep z suplementami diety, witaminami i produktami bio. Szeroki wybór, wysyłka do paczkomatu, punktu odbioru lub kurierem.",
+      "Sklep z suplementami diety, ziołami i zdrową żywnością: czekolady, przekąski, kawa i herbata. Wysyłka do paczkomatu, punktu odbioru lub kurierem.",
     images: [DEFAULT_OG_IMAGE],
   },
   twitter: {
     card: "summary_large_image",
     title: "Well Botany — Suplementy i produkty bio",
     description:
-      "Sklep z suplementami diety, witaminami i produktami bio. Szeroki wybór, wysyłka do paczkomatu, punktu odbioru lub kurierem.",
+      "Sklep z suplementami diety, ziołami i zdrową żywnością: czekolady, przekąski, kawa i herbata. Wysyłka do paczkomatu, punktu odbioru lub kurierem.",
     images: [DEFAULT_OG_IMAGE.url],
   },
   verification: {

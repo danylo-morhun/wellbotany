@@ -18,7 +18,7 @@ export async function GET() {
   const lines = [
     "# Well Botany",
     "",
-    "> Polski sklep internetowy z suplementami diety, witaminami, minerałami, ziołami i produktami bio. Przy każdym produkcie: pełny skład, ilość w porcji dziennej, %RWS i sposób użycia. Oświadczenia zdrowotne wyłącznie z rejestru UE (rozporządzenie 432/2012). Dostawa na terenie Polski.",
+    "> Polski sklep internetowy z suplementami diety, witaminami, minerałami, ziołami i zdrową żywnością (czekolady, przekąski, kawa, herbata, słodziki). Przy każdym produkcie: pełny skład, ilość w porcji dziennej, %RWS i sposób użycia. Oświadczenia zdrowotne wyłącznie z rejestru UE (rozporządzenie 432/2012). Dostawa na terenie Polski.",
     "",
     "## Poradniki",
     "",
