@@ -16,7 +16,7 @@ import { IngredientTiles } from "@/app/(shop)/components/IngredientTiles";
 import { NewsletterSection } from "@/app/(shop)/components/NewsletterSection";
 import { TrustStrip } from "@/app/(shop)/components/TrustStrip";
 import { getBrands } from "@/features/catalog/actions";
-import { getHomepageData } from "@/features/catalog/lib/homepage";
+import { getHomepageData, PROMO_TAB_ID } from "@/features/catalog/lib/homepage";
 import { getHomeGiftSets } from "@/features/gift-sets/lib/homepage";
 import { HeroSlider } from "@/features/home/components/HeroSlider";
 import { getHomeBanners } from "@/features/home/lib/banners";
@@ -52,8 +52,16 @@ export default async function HomePage() {
   // While a campaign runs it takes the reductions; a second "Promocje" would repeat them
   const campaign = campaignToRender();
 
+  // A running campaign already shows the biggest reductions under the shelf
+  const shelfTabs = campaign ? tabs.filter((t) => t.id !== PROMO_TAB_ID) : tabs;
+
   // Bands after the opening alternate mint/plain (DESIGN.md §5)
   const rest = [
+    (giftSets.length > 0 || builderActive) && (
+      <FadeInView key="gifts">
+        <HomeGiftSets giftSets={giftSets} builderActive={builderActive} />
+      </FadeInView>
+    ),
     <FadeInView key="food">
       <HomeFoodShelf products={foodShelf} categories={foodCategories} />
     </FadeInView>,
@@ -61,11 +69,6 @@ export default async function HomePage() {
     !campaign && promos.length > 0 && (
       <FadeInView key="promos">
         <HomePromos products={promos} />
-      </FadeInView>
-    ),
-    (giftSets.length > 0 || builderActive) && (
-      <FadeInView key="gifts">
-        <HomeGiftSets giftSets={giftSets} builderActive={builderActive} />
       </FadeInView>
     ),
     <FadeInView key="help">
@@ -87,7 +90,7 @@ export default async function HomePage() {
       <HomeBand className="pt-5 md:pt-7">
         <HomeHeadline productCount={productCount} />
         <div className="mt-4 md:mt-5">
-          <BestsellerTabs tabs={tabs} lead />
+          <BestsellerTabs tabs={shelfTabs} lead />
         </div>
       </HomeBand>
       {campaign && (

@@ -53,6 +53,9 @@ const FOOD_SHELF_SLUGS = [
 ];
 const FOOD_SHELF_LIMIT = 8;
 
+// "Promocje" tab first once a row of real reductions exists
+export const PROMO_TAB_ID = "promocje";
+const PROMO_TAB_MIN = 4;
 // Promo band: one lead tile + four small items
 const PROMOS_LIMIT = 5;
 // Campaign section (Black Week…): two rows of four, biggest reductions first
@@ -212,7 +215,16 @@ export const getHomepageData = unstable_cache(
       Promise.all(needs.map((c) => needTabProducts(c.slug, featuredIds))),
       food ? needTabProducts(food.slug, featuredIds) : Promise.resolve([]),
     ]);
+    // Real reductions only (Omnibus), biggest first: the lead tile is the best deal
+    const reductions = promoPool
+      .filter((p) => offerDiscount(p) > 0)
+      .sort((a, b) => offerDiscount(b) - offerDiscount(a));
+    // Promocje opens the page when there are enough real reductions to fill a row
+    const promoTab = reductions.length >= PROMO_TAB_MIN ? reductions.slice(0, FEATURED_LIMIT) : [];
     const tabs = [
+      ...(promoTab.length > 0
+        ? [{ id: PROMO_TAB_ID, label: "Promocje", href: "/katalog?promocje=1", products: promoTab }]
+        : []),
       {
         id: "polecane",
         label: "Polecane",
@@ -242,10 +254,6 @@ export const getHomepageData = unstable_cache(
     // Each product appears once on the page, in the first section that wants it
     const shown = new Set(tabs.flatMap((tab) => tab.products.map((p) => p.id)));
 
-    // Real reductions only (Omnibus), biggest first: the lead tile is the best deal
-    const reductions = promoPool
-      .filter((p) => offerDiscount(p) > 0)
-      .sort((a, b) => offerDiscount(b) - offerDiscount(a));
     // A campaign shows the best ones even if a tab above has them too: the
     // page decides at render time whether a campaign is on
     const campaignProducts = reductions.slice(0, CAMPAIGN_LIMIT);
@@ -299,7 +307,7 @@ export const getHomepageData = unstable_cache(
       productCount,
     };
   },
-  ["homepage-v9"],
+  ["homepage-v10"],
   { tags: ["categories", "products", STOCK_LISTINGS_TAG] },
 );
 
