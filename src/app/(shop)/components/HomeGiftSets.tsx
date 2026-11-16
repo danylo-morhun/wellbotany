@@ -25,11 +25,11 @@ export function HomeGiftSets({ giftSets, builderActive }: Props) {
       />
 
       <div className="grid grid-cols-2 gap-3 sm:gap-4 md:grid-cols-4">
-        {builderActive && <BuilderTile />}
         {giftSets.map((gs) => (
           <GiftSetCard key={gs.slug} giftSet={gs} headingLevel={3} />
         ))}
       </div>
+      {builderActive && <BuilderTile />}
     </section>
   );
 }
@@ -75,14 +75,14 @@ function BuilderBand() {
   );
 }
 
-/** Product-sized tile beside the curated sets (full-width row on phones). */
+/** Full-width strip under the curated sets. */
 function BuilderTile() {
   return (
     <Link
       href={BUILDER_HREF}
-      className="group col-span-2 flex flex-col items-start gap-5 rounded-2xl bg-primary p-5 text-primary-foreground shadow-card transition-[box-shadow,transform] duration-200 ease-out hover:-translate-y-0.5 hover:shadow-card-hover motion-reduce:transition-none motion-reduce:hover:translate-y-0 sm:p-6 md:col-span-1 md:justify-between md:gap-6"
+      className="group flex flex-col items-start gap-4 rounded-2xl bg-primary p-5 text-primary-foreground shadow-card transition-[box-shadow,transform] duration-200 ease-out hover:-translate-y-0.5 hover:shadow-card-hover motion-reduce:transition-none motion-reduce:hover:translate-y-0 sm:flex-row sm:items-center sm:justify-between sm:px-6"
     >
-      <div className="flex items-center gap-4 md:flex-col md:items-start">
+      <div className="flex items-center gap-4">
         <div className="flex size-12 shrink-0 items-center justify-center rounded-full bg-primary-foreground/15">
           <Gift className="size-6" aria-hidden />
         </div>
