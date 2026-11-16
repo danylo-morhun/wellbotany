@@ -7,3 +7,9 @@ weights we use and Google's `latin` + `latin-ext` ranges (Geist Mono: `latin`):
     fonttools varLib.instancer Onest[wght].ttf wght=500:700 -o onest.ttf
     fonttools varLib.instancer PlusJakartaSans[wght].ttf wght=400:800 -o jakarta.ttf
     pyftsubset <font>.ttf --unicodes=<latin[,latin-ext]> --layout-features='*' --flavor=woff2
+
+Anton (`ofl/anton/Anton-Regular.ttf`, OFL-Anton.txt): poster words on the homepage's
+Matcha bands, same subset (`latin` + `latin-ext`), loaded only by `(shop)/components/poster-font.ts`.
+
+Anton (`ofl/anton/Anton-Regular.ttf`, OFL-Anton.txt): poster words on the homepage's
+Matcha bands, same `latin` + `latin-ext` subset, loaded only by `(shop)/components/poster-font.ts`.
