@@ -27,7 +27,9 @@ export default async function DostawaPage() {
   const threshold =
     freeShippingThresholdPln !== null ? formatPriceCompact(freeShippingThresholdPln) : null;
 
-  const methods = (await getShippingRates()).map((r) => [r.method, r.pricePln] as const);
+  const rates = await getShippingRates();
+  const methods = rates.map((r) => [r.method, r.pricePln] as const);
+  const pickup = rates.some((r) => r.method === "PICKUP");
 
   return (
     <div className="container mx-auto max-w-prose px-4 py-12">
@@ -85,7 +87,7 @@ export default async function DostawaPage() {
           <p className="text-muted-foreground">
             Zamówienia wysyłamy w ciągu 2 dni roboczych od zaksięgowania płatności.{" "}
             {onlinePayments
-              ? "Przy płatności online (BLIK, karta, szybki przelew) płatność księgowana jest od razu, przy przelewie tradycyjnym — zwykle w ciągu 1 dnia roboczego."
+              ? "Płatność online (BLIK, karta, szybki przelew) księgowana jest od razu."
               : "Przelew tradycyjny księgujemy zwykle w ciągu 1 dnia roboczego."}{" "}
             Czas doręczenia przez przewoźnika to najczęściej 1–2 dni robocze od nadania.
           </p>
@@ -109,22 +111,24 @@ export default async function DostawaPage() {
           </p>
         </section>
 
-        <section>
-          <h2 className="mb-3 text-xl">Odbiór osobisty w Kaliszu</h2>
-          <p className="text-muted-foreground">
-            Zamówienie możesz odebrać bezpłatnie w jednym z punktów odbioru. Gdy będzie gotowe,
-            wyślemy Ci e-mail. Zamówienie czeka na odbiór {PICKUP_HOLD_DAYS} dni.
-          </p>
-          <ul className="mt-3 space-y-3">
-            {Object.entries(PICKUP_LOCATIONS).map(([key, location]) => (
-              <li key={key} className="rounded-2xl bg-card p-4 shadow-card">
-                <p className="font-medium">{location.name}</p>
-                <p className="text-muted-foreground">{location.address}</p>
-                <p className="text-muted-foreground">{location.hours.join(" · ")}</p>
-              </li>
-            ))}
-          </ul>
-        </section>
+        {pickup && (
+          <section>
+            <h2 className="mb-3 text-xl">Odbiór osobisty w Kaliszu</h2>
+            <p className="text-muted-foreground">
+              Zamówienie możesz odebrać bezpłatnie w jednym z punktów odbioru. Gdy będzie gotowe,
+              wyślemy Ci e-mail. Zamówienie czeka na odbiór {PICKUP_HOLD_DAYS} dni.
+            </p>
+            <ul className="mt-3 space-y-3">
+              {Object.entries(PICKUP_LOCATIONS).map(([key, location]) => (
+                <li key={key} className="rounded-2xl bg-card p-4 shadow-card">
+                  <p className="font-medium">{location.name}</p>
+                  <p className="text-muted-foreground">{location.address}</p>
+                  <p className="text-muted-foreground">{location.hours.join(" · ")}</p>
+                </li>
+              ))}
+            </ul>
+          </section>
+        )}
 
         <section>
           <h2 className="mb-3 text-xl">Śledzenie przesyłki</h2>
@@ -152,15 +156,19 @@ export default async function DostawaPage() {
                 potwierdzeniu płatności.
               </li>
             )}
-            <li>
-              Przelew tradycyjny na nasz rachunek bankowy — dane do przelewu otrzymasz po złożeniu
-              zamówienia i w e-mailu. Prosimy o wpłatę w ciągu 3 dni roboczych; zamówienie
-              realizujemy po zaksięgowaniu wpłaty.
-            </li>
-            <li>
-              Płatność przy odbiorze osobistym w sklepie (gotówką lub kartą) — dostępna tylko przy
-              wyborze odbioru osobistego w Kaliszu.
-            </li>
+            {!onlinePayments && (
+              <li>
+                Przelew tradycyjny na nasz rachunek bankowy — dane do przelewu otrzymasz po złożeniu
+                zamówienia i w e-mailu. Prosimy o wpłatę w ciągu 3 dni roboczych; zamówienie
+                realizujemy po zaksięgowaniu wpłaty.
+              </li>
+            )}
+            {pickup && (
+              <li>
+                Płatność przy odbiorze osobistym w sklepie (gotówką lub kartą) — dostępna tylko przy
+                wyborze odbioru osobistego w Kaliszu.
+              </li>
+            )}
           </ul>
         </section>
       </div>

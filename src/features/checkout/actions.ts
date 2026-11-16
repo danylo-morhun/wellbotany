@@ -28,7 +28,7 @@ import {
 import { actionClient } from "@/lib/safe-action";
 import { checkoutItemUnitPricePln, getCartForCheckout } from "./lib/cart";
 import { grantOrderAccess } from "./lib/order-access";
-import { isOfflinePayment } from "./lib/payment";
+import { isOfflinePayment, isPaymentMethodAvailable } from "./lib/payment";
 import { orderTotals, requiresAddress, requiresPickupPoint } from "./lib/shipping";
 import { getShippingRates } from "./lib/shipping-rates";
 import { checkoutSchema } from "./schema";
@@ -98,12 +98,12 @@ export const verifyCoupon = actionClient
     return { valid: true as const, discountPln, message };
   });
 
-// Online methods stay in the shared enum; the server rejects them while P24 is off.
+// All methods stay in the shared enum; the server rejects the ones checkout doesn't offer.
 const placeOrderSchema = checkoutSchema.superRefine((data, ctx) => {
-  if (!isP24Enabled() && !isOfflinePayment(data.paymentMethod)) {
+  if (!isPaymentMethodAvailable(data.paymentMethod, isP24Enabled())) {
     ctx.addIssue({
       code: z.ZodIssueCode.custom,
-      message: "Płatności online są chwilowo niedostępne — wybierz przelew tradycyjny",
+      message: "Ta metoda płatności jest niedostępna — wybierz inną",
       path: ["paymentMethod"],
     });
   }

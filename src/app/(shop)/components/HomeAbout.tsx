@@ -29,8 +29,8 @@ export function HomeAbout() {
           <Link href="/poradnik" className="text-primary hover:underline">
             poradniku
           </Link>{" "}
-          wyjaśniamy, jak wybierać suplementy. Zamówienia wysyłamy w ciągu 24–48 h do paczkomatu,
-          punktu odbioru lub kurierem.
+          wyjaśniamy, jak wybierać suplementy. Zamówienia wysyłamy w ciągu 2 dni roboczych do
+          paczkomatu, punktu odbioru lub kurierem.
         </p>
       </details>
     </section>

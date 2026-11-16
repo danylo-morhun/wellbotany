@@ -7,7 +7,7 @@ import { DEFAULT_ORDERS_PAUSED_MESSAGE_PL } from "../schema";
 export const SHOP_SETTINGS_TAG = "shop-settings";
 
 const DEFAULT_FREE_SHIPPING_THRESHOLD_PLN = 20000;
-const DEFAULT_PRODUCT_META_SUFFIX_PL = "Wysyłka w 24–48 h.";
+const DEFAULT_PRODUCT_META_SUFFIX_PL = "Wysyłka w ciągu 2 dni roboczych.";
 
 export type ShopSettings = {
   /** Grosz; null = free delivery disabled */

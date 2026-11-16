@@ -25,7 +25,7 @@ const values = [
   {
     icon: Truck,
     title: "Szybka dostawa",
-    text: "Wysyłamy w 24–48 h do paczkomatu, punktu odbioru lub kurierem.",
+    text: "Wysyłamy w ciągu 2 dni roboczych do paczkomatu, punktu odbioru lub kurierem.",
   },
 ];
 

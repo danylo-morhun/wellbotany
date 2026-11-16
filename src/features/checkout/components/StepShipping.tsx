@@ -59,6 +59,8 @@ type Props = {
   productsPln: number;
   freeShippingThresholdPln: number | null;
   shippingRates: ShippingRate[];
+  /** Replaces pay-at-pickup when another shipping method is chosen */
+  fallbackPaymentMethod: CheckoutFormData["paymentMethod"];
   onChange: (updates: Partial<CheckoutFormData>) => void;
   onBack: () => void;
   onNext: () => void;
@@ -70,6 +72,7 @@ export function StepShipping({
   productsPln,
   freeShippingThresholdPln,
   shippingRates,
+  fallbackPaymentMethod,
   onChange,
   onBack,
   onNext,
@@ -318,7 +321,7 @@ export function StepShipping({
                         // Pay-at-pickup only exists for in-store pickup
                         ...(opt.value !== "PICKUP" &&
                           data.paymentMethod === "CASH_ON_DELIVERY" && {
-                            paymentMethod: "BANK_TRANSFER",
+                            paymentMethod: fallbackPaymentMethod,
                           }),
                       });
                     }}
