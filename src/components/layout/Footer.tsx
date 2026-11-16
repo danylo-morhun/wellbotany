@@ -77,7 +77,8 @@ export async function Footer() {
               />
             </Link>
             <p className="mt-4 max-w-xs text-sm leading-relaxed text-band-foreground/75">
-              Suplementy diety, witaminy i zioła z pełnym składem i dawką przy każdym produkcie.
+              Suplementy diety, zioła i zdrowa żywność z pełnym składem i dawką przy każdym
+              produkcie.
             </p>
             <ul className="mt-6 space-y-2.5 text-sm text-band-foreground/75">
               <li>

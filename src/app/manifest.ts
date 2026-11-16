@@ -4,7 +4,7 @@ export default function manifest(): MetadataRoute.Manifest {
   return {
     name: "Well Botany",
     short_name: "Well Botany",
-    description: "Sklep z suplementami diety, witaminami i produktami bio.",
+    description: "Sklep z suplementami diety, ziołami i zdrową żywnością.",
     start_url: "/",
     display: "standalone",
     background_color: "#EAF6EF",

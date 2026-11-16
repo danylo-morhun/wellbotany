@@ -18,7 +18,7 @@ export async function generateMetadata({ searchParams }: Props): Promise<Metadat
   return {
     title: `Katalog produktów${seo.titleSuffix}`,
     description:
-      "Przeglądaj nasz szeroki wybór suplementów diety, witamin i produktów bio. Filtruj według kategorii, marki i cech.",
+      "Przeglądaj nasz szeroki wybór suplementów diety, witamin, ziół i zdrowej żywności. Filtruj według kategorii, marki i cech.",
     alternates: { canonical: seo.canonical },
     // Filtered views and internal search results are near-duplicates
     ...(seo.noindex && { robots: { index: false, follow: true } }),
