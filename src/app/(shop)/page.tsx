@@ -5,6 +5,7 @@ import { FadeInView } from "@/app/(shop)/components/FadeInView";
 import { HelpAndGuides } from "@/app/(shop)/components/HelpAndGuides";
 import { HomeAbout } from "@/app/(shop)/components/HomeAbout";
 import { HomeBand } from "@/app/(shop)/components/HomeBand";
+import { HomeCampaign } from "@/app/(shop)/components/HomeCampaign";
 import { HomeGiftSets } from "@/app/(shop)/components/HomeGiftSets";
 import { HomeHeadline } from "@/app/(shop)/components/HomeHeadline";
 import { HomeIntro } from "@/app/(shop)/components/HomeIntro";
@@ -18,6 +19,7 @@ import { getHomepageData } from "@/features/catalog/lib/homepage";
 import { getHomeGiftSets } from "@/features/gift-sets/lib/homepage";
 import { HeroSlider } from "@/features/home/components/HeroSlider";
 import { getHomeBanners } from "@/features/home/lib/banners";
+import { campaignToRender } from "@/features/home/lib/campaign";
 import { HideIfSubscribed } from "@/features/newsletter/components/HideIfSubscribed";
 
 export const metadata: Metadata = {
@@ -30,16 +32,19 @@ export const revalidate = 3600;
 
 export default async function HomePage() {
   const [
-    { categories, tabs, newArrivals, promos, ingredientTiles },
+    { categories, tabs, newArrivals, promos, campaignProducts, ingredientTiles },
     banners,
     brands,
     { giftSets, builderActive },
   ] = await Promise.all([getHomepageData(), getHomeBanners(), getBrands(), getHomeGiftSets()]);
 
+  // While a campaign runs it takes the reductions; a second "Promocje" would repeat them
+  const campaign = campaignToRender();
+
   // Bands after the opening alternate mint/plain (DESIGN.md §5)
   const rest = [
     <HomeIntro key="intro" categories={categories} headline={false} />,
-    promos.length > 0 && (
+    !campaign && promos.length > 0 && (
       <FadeInView key="promos">
         <HomePromos products={promos} />
       </FadeInView>
@@ -71,6 +76,11 @@ export default async function HomePage() {
           <BestsellerTabs tabs={tabs} lead />
         </div>
       </HomeBand>
+      {campaign && (
+        <HomeBand tone="mint" className="py-8 md:py-14">
+          <HomeCampaign campaign={campaign} products={campaignProducts} />
+        </HomeBand>
+      )}
       <HomeBand className="pt-4 pb-8 md:pt-6 md:pb-14">
         <TrustStrip slim />
       </HomeBand>
