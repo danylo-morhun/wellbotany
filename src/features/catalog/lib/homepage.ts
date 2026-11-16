@@ -38,6 +38,10 @@ const TAB_POOL = 8;
 
 // Promo band: one lead tile + four small items
 const PROMOS_LIMIT = 5;
+// Campaign section (Black Week…): two rows of four, biggest reductions first
+const CAMPAIGN_LIMIT = 8;
+// Every discounted product, so the biggest reductions can be picked
+const PROMO_POOL = 120;
 // Nowości: dense list, two/three columns
 const NEW_LIMIT = 6;
 // Over-fetch so rows already shown higher up can be dropped without a second query
@@ -164,7 +168,7 @@ export const getHomepageData = unstable_cache(
             some: { isActive: true, stock: { gt: 0 }, comparePricePln: { not: null } },
           },
         },
-        take: ROW_POOL,
+        take: PROMO_POOL,
         orderBy: { updatedAt: "desc" },
         select: productSelect,
       }),
@@ -206,10 +210,13 @@ export const getHomepageData = unstable_cache(
     const shown = new Set(tabs.flatMap((tab) => tab.products.map((p) => p.id)));
 
     // Real reductions only (Omnibus), biggest first: the lead tile is the best deal
-    const promos = promoPool
-      .filter((p) => !shown.has(p.id) && offerDiscount(p) > 0)
-      .sort((a, b) => offerDiscount(b) - offerDiscount(a))
-      .slice(0, PROMOS_LIMIT);
+    const reductions = promoPool
+      .filter((p) => offerDiscount(p) > 0)
+      .sort((a, b) => offerDiscount(b) - offerDiscount(a));
+    // A campaign shows the best ones even if a tab above has them too: the
+    // page decides at render time whether a campaign is on
+    const campaignProducts = reductions.slice(0, CAMPAIGN_LIMIT);
+    const promos = reductions.filter((p) => !shown.has(p.id)).slice(0, PROMOS_LIMIT);
     for (const p of promos) shown.add(p.id);
 
     const newArrivals = newPool.filter((p) => !shown.has(p.id)).slice(0, NEW_LIMIT);
@@ -225,10 +232,11 @@ export const getHomepageData = unstable_cache(
       tabs,
       newArrivals,
       promos,
+      campaignProducts,
       ingredientTiles,
     };
   },
-  ["homepage-v7"],
+  ["homepage-v8"],
   { tags: ["categories", "products", STOCK_LISTINGS_TAG] },
 );
 
