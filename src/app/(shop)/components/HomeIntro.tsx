@@ -56,10 +56,10 @@ export function HomeIntro({ categories, headline = true }: Props) {
           id="home-h1"
           className="text-balance font-heading text-[clamp(2.25rem,5vw,3.25rem)] font-extrabold leading-[1.1] tracking-[-0.02em]"
         >
-          Suplementy diety, witaminy i zioła
+          Suplementy diety, zioła i zdrowa żywność
         </h1>
         <p className="text-muted-foreground md:text-lg">
-          Ponad 1300 produktów z pełnym składem. Czego szukasz?
+          Od witamin po czekoladę i kawę – wszystko z pełnym składem. Czego szukasz?
         </p>
       </div>
       {tabs.length > 0 && <HomeTabs tabs={tabs} label="Kategorie" />}

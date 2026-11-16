@@ -8,12 +8,12 @@ export function HomeAbout() {
   return (
     <section aria-labelledby="home-about-heading" className="max-w-prose">
       <h2 id="home-about-heading" className={sectionTitleClass}>
-        Sklep z suplementami i ziołami online
+        Suplementy, zioła i zdrowa żywność online
       </h2>
       <p className="mt-3 text-muted-foreground">
-        Well Botany to sklep internetowy z suplementami diety, witaminami i ziołami. W ofercie mamy
-        ponad 1300 suplementów, witamin, minerałów, ekstraktów ziołowych, kosmetyków naturalnych i
-        produktów bio od sprawdzonych producentów.
+        Well Botany to sklep internetowy z suplementami diety, ziołami i zdrową żywnością. W ofercie
+        mamy suplementy, witaminy, minerały, ekstrakty ziołowe i kosmetyki naturalne, a obok nich
+        czekolady, przekąski, kawę, herbatę i słodziki – wszystko od sprawdzonych producentów.
       </p>
       <details className="group mt-2">
         <summary className="inline-flex min-h-11 cursor-pointer list-none items-center gap-1 text-sm font-semibold text-primary hover:underline [&::-webkit-details-marker]:hidden">
