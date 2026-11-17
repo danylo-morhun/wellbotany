@@ -56,13 +56,16 @@ async function accessToken(sa: ServiceAccount): Promise<string> {
 
 export type MerchantOffer = { variantId: string; pricePln: number; inStock: boolean };
 
+export type PushResult = { pushed: number; notInFeed: number; failed: number };
+
 /** Upserts price + availability for the given variants (offerId = variant id, as in the feed). */
-export async function pushOffersToMerchant(offers: MerchantOffer[]): Promise<number> {
+export async function pushOffersToMerchant(offers: MerchantOffer[]): Promise<PushResult> {
   const cfg = config();
-  if (!cfg || offers.length === 0) return 0;
+  if (!cfg || offers.length === 0) return { pushed: 0, notInFeed: 0, failed: 0 };
   const token = await accessToken(cfg.sa);
   const url = `https://merchantapi.googleapis.com/products/v1/accounts/${cfg.account}/productInputs:insert?dataSource=${encodeURIComponent(cfg.dataSource)}`;
   let failed = 0;
+  let notInFeed = 0;
   // Batches in parallel: a full resync is ~1.5k variants (~1.5 min)
   for (let i = 0; i < offers.length; i += 25) {
     const results = await Promise.allSettled(
@@ -81,8 +84,8 @@ export async function pushOffersToMerchant(offers: MerchantOffer[]): Promise<num
           }),
         });
         // 404: not in the feed (e.g. no photo yet) — nothing to update
-        if (!res.ok && res.status !== 404)
-          throw new Error(`${offer.variantId}: ${res.status} ${await res.text()}`);
+        if (res.status === 404) notInFeed++;
+        else if (!res.ok) throw new Error(`${offer.variantId}: ${res.status} ${await res.text()}`);
       }),
     );
     for (const r of results) {
@@ -92,7 +95,7 @@ export async function pushOffersToMerchant(offers: MerchantOffer[]): Promise<num
       }
     }
   }
-  return offers.length - failed;
+  return { pushed: offers.length - failed - notInFeed, notInFeed, failed };
 }
 
 /** Offers for these products, computed the same way as /product-feed.xml. */
@@ -134,7 +137,7 @@ export async function syncProductsToMerchant(productIds: string[]): Promise<void
 }
 
 /** Daily resync — also covers price changes made outside the admin (imports, scripts). */
-export async function syncAllToMerchant(): Promise<{ pushed: number; total: number }> {
+export async function syncAllToMerchant(): Promise<PushResult & { total: number }> {
   const offers = await offersFor({ status: "ACTIVE" });
-  return { pushed: await pushOffersToMerchant(offers), total: offers.length };
+  return { ...(await pushOffersToMerchant(offers)), total: offers.length };
 }
