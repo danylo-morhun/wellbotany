@@ -24,10 +24,28 @@ import { HeroSlider } from "@/features/home/components/HeroSlider";
 import { getHomeBanners } from "@/features/home/lib/banners";
 import { campaignToRender } from "@/features/home/lib/campaign";
 import { HideIfSubscribed } from "@/features/newsletter/components/HideIfSubscribed";
+import { DEFAULT_OG_IMAGE, SITE_DESCRIPTION } from "@/lib/seo";
 
+const HOME_TITLE = "Suplementy diety, zioła i zdrowa żywność – sklep Well Botany";
+
+// openGraph/twitter replace the layout's whole object, so the shared fields are repeated
 export const metadata: Metadata = {
-  title: { absolute: "Suplementy diety, zioła i zdrowa żywność – sklep Well Botany" },
+  title: { absolute: HOME_TITLE },
   alternates: { canonical: "/" },
+  openGraph: {
+    type: "website",
+    locale: "pl_PL",
+    siteName: "Well Botany",
+    title: HOME_TITLE,
+    description: SITE_DESCRIPTION,
+    images: [DEFAULT_OG_IMAGE],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: HOME_TITLE,
+    description: SITE_DESCRIPTION,
+    images: [DEFAULT_OG_IMAGE.url],
+  },
 };
 
 // Banners open/close on their dates without an admin edit
