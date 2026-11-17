@@ -10,6 +10,7 @@ import {
   buildOrganizationJsonLd,
   buildWebsiteJsonLd,
   DEFAULT_OG_IMAGE,
+  SITE_DESCRIPTION,
   toJsonLdScript,
 } from "@/lib/seo";
 import "./globals.css";
@@ -39,26 +40,23 @@ const onest = localFont({
 
 export const metadata: Metadata = {
   title: {
-    default: "Well Botany — Suplementy i produkty bio",
+    default: "Well Botany — suplementy, zioła i zdrowa żywność",
     template: "%s | Well Botany",
   },
-  description:
-    "Sklep z suplementami diety, ziołami i zdrową żywnością: czekolady, przekąski, kawa i herbata. Wysyłka do paczkomatu, punktu odbioru lub kurierem.",
+  description: SITE_DESCRIPTION,
   metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL ?? "https://wellbotany.pl"),
   openGraph: {
     type: "website",
     locale: "pl_PL",
     siteName: "Well Botany",
-    title: "Well Botany — Suplementy i produkty bio",
-    description:
-      "Sklep z suplementami diety, ziołami i zdrową żywnością: czekolady, przekąski, kawa i herbata. Wysyłka do paczkomatu, punktu odbioru lub kurierem.",
+    title: "Well Botany — suplementy, zioła i zdrowa żywność",
+    description: SITE_DESCRIPTION,
     images: [DEFAULT_OG_IMAGE],
   },
   twitter: {
     card: "summary_large_image",
-    title: "Well Botany — Suplementy i produkty bio",
-    description:
-      "Sklep z suplementami diety, ziołami i zdrową żywnością: czekolady, przekąski, kawa i herbata. Wysyłka do paczkomatu, punktu odbioru lub kurierem.",
+    title: "Well Botany — suplementy, zioła i zdrowa żywność",
+    description: SITE_DESCRIPTION,
     images: [DEFAULT_OG_IMAGE.url],
   },
   verification: {

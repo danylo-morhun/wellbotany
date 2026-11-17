@@ -1,7 +1,7 @@
 import { ImageResponse } from "next/og";
 
 export const runtime = "edge";
-export const alt = "Well Botany — Suplementy i produkty bio";
+export const alt = "Well Botany — suplementy, zioła i zdrowa żywność";
 export const size = { width: 1200, height: 630 };
 export const contentType = "image/png";
 
@@ -47,7 +47,9 @@ export default function OpengraphImage() {
       >
         WellBotany
       </div>
-      <div style={{ fontSize: 30, color: "rgba(234,246,239,0.75)" }}>Suplementy i produkty bio</div>
+      <div style={{ fontSize: 30, color: "rgba(234,246,239,0.75)" }}>
+        Suplementy, zioła i zdrowa żywność
+      </div>
     </div>,
     { ...size },
   );
