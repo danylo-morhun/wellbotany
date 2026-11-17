@@ -36,6 +36,8 @@ export default defineConfig({
       REDIS_URL: "",
       SENTRY_DSN: "",
       NEXT_PUBLIC_SENTRY_DSN: "",
+      // Test merchant id: renders the Google Customer Reviews card (google-reviews.spec.ts)
+      NEXT_PUBLIC_GCR_MERCHANT_ID: "100000000",
       ...(process.env.E2E_EMAIL
         ? { SHOP_NOTIFY_EMAIL: process.env.E2E_EMAIL }
         : { RESEND_API_KEY: "" }),
