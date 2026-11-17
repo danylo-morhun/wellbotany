@@ -5,6 +5,7 @@ import { resolveDisplayBrand } from "@/features/catalog/lib/brand-tree";
 import { MAIN_IMAGE_FIRST } from "@/features/catalog/lib/main-image";
 import { getShopSettings } from "@/features/settings/lib/shop-settings";
 import { publicImageUrl } from "@/lib/image-loader";
+import { googlePrices } from "@/lib/omnibus";
 import { prisma } from "@/lib/prisma";
 import { stripHtml } from "@/lib/seo";
 import { feedUnitPricing, variantPackQuantity } from "@/lib/unit-price";
@@ -49,6 +50,8 @@ export async function GET() {
           ean: true,
           optionValue: true,
           pricePln: true,
+          comparePricePln: true,
+          lowestPrice30dPln: true,
           stock: true,
           trackStock: true,
         },
@@ -79,6 +82,7 @@ export async function GET() {
       // Each variant's own URL, so the landing page shows the feed price
       const variantLink = multiVariant ? `${link}?wariant=${variant.id}` : link;
       const inStock = !ordersPaused && (!variant.trackStock || variant.stock > 0);
+      const { pricePln, salePricePln } = googlePrices(variant);
       const unitPricing = feedUnitPricing(
         variantPackQuantity(variant.optionValue, product.netWeight, !multiVariant, product.namePl),
       );
@@ -90,7 +94,8 @@ export async function GET() {
       <g:link>${escapeXml(variantLink)}</g:link>
       <g:image_link>${escapeXml(publicImageUrl(image))}</g:image_link>
       <g:availability>${inStock ? "in_stock" : "out_of_stock"}</g:availability>
-      <g:price>${(variant.pricePln / 100).toFixed(2)} PLN</g:price>
+      <g:price>${(pricePln / 100).toFixed(2)} PLN</g:price>
+      ${salePricePln ? `<g:sale_price>${(salePricePln / 100).toFixed(2)} PLN</g:sale_price>` : ""}
       <g:condition>new</g:condition>
       ${unitPricing ? `<g:unit_pricing_measure>${unitPricing.measure}</g:unit_pricing_measure>\n      <g:unit_pricing_base_measure>${unitPricing.base}</g:unit_pricing_base_measure>` : ""}
       ${multiVariant ? `<g:item_group_id>${escapeXml(product.id)}</g:item_group_id>` : ""}

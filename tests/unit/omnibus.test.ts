@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { discountPercent, omnibusNote, referencePrice } from "@/lib/omnibus";
+import { discountPercent, googlePrices, omnibusNote, referencePrice } from "@/lib/omnibus";
 
 describe("omnibusNote", () => {
   it("describes the lowest price before a reduction", () => {
@@ -59,5 +59,19 @@ describe("referencePrice", () => {
     expect(
       referencePrice({ pricePln: 8000, comparePricePln: null, lowestPrice30dPln: 10000 }),
     ).toBe(null);
+  });
+});
+
+describe("googlePrices", () => {
+  it("sends the 30-day low as price and the current price as sale price", () => {
+    expect(
+      googlePrices({ pricePln: 3990, comparePricePln: 4990, lowestPrice30dPln: 4590 }),
+    ).toEqual({ pricePln: 4590, salePricePln: 3990 });
+  });
+
+  it("sends the current price alone without a real reduction", () => {
+    expect(
+      googlePrices({ pricePln: 3990, comparePricePln: 4990, lowestPrice30dPln: 3990 }),
+    ).toEqual({ pricePln: 3990, salePricePln: null });
   });
 });

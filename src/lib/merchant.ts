@@ -7,6 +7,7 @@
 //   MERCHANT_SUPPLEMENTAL_SOURCE data source id of the supplemental API source
 import crypto from "node:crypto";
 import type { Prisma } from "@prisma/client";
+import { googlePrices } from "@/lib/omnibus";
 import { prisma } from "@/lib/prisma";
 
 type ServiceAccount = { client_email: string; private_key: string; token_uri: string };
@@ -54,7 +55,20 @@ async function accessToken(sa: ServiceAccount): Promise<string> {
   return body.access_token;
 }
 
-export type MerchantOffer = { variantId: string; pricePln: number; inStock: boolean };
+export type MerchantOffer = {
+  variantId: string;
+  /** Regular price; the struck 30-day low during a reduction (lib/omnibus googlePrices) */
+  pricePln: number;
+  salePricePln?: number | null;
+  inStock: boolean;
+};
+
+const micros = (pln: number) => ({ amountMicros: String(pln * 10_000), currencyCode: "PLN" });
+// A sale window in the past: overrides a sale_price still in the daily feed after a reduction ends
+const NO_SALE = {
+  startTime: "2000-01-01T00:00:00Z",
+  endTime: "2000-01-02T00:00:00Z",
+};
 
 export type PushResult = { pushed: number; notInFeed: number; failed: number };
 
@@ -78,7 +92,10 @@ export async function pushOffersToMerchant(offers: MerchantOffer[]): Promise<Pus
             contentLanguage: "pl",
             feedLabel: "PL",
             productAttributes: {
-              price: { amountMicros: String(offer.pricePln * 10_000), currencyCode: "PLN" },
+              price: micros(offer.pricePln),
+              ...(offer.salePricePln
+                ? { salePrice: micros(offer.salePricePln) }
+                : { salePriceEffectiveDate: NO_SALE }),
               availability: offer.inStock ? "IN_STOCK" : "OUT_OF_STOCK",
             },
           }),
@@ -112,14 +129,22 @@ async function offersFor(where: Prisma.ProductWhereInput): Promise<MerchantOffer
     select: {
       status: true,
       variants: {
-        select: { id: true, pricePln: true, stock: true, trackStock: true, isActive: true },
+        select: {
+          id: true,
+          pricePln: true,
+          comparePricePln: true,
+          lowestPrice30dPln: true,
+          stock: true,
+          trackStock: true,
+          isActive: true,
+        },
       },
     },
   });
   return products.flatMap((product) =>
     product.variants.map((v) => ({
       variantId: v.id,
-      pricePln: v.pricePln,
+      ...googlePrices(v),
       // Archived/draft products and inactive variants leave the feed on the next
       // fetch; until then they must not show as buyable
       inStock:
