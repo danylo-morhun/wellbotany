@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { isP24Enabled } from "@/features/przelewy24/lib/config";
 import {
+  GCR_MERCHANT_ID,
   GOOGLE_ADS_ENABLED,
   MARKETING_ENABLED,
   MARKETING_TOOLS,
@@ -68,6 +69,20 @@ const purposes = [
     duration: "do wycofania zgody — usuniemy wtedy opinię ze Sklepu.",
     consequence: "brak — opinia jest dobrowolna",
   },
+  ...(GCR_MERCHANT_ID
+    ? [
+        {
+          title: "Ankieta Opinii konsumenckich Google",
+          goal: "po złożeniu zamówienia możesz poprosić, aby Google wysłał Ci e-mailem krótką ankietę o zakupach w Sklepie (program Opinie konsumenckie Google). Dopiero gdy klikniesz „Oceń zakupy w Google”, przekazujemy Google numer zamówienia, Twój adres e-mail, kraj dostawy i przewidywaną datę dostawy. Google wysyła ankietę i przetwarza te dane oraz Twoją ocenę jako odrębny administrator, zgodnie z polityką prywatności Google: https://policies.google.com/privacy?hl=pl. Ocena może być publikowana przez Google jako ocena Sklepu.",
+          basis: [
+            "Twoja zgoda — kliknięcie przycisku „Oceń zakupy w Google” i potwierdzenie w oknie Google (art. 6 ust. 1 lit. a RODO)",
+          ],
+          duration:
+            "do wycofania zgody (link w e-mailu od Google lub wiadomość do nas); dane przekazane przed wycofaniem Google przechowuje według własnych zasad.",
+          consequence: "brak — ankieta jest dobrowolna i nie wpływa na realizację zamówienia",
+        },
+      ]
+    : []),
   {
     title: "Statystyki korzystania ze Sklepu",
     goal: "analiza ruchu i zakupów w Sklepie za pomocą Google Analytics (identyfikatory pseudonimowe, bez celów reklamowych)",
@@ -130,6 +145,16 @@ const recipients = [
         {
           action: "pomiar skuteczności reklam (tylko po wyrażeniu zgody na cookies marketingowe)",
           recipient: "Google Ireland Ltd. (Google Ads)",
+        },
+      ]
+    : []),
+  ...(GCR_MERCHANT_ID
+    ? [
+        {
+          action:
+            "ankieta Opinii konsumenckich Google (tylko gdy ją wybierzesz po złożeniu zamówienia)",
+          recipient:
+            "Google Ireland Ltd. — odrębny administrator danych (program Opinie konsumenckie Google); zasady: policies.google.com/privacy",
         },
       ]
     : []),
