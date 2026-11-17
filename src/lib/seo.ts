@@ -1,11 +1,15 @@
 import { publicImageUrl } from "@/lib/image-loader";
 import { SOCIAL_LINKS } from "@/lib/seller";
 
+/** Default meta description: the home page's and every page without its own. */
+export const SITE_DESCRIPTION =
+  "Suplementy diety, zioła i zdrowa żywność: czekolady, ciastka, przekąski, kawa i herbata. Pełny skład przy każdym produkcie. Wysyłka w ciągu 2 dni roboczych.";
+
 export const DEFAULT_OG_IMAGE = {
   url: "/og-image.jpg",
   width: 1200,
   height: 630,
-  alt: "Well Botany — suplementy diety, witaminy i produkty bio",
+  alt: "Well Botany — suplementy diety, zioła i zdrowa żywność",
 };
 
 /**
