@@ -8,6 +8,7 @@ import {
   PRODUCT_LIST_SELECT,
   type ProductListItem,
 } from "../actions";
+import { CHOCOLATE_SLUG, foodProductCount, foodSubcategories } from "./food";
 import { STOCK_LISTINGS_TAG } from "./product-tag";
 
 // Same shape as listings, so ProductCard gets everything it needs
@@ -39,8 +40,6 @@ const TAB_POOL = 24;
 // Food shelf: the range most visitors don't expect from a supplement shop.
 // Round-robin over these categories so one shelf shows chocolate, snacks,
 // coffee and sweeteners instead of 8 bars.
-const FOOD_SLUG = "zywnosc";
-const CHOCOLATE_SLUG = "czekolady-i-czekoladki";
 const FOOD_SHELF_SLUGS = [
   CHOCOLATE_SLUG,
   "chipsy-i-przekaski-slone",
@@ -263,9 +262,7 @@ export const getHomepageData = unstable_cache(
       })),
     ].filter((tab) => tab.products.length > 0);
     for (const tab of tabs) for (const p of tab.products) shown.add(p.id);
-    const food = categories.find((c) => c.slug === FOOD_SLUG);
-    const chocolate = categories.find((c) => c.slug === CHOCOLATE_SLUG);
-    const foodCount = (food?.productCount ?? 0) + (chocolate?.productCount ?? 0);
+    const foodCount = foodProductCount(categories);
 
     // A campaign shows the best ones even if a tab above has them too: the
     // page decides at render time whether a campaign is on
@@ -292,11 +289,7 @@ export const getHomepageData = unstable_cache(
       }
       if (!added) break;
     }
-    const foodCategories = categories.filter(
-      (c) =>
-        c.productCount > 0 &&
-        (c.slug === CHOCOLATE_SLUG || (food != null && c.parentId === food.id)),
-    );
+    const foodCategories = foodSubcategories(categories).filter((c) => c.productCount > 0);
 
     const newArrivals = newPool.filter((p) => !shown.has(p.id)).slice(0, NEW_LIMIT);
 
