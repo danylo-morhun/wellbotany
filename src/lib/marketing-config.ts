@@ -11,3 +11,6 @@ export const MARKETING_TOOLS = [
 ]
   .filter(Boolean)
   .join(" i ");
+
+/** Google Customer Reviews opt-in on the order confirmation page; null = off. */
+export const GCR_MERCHANT_ID = Number(process.env.NEXT_PUBLIC_GCR_MERCHANT_ID) || null;
