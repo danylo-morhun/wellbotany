@@ -105,6 +105,9 @@ export function MobileMenu({ navLinks, utilityLinks, nav, showPromos }: Props) {
                 <ChevronDown className="size-4 shrink-0 text-muted-foreground transition-transform group-open:rotate-180" />
               </summary>
               <div className="flex flex-col gap-0.5 pb-1">
+                <Link href={menu.href} className={subLinkClass}>
+                  {menu.seeAllLabel}
+                </Link>
                 {menu.sections.map((section) =>
                   section.title ? (
                     <details key={section.title} className="group/col">
