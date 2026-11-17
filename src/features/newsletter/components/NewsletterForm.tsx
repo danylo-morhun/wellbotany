@@ -46,8 +46,8 @@ export function NewsletterForm({ variant = "band", onSubscribed }: Props) {
           band ? "mx-auto mt-6 max-w-md bg-band-foreground/10" : "bg-primary/10 text-foreground",
         )}
       >
-        ✓ Gotowe! Kod -{WELCOME_DISCOUNT_PERCENT}% wysłaliśmy na Twój e-mail — sprawdź też folder
-        Oferty lub Spam.
+        {/* Same text for new and returning addresses — never reveal who is subscribed */}✓ Gotowe!
+        Wysłaliśmy wiadomość na Twój e-mail — sprawdź też folder Oferty lub Spam.
       </p>
     );
   }
