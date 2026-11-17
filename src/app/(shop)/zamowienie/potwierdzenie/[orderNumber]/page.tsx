@@ -10,8 +10,11 @@ import { isOfflinePayment, PAYMENT_LABELS } from "@/features/checkout/lib/paymen
 import { shippingLabel } from "@/features/checkout/lib/shipping";
 import { RetryPaymentButton } from "@/features/przelewy24/components/RetryPaymentButton";
 import { isP24Enabled } from "@/features/przelewy24/lib/config";
+import { GoogleReviewsOptIn } from "@/features/reviews/components/GoogleReviewsOptIn";
+import { gcrDeliveryDate, showGcrOptIn } from "@/features/reviews/lib/gcr";
 import { auth } from "@/lib/auth";
 import { formatPrice } from "@/lib/format";
+import { GCR_MERCHANT_ID } from "@/lib/marketing-config";
 import { PICKUP_HOLD_DAYS, pickupLocation } from "@/lib/pickup-locations";
 import { prisma } from "@/lib/prisma";
 
@@ -44,6 +47,7 @@ export default async function PotwierdzeniePage({ params, searchParams }: Props)
       pickupLocation: true,
       shipCity: true,
       shipPostalCode: true,
+      shipCountry: true,
       paymentMethod: true,
       subtotalPln: true,
       shippingPln: true,
@@ -51,6 +55,7 @@ export default async function PotwierdzeniePage({ params, searchParams }: Props)
       totalPln: true,
       couponCode: true,
       createdAt: true,
+      paidAt: true,
       items: {
         select: {
           id: true,
@@ -69,8 +74,9 @@ export default async function PotwierdzeniePage({ params, searchParams }: Props)
   if (!order) notFound();
 
   const session = await auth();
+  const isAdmin = session?.user?.role === "ADMIN";
   const canView =
-    session?.user?.role === "ADMIN" ||
+    isAdmin ||
     (!!order.customerId && order.customerId === session?.user?.id) ||
     (await hasOrderAccess(order.orderNumber)) ||
     isOrderAccessToken(order.orderNumber, dostep);
@@ -198,6 +204,16 @@ export default async function PotwierdzeniePage({ params, searchParams }: Props)
           </div>
         )}
       </div>
+
+      {GCR_MERCHANT_ID && !isAdmin && showGcrOptIn(order, new Date()) && (
+        <GoogleReviewsOptIn
+          merchantId={GCR_MERCHANT_ID}
+          orderNumber={order.orderNumber}
+          email={order.customerEmail}
+          deliveryCountry={order.shipCountry}
+          deliveryDate={gcrDeliveryDate(order)}
+        />
+      )}
 
       <div className="mt-8 flex flex-col items-center gap-3">
         <Link
