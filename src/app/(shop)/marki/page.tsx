@@ -6,7 +6,7 @@ export const metadata = {
   title: "Marki",
   alternates: { canonical: "/marki" },
   description:
-    "Suplementy, witaminy i produkty bio według marek: Yango, Kenay, Formeds, Singularis i inne.",
+    "Suplementy, witaminy i zdrowa żywność według marek: Yango, Kenay, Formeds, Singularis i inne.",
 };
 
 export default async function MarkiPage() {

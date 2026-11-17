@@ -9,7 +9,7 @@ export const metadata = {
   title: "Kategorie",
   alternates: { canonical: "/kategorie" },
   description:
-    "Suplementy, witaminy i produkty bio według kategorii i potrzeb: odporność, sen, stawy, trawienie.",
+    "Suplementy, witaminy i zdrowa żywność według kategorii i potrzeb: odporność, sen, stawy, trawienie.",
 };
 
 export default async function KategoriePage() {
