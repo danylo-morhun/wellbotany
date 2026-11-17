@@ -42,6 +42,12 @@ const ADS_HOSTS =
   "https://www.googleadservices.com https://googleads.g.doubleclick.net https://ad.doubleclick.net https://pagead2.googlesyndication.com https://www.google.com https://www.google.pl";
 const ADS_FRAME = "https://www.googletagmanager.com";
 
+// Google Customer Reviews opt-in dialog — loaded only after a click on the
+// order confirmation page (GoogleReviewsOptIn.tsx). Under 'strict-dynamic' its
+// scripts need no host; the relaxed CSP lists apis.google.com for client-side
+// navigation into the confirmation page.
+const GCR_FRAME = "https://www.google.com";
+
 // Pickup-point map on checkout: OpenStreetMap raster tiles. Point data comes
 // from our own /api/points (proxy to epaka), so no extra connect-src.
 const POINT_MAP_IMG = "https://tile.openstreetmap.org";
@@ -59,7 +65,7 @@ function buildStrictCsp(nonce: string, withPointMap: boolean): string {
     "style-src 'self' 'unsafe-inline'",
     "font-src 'self'",
     `connect-src 'self' https://api.cloudinary.com https://res.cloudinary.com https://*.ingest.de.sentry.io https://*.ingest.sentry.io ${GA_CONNECT} ${ADS_HOSTS}`,
-    `frame-src 'self' ${ADS_FRAME}`,
+    `frame-src 'self' ${ADS_FRAME} ${GCR_FRAME}`,
     "object-src 'none'",
     "base-uri 'self'",
     "form-action 'self'",
@@ -77,13 +83,13 @@ function buildRelaxedCsp(): string {
   return [
     "default-src 'self'",
     `img-src 'self' data: blob: ${IMG_SRC_HOSTS} ${ADS_HOSTS}`,
-    "script-src 'self' 'unsafe-inline' https://www.googletagmanager.com https://www.googleadservices.com https://www.google.com",
+    "script-src 'self' 'unsafe-inline' https://www.googletagmanager.com https://www.googleadservices.com https://www.google.com https://apis.google.com",
     "style-src 'self' 'unsafe-inline'",
     "font-src 'self'",
     // Cloudinary too: a client-side nav from the storefront into /admin keeps
     // this document's CSP, so the admin image upload runs under it.
     `connect-src 'self' https://api.cloudinary.com https://res.cloudinary.com https://*.ingest.de.sentry.io https://*.ingest.sentry.io ${GA_CONNECT} ${ADS_HOSTS}`,
-    `frame-src 'self' ${ADS_FRAME}`,
+    `frame-src 'self' ${ADS_FRAME} ${GCR_FRAME}`,
     "object-src 'none'",
     "base-uri 'self'",
     "form-action 'self'",
