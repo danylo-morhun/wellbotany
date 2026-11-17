@@ -1,6 +1,11 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { GOOGLE_ADS_ENABLED, MARKETING_ENABLED, META_ENABLED } from "@/lib/marketing-config";
+import {
+  GCR_MERCHANT_ID,
+  GOOGLE_ADS_ENABLED,
+  MARKETING_ENABLED,
+  META_ENABLED,
+} from "@/lib/marketing-config";
 
 export const metadata: Metadata = {
   title: "Polityka cookies",
@@ -42,6 +47,16 @@ const cookieTypes = [
           purpose:
             "Meta (Facebook, Instagram): plik _fbc z identyfikatorem kliknięcia w naszą reklamę. Po złożeniu zamówienia nasz serwer przekazuje Meta jego numer i wartość, ten identyfikator, adres IP, dane przeglądarki oraz zahashowany e-mail i telefon — bez informacji o kupionych produktach. Skrypt Meta nie działa w sklepie. Bez zgody nic nie jest zapisywane ani wysyłane.",
           duration: "Do 90 dni",
+        },
+      ]
+    : []),
+  ...(GCR_MERCHANT_ID
+    ? [
+        {
+          name: "Zewnętrzne (tylko po kliknięciu)",
+          purpose:
+            "Opinie konsumenckie Google (Google Ireland Ltd.): tylko jeśli na stronie potwierdzenia zamówienia klikniesz „Oceń zakupy w Google”, wyświetlamy okno Google, które może odczytywać i zapisywać pliki cookies Google (np. gdy jesteś zalogowany na konto Google). Google otrzymuje wtedy informacje o Twoim zamówieniu w Sklepie. Bez kliknięcia okno nie jest ładowane. Cookies Google możesz usunąć lub zablokować w ustawieniach przeglądarki.",
+          duration: "Według zasad Google",
         },
       ]
     : []),
