@@ -154,7 +154,7 @@ const recipients = [
           action:
             "ankieta Opinii konsumenckich Google (tylko gdy ją wybierzesz po złożeniu zamówienia)",
           recipient:
-            "Google Ireland Ltd. — odrębny administrator danych (program Opinie konsumenckie Google); zasady: policies.google.com/privacy",
+            "Google LLC (USA) — odrębny administrator danych (program Opinie konsumenckie Google); zasady: policies.google.com/privacy",
         },
       ]
     : []),

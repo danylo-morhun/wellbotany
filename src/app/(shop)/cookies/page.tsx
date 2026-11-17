@@ -55,7 +55,7 @@ const cookieTypes = [
         {
           name: "Zewnętrzne (tylko po kliknięciu)",
           purpose:
-            "Opinie konsumenckie Google (Google Ireland Ltd.): tylko jeśli na stronie potwierdzenia zamówienia klikniesz „Oceń zakupy w Google”, wyświetlamy okno Google, które może odczytywać i zapisywać pliki cookies Google (np. gdy jesteś zalogowany na konto Google). Google otrzymuje wtedy informacje o Twoim zamówieniu w Sklepie. Bez kliknięcia okno nie jest ładowane. Cookies Google możesz usunąć lub zablokować w ustawieniach przeglądarki.",
+            "Opinie konsumenckie Google (Google LLC): tylko jeśli na stronie potwierdzenia zamówienia klikniesz „Oceń zakupy w Google”, wyświetlamy okno Google, które może odczytywać i zapisywać pliki cookies Google (np. gdy jesteś zalogowany na konto Google). Google otrzymuje wtedy informacje o Twoim zamówieniu w Sklepie. Bez kliknięcia okno nie jest ładowane. Cookies Google możesz usunąć lub zablokować w ustawieniach przeglądarki.",
           duration: "Według zasad Google",
         },
       ]
