@@ -13,6 +13,9 @@ describe("productKind", () => {
     );
     expect(productKind({ slug: "zywnosc", group: "OTHER", parent: null })).toBe("food");
     expect(
+      productKind({ slug: "czekolady-i-czekoladki", group: "OTHER", parent: { slug: "zywnosc" } }),
+    ).toBe("food");
+    expect(
       productKind({ slug: "pielegnacja-twarzy", group: "OTHER", parent: { slug: "kosmetyki" } }),
     ).toBe("nonFood");
     expect(productKind({ slug: "akcesoria", group: "OTHER", parent: null })).toBe("nonFood");
