@@ -4,7 +4,9 @@
 # symlink switch + service restart (~1 s), so a failed build never touches prod.
 #
 #   wb-deploy prepare <sha>   fetch, install, build into releases/<sha> (idempotent)
-#   wb-deploy migrate <sha>   prepare + prisma migrate deploy (prod DB)
+#   wb-deploy migrate <sha>   install, prisma migrate deploy (prod DB), THEN build —
+#                             the build prerenders pages against the prod DB, so it
+#                             must see the new columns (16.11: P2022 on HomeBanner)
 #   wb-deploy deploy <sha>    prepare, refuse if migrations pending, switch, restart
 #   wb-deploy rollback        switch back to the previous release
 #   wb-deploy revision        print the live commit
@@ -27,15 +29,25 @@ full_sha() {
   git -C "$REPO" rev-parse --verify "$1^{commit}"
 }
 
-prepare() {
+# Checkout + dependencies + Prisma client, no build (idempotent)
+install_release() {
   local sha; sha=$(full_sha "$1"); local dir=$RELEASES/$sha
-  if [ -f "$dir/.prepared" ]; then log "release $sha already built"; echo "$dir"; return; fi
+  # .prepared: built by an older wb-deploy (no .installed marker) — never wipe it
+  if [ -f "$dir/.installed" ] || [ -f "$dir/.prepared" ]; then echo "$dir"; return; fi
   rm -rf "$dir"; git -C "$REPO" worktree prune
   git -C "$REPO" worktree add -q --detach "$dir" "$sha"
   ln -sf "$ENV_FILE" "$dir/.env.production.local"
   cd "$dir"
   log "install"; pnpm install --frozen-lockfile --prod=false >/dev/null
   pnpm exec prisma generate >/dev/null
+  touch "$dir/.installed"
+  echo "$dir"
+}
+
+prepare() {
+  local sha; sha=$(full_sha "$1"); local dir=$RELEASES/$sha
+  if [ -f "$dir/.prepared" ]; then log "release $sha already built"; echo "$dir"; return; fi
+  dir=$(install_release "$sha" | tail -1); cd "$dir"
   log "build $sha"; pnpm build > "$dir/build.log" 2>&1 || { tail -40 "$dir/build.log" >&2; exit 1; }
   touch "$dir/.prepared"
   echo "$dir"
@@ -43,9 +55,13 @@ prepare() {
 
 with_db_env() { set -a; . "$ENV_FILE"; set +a; }
 
+# Migrate before building: the build reads the prod DB (prerender), so the
+# schema must already match this release. Migrations stay additive — the live
+# release keeps running on the new schema until the switch.
 migrate() {
-  local dir; dir=$(prepare "$1" | tail -1); cd "$dir"; with_db_env
-  pnpm exec prisma migrate deploy
+  local dir; dir=$(install_release "$1" | tail -1)
+  ( cd "$dir"; with_db_env; pnpm exec prisma migrate deploy )
+  prepare "$1" >/dev/null
 }
 
 pending_migrations() {
@@ -80,8 +96,10 @@ case "$cmd" in
   prepare) valid_sha "$arg"; prepare "$arg" >/dev/null ;;
   migrate) valid_sha "$arg"; migrate "$arg" ;;
   deploy)
-    valid_sha "$arg"; dir=$(prepare "$arg" | tail -1)
+    valid_sha "$arg"; dir=$(install_release "$arg" | tail -1)
+    # Check before building — a build against the old schema fails anyway
     if pending_migrations "$dir"; then log "migrations pending — run 'migrate $arg' first"; exit 3; fi
+    dir=$(prepare "$arg" | tail -1)
     switch_to "$dir"; prune ;;
   rollback)
     prev=""; [ -L "$BASE/previous" ] && prev=$(readlink -f "$BASE/previous")
