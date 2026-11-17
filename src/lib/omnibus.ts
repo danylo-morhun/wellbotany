@@ -43,3 +43,18 @@ export function omnibusNote(offer: PricedOffer): string | null {
   if (discountPercent(offer) == null || offer.lowestPrice30dPln == null) return null;
   return `Najniższa cena z 30 dni przed obniżką: ${formatPrice(offer.lowestPrice30dPln)}`;
 }
+
+/**
+ * Google Merchant prices: during a real reduction `price` is the struck 30-day
+ * low and `salePrice` the current price, matching the product page; otherwise
+ * the current price alone.
+ */
+export function googlePrices(offer: PricedOffer): {
+  pricePln: number;
+  salePricePln: number | null;
+} {
+  const reference = referencePrice(offer);
+  return reference == null
+    ? { pricePln: offer.pricePln, salePricePln: null }
+    : { pricePln: reference, salePricePln: offer.pricePln };
+}
