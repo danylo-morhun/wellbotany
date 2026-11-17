@@ -36,3 +36,29 @@ export async function sendWelcomeCouponEmail(input: {
     },
   });
 }
+
+/**
+ * Sent when an address that already received its welcome code signs up again,
+ * so the form never "succeeds" in silence. No new code — one per address.
+ */
+export async function sendAlreadySubscribedEmail(input: { email: string }): Promise<void> {
+  const resend = resendClient();
+  if (!resend) return;
+
+  const body = `
+    <p>Ten adres e-mail jest już zapisany do newslettera Well Botany — nic więcej nie trzeba robić.</p>
+    <p>Kod powitalny wysyłamy raz na adres, przy pierwszym zapisie. O kolejnych promocjach napiszemy w newsletterze.</p>
+    <p style="margin-top:24px"><a href="${SITE_URL}/" style="display:inline-block;background:#0f7a5c;color:#fff;padding:12px 24px;border-radius:999px;text-decoration:none;font-weight:600">Przejdź do sklepu</a></p>
+    <p style="margin-top:24px;font-size:12px;color:#767676">To nie Ty? Zignoruj tę wiadomość albo <a href="${unsubscribePageUrl(input.email)}" style="color:#767676">wypisz się</a>.</p>`;
+
+  await sendEmail(resend, {
+    from: EMAIL_FROM,
+    to: input.email,
+    subject: "Jesteś już na liście Well Botany",
+    html: layout("Ten adres jest już zapisany", body),
+    headers: {
+      "List-Unsubscribe": `<${unsubscribeOneClickUrl(input.email)}>`,
+      "List-Unsubscribe-Post": "List-Unsubscribe=One-Click",
+    },
+  });
+}
