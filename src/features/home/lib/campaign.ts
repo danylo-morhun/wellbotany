@@ -23,6 +23,14 @@ export const CAMPAIGNS: Campaign[] = [
     startsAt: new Date("2026-11-23T00:00:00+01:00"),
     endsAt: new Date("2026-12-01T00:00:00+01:00"),
   },
+  {
+    id: "swieta-2026",
+    title: "Na Święta",
+    // Last day to order and pay for delivery before Christmas (marketing plan R6)
+    note: "Obniżki do środy 16.12, godz. 23:59",
+    startsAt: new Date("2026-12-07T00:00:00+01:00"),
+    endsAt: new Date("2026-12-17T00:00:00+01:00"),
+  },
 ];
 
 /** The home page is cached for up to an hour, so the server already renders a
