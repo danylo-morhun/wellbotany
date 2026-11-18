@@ -106,7 +106,7 @@ export default async function HomePage() {
     </FadeInView>,
   ].filter(Boolean);
 
-  // Hero, three doors, campaigns, then the deals: the first screen sells
+  // Hero, three doors, campaigns, then the deals (deals first on phones): the first screen sells
   return (
     <>
       <HomeHero productCount={productCount} hasDeals={!campaign && deals.length > 0} />
@@ -117,20 +117,27 @@ export default async function HomePage() {
           giftFromPln={giftFromPln}
         />
       </HomeBand>
-      {banners.length > 0 && (
-        <HomeBand className="pt-5 md:pt-8">
-          <section aria-label="Kampanie" className="overflow-hidden rounded-[1.75rem]">
-            <HeroSlider banners={banners} />
-          </section>
-        </HomeBand>
-      )}
-      <HomeBand className="pt-8 md:pt-12">
-        {campaign ? (
-          <HomeCampaign campaign={campaign} products={campaignProducts} />
-        ) : (
-          <HomeDeals products={deals} />
+      {/* Phones: products before the banner slider, which repeats the hero */}
+      <div className="flex flex-col">
+        {banners.length > 0 && (
+          <div className="max-md:order-2">
+            <HomeBand className="pt-8">
+              <section aria-label="Kampanie" className="overflow-hidden rounded-[1.75rem]">
+                <HeroSlider banners={banners} />
+              </section>
+            </HomeBand>
+          </div>
         )}
-      </HomeBand>
+        <div className="max-md:order-1">
+          <HomeBand className="pt-8 md:pt-12">
+            {campaign ? (
+              <HomeCampaign campaign={campaign} products={campaignProducts} />
+            ) : (
+              <HomeDeals products={deals} />
+            )}
+          </HomeBand>
+        </div>
+      </div>
       <HomeBand className="pt-6 pb-8 md:pt-8 md:pb-14">
         <TrustStrip slim />
       </HomeBand>
