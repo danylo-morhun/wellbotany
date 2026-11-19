@@ -15,6 +15,8 @@ What runs on the production server, kept here so it can be rebuilt.
   days unpaid, shop summary when the extra 7 days end).
   `wb-review-requests.timer` (11:00 Warsaw → `/api/cron/review-requests`: one review request e-mail
   7 days after shipping, unless already asked; shipments older than 30 days are skipped).
+  `wb-shipment-tracking.timer` (every 30 min 07–22 Warsaw → `/api/cron/shipment-tracking`: epaka
+  parcel state → SHIPPED / DELIVERED, problem or not-handed-over alert e-mailed to the shop once).
 - `wb-pg-backup` → `/usr/local/bin/wb-pg-backup`: dump → `/var/backups/wellbotany` (14 days)
   → B2 via rclone crypt; touches `.backup-ok` / `.offsite-ok`, which `/api/health` checks
   (`BACKUP_DIR` in the env file, Uptime alerts after 27 h).
