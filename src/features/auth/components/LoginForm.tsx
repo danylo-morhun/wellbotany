@@ -14,7 +14,7 @@ export function LoginForm({ callbackUrl }: Props) {
   const [showPassword, setShowPassword] = useState(false);
   const [code, setCode] = useState("");
   // Admin accounts: after the password the action asks for the TOTP code
-  const [needsCode, setNeedsCode] = useState(false);
+  const [needsCode, setNeedsCode] = useState<false | "totp" | "email">(false);
   const codeRef = useRef<HTMLInputElement>(null);
   useEffect(() => {
     if (needsCode) codeRef.current?.focus();
@@ -22,7 +22,7 @@ export function LoginForm({ callbackUrl }: Props) {
 
   const { execute, isPending, hasErrored, result } = useAction(loginCustomer, {
     onSuccess: ({ data }) => {
-      if (data?.needsCode) setNeedsCode(true);
+      if (data?.needsCode) setNeedsCode(data.method);
     },
   });
 
@@ -88,7 +88,7 @@ export function LoginForm({ callbackUrl }: Props) {
       {needsCode && (
         <div>
           <label className="mb-1 block text-sm font-medium" htmlFor="totp-code">
-            Kod z aplikacji uwierzytelniającej
+            {needsCode === "email" ? "Kod z e-maila" : "Kod z aplikacji uwierzytelniającej"}
           </label>
           <input
             id="totp-code"
@@ -103,8 +103,23 @@ export function LoginForm({ callbackUrl }: Props) {
             className={`${inputClass} tracking-[0.3em]`}
           />
           <p className="mt-1 text-xs text-muted-foreground">
-            6 cyfr z Google Authenticator, Authy lub innej aplikacji, w której dodano Well Botany.
+            {needsCode === "email"
+              ? `Wysłaliśmy 6 cyfr na ${email}. Kod jest ważny 10 minut — sprawdź też spam.`
+              : "6 cyfr z Google Authenticator, Authy lub innej aplikacji, w której dodano Well Botany."}
           </p>
+          {needsCode === "email" && (
+            <button
+              type="button"
+              disabled={isPending}
+              onClick={() => {
+                setCode("");
+                execute({ email, password, callbackUrl });
+              }}
+              className="mt-1 text-xs text-primary hover:underline disabled:opacity-50"
+            >
+              Wyślij nowy kod
+            </button>
+          )}
         </div>
       )}
 
