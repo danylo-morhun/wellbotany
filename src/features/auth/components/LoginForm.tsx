@@ -16,13 +16,19 @@ export function LoginForm({ callbackUrl }: Props) {
   // Admin accounts: after the password the action asks for the TOTP code
   const [needsCode, setNeedsCode] = useState<false | "totp" | "email">(false);
   const codeRef = useRef<HTMLInputElement>(null);
+  // Signed in — the full page load to the next page is under way
+  const [navigating, setNavigating] = useState(false);
   useEffect(() => {
     if (needsCode) codeRef.current?.focus();
   }, [needsCode]);
 
   const { execute, isPending, hasErrored, result } = useAction(loginCustomer, {
     onSuccess: ({ data }) => {
-      if (data?.needsCode) setNeedsCode(data.method);
+      if (data?.needsCode) setNeedsCode(data.method ?? "totp");
+      else if (data?.redirectTo) {
+        setNavigating(true);
+        window.location.assign(data.redirectTo);
+      }
     },
   });
 
@@ -125,10 +131,10 @@ export function LoginForm({ callbackUrl }: Props) {
 
       <button
         type="submit"
-        disabled={isPending}
+        disabled={isPending || navigating}
         className="w-full rounded-full bg-primary px-4 py-3 text-sm font-medium text-primary-foreground transition-[transform,background-color,color,border-color] duration-[160ms] ease-[cubic-bezier(0.23,1,0.32,1)] hover:bg-primary-deep active:scale-[0.97] disabled:opacity-50 motion-reduce:transition-none motion-reduce:active:scale-100"
       >
-        {isPending ? "Logowanie..." : "Zaloguj się"}
+        {isPending || navigating ? "Logowanie..." : "Zaloguj się"}
       </button>
     </form>
   );
