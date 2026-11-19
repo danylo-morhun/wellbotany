@@ -37,6 +37,8 @@ export type OrderRow = {
   itemCount: number;
   wantsFaktura: boolean;
   hasCustomerNote: boolean;
+  /** Open delivery problem, already in words */
+  shipmentAlert: string | null;
 };
 
 type BulkStatus = (typeof BULK_ORDER_STATUSES)[number];
@@ -175,6 +177,11 @@ export function OrdersTable({ orders }: { orders: OrderRow[] }) {
                     <Badge tone={ORDER_STATUS_TONE[o.status]} dot>
                       {orderStatusLabel(o.status, o.shippingMethod)}
                     </Badge>
+                    {o.shipmentAlert && (
+                      <p className="mt-0.5 text-xs font-medium text-destructive">
+                        {o.shipmentAlert}
+                      </p>
+                    )}
                   </td>
                   <td className="px-4 py-3 text-right font-medium tabular-nums">
                     {formatPrice(o.totalPln)}

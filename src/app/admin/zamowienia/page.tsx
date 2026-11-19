@@ -12,6 +12,7 @@ import { PAYMENT_LABELS } from "@/features/checkout/lib/payment";
 import { SHIPPING_METHOD_KEYS, shippingLabel } from "@/features/checkout/lib/shipping";
 import { type OrderRow, OrdersTable } from "@/features/orders/components/OrdersTable";
 import { ORDER_VIEWS, resolveOrderView } from "@/features/orders/lib/views";
+import { PACKAGE_STATUS_LABELS } from "@/features/shipping/lib/shipment-status";
 import { pluralPl } from "@/lib/format";
 import { pickupLocation } from "@/lib/pickup-locations";
 import { prisma } from "@/lib/prisma";
@@ -64,10 +65,10 @@ export default async function AdminOrdersPage({
   };
   const where: Prisma.OrderWhereInput = {
     ...baseWhere,
-    ...(view.statuses && { status: { in: view.statuses } }),
   };
+  if (view.where) where.AND = [view.where];
 
-  const [orders, total, statusCounts] = await Promise.all([
+  const [orders, total, viewCounts] = await Promise.all([
     prisma.order.findMany({
       where,
       orderBy: { createdAt: view.oldestFirst ? "asc" : "desc" },
@@ -89,17 +90,17 @@ export default async function AdminOrdersPage({
         shipCity: true,
         wantsFaktura: true,
         noteCustomer: true,
+        shipmentAlert: true,
         items: { select: { quantity: true } },
       },
     }),
     prisma.order.count({ where }),
-    prisma.order.groupBy({ by: ["status"], where: baseWhere, _count: { _all: true } }),
+    Promise.all(
+      ORDER_VIEWS.map((v) =>
+        prisma.order.count({ where: v.where ? { ...baseWhere, AND: [v.where] } : baseWhere }),
+      ),
+    ),
   ]);
-
-  const countFor = (statuses: string[] | null) =>
-    statusCounts
-      .filter((c) => !statuses || statuses.includes(c.status))
-      .reduce((sum, c) => sum + c._count._all, 0);
 
   const now = new Date();
   const rows: OrderRow[] = orders.map((o) => ({
@@ -121,6 +122,9 @@ export default async function AdminOrdersPage({
     itemCount: o.items.reduce((sum, i) => sum + i.quantity, 0),
     wantsFaktura: o.wantsFaktura,
     hasCustomerNote: !!o.noteCustomer?.trim(),
+    shipmentAlert: o.shipmentAlert
+      ? (PACKAGE_STATUS_LABELS[o.shipmentAlert] ?? o.shipmentAlert)
+      : null,
   }));
 
   const tabHref = (key: string) => {
@@ -151,9 +155,11 @@ export default async function AdminOrdersPage({
         aria-label="Widoki zamówień"
         className="-mx-1 mb-4 flex gap-1 overflow-x-auto border-b border-border px-1"
       >
-        {ORDER_VIEWS.map((v) => {
+        {ORDER_VIEWS.map((v, i) => {
           const active = v.key === view.key;
-          const count = countFor(v.statuses);
+          const count = viewCounts[i];
+          // Empty problem tab stays out of the way
+          if (v.key === "problemy" && count === 0 && !active) return null;
           return (
             <Link
               key={v.key}
