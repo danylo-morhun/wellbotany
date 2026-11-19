@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { PageHeader } from "@/app/admin/components/ui";
+import { ChangePasswordForm } from "@/features/auth/components/ChangePasswordForm";
 import { TierPromoForm } from "@/features/promotions/components/TierPromoForm";
 import { ShopSettingsForm } from "@/features/settings/components/ShopSettingsForm";
 import { getShopSettings } from "@/features/settings/lib/shop-settings";
@@ -14,6 +15,7 @@ export default async function AdminSettingsPage() {
       <PageHeader title="Ustawienia sklepu" />
       <ShopSettingsForm settings={settings} />
       <TierPromoForm promo={settings.tierPromo} />
+      <ChangePasswordForm />
     </div>
   );
 }
