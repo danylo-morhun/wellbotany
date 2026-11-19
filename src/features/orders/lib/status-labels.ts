@@ -4,7 +4,8 @@ export const ORDER_STATUS_LABELS: Record<string, string> = {
   PENDING: "Oczekujące",
   PAYMENT_PENDING: "Oczekuje na płatność",
   PAID: "Opłacone",
-  PROCESSING: "W realizacji",
+  // Carrier orders: the epaka label is bought, parcel packed and waiting for the courier
+  PROCESSING: "Spakowane",
   SHIPPED: "Wysłane",
   DELIVERED: "Dostarczone",
   CANCELLED: "Anulowane",
@@ -13,6 +14,7 @@ export const ORDER_STATUS_LABELS: Record<string, string> = {
 
 // Pickup orders reuse SHIPPED/DELIVERED for "ready in store"/"collected".
 const PICKUP_STATUS_LABELS: Record<string, string> = {
+  PROCESSING: "W realizacji",
   SHIPPED: "Gotowe do odbioru",
   DELIVERED: "Odebrane",
 };
