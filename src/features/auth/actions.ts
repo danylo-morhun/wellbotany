@@ -3,6 +3,7 @@
 import bcrypt from "bcryptjs";
 import { cookies } from "next/headers";
 import { AuthError } from "next-auth";
+import { checkEmailCode, sendEmailCode } from "@/features/auth/lib/email-code";
 import { loginPath } from "@/features/auth/lib/login-path";
 import { openTotpSecret, verifyTotp } from "@/features/auth/lib/totp";
 import { CART_COOKIE_NAME, mergeGuestCart } from "@/features/cart/lib/session";
@@ -34,11 +35,16 @@ export const loginCustomer = actionClient
       where: { email: input.email },
       select: {
         id: true,
+        email: true,
         passwordHash: true,
         isAdmin: true,
         totpSecret: true,
         totpEnabledAt: true,
         totpLastStep: true,
+        mfaEmail: true,
+        emailCodeHash: true,
+        emailCodeExpiresAt: true,
+        emailCodeAttempts: true,
       },
     });
     if (!customer?.passwordHash) {
@@ -49,8 +55,24 @@ export const loginCustomer = actionClient
 
     // Admins with TOTP: password first, then the form asks for the code. The
     // check here only gives a clear message — authorize() enforces it again.
-    const totpOn = customer.isAdmin && customer.totpEnabledAt && customer.totpSecret;
-    if (totpOn && !input.code) return { needsCode: true as const };
+    const emailOn = customer.isAdmin && customer.mfaEmail;
+    if (emailOn && !input.code) {
+      try {
+        await sendEmailCode(customer);
+      } catch (err) {
+        console.error("[auth] e-mail login code failed:", err);
+        throw new ActionError("Nie udało się wysłać kodu — spróbuj za chwilę");
+      }
+      return { needsCode: true as const, method: "email" as const };
+    }
+    if (emailOn && input.code && !(await checkEmailCode(customer, input.code))) {
+      throw new ActionError(
+        "Nieprawidłowy lub wygasły kod — sprawdź e-mail albo zaloguj się ponownie po nowy kod",
+      );
+    }
+
+    const totpOn = !emailOn && customer.isAdmin && customer.totpEnabledAt && customer.totpSecret;
+    if (totpOn && !input.code) return { needsCode: true as const, method: "totp" as const };
     if (
       totpOn &&
       input.code &&
@@ -77,7 +99,9 @@ export const loginCustomer = actionClient
         code: input.code ?? "",
         // An admin without TOTP has no admin rights until it is set up
         redirectTo:
-          customer.isAdmin && !totpOn ? `${await loginPath()}/2fa` : afterSignIn(input.callbackUrl),
+          customer.isAdmin && !totpOn && !emailOn
+            ? `${await loginPath()}/2fa`
+            : afterSignIn(input.callbackUrl),
       });
     } catch (err) {
       if (err instanceof AuthError) throw new ActionError("Nieprawidłowy e-mail lub hasło");

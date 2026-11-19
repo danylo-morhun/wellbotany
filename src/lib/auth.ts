@@ -2,6 +2,7 @@ import bcrypt from "bcryptjs";
 import type { NextAuthConfig } from "next-auth";
 import NextAuth, { type DefaultSession } from "next-auth";
 import Credentials from "next-auth/providers/credentials";
+import { consumeEmailCode } from "@/features/auth/lib/email-code";
 import { openTotpSecret, verifyTotp } from "@/features/auth/lib/totp";
 import { prisma } from "./prisma";
 
@@ -45,6 +46,7 @@ const config: NextAuthConfig = {
             totpSecret: true,
             totpEnabledAt: true,
             totpLastStep: true,
+            mfaEmail: true,
           },
         });
         if (!customer?.passwordHash) return null;
@@ -57,6 +59,12 @@ const config: NextAuthConfig = {
         };
 
         if (!customer.isAdmin) return { ...user, role: "CUSTOMER" as const };
+        // E-mail 2FA: the login action sent a one-time code; consume it here
+        if (customer.mfaEmail) {
+          const ok = await consumeEmailCode(customer.id, String(credentials.code ?? ""));
+          if (!ok) return null;
+          return { ...user, role: "ADMIN" as const, mfa: true };
+        }
         // Admin without TOTP: signed in as a customer, sent to set it up
         if (!customer.totpEnabledAt || !customer.totpSecret) {
           return { ...user, role: "CUSTOMER" as const, totpSetup: true };
