@@ -10,6 +10,7 @@ import { buttonVariants } from "@/components/ui/button";
 import { PAYMENT_LABELS } from "@/features/checkout/lib/payment";
 import { CARRIERS, isPointService, shippingLabel } from "@/features/checkout/lib/shipping";
 import { MarkPaidButton } from "@/features/orders/components/MarkPaidButton";
+import { NextStep } from "@/features/orders/components/NextStep";
 import { StatusForm } from "@/features/orders/components/StatusForm";
 import { SubiektEnteredButton } from "@/features/orders/components/SubiektEnteredButton";
 import { RequestReviewButton } from "@/features/reviews/components/RequestReviewButton";
@@ -154,6 +155,22 @@ export default async function AdminOrderDetailPage({ params }: Props) {
     ...(tracksSubiekt ? [{ label: "Wprowadzono do Subiekta", at: order.subiektEnteredAt }] : []),
   ];
 
+  const epakaPanel = (
+    <EpakaShipmentPanel
+      orderId={order.id}
+      epakaOrderId={order.epakaOrderId}
+      trackingNumber={order.trackingNumber}
+      epakaReady={isEpakaConfigured()}
+      receiver={epakaReceiver}
+      senderPoints={senderPoints}
+      defaultPackage={DEFAULT_PACKAGE}
+    />
+  );
+  const labelIsNextStep =
+    !!epakaCourierId &&
+    !order.epakaOrderId &&
+    (order.status === "PAID" || order.status === "PROCESSING");
+
   return (
     <div>
       <PageHeader
@@ -182,6 +199,22 @@ export default async function AdminOrderDetailPage({ params }: Props) {
 
       <div className="grid grid-cols-1 items-start gap-6 lg:grid-cols-[minmax(0,1fr)_340px]">
         <div className="space-y-6">
+          <NextStep
+            order={{
+              id: order.id,
+              status: order.status,
+              shippingMethod: order.shippingMethod,
+              paymentMethod: order.paymentMethod,
+              isPaid,
+              epakaOrderId: order.epakaOrderId,
+              trackingNumber: order.trackingNumber,
+              trackingUrl: order.trackingUrl,
+              shipmentStatus: order.shipmentStatus,
+              shipmentAlert: order.shipmentAlert,
+            }}
+            viaEpaka={!!epakaCourierId}
+            labelForm={labelIsNextStep ? epakaPanel : null}
+          />
           {order.withdrawals.map((w) => (
             <div key={w.id} className="rounded-2xl bg-destructive/10 p-4 text-sm">
               <p className="mb-1 font-semibold text-destructive">
@@ -298,7 +331,7 @@ export default async function AdminOrderDetailPage({ params }: Props) {
             </dl>
           </Panel>
 
-          <Panel title="Status i notatka">
+          <Panel title="Notatka i status ręcznie">
             <StatusForm
               // Remount when status changes elsewhere (e.g. "mark as paid") — the select is uncontrolled
               key={order.status}
@@ -428,18 +461,9 @@ export default async function AdminOrderDetailPage({ params }: Props) {
             )}
           </Panel>
 
-          {epakaCourierId && (
-            <Panel title="Wysyłka epaka">
-              <EpakaShipmentPanel
-                orderId={order.id}
-                epakaOrderId={order.epakaOrderId}
-                trackingNumber={order.trackingNumber}
-                epakaReady={isEpakaConfigured()}
-                receiver={epakaReceiver}
-                senderPoints={senderPoints}
-                defaultPackage={DEFAULT_PACKAGE}
-              />
-            </Panel>
+          {/* Before the label it lives in "Następny krok"; afterwards here, for the PDF and number */}
+          {epakaCourierId && (order.epakaOrderId || !labelIsNextStep) && (
+            <Panel title="Wysyłka epaka">{epakaPanel}</Panel>
           )}
 
           <Panel title="Płatność">
