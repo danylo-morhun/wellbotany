@@ -418,6 +418,14 @@ model Customer {
   totpEnabledAt DateTime?
   totpLastStep  Int?
 
+  // Admin e-mail 2FA instead of TOTP (src/features/auth/lib/email-code.ts):
+  // one-time 6-digit code, stored as an HMAC, 10 min, 5 tries.
+  mfaEmail           Boolean   @default(false)
+  emailCodeHash      String?
+  emailCodeExpiresAt DateTime?
+  emailCodeSentAt    DateTime?
+  emailCodeAttempts  Int       @default(0)
+
   // Link to auth provider (NextAuth / Supabase Auth user ID)
   authUserId String? @unique
 
