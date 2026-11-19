@@ -92,21 +92,27 @@ export const loginCustomer = actionClient
     if (guestCartId) await mergeGuestCart(guestCartId, customer.id);
     if (guestWishlistId) await mergeGuestWishlist(guestWishlistId, customer.id);
 
+    // An admin without TOTP has no admin rights until it is set up
+    const redirectTo =
+      customer.isAdmin && !totpOn && !emailOn
+        ? `${await loginPath()}/2fa`
+        : afterSignIn(input.callbackUrl);
     try {
       await signIn("credentials", {
         email: input.email,
         password: input.password,
         code: input.code ?? "",
-        // An admin without TOTP has no admin rights until it is set up
-        redirectTo:
-          customer.isAdmin && !totpOn && !emailOn
-            ? `${await loginPath()}/2fa`
-            : afterSignIn(input.callbackUrl),
+        redirect: false,
       });
     } catch (err) {
       if (err instanceof AuthError) throw new ActionError("Nieprawidłowy e-mail lub hasło");
-      throw err; // NEXT_REDIRECT — must rethrow
+      throw err;
     }
+    // The form navigates itself (full page load). A server-action redirect
+    // renders the next page inside this response, before the browser holds the
+    // new session cookie — on the admin host that left the admin on the login
+    // form until a manual reload.
+    return { redirectTo };
   });
 
 export const registerCustomer = actionClient
