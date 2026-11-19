@@ -1,10 +1,8 @@
 import { formatReceivedAt, withdrawalStatement } from "@/features/withdrawal/lib/statement";
 import { prisma } from "@/lib/prisma";
 import { SELLER } from "@/lib/seller";
-import { EMAIL_FROM, resendClient, sendEmail } from "./client";
+import { EMAIL_FROM, resendClient, sendEmail, shopInbox } from "./client";
 import { escapeHtml, layout } from "./layout";
-
-const SHOP_NOTIFY_FALLBACK = "kontakt@wellbotany.pl";
 
 /**
  * Acknowledgement on a durable medium with the statement and its date and time
@@ -59,7 +57,7 @@ export async function sendWithdrawalEmails(withdrawalId: string): Promise<void> 
     }),
     sendEmail(resend, {
       from: EMAIL_FROM,
-      to: process.env.SHOP_NOTIFY_EMAIL || SHOP_NOTIFY_FALLBACK,
+      to: shopInbox(),
       replyTo: withdrawal.email,
       subject: `Odstąpienie od umowy — ${orderNumber}`,
       html: layout("Odstąpienie od umowy", shopBody),
