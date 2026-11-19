@@ -22,3 +22,12 @@ export async function sendEmail(
   const { error } = await resend.emails.send(payload);
   if (error) throw new Error(`Resend ${error.name}: ${error.message}`);
 }
+
+/** Shop inbox(es) for order notifications — SHOP_NOTIFY_EMAIL may list several, comma-separated. */
+export function shopInbox(): string[] {
+  const list = (process.env.SHOP_NOTIFY_EMAIL ?? "")
+    .split(",")
+    .map((a) => a.trim())
+    .filter(Boolean);
+  return list.length > 0 ? list : ["kontakt@wellbotany.pl"];
+}

@@ -4,7 +4,7 @@ import { formatPrice } from "@/lib/format";
 import { PICKUP_HOLD_DAYS, pickupLocation } from "@/lib/pickup-locations";
 import { prisma } from "@/lib/prisma";
 import { BANK_TRANSFER_DETAILS } from "@/lib/shop-config";
-import { EMAIL_FROM, resendClient, sendEmail } from "./client";
+import { EMAIL_FROM, resendClient, sendEmail, shopInbox } from "./client";
 import { contractInfoHtml } from "./contract-info";
 import { escapeHtml, layout } from "./layout";
 
@@ -195,8 +195,6 @@ export async function sendReviewRequestEmail(orderId: string): Promise<void> {
   });
 }
 
-const SHOP_NOTIFY_FALLBACK = "kontakt@wellbotany.pl";
-
 /** "Nowe zamówienie" for the shop inbox (SHOP_NOTIFY_EMAIL) — everything needed to pack and ship. */
 export async function sendShopOrderNotification(orderNumber: string): Promise<void> {
   const resend = resendClient();
@@ -285,7 +283,7 @@ export async function sendShopOrderNotification(orderNumber: string): Promise<vo
 
   await sendEmail(resend, {
     from: EMAIL_FROM,
-    to: process.env.SHOP_NOTIFY_EMAIL || SHOP_NOTIFY_FALLBACK,
+    to: shopInbox(),
     replyTo: order.customerEmail,
     subject: `Nowe zamówienie ${order.orderNumber} — ${formatPrice(order.totalPln)}`,
     html: layout(`Nowe zamówienie ${e(order.orderNumber)}`, body),

@@ -2,12 +2,12 @@ import { orderAccessToken } from "@/features/checkout/lib/order-access";
 import { extraDueDay, plDate } from "@/features/orders/lib/payment-reminders";
 import { formatPrice } from "@/lib/format";
 import { prisma } from "@/lib/prisma";
+import { SELLER } from "@/lib/seller";
 import { BANK_TRANSFER_DETAILS } from "@/lib/shop-config";
-import { EMAIL_FROM, resendClient, sendEmail } from "./client";
+import { EMAIL_FROM, resendClient, sendEmail, shopInbox } from "./client";
 import { escapeHtml, layout } from "./layout";
 
 const SITE = process.env.NEXT_PUBLIC_SITE_URL ?? "https://wellbotany.pl";
-const SHOP_INBOX = process.env.SHOP_NOTIFY_EMAIL || "kontakt@wellbotany.pl";
 
 type ReminderOrder = {
   orderNumber: string;
@@ -50,7 +50,7 @@ export async function sendPaymentReminderEmail(
   await sendEmail(resend, {
     from: EMAIL_FROM,
     to: order.customerEmail,
-    replyTo: SHOP_INBOX,
+    replyTo: SELLER.email,
     subject: `Przypomnienie o płatności — zamówienie ${order.orderNumber}`,
     html: layout("Przypomnienie o płatności", body),
   });
@@ -83,7 +83,7 @@ export async function sendPaymentReminderSummary(
   `;
   await sendEmail(resend, {
     from: EMAIL_FROM,
-    to: SHOP_INBOX,
+    to: shopInbox(),
     subject: `Nieopłacone zamówienia: ${expired.length} do anulowania, ${reminded.length} przypomnień`,
     html: layout("Nieopłacone zamówienia", body),
   });
@@ -120,7 +120,7 @@ export async function sendOrderCancelledEmail(orderId: string): Promise<void> {
   await sendEmail(resend, {
     from: EMAIL_FROM,
     to: order.customerEmail,
-    replyTo: SHOP_INBOX,
+    replyTo: SELLER.email,
     subject: `Zamówienie ${order.orderNumber} zostało anulowane`,
     html: layout(
       "Zamówienie anulowane",
