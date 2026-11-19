@@ -119,7 +119,8 @@ export function EpakaShipmentPanel({
           Pobierz etykietę (PDF)
         </a>
         <p className="text-xs text-muted-foreground">
-          Po nadaniu paczki zmień status na „Wysłane” — klient dostanie e-mail z numerem.
+          Status zmieni się na „Wysłane” sam, gdy przewoźnik zeskanuje paczkę — klient dostanie
+          wtedy e-mail z numerem.
         </p>
       </div>
     );
@@ -132,6 +133,10 @@ export function EpakaShipmentPanel({
       </p>
     );
   }
+
+  const receiverIncomplete = (
+    ["firstName", "lastName", "street", "houseNumber", "postCode", "city", "phone"] as const
+  ).some((k) => !receiver[k]?.trim());
 
   function submit() {
     if (mode === "dropOff" && !senderPoints.some((p) => p.id === senderPointId)) {
@@ -161,22 +166,38 @@ export function EpakaShipmentPanel({
 
   return (
     <div className="space-y-4">
-      <div className="grid grid-cols-2 gap-3">
-        {RECEIVER_FIELDS.filter((f) => f.key !== "pointId" || initialReceiver.pointId).map((f) => (
-          <Field
-            key={f.key}
-            label={f.label}
-            htmlFor={`epaka-${f.key}`}
-            className={f.wide ? "col-span-2" : undefined}
-          >
-            <TextInput
-              id={`epaka-${f.key}`}
-              value={receiver[f.key] ?? ""}
-              onChange={(e) => setReceiver((r) => ({ ...r, [f.key]: e.target.value }))}
-            />
-          </Field>
-        ))}
-      </div>
+      {/* Filled from the order — open only when something epaka needs is missing */}
+      <details open={receiverIncomplete} className="rounded-xl bg-muted/50 px-3 py-2 text-sm">
+        <summary className="cursor-pointer select-none">
+          <span className="font-medium">Odbiorca:</span> {receiver.firstName} {receiver.lastName}
+          {receiver.pointId ? `, punkt ${receiver.pointId}` : ""}
+          {" · "}
+          {receiver.street} {receiver.houseNumber}, {receiver.postCode} {receiver.city}
+          {receiverIncomplete ? (
+            <span className="ml-1 font-medium text-destructive">— uzupełnij dane</span>
+          ) : (
+            <span className="ml-1 text-primary">· zmień</span>
+          )}
+        </summary>
+        <div className="mt-3 grid grid-cols-2 gap-3">
+          {RECEIVER_FIELDS.filter((f) => f.key !== "pointId" || initialReceiver.pointId).map(
+            (f) => (
+              <Field
+                key={f.key}
+                label={f.label}
+                htmlFor={`epaka-${f.key}`}
+                className={f.wide ? "col-span-2" : undefined}
+              >
+                <TextInput
+                  id={`epaka-${f.key}`}
+                  value={receiver[f.key] ?? ""}
+                  onChange={(e) => setReceiver((r) => ({ ...r, [f.key]: e.target.value }))}
+                />
+              </Field>
+            ),
+          )}
+        </div>
+      </details>
 
       <div className="grid grid-cols-4 gap-2">
         {PACKAGE_FIELDS.map((f) => (
