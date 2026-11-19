@@ -837,10 +837,17 @@ model Order {
   allegroOrderId String? @unique // non-null when order originated from Allegro
 
   // ── SHIPPING TRACKING ──
-  trackingNumber String?
-  trackingUrl    String?
+  trackingNumber   String?
+  trackingUrl      String?
   // epaka.pl order id once the shipment is created from the admin; label PDF is fetched by it
-  epakaOrderId   Int?
+  epakaOrderId     Int?
+  // When the epaka label was bought (status → Spakowane); a parcel not handed over a day later raises an alert
+  labelCreatedAt   DateTime?
+  // epaka packageStatus code (package_on_transit, package_delivered, …), polled by wb-shipment-tracking
+  shipmentStatus   String?
+  shipmentStatusAt DateTime?
+  // Open delivery problem (epaka code or "not_handed_over"), e-mailed to the shop once; cleared when the parcel moves on
+  shipmentAlert    String?
 
   items OrderItem[]
 
