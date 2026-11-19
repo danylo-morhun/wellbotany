@@ -218,3 +218,32 @@ export async function findEpakaPoint(
     return null;
   }
 }
+
+/** Parcel state codes from GET /v1/user/orders/{id} (packageStatus). */
+export type EpakaPackageStatus =
+  | "package_no_send"
+  | "package_received_from_sender"
+  | "package_on_transit"
+  | "package_in_delivery"
+  | "package_delivered"
+  | "package_delivery_problem"
+  | "package_damaged"
+  | "wrong_address"
+  | "return_to_sender"
+  | "package_sending_in_point"
+  | "package_waiting_in_point"
+  | "package_sending_in_paczkomat"
+  | "package_waiting_in_paczkomat";
+
+/** Current parcel and epaka order state; packageStatus is null until the courier reports anything. */
+export async function getEpakaOrderStatus(
+  orderId: number,
+): Promise<{ packageStatus: EpakaPackageStatus | null; orderStatus: string | null }> {
+  const data = await call<{ packageStatus?: string | null; orderStatus?: string | null }>(
+    `/v1/user/orders/${orderId}`,
+  );
+  return {
+    packageStatus: (data.packageStatus as EpakaPackageStatus | null | undefined) ?? null,
+    orderStatus: data.orderStatus ?? null,
+  };
+}
