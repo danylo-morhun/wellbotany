@@ -289,3 +289,43 @@ export async function sendShopOrderNotification(orderNumber: string): Promise<vo
     html: layout(`Nowe zamówienie ${e(order.orderNumber)}`, body),
   });
 }
+
+/** Delivery problem or a parcel not handed over — to the shop inbox, once per problem. */
+export async function sendShipmentAlertEmail(orderId: string, problem: string): Promise<void> {
+  const resend = resendClient();
+  if (!resend) return;
+  const order = await prisma.order.findUnique({
+    where: { id: orderId },
+    select: {
+      id: true,
+      orderNumber: true,
+      customerName: true,
+      customerEmail: true,
+      customerPhone: true,
+      trackingNumber: true,
+      trackingUrl: true,
+    },
+  });
+  if (!order) return;
+  const e = (value: string | null | undefined) => escapeHtml(value ?? "");
+  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "https://wellbotany.pl";
+  const tracking = order.trackingNumber
+    ? order.trackingUrl
+      ? `<a href="${e(order.trackingUrl)}">${e(order.trackingNumber)}</a>`
+      : e(order.trackingNumber)
+    : "—";
+
+  await sendEmail(resend, {
+    from: EMAIL_FROM,
+    to: shopInbox(),
+    replyTo: order.customerEmail,
+    subject: `Problem z przesyłką ${order.orderNumber}: ${problem}`,
+    html: layout(
+      `Problem z przesyłką ${e(order.orderNumber)}`,
+      `<p><strong>${e(problem)}</strong></p>
+       <p>Przesyłka: ${tracking}</p>
+       <p>${e(order.customerName)}<br>${e(order.customerEmail)}${order.customerPhone ? `<br>${e(order.customerPhone)}` : ""}</p>
+       <p style="margin-top:24px"><a href="${siteUrl}/admin/zamowienia/${order.id}">Otwórz zamówienie w panelu</a></p>`,
+    ),
+  });
+}
