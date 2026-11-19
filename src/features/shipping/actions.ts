@@ -118,8 +118,16 @@ export const createEpakaShipment = adminActionClient
       // Saved before anything else can fail — the shipment is already paid for
       await prisma.order.update({
         where: { id: input.orderId },
-        data: { epakaOrderId: created.orderId },
+        data: { epakaOrderId: created.orderId, labelCreatedAt: new Date() },
       });
+      // Label bought = packed and waiting for the courier ("Spakowane"); the
+      // tracking cron moves it to SHIPPED once the carrier scans the parcel
+      await prisma.order.updateMany({
+        where: { id: input.orderId, status: "PAID" },
+        data: { status: "PROCESSING" },
+      });
+      revalidatePath("/admin/zamowienia");
+      revalidatePath(`/admin/zamowienia/${input.orderId}`);
       const trackingNumber = await saveLabelNumber(
         input.orderId,
         created.orderId,
