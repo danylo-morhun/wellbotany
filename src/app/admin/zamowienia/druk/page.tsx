@@ -39,7 +39,7 @@ export default async function PackingSlipsPage({ searchParams }: Props) {
           return (
             <article
               key={order.id}
-              className="rounded-2xl bg-card p-8 text-sm shadow-card print:break-after-page print:rounded-none print:p-0 print:shadow-none"
+              className="rounded-2xl bg-card p-8 text-sm shadow-card print:break-after-page print:last:break-after-auto print:rounded-none print:p-0 print:shadow-none"
             >
               <header className="mb-6 flex items-start justify-between gap-6 border-b border-border pb-4">
                 <div>
