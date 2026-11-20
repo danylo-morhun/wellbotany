@@ -1,5 +1,5 @@
 import { type NextRequest, NextResponse } from "next/server";
-import type { PickupPoint } from "@/features/checkout/lib/points";
+import { epakaPointQuery, exactCodeFirst, type PickupPoint } from "@/features/checkout/lib/points";
 import { CARRIERS, isPointService } from "@/features/checkout/lib/shipping";
 
 // Pickup-point search for the checkout map. Proxied because the epaka API sends
@@ -66,7 +66,7 @@ export async function GET(req: NextRequest) {
     upstream.set("lat", lat.toFixed(4));
     upstream.set("lon", lon.toFixed(4));
   } else {
-    upstream.set("query", query);
+    upstream.set("query", epakaPointQuery(service, query));
   }
 
   try {
@@ -77,7 +77,7 @@ export async function GET(req: NextRequest) {
     });
     if (!res.ok) throw new Error(`epaka points ${res.status}`);
     const data = (await res.json()) as { points?: EpakaPoint[] };
-    const points = (data.points ?? []).map(toPoint);
+    const points = exactCodeFirst((data.points ?? []).map(toPoint), query);
     return NextResponse.json(
       { points },
       { headers: { "Cache-Control": "public, s-maxage=3600, stale-while-revalidate=86400" } },
