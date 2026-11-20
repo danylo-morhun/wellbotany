@@ -49,13 +49,15 @@ const ADS_FRAME = "https://www.googletagmanager.com";
 const GCR_FRAME = "https://www.google.com";
 
 // Pickup-point map on checkout: OpenStreetMap raster tiles. Point data comes
-// from our own /api/points (proxy to epaka), so no extra connect-src.
+// from our own /api/points (proxy to epaka), so no extra connect-src. Allowed
+// in every CSP: a client-side nav into /zamowienie (e.g. from /koszyk) keeps
+// the first page's CSP, so a checkout-only rule left the map blank until reload.
 const POINT_MAP_IMG = "https://tile.openstreetmap.org";
 
-function buildStrictCsp(nonce: string, withPointMap: boolean): string {
+function buildStrictCsp(nonce: string): string {
   return [
     "default-src 'self'",
-    `img-src 'self' data: blob: ${IMG_SRC_HOSTS} ${ADS_HOSTS}${withPointMap ? ` ${POINT_MAP_IMG}` : ""}`,
+    `img-src 'self' data: blob: ${IMG_SRC_HOSTS} ${ADS_HOSTS} ${POINT_MAP_IMG}`,
     // 'strict-dynamic' trusts scripts loaded by an already-nonce'd script
     // (e.g. Google Analytics' gtag.js pulling in further tag scripts).
     `script-src 'self' 'nonce-${nonce}' '${THEME_INIT_SCRIPT_HASH}' '${COOKIE_CONSENT_SCRIPT_HASH}' 'strict-dynamic'`,
@@ -82,7 +84,7 @@ function buildStrictCsp(nonce: string, withPointMap: boolean): string {
 function buildRelaxedCsp(): string {
   return [
     "default-src 'self'",
-    `img-src 'self' data: blob: ${IMG_SRC_HOSTS} ${ADS_HOSTS}`,
+    `img-src 'self' data: blob: ${IMG_SRC_HOSTS} ${ADS_HOSTS} ${POINT_MAP_IMG}`,
     "script-src 'self' 'unsafe-inline' https://www.googletagmanager.com https://www.googleadservices.com https://www.google.com https://apis.google.com",
     "style-src 'self' 'unsafe-inline'",
     "font-src 'self'",
@@ -108,7 +110,7 @@ function withCsp(req: NextRequest): NextResponse {
   }
 
   const nonce = Buffer.from(crypto.randomUUID()).toString("base64");
-  const csp = buildStrictCsp(nonce, req.nextUrl.pathname === "/zamowienie");
+  const csp = buildStrictCsp(nonce);
 
   const requestHeaders = new Headers(req.headers);
   requestHeaders.set("x-nonce", nonce);
