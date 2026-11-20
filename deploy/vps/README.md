@@ -24,7 +24,7 @@ What runs on the production server, kept here so it can be rebuilt.
 - Redis 7 (`redis-server`): localhost only, password, 128 MB, `volatile-lru`; settings in
   `/etc/redis/conf.d-wellbotany.conf` (included from `redis.conf`), URL = `REDIS_URL`.
 - Kernel updates: unattended-upgrades reboots at 04:30 when needed (`52wellbotany-reboot`).
-- nginx: TLS + proxy, `/_next/static/` from disk, gzip, `admin.wellbotany.pl` vhost.
+- nginx: TLS + proxy, `/_next/static/` from disk, gzip + Brotli (`libnginx-mod-http-brotli-filter`, `conf.d/11-brotli.conf`), `admin.wellbotany.pl` vhost.
 
 Deploys: `.github/workflows/deploy.yml` (nightly / by hand) or `scripts/deploy-prod.sh`.
 Rollback: `ssh wb-vps wb-deploy rollback`.
