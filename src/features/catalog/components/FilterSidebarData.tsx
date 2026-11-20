@@ -7,6 +7,7 @@ import {
   getTags,
   resolveCatalogFilters,
 } from "../actions";
+import { toFacetBrand, toFacetCategory, toFacetTag } from "../lib/filter-facets";
 import { FilterSidebar } from "./FilterSidebar";
 
 type Props = {
@@ -35,15 +36,15 @@ export async function FilterSidebarData({
   ]);
 
   const scopedCategories = showCategories
-    ? categories.map((c) => ({ ...c, productCount: categoryCounts.get(c.id) ?? 0 }))
+    ? categories.map((c) => toFacetCategory({ ...c, productCount: categoryCounts.get(c.id) ?? 0 }))
     : [];
-  const scopedBrands = applyBrandFacetCounts(brands, brandCounts);
+  const scopedBrands = applyBrandFacetCounts(brands, brandCounts).map(toFacetBrand);
 
   return (
     <FilterSidebar
       categories={scopedCategories}
       brands={scopedBrands}
-      tags={tags}
+      tags={tags.map(toFacetTag)}
       basePath={basePath}
       impliedCategory={categoryOverride}
       impliedBrand={brandOverride}

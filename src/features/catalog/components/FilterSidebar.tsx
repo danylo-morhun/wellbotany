@@ -4,13 +4,13 @@ import { Check, ChevronRight } from "lucide-react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useCallback, useEffect, useState } from "react";
 import { Checkbox } from "@/components/ui/checkbox";
-import type { BrandItem, CategoryItem, TagItem } from "../actions";
+import type { FacetBrand, FacetCategory, FacetTag } from "../lib/filter-facets";
 import { SearchInput } from "./SearchInput";
 
 type Props = {
-  categories: CategoryItem[];
-  brands: BrandItem[];
-  tags: TagItem[];
+  categories: FacetCategory[];
+  brands: FacetBrand[];
+  tags: FacetTag[];
   basePath?: string;
   /** Category implied by the current route (e.g. `/kategoria/sport`) but not present in the URL's query string — shown as checked, and included when toggling other categories. */
   impliedCategory?: string;
@@ -25,7 +25,7 @@ function withZeroCountsLast<T>(items: T[], count: (item: T) => number): T[] {
   return [...items].sort((a, b) => (count(a) === 0 ? 1 : 0) - (count(b) === 0 ? 1 : 0));
 }
 
-const categoryCount = (c: CategoryItem) => c.productCount;
+const categoryCount = (c: FacetCategory) => c.productCount;
 const brandCount = (b: { _count: { products: number } }) => b._count.products;
 
 function CheckboxRow({

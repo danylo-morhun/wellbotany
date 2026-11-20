@@ -10,14 +10,14 @@ import {
   SheetHeader,
   SheetTitle,
 } from "@/components/ui/sheet";
-import type { BrandItem, CategoryItem, TagItem } from "../actions";
 import { activeFilterCount } from "../lib/active-filters";
+import type { FacetBrand, FacetCategory, FacetTag } from "../lib/filter-facets";
 import { FilterSidebar } from "./FilterSidebar";
 
 type Props = {
-  categories: CategoryItem[];
-  brands: BrandItem[];
-  tags: TagItem[];
+  categories: FacetCategory[];
+  brands: FacetBrand[];
+  tags: FacetTag[];
   basePath?: string;
   /** Passed through to FilterSidebar, for category and brand pages */
   impliedCategory?: string;
