@@ -1,15 +1,17 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { BreadcrumbJsonLd } from "@/features/catalog/components/Breadcrumbs";
 import {
   GCR_MERCHANT_ID,
   GOOGLE_ADS_ENABLED,
   MARKETING_ENABLED,
   META_ENABLED,
 } from "@/lib/marketing-config";
+import { pageSeo } from "@/lib/seo";
 
 export const metadata: Metadata = {
   title: "Polityka cookies",
-  alternates: { canonical: "/cookies" },
+  ...pageSeo("/cookies"),
   description: "Informacje o plikach cookies używanych w sklepie Well Botany.",
 };
 
@@ -65,6 +67,12 @@ const cookieTypes = [
 export default function CookiesPage() {
   return (
     <div className="container mx-auto max-w-3xl px-4 py-12">
+      <BreadcrumbJsonLd
+        items={[
+          { name: "Strona główna", href: "/" },
+          { name: "Polityka cookies", href: "/cookies" },
+        ]}
+      />
       <h1 className="mb-8 text-3xl">Polityka cookies</h1>
 
       <div className="space-y-10 text-sm leading-relaxed">

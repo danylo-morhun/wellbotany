@@ -1,13 +1,15 @@
 import Image from "next/image";
 import Link from "next/link";
 import { getCategories } from "@/features/catalog/actions";
+import { BreadcrumbJsonLd } from "@/features/catalog/components/Breadcrumbs";
 import { childrenOf } from "@/features/catalog/lib/nav";
 import { categoryIconFor } from "@/lib/category-icons";
 import { pluralPl } from "@/lib/format";
+import { pageSeo } from "@/lib/seo";
 
 export const metadata = {
   title: "Kategorie",
-  alternates: { canonical: "/kategorie" },
+  ...pageSeo("/kategorie"),
   description:
     "Suplementy, witaminy i zdrowa żywność według kategorii i potrzeb: odporność, sen, stawy, trawienie.",
 };
@@ -21,6 +23,12 @@ export default async function KategoriePage() {
 
   return (
     <div className="container mx-auto max-w-6xl px-4 py-12">
+      <BreadcrumbJsonLd
+        items={[
+          { name: "Strona główna", href: "/" },
+          { name: "Kategorie", href: "/kategorie" },
+        ]}
+      />
       <div className="mb-10">
         <h1 className="text-4xl font-bold tracking-tight">Kategorie</h1>
         <p className="mt-2 text-muted-foreground">Znajdź produkty dopasowane do Twoich potrzeb</p>

@@ -11,7 +11,13 @@ import { MIN_LISTED_PRODUCTS } from "@/features/catalog/lib/nav";
 import { pluralizeProducts } from "@/lib/format";
 import { prisma } from "@/lib/prisma";
 import { sanitizeRichText } from "@/lib/sanitize";
-import { buildFaqJsonLd, buildListingSeo, buildPageTitle, toJsonLdScript } from "@/lib/seo";
+import {
+  buildFaqJsonLd,
+  buildListingSeo,
+  buildPageTitle,
+  pageSeo,
+  toJsonLdScript,
+} from "@/lib/seo";
 import {
   getCategories,
   getCategoryBySlug,
@@ -51,7 +57,7 @@ export async function generateMetadata({ params, searchParams }: Props): Promise
       category.metaDescPl ??
       category.descriptionPl ??
       `${heading} – ${productCount} ${pluralizeProducts(productCount)} w sklepie Well Botany. Sprawdź skład i ceny. Wysyłka do paczkomatu, punktu odbioru lub kurierem.`,
-    alternates: { canonical: seo.canonical },
+    ...pageSeo(seo.canonical),
     // A near-empty listing is a thin page; index it once it fills up
     ...((seo.noindex || productCount < MIN_LISTED_PRODUCTS) && {
       robots: { index: false, follow: true },

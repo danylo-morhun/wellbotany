@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import { publicImageUrl } from "@/lib/image-loader";
 import { SOCIAL_LINKS } from "@/lib/seller";
 
@@ -11,6 +12,39 @@ export const DEFAULT_OG_IMAGE = {
   height: 630,
   alt: "Well Botany — suplementy diety, zioła i zdrowa żywność",
 };
+
+type PageOpenGraph = {
+  type?: "website" | "article";
+  /** Only when it should differ from the page <title>; Next fills it in otherwise */
+  title?: string;
+  description?: string;
+  images?: { url: string; width?: number; height?: number; alt?: string }[];
+};
+
+/**
+ * Canonical + Open Graph for a public page. og:url always equals the
+ * canonical. A page's `openGraph` replaces the layout's whole object (Next
+ * merges metadata one key deep), so the shared fields and the default image
+ * live here. og:title and og:description are left out unless passed: Next
+ * then fills them from the page's own title and description.
+ */
+export function pageSeo(
+  canonical: string,
+  og: PageOpenGraph = {},
+): Pick<Metadata, "alternates" | "openGraph"> {
+  return {
+    alternates: { canonical },
+    openGraph: {
+      type: og.type ?? "website",
+      locale: "pl_PL",
+      siteName: "Well Botany",
+      url: canonical,
+      ...(og.title && { title: og.title }),
+      ...(og.description && { description: og.description }),
+      images: og.images ?? [DEFAULT_OG_IMAGE],
+    },
+  };
+}
 
 /**
  * JSON.stringify output can contain "</script>" if a field holds that literal
@@ -173,8 +207,10 @@ export function buildWebsiteJsonLd() {
   return {
     "@context": "https://schema.org",
     "@type": "WebSite",
+    "@id": `${siteUrl}/#website`,
     name: "Well Botany",
     url: siteUrl,
+    publisher: { "@id": organizationId(siteUrl) },
     potentialAction: {
       "@type": "SearchAction",
       target: `${siteUrl}/katalog?szukaj={search_term_string}`,
@@ -183,7 +219,7 @@ export function buildWebsiteJsonLd() {
   };
 }
 
-/** Guide/glossary page. Publisher = the shop until named reviewers exist. */
+/** Guide/glossary page. Author = the shop: posts have no named author yet, only an optional reviewer. */
 export function buildArticleJsonLd(article: {
   headline: string;
   description: string;
@@ -194,18 +230,21 @@ export function buildArticleJsonLd(article: {
   reviewedBy?: string | null;
 }) {
   const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "https://wellbotany.pl";
+  const url = `${siteUrl}${article.path}`;
   return {
     "@context": "https://schema.org",
     "@type": "Article",
     headline: article.headline,
     description: article.description,
-    mainEntityOfPage: `${siteUrl}${article.path}`,
+    // A declared node, not a bare URL: validators read a bare URL here as an @id nothing defines
+    mainEntityOfPage: { "@type": "WebPage", "@id": url, url },
     datePublished: article.datePublished.toISOString(),
     dateModified: article.dateModified.toISOString(),
     inLanguage: "pl-PL",
     author: { "@id": organizationId(siteUrl) },
     publisher: { "@id": organizationId(siteUrl) },
-    ...(article.image && { image: publicImageUrl(article.image) }),
+    // Google wants an image on every Article; the share image stands in for a missing cover
+    image: article.image ? publicImageUrl(article.image) : `${siteUrl}${DEFAULT_OG_IMAGE.url}`,
     ...(article.reviewedBy && {
       reviewedBy: { "@type": "Person", name: article.reviewedBy },
     }),

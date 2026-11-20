@@ -3,10 +3,11 @@ import { MAIN_IMAGE_FIRST } from "@/features/catalog/lib/main-image";
 import { GiftBuilder } from "@/features/gift-sets/components/GiftBuilder";
 import { DEFAULT_GIFT_BUILDER_POLICY } from "@/features/gift-sets/lib/pricing";
 import { prisma } from "@/lib/prisma";
+import { pageSeo } from "@/lib/seo";
 
 export const metadata: Metadata = {
   title: "Złóż własny zestaw prezentowy",
-  alternates: { canonical: "/zestawy-prezentowe/stworz" },
+  ...pageSeo("/zestawy-prezentowe/stworz"),
 };
 
 export default async function GiftBuilderPage() {

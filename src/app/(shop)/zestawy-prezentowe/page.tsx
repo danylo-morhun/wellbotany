@@ -1,13 +1,15 @@
 import { ArrowRight, Sparkles } from "lucide-react";
 import type { Metadata } from "next";
 import Link from "next/link";
+import { BreadcrumbJsonLd } from "@/features/catalog/components/Breadcrumbs";
 import { GiftSetCard } from "@/features/gift-sets/components/GiftSetCard";
 import { GIFT_SET_ITEM_IMAGES, toGiftSetListItem } from "@/features/gift-sets/lib/homepage";
 import { prisma } from "@/lib/prisma";
+import { pageSeo } from "@/lib/seo";
 
 export const metadata: Metadata = {
   title: "Zestawy prezentowe",
-  alternates: { canonical: "/zestawy-prezentowe" },
+  ...pageSeo("/zestawy-prezentowe"),
 };
 
 export default async function GiftSetsPage() {
@@ -27,6 +29,12 @@ export default async function GiftSetsPage() {
 
   return (
     <div className="mx-auto max-w-7xl px-4 py-10 sm:px-6 lg:px-8">
+      <BreadcrumbJsonLd
+        items={[
+          { name: "Strona główna", href: "/" },
+          { name: "Zestawy prezentowe", href: "/zestawy-prezentowe" },
+        ]}
+      />
       <div className="mb-8">
         <h1 className="text-3xl font-bold tracking-tight">Zestawy prezentowe</h1>
         <p className="mt-2 text-muted-foreground">

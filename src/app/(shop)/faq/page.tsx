@@ -1,17 +1,18 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { BreadcrumbJsonLd } from "@/features/catalog/components/Breadcrumbs";
 import { getShippingRates } from "@/features/checkout/lib/shipping-rates";
 import { isP24Enabled } from "@/features/przelewy24/lib/config";
 import { getShopSettings } from "@/features/settings/lib/shop-settings";
 import { formatPriceCompact } from "@/lib/format";
 import { PICKUP_HOLD_DAYS } from "@/lib/pickup-locations";
-import { buildFaqJsonLd, toJsonLdScript } from "@/lib/seo";
+import { buildFaqJsonLd, pageSeo, toJsonLdScript } from "@/lib/seo";
 
 export const dynamic = "force-static";
 
 export const metadata: Metadata = {
   title: "Najczęściej zadawane pytania (FAQ)",
-  alternates: { canonical: "/faq" },
+  ...pageSeo("/faq"),
   description:
     "Odpowiedzi na pytania o zamówienia, dostawę, płatności, zwroty, fakturę oraz bezpieczne stosowanie suplementów diety w Well Botany.",
 };
@@ -208,6 +209,12 @@ export default async function FaqPage() {
 
   return (
     <div className="container mx-auto max-w-prose px-4 py-12">
+      <BreadcrumbJsonLd
+        items={[
+          { name: "Strona główna", href: "/" },
+          { name: "FAQ", href: "/faq" },
+        ]}
+      />
       <script
         type="application/ld+json"
         // biome-ignore lint/security/noDangerouslySetInnerHtml: sanitized by toJsonLdScript

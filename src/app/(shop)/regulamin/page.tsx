@@ -1,13 +1,15 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { BreadcrumbJsonLd } from "@/features/catalog/components/Breadcrumbs";
 import { getShippingRates } from "@/features/checkout/lib/shipping-rates";
 import { isP24Enabled } from "@/features/przelewy24/lib/config";
+import { pageSeo } from "@/lib/seo";
 
 export const dynamic = "force-static";
 
 export const metadata: Metadata = {
   title: "Regulamin",
-  alternates: { canonical: "/regulamin" },
+  ...pageSeo("/regulamin"),
   description: "Regulamin sklepu internetowego Well Botany.",
 };
 
@@ -43,6 +45,12 @@ export default async function RegulaminPage() {
   const pickup = (await getShippingRates()).some((r) => r.method === "PICKUP");
   return (
     <div className="container mx-auto max-w-3xl px-4 py-12">
+      <BreadcrumbJsonLd
+        items={[
+          { name: "Strona główna", href: "/" },
+          { name: "Regulamin", href: "/regulamin" },
+        ]}
+      />
       <h1 className="mb-2 text-3xl">Regulamin sklepu internetowego</h1>
       <p className="mb-8 text-sm text-muted-foreground">
         Określa m.in. zasady zawierania umów sprzedaży poprzez Sklep oraz najważniejsze informacje o

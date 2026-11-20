@@ -6,7 +6,7 @@ import { CategoryProductResults } from "@/features/catalog/components/CategoryPr
 import { FilterDrawerButtonData } from "@/features/catalog/components/FilterDrawerButtonData";
 import { FilterSidebarData } from "@/features/catalog/components/FilterSidebarData";
 import { ProductGridSkeleton } from "@/features/catalog/components/ProductGridSkeleton";
-import { buildListingSeo } from "@/lib/seo";
+import { buildListingSeo, pageSeo } from "@/lib/seo";
 import { getBrands, getCategories, getTags } from "../../../features/catalog/actions";
 
 type Props = {
@@ -19,7 +19,7 @@ export async function generateMetadata({ searchParams }: Props): Promise<Metadat
     title: `Katalog produktów${seo.titleSuffix}`,
     description:
       "Przeglądaj nasz szeroki wybór suplementów diety, witamin, ziół i zdrowej żywności. Filtruj według kategorii, marki i cech.",
-    alternates: { canonical: seo.canonical },
+    ...pageSeo(seo.canonical),
     // Filtered views and internal search results are near-duplicates
     ...(seo.noindex && { robots: { index: false, follow: true } }),
   };
@@ -54,7 +54,11 @@ export default async function KatalogPage({ searchParams }: Props) {
               </Suspense>
             </div>
             <Suspense>
-              <ActiveFilterChips categories={categories} brands={brands} tags={tags} />
+              <ActiveFilterChips
+                categories={categories.map(({ slug, namePl }) => ({ slug, namePl }))}
+                brands={brands.map(({ slug, name }) => ({ slug, name }))}
+                tags={tags.map(({ slug, namePl }) => ({ slug, namePl }))}
+              />
             </Suspense>
           </div>
 
