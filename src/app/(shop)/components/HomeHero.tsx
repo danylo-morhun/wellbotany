@@ -102,8 +102,11 @@ export function HomeHero({ productCount, hasDeals }: Props) {
               alt=""
               width={p.width}
               height={p.height}
-              // LCP: the hero group paints first
-              priority={i < 2}
+              // LCP: the whole group sits in the first screen, so none is lazy; the two
+              // biggest get preload + high fetch priority (`priority` no longer sets it)
+              preload={i < 2}
+              loading={i < 2 ? undefined : "eager"}
+              fetchPriority={i < 2 ? "high" : undefined}
               sizes="(min-width: 768px) 25vw, 40vw"
               className={cn(
                 "absolute w-auto drop-shadow-[0_28px_24px_rgba(0,0,0,0.32)]",
