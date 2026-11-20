@@ -7,7 +7,8 @@ import { SeeAllLink } from "./SectionHeading";
 export type HomeTab = {
   id: string;
   label: string;
-  /** Server-rendered; inactive panels stay in the DOM, hidden */
+  /** Server-rendered. Only the active panel goes into the HTML; the rest wait in
+   * the RSC payload, so switching stays instant without tripling the page. */
   panel: React.ReactNode;
   link?: { href: string; label: string };
 };
@@ -67,7 +68,7 @@ export function HomeTabs({ tabs, label }: Props) {
               role="tab"
               id={`${baseId}-tab-${i}`}
               aria-selected={i === active}
-              aria-controls={`${baseId}-panel-${i}`}
+              aria-controls={i === active ? `${baseId}-panel-${i}` : undefined}
               tabIndex={i === active ? 0 : -1}
               onClick={() => setActive(i)}
               className={cn(
@@ -87,17 +88,16 @@ export function HomeTabs({ tabs, label }: Props) {
           </span>
         )}
       </div>
-      {tabs.map((tab, i) => (
+      {tabs[active] && (
         <div
-          key={tab.id}
+          key={tabs[active].id}
           role="tabpanel"
-          id={`${baseId}-panel-${i}`}
-          aria-labelledby={`${baseId}-tab-${i}`}
-          hidden={i !== active}
+          id={`${baseId}-panel-${active}`}
+          aria-labelledby={`${baseId}-tab-${active}`}
         >
-          {tab.panel}
+          {tabs[active].panel}
         </div>
-      ))}
+      )}
       {link && (
         <div className="flex justify-end sm:hidden">
           <SeeAllLink href={link.href} label={link.label} />
