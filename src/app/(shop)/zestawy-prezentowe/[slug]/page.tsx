@@ -2,10 +2,13 @@ import type { Metadata } from "next";
 import Image from "next/image";
 import { notFound } from "next/navigation";
 import { cache } from "react";
+import { BreadcrumbJsonLd } from "@/features/catalog/components/Breadcrumbs";
 import { AddCuratedGiftSetButton } from "@/features/gift-sets/components/AddCuratedGiftSetButton";
 import { formatPrice } from "@/lib/format";
+import { publicImageUrl } from "@/lib/image-loader";
 import { omnibusNote, referencePrice } from "@/lib/omnibus";
 import { prisma } from "@/lib/prisma";
+import { pageSeo } from "@/lib/seo";
 
 type Props = { params: Promise<{ slug: string }> };
 
@@ -43,7 +46,9 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   if (!giftSet) return { title: "Zestaw prezentowy" };
   return {
     title: `${giftSet.namePl} – zestaw prezentowy`,
-    alternates: { canonical: `/zestawy-prezentowe/${giftSet.slug}` },
+    ...pageSeo(`/zestawy-prezentowe/${giftSet.slug}`, {
+      ...(giftSet.imageUrl && { images: [{ url: publicImageUrl(giftSet.imageUrl) }] }),
+    }),
   };
 }
 
@@ -58,6 +63,13 @@ export default async function GiftSetDetailPage({ params }: Props) {
 
   return (
     <div className="mx-auto max-w-5xl px-4 py-10 sm:px-6 lg:px-8">
+      <BreadcrumbJsonLd
+        items={[
+          { name: "Strona główna", href: "/" },
+          { name: "Zestawy prezentowe", href: "/zestawy-prezentowe" },
+          { name: giftSet.namePl, href: `/zestawy-prezentowe/${giftSet.slug}` },
+        ]}
+      />
       <div className="grid gap-10 lg:grid-cols-2">
         <div className="relative aspect-square overflow-hidden rounded-2xl bg-card shadow-card">
           {giftSet.imageUrl ? (

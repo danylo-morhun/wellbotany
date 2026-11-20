@@ -1,12 +1,14 @@
 import { Leaf, ShieldCheck, Truck } from "lucide-react";
 import type { Metadata } from "next";
 import Link from "next/link";
+import { BreadcrumbJsonLd } from "@/features/catalog/components/Breadcrumbs";
 import { getShopSettings } from "@/features/settings/lib/shop-settings";
 import { formatPriceCompact } from "@/lib/format";
+import { pageSeo } from "@/lib/seo";
 
 export const metadata: Metadata = {
   title: "O nas",
-  alternates: { canonical: "/o-nas" },
+  ...pageSeo("/o-nas"),
   description:
     "Well Botany to polski sklep z suplementami diety, witaminami, ziołami i zdrową żywnością. Przy każdym produkcie podajemy pełny skład i dawkę.",
 };
@@ -34,6 +36,12 @@ export default async function ONasPage() {
 
   return (
     <div className="container mx-auto max-w-prose px-4 py-12">
+      <BreadcrumbJsonLd
+        items={[
+          { name: "Strona główna", href: "/" },
+          { name: "O nas", href: "/o-nas" },
+        ]}
+      />
       <h1 className="mb-8 text-3xl">O nas</h1>
 
       <div className="space-y-10 text-sm leading-relaxed">

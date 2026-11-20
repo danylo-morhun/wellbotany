@@ -2,12 +2,13 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { Breadcrumbs } from "@/features/catalog/components/Breadcrumbs";
 import { getIngredients } from "@/features/glossary/lib/queries";
+import { pageSeo } from "@/lib/seo";
 
 export const metadata: Metadata = {
   title: "Składniki suplementów od A do Z",
   description:
     "Słownik składników suplementów diety: formy, dawki, na co zwrócić uwagę i w jakich produktach je znajdziesz. Magnez, witamina D3, ashwagandha i inne.",
-  alternates: { canonical: "/skladniki" },
+  ...pageSeo("/skladniki"),
 };
 
 export default async function SkladnikiPage() {

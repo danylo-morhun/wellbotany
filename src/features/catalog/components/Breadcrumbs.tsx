@@ -5,15 +5,20 @@ type Props = {
   items: BreadcrumbItem[];
 };
 
-export function Breadcrumbs({ items }: Props) {
-  const jsonLd = buildBreadcrumbJsonLd(items);
+/** BreadcrumbList only — for pages without a visible trail (info pages, gift sets). */
+export function BreadcrumbJsonLd({ items }: Props) {
+  return (
+    <script
+      type="application/ld+json"
+      dangerouslySetInnerHTML={{ __html: toJsonLdScript(buildBreadcrumbJsonLd(items)) }}
+    />
+  );
+}
 
+export function Breadcrumbs({ items }: Props) {
   return (
     <>
-      <script
-        type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: toJsonLdScript(jsonLd) }}
-      />
+      <BreadcrumbJsonLd items={items} />
       <nav aria-label="Ścieżka nawigacji">
         <ol className="flex flex-wrap items-center gap-1 text-sm text-muted-foreground">
           {items.map((item, index) => {

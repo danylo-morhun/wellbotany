@@ -1,19 +1,27 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { PrintButton } from "@/components/PrintButton";
+import { BreadcrumbJsonLd } from "@/features/catalog/components/Breadcrumbs";
 import { SELLER } from "@/lib/seller";
+import { pageSeo } from "@/lib/seo";
 
 export const dynamic = "force-static";
 
 export const metadata: Metadata = {
   title: "Zwroty i reklamacje",
-  alternates: { canonical: "/zwroty" },
+  ...pageSeo("/zwroty"),
   description: "Informacje o prawie odstąpienia od umowy, zwrotach i reklamacjach.",
 };
 
 export default function ZwrotyPage() {
   return (
     <div className="container mx-auto max-w-prose px-4 py-12">
+      <BreadcrumbJsonLd
+        items={[
+          { name: "Strona główna", href: "/" },
+          { name: "Zwroty i reklamacje", href: "/zwroty" },
+        ]}
+      />
       <h1 className="mb-8 text-3xl">Zwroty i reklamacje</h1>
 
       <div className="space-y-10 text-sm leading-relaxed text-foreground">

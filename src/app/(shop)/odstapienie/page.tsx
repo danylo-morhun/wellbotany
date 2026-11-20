@@ -1,10 +1,12 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { BreadcrumbJsonLd } from "@/features/catalog/components/Breadcrumbs";
 import { WithdrawalForm } from "@/features/withdrawal/components/WithdrawalForm";
+import { pageSeo } from "@/lib/seo";
 
 export const metadata: Metadata = {
   title: "Odstąpienie od umowy",
-  alternates: { canonical: "/odstapienie" },
+  ...pageSeo("/odstapienie"),
   description: "Odstąp od umowy online — w 14 dni od otrzymania zamówienia, bez podania przyczyny.",
 };
 
@@ -14,6 +16,12 @@ export default async function OdstapieniePage({ searchParams }: Props) {
   const { zamowienie } = await searchParams;
   return (
     <div className="container mx-auto max-w-prose px-4 py-12">
+      <BreadcrumbJsonLd
+        items={[
+          { name: "Strona główna", href: "/" },
+          { name: "Odstąpienie od umowy", href: "/odstapienie" },
+        ]}
+      />
       <h1 className="mb-4 text-3xl">Odstąpienie od umowy</h1>
       <p className="mb-8 text-sm text-muted-foreground">
         Masz 14 dni od otrzymania zamówienia, aby odstąpić od umowy bez podania przyczyny. Wypełnij

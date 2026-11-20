@@ -9,7 +9,7 @@ import { FilterSidebarData } from "@/features/catalog/components/FilterSidebarDa
 import { ProductGridSkeleton } from "@/features/catalog/components/ProductGridSkeleton";
 import { prisma } from "@/lib/prisma";
 import { sanitizeRichText } from "@/lib/sanitize";
-import { buildListingSeo } from "@/lib/seo";
+import { buildListingSeo, pageSeo } from "@/lib/seo";
 import { getBrandBySlug } from "../../../../features/catalog/actions";
 
 function firstSentence(text: string): string {
@@ -39,7 +39,7 @@ export async function generateMetadata({ params, searchParams }: Props): Promise
     description:
       (brand.description && firstSentence(brand.description)) ??
       `${brand.name} w sklepie Well Botany: suplementy diety i produkty marki ${brand.name}. Sprawdź skład, dawkowanie i ceny. Wysyłka do paczkomatu, punktu odbioru lub kurierem.`,
-    alternates: { canonical: seo.canonical },
+    ...pageSeo(seo.canonical),
     ...(seo.noindex && { robots: { index: false, follow: true } }),
   };
 }

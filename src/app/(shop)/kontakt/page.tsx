@@ -1,16 +1,24 @@
 import { Clock, Mail, MapPin, Phone } from "lucide-react";
 import type { Metadata } from "next";
+import { BreadcrumbJsonLd } from "@/features/catalog/components/Breadcrumbs";
 import { ContactForm } from "@/features/contact/components/ContactForm";
+import { pageSeo } from "@/lib/seo";
 
 export const metadata: Metadata = {
   title: "Kontakt",
-  alternates: { canonical: "/kontakt" },
+  ...pageSeo("/kontakt"),
   description: "Telefon, e-mail i godziny obsługi sklepu Well Botany.",
 };
 
 export default function KontaktPage() {
   return (
     <div className="container mx-auto max-w-3xl px-4 py-12">
+      <BreadcrumbJsonLd
+        items={[
+          { name: "Strona główna", href: "/" },
+          { name: "Kontakt", href: "/kontakt" },
+        ]}
+      />
       <h1 className="mb-8 text-3xl">Kontakt</h1>
 
       <div className="space-y-8">

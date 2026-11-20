@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { BreadcrumbJsonLd } from "@/features/catalog/components/Breadcrumbs";
 import { isP24Enabled } from "@/features/przelewy24/lib/config";
 import {
   GCR_MERCHANT_ID,
@@ -8,12 +9,13 @@ import {
   MARKETING_TOOLS,
   META_ENABLED,
 } from "@/lib/marketing-config";
+import { pageSeo } from "@/lib/seo";
 
 export const dynamic = "force-static";
 
 export const metadata: Metadata = {
   title: "Polityka prywatności",
-  alternates: { canonical: "/polityka-prywatnosci" },
+  ...pageSeo("/polityka-prywatnosci"),
   description: "Zasady przetwarzania danych osobowych w sklepie Well Botany.",
 };
 
@@ -185,6 +187,12 @@ const recipients = [
 export default function PolitykaPrywatnosciPage() {
   return (
     <div className="container mx-auto max-w-3xl px-4 py-12">
+      <BreadcrumbJsonLd
+        items={[
+          { name: "Strona główna", href: "/" },
+          { name: "Polityka prywatności", href: "/polityka-prywatnosci" },
+        ]}
+      />
       <h1 className="mb-2 text-3xl">Polityka prywatności</h1>
       <p className="mb-8 text-sm text-muted-foreground">
         Poniżej znajdziesz najważniejsze informacje o zasadach przetwarzania Twoich danych osobowych

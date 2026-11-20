@@ -45,20 +45,16 @@ export const metadata: Metadata = {
   },
   description: SITE_DESCRIPTION,
   metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL ?? "https://wellbotany.pl"),
+  // No og/twitter title or description here: Next fills them from each page's
+  // own title and description. Pages with a canonical build theirs via pageSeo().
   openGraph: {
     type: "website",
     locale: "pl_PL",
     siteName: "Well Botany",
-    title: "Well Botany — suplementy, zioła i zdrowa żywność",
-    description: SITE_DESCRIPTION,
     images: [DEFAULT_OG_IMAGE],
   },
-  twitter: {
-    card: "summary_large_image",
-    title: "Well Botany — suplementy, zioła i zdrowa żywność",
-    description: SITE_DESCRIPTION,
-    images: [DEFAULT_OG_IMAGE.url],
-  },
+  // Title, description and image follow the page's Open Graph
+  twitter: { card: "summary_large_image" },
   verification: {
     google: "8H41cB23kzb36R1T4wR4A_oz4zVtbQGdKUq6Nl5AqsQ",
   },

@@ -8,7 +8,13 @@ import { ProductCard } from "@/features/catalog/components/ProductCard";
 import { readFaq } from "@/features/glossary/lib/queries";
 import { publicImageUrl } from "@/lib/image-loader";
 import { sanitizeRichText } from "@/lib/sanitize";
-import { buildArticleJsonLd, buildFaqJsonLd, buildPageTitle, toJsonLdScript } from "@/lib/seo";
+import {
+  buildArticleJsonLd,
+  buildFaqJsonLd,
+  buildPageTitle,
+  pageSeo,
+  toJsonLdScript,
+} from "@/lib/seo";
 
 type Props = { params: Promise<{ slug: string }> };
 
@@ -25,11 +31,10 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   return {
     title: buildPageTitle(post.metaTitlePl ?? post.titlePl),
     description: post.metaDescPl ?? post.excerptPl,
-    alternates: { canonical: `/poradnik/${post.slug}` },
-    openGraph: {
+    ...pageSeo(`/poradnik/${post.slug}`, {
       type: "article",
       ...(post.coverImage && { images: [{ url: publicImageUrl(post.coverImage) }] }),
-    },
+    }),
   };
 }
 
@@ -87,7 +92,9 @@ export default async function PoradnikPostPage({ params }: Props) {
               src={post.coverImage}
               alt=""
               fill
-              priority
+              // LCP: the cover is the first thing on the page
+              preload
+              fetchPriority="high"
               sizes="(max-width: 768px) 100vw, 768px"
               className="object-cover"
             />

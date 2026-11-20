@@ -9,7 +9,13 @@ import {
   readFaq,
 } from "@/features/glossary/lib/queries";
 import { sanitizeRichText } from "@/lib/sanitize";
-import { buildArticleJsonLd, buildFaqJsonLd, buildPageTitle, toJsonLdScript } from "@/lib/seo";
+import {
+  buildArticleJsonLd,
+  buildFaqJsonLd,
+  buildPageTitle,
+  pageSeo,
+  toJsonLdScript,
+} from "@/lib/seo";
 
 type Props = { params: Promise<{ slug: string }> };
 
@@ -28,8 +34,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
       ingredient.metaTitlePl ?? `${ingredient.namePl} – formy, dawki, produkty`,
     ),
     description: ingredient.metaDescPl ?? ingredient.shortPl,
-    alternates: { canonical: `/skladniki/${ingredient.slug}` },
-    openGraph: { type: "article" },
+    ...pageSeo(`/skladniki/${ingredient.slug}`, { type: "article" }),
   };
 }
 

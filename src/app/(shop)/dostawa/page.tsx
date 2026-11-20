@@ -1,16 +1,18 @@
 import type { Metadata } from "next";
+import { BreadcrumbJsonLd } from "@/features/catalog/components/Breadcrumbs";
 import { shippingLabel } from "@/features/checkout/lib/shipping";
 import { getShippingRates } from "@/features/checkout/lib/shipping-rates";
 import { isP24Enabled } from "@/features/przelewy24/lib/config";
 import { getShopSettings } from "@/features/settings/lib/shop-settings";
 import { formatPriceCompact } from "@/lib/format";
 import { PICKUP_HOLD_DAYS, PICKUP_LOCATIONS } from "@/lib/pickup-locations";
+import { pageSeo } from "@/lib/seo";
 
 export const dynamic = "force-static";
 
 export const metadata: Metadata = {
   title: "Dostawa i płatność",
-  alternates: { canonical: "/dostawa" },
+  ...pageSeo("/dostawa"),
   description: "Informacje o metodach dostawy, kosztach i czasie realizacji zamówień.",
 };
 
@@ -33,6 +35,12 @@ export default async function DostawaPage() {
 
   return (
     <div className="container mx-auto max-w-prose px-4 py-12">
+      <BreadcrumbJsonLd
+        items={[
+          { name: "Strona główna", href: "/" },
+          { name: "Dostawa i płatność", href: "/dostawa" },
+        ]}
+      />
       <h1 className="mb-8 text-3xl">Dostawa i płatność</h1>
 
       <div className="space-y-10 text-sm leading-relaxed text-foreground">

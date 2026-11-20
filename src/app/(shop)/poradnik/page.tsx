@@ -3,12 +3,13 @@ import Image from "next/image";
 import Link from "next/link";
 import { getPublishedPosts } from "@/features/blog/lib/queries";
 import { Breadcrumbs } from "@/features/catalog/components/Breadcrumbs";
+import { pageSeo } from "@/lib/seo";
 
 export const metadata: Metadata = {
   title: "Poradnik – suplementy, witaminy i zioła",
   description:
     "Poradniki o suplementach diety: jak wybrać magnez, witaminę D3, probiotyk czy adaptogeny, jak czytać etykiety i na co uważać.",
-  alternates: { canonical: "/poradnik" },
+  ...pageSeo("/poradnik"),
 };
 
 const dateFormat = new Intl.DateTimeFormat("pl-PL", { dateStyle: "long" });

@@ -1,10 +1,12 @@
 import { getBrands } from "@/features/catalog/actions";
+import { BreadcrumbJsonLd } from "@/features/catalog/components/Breadcrumbs";
 import { pluralPl } from "@/lib/format";
+import { pageSeo } from "@/lib/seo";
 import { BrandRow } from "./BrandRow";
 
 export const metadata = {
   title: "Marki",
-  alternates: { canonical: "/marki" },
+  ...pageSeo("/marki"),
   description:
     "Suplementy, witaminy i zdrowa żywność według marek: Yango, Kenay, Formeds, Singularis i inne.",
 };
@@ -29,6 +31,12 @@ export default async function MarkiPage() {
 
   return (
     <div className="container mx-auto max-w-3xl px-4 py-12 md:py-16">
+      <BreadcrumbJsonLd
+        items={[
+          { name: "Strona główna", href: "/" },
+          { name: "Marki", href: "/marki" },
+        ]}
+      />
       <div className="mb-10 md:mb-14">
         <h1 className="font-heading text-3xl text-foreground md:text-4xl">Marki</h1>
         <p className="mt-2 text-sm text-muted-foreground">

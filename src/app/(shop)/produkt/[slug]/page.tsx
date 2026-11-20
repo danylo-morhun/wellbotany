@@ -24,7 +24,7 @@ import { WishlistButton } from "@/features/wishlist/components/WishlistButton";
 import { publicImageUrl } from "@/lib/image-loader";
 import { discountPercent, omnibusNote, referencePrice } from "@/lib/omnibus";
 import { sanitizeRichText } from "@/lib/sanitize";
-import { buildPageTitle, buildProductJsonLd, DEFAULT_OG_IMAGE, toJsonLdScript } from "@/lib/seo";
+import { buildPageTitle, buildProductJsonLd, pageSeo, toJsonLdScript } from "@/lib/seo";
 import { formatUnitPrice, variantPackQuantity } from "@/lib/unit-price";
 import {
   getProduct,
@@ -71,12 +71,11 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   return {
     title: buildPageTitle(title),
     description,
-    alternates: { canonical: `/produkt/${product.slug}` },
-    openGraph: {
+    ...pageSeo(`/produkt/${product.slug}`, {
       title,
       description,
-      images: mainImage ? [{ url: publicImageUrl(mainImage) }] : [DEFAULT_OG_IMAGE],
-    },
+      ...(mainImage && { images: [{ url: publicImageUrl(mainImage) }] }),
+    }),
   };
 }
 
