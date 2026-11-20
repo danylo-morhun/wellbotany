@@ -4,7 +4,7 @@ import { Dialog } from "@base-ui/react/dialog";
 import { LocateFixed, MapPin, Search, X } from "lucide-react";
 import dynamic from "next/dynamic";
 import { useRef, useState } from "react";
-import type { PickupPoint } from "../lib/points";
+import { isSamePointCode, type PickupPoint } from "../lib/points";
 import type { PointService } from "../lib/shipping";
 
 // Leaflet touches `window` on import and weighs ~40 KB — load it with the dialog only
@@ -43,7 +43,9 @@ export function PointPicker({ service, pointName, onSelect }: Props) {
       const data = (await res.json()) as { points: PickupPoint[] };
       if (requestId !== requestRef.current) return;
       setPoints(data.points);
-      setSelectedId(null);
+      // A search by point code returns that point first — select it right away
+      const first = data.points[0];
+      setSelectedId(first && params.q && isSamePointCode(first.id, params.q) ? first.id : null);
       setStatus(data.points.length > 0 ? "ok" : "empty");
     } catch (err) {
       if (requestId !== requestRef.current) return;
