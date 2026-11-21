@@ -129,7 +129,10 @@ async function uploadImage(url: string, publicId: string): Promise<string> {
 
 async function main() {
   const db = connect();
-  const host = (process.env.DATABASE_URL ?? "").split("@")[1]?.split(".")[0] ?? "db";
+  // "ep-x.neon.tech/db" → "ep-x"; "localhost:5432/db" → "localhost-5432-db" (safe file name)
+  const host = ((process.env.DATABASE_URL ?? "").split("@")[1]?.split("?")[0] ?? "db")
+    .split(".")[0]
+    .replace(/[^\w-]/g, "-");
   const stateFile = path.join(dir as string, `applied-${host}.json`);
   const state: Record<string, string> = fs.existsSync(stateFile) ? read(stateFile) : {};
   const report: string[] = [];
