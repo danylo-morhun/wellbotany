@@ -5,7 +5,7 @@ import { EmptyState, PageHeader, Panel, table } from "@/app/admin/components/ui"
 import {
   COST_MAX_CHANGE,
   compareCatalog,
-  PRICE_LEVEL,
+  MIN_MARGIN,
   PRICE_MAX_CHANGE,
   pairVariants,
   percentChange,
@@ -122,7 +122,7 @@ export default async function AdminSubiektPage({ searchParams }: Props) {
     <div className="space-y-6">
       <PageHeader
         title="Subiekt vs sklep"
-        description={`Kartoteka z Subiekta (${location.code}) porównana z produktami sklepu. Ceny zakupu z Subiekta przechodzą do sklepu same, chyba że zmiana przekracza ${COST_MAX_CHANGE * 100}% — te są tu do sprawdzenia. Ceny sprzedaży idą za poziomem ${PRICE_LEVEL} z Subiekta tak samo (zmiana ponad ${PRICE_MAX_CHANGE * 100}% czeka tu na sprawdzenie); produktów z przekreśloną ceną promocyjną nie zmieniamy.`}
+        description={`Kartoteka z Subiekta (${location.code}) porównana z produktami sklepu. Ceny zakupu z Subiekta przechodzą do sklepu same, chyba że zmiana przekracza ${COST_MAX_CHANGE * 100}% — te są tu do sprawdzenia. Cen sprzedaży z Subiekta nie przenosimy: cenę w sklepie podnosimy tylko wtedy, gdy marża spadłaby poniżej ${MIN_MARGIN * 100}% od ceny zakupu (podwyżka ponad ${PRICE_MAX_CHANGE * 100}% czeka na sprawdzenie); produktów z przekreśloną ceną promocyjną nie zmieniamy.`}
         meta={
           location.catalogSyncedAt
             ? `Ostatnia kartoteka: ${dateTime.format(location.catalogSyncedAt)}`
