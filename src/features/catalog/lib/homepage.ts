@@ -53,6 +53,43 @@ const FOOD_SHELF_SLUGS = [
 ];
 const FOOD_SHELF_LIMIT = 8;
 
+// More of the range further down the page, one shelf per part of the shop.
+// Products round-robin over `slugs`; chips are the children of `parent`.
+const CATEGORY_SHELVES = [
+  {
+    id: "kawa-herbata",
+    parent: "kawa-i-herbata",
+    title: "Kawa, herbata i matcha",
+    lead: "Kawa ziarnista i mielona, japońska matcha i herbaty liściaste, kawa zbożowa.",
+    linkLabel: "Kawa i herbata",
+    slugs: ["kawa", "herbata-i-matcha", "kawa-zbozowa-i-napoje"],
+  },
+  {
+    id: "aromaterapia",
+    parent: "aromaterapia",
+    title: "Aromaterapia i dom",
+    lead: "Olejki eteryczne do dyfuzora i kąpieli, świece sojowe i woski zapachowe.",
+    linkLabel: "Aromaterapia",
+    slugs: ["olejki-eteryczne", "swiece-zapachowe", "akcesoria-do-aromaterapii"],
+  },
+  {
+    id: "kosmetyki",
+    parent: "kosmetyki",
+    title: "Kosmetyki do pielęgnacji",
+    lead: "Oleje kosmetyczne, hydrolaty, kremy i serum – pełny skład INCI przy każdym produkcie.",
+    linkLabel: "Kosmetyki",
+    slugs: [
+      "pielegnacja-twarzy",
+      "oleje-kosmetyczne",
+      "hydrolaty",
+      "pielegnacja-ciala",
+      "wlosy-i-skora-glowy",
+      "perfumy",
+    ],
+  },
+] as const;
+const CATEGORY_SHELF_LIMIT = 8;
+
 // "Teraz taniej": two rows of four, biggest real reductions first
 const DEALS_LIMIT = 8;
 // Campaign section (Black Week…): two rows of four, biggest reductions first
@@ -268,26 +305,45 @@ export const getHomepageData = unstable_cache(
     // page decides at render time whether a campaign is on
     const campaignProducts = reductions.slice(0, CAMPAIGN_LIMIT);
 
-    // Food shelf: one product per food category in turn, nothing shown above
-    const foodBrands = new Set<string>();
-    const foodPools = await Promise.all(
-      FOOD_SHELF_SLUGS.map(async (slug) => {
-        const pool = await sellableInCategory(slug, [...shown]);
-        // Brands spread inside each category, the shelf's brands spread across them
-        return pickAcrossBrands(pool, pool.length, foodBrands);
-      }),
-    );
-    const foodShelf: ProductListItem[] = [];
-    for (let round = 0; foodShelf.length < FOOD_SHELF_LIMIT && round < CANDIDATE_POOL; round++) {
-      let added = false;
-      for (const pool of foodPools) {
-        const p = pool.filter((x) => !shown.has(x.id) && !foodShelf.includes(x))[0];
-        if (!p || foodShelf.length >= FOOD_SHELF_LIMIT) continue;
-        foodShelf.push(p);
-        shown.add(p.id);
-        added = true;
+    // One product per category in turn, nothing shown above
+    const fillShelf = async (slugs: readonly string[], limit: number) => {
+      const brands = new Set<string>();
+      const pools = await Promise.all(
+        slugs.map(async (slug) => {
+          const pool = await sellableInCategory(slug, [...shown]);
+          // Brands spread inside each category, the shelf's brands spread across them
+          return pickAcrossBrands(pool, pool.length, brands);
+        }),
+      );
+      const shelf: ProductListItem[] = [];
+      for (let round = 0; shelf.length < limit && round < CANDIDATE_POOL; round++) {
+        let added = false;
+        for (const pool of pools) {
+          const p = pool.filter((x) => !shown.has(x.id) && !shelf.includes(x))[0];
+          if (!p || shelf.length >= limit) continue;
+          shelf.push(p);
+          shown.add(p.id);
+          added = true;
+        }
+        if (!added) break;
       }
-      if (!added) break;
+      return shelf;
+    };
+
+    const foodShelf = await fillShelf(FOOD_SHELF_SLUGS, FOOD_SHELF_LIMIT);
+    const categoryShelves = [];
+    for (const shelf of CATEGORY_SHELVES) {
+      const parent = categories.find((c) => c.slug === shelf.parent);
+      categoryShelves.push({
+        id: shelf.id,
+        title: shelf.title,
+        lead: shelf.lead,
+        link: { href: `/kategoria/${shelf.parent}`, label: shelf.linkLabel },
+        products: await fillShelf(shelf.slugs, CATEGORY_SHELF_LIMIT),
+        categories: parent
+          ? categories.filter((c) => c.parentId === parent.id && c.productCount > 0)
+          : [],
+      });
     }
     const foodCategories = foodSubcategories(categories).filter((c) => c.productCount > 0);
 
@@ -309,11 +365,12 @@ export const getHomepageData = unstable_cache(
       ingredientTiles,
       foodShelf,
       foodCategories,
+      categoryShelves,
       productCount,
       foodCount,
     };
   },
-  ["homepage-v11"],
+  ["homepage-v12"],
   { tags: ["categories", "products", STOCK_LISTINGS_TAG] },
 );
 

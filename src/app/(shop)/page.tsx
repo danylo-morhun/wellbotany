@@ -7,6 +7,7 @@ import { HerbalistPicks } from "@/app/(shop)/components/HerbalistPicks";
 import { HomeAbout } from "@/app/(shop)/components/HomeAbout";
 import { HomeBand } from "@/app/(shop)/components/HomeBand";
 import { HomeCampaign } from "@/app/(shop)/components/HomeCampaign";
+import { HomeCategoryShelf } from "@/app/(shop)/components/HomeCategoryShelf";
 import { HomeDeals } from "@/app/(shop)/components/HomeDeals";
 import { HomeEntryTiles } from "@/app/(shop)/components/HomeEntryTiles";
 import { HomeFoodShelf } from "@/app/(shop)/components/HomeFoodShelf";
@@ -48,6 +49,7 @@ export default async function HomePage() {
       ingredientTiles,
       foodShelf,
       foodCategories,
+      categoryShelves,
       productCount,
       foodCount,
     },
@@ -78,14 +80,29 @@ export default async function HomePage() {
     <FadeInView key="tabs">
       <BestsellerTabs tabs={tabs} />
     </FadeInView>,
+    categoryShelves[0] && categoryShelves[0].products.length > 0 && (
+      <FadeInView key={categoryShelves[0].id}>
+        <HomeCategoryShelf {...categoryShelves[0]} />
+      </FadeInView>
+    ),
     <FadeInView key="help">
       <HelpAndGuides categories={categories} />
     </FadeInView>,
+    categoryShelves[1] && categoryShelves[1].products.length > 0 && (
+      <FadeInView key={categoryShelves[1].id}>
+        <HomeCategoryShelf {...categoryShelves[1]} />
+      </FadeInView>
+    ),
     <HomeIntro key="intro" categories={categories} headline={false} />,
     <FadeInView key="ingredients" className="grid gap-10 lg:grid-cols-2 lg:gap-12">
       <IngredientTiles tiles={ingredientTiles} />
       <BrandStrip brands={brands} />
     </FadeInView>,
+    categoryShelves[2] && categoryShelves[2].products.length > 0 && (
+      <FadeInView key={categoryShelves[2].id}>
+        <HomeCategoryShelf {...categoryShelves[2]} />
+      </FadeInView>
+    ),
     <FadeInView key="new">
       <HomeNewArrivals products={newArrivals} />
     </FadeInView>,
