@@ -81,11 +81,18 @@ export function planCostUpdates(
   return { apply: guard ? fills : new Map([...fills, ...changes]), review, guard };
 }
 
-// Site sale price follows Subiekt's retail level (owner 2026-11-16: the shop's
-// prices already carry the ~30 % margin she wants). Level 1 = "Detaliczna-B2B".
-export const PRICE_LEVEL = 1;
+// Site sale price floor: purchase cost + 30 % margin (owner 2026-11-21). Subiekt's
+// retail levels are not reliable, so they no longer set our prices; a price at or
+// above the floor is left as is, one below it is raised to the floor.
+export const MIN_MARGIN = 0.3;
 // Same reasoning as costs: a jump this big is likelier a typo or a pack-size mix-up
 export const PRICE_MAX_CHANGE = 0.5;
+
+/** Lowest gross sale price (grosz) that keeps MIN_MARGIN on a net cost. */
+export function marginFloor(costNet: number, vatRate: number): number {
+  // Whole-percent integer math: 700 / 0.7 in floats is 1000.0000000000001
+  return Math.ceil((costNet * (100 + vatRate)) / Math.round((1 - MIN_MARGIN) * 100));
+}
 
 export type PricePlan = {
   /** variantId → new pricePln (gross, grosz) */
@@ -94,58 +101,51 @@ export type PricePlan = {
     variantId: string;
     current: number;
     incoming: number;
-    reason: "change-too-large" | "ambiguous";
+    reason: "change-too-large";
   }[];
   /** Set when the bulk guard held back every change */
   guard: string | null;
 };
 
-type VariantPrice = { id: string; pricePln: number; comparePricePln: number | null };
+type VariantPrice = {
+  id: string;
+  pricePln: number;
+  comparePricePln: number | null;
+  /** Cost after this snapshot's cost plan was applied */
+  costPricePln: number | null;
+  vatRate: number;
+};
 
 /**
- * New sale prices from Subiekt (tc_CenaBrutto<PRICE_LEVEL>, gross) for our variants.
- * Never touches a variant with a running site promotion (comparePricePln set):
- * moving its price would break the Omnibus "lowest price in 30 days" shown next to it.
- * A missing or zero Subiekt price leaves ours as is.
+ * Raises sale prices below the margin floor, for variants this snapshot matched.
+ * Never lowers a price. Never touches a variant with a running site promotion
+ * (comparePricePln set): moving its price would break the Omnibus "lowest price
+ * in 30 days" shown next to it. No cost → no floor.
  */
 export function planPriceUpdates(
   items: CatalogItem[],
   index: VariantIndex,
   variants: VariantPrice[],
-  level = PRICE_LEVEL,
 ): PricePlan {
   const current = new Map(variants.map((v) => [v.id, v]));
-
-  const incoming = new Map<string, number | null>();
+  const matched = new Set<string>();
   for (const item of items) {
-    const price = item.pricesGross[level - 1];
-    if (!price) continue;
     const id = findVariant(index, item);
-    if (!id || !current.has(id)) continue;
-    const seen = incoming.get(id);
-    incoming.set(id, seen === undefined || seen === price ? price : null);
+    if (id) matched.add(id);
   }
 
   const changes = new Map<string, number>();
   const review: PricePlan["review"] = [];
-  for (const [id, price] of incoming) {
+  for (const id of matched) {
     const variant = current.get(id);
-    if (!variant || variant.comparePricePln !== null) continue;
+    if (!variant || variant.comparePricePln !== null || !variant.costPricePln) continue;
     const now = variant.pricePln;
-    if (price === null) {
-      const first = items.find((i) => findVariant(index, i) === id && i.pricesGross[level - 1]);
-      review.push({
-        variantId: id,
-        current: now,
-        incoming: first?.pricesGross[level - 1] ?? 0,
-        reason: "ambiguous",
-      });
-    } else if (price !== now) {
-      if (now > 0 && Math.abs(price - now) / now > PRICE_MAX_CHANGE) {
-        review.push({ variantId: id, current: now, incoming: price, reason: "change-too-large" });
-      } else {
-        changes.set(id, price);
-      }
+    const floor = marginFloor(variant.costPricePln, variant.vatRate);
+    if (now >= floor) continue;
+    if (now > 0 && (floor - now) / now > PRICE_MAX_CHANGE) {
+      review.push({ variantId: id, current: now, incoming: floor, reason: "change-too-large" });
+    } else {
+      changes.set(id, floor);
     }
   }
 
