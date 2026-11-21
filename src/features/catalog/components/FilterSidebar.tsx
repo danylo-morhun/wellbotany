@@ -87,6 +87,7 @@ export function FilterSidebar({
   const router = useRouter();
   const searchParams = useSearchParams();
   const [showAllCategories, setShowAllCategories] = useState(false);
+  const [showAllBrands, setShowAllBrands] = useState(false);
   const [priceMin, setPriceMin] = useState(searchParams.get("cenaMin") ?? "");
   const [priceMax, setPriceMax] = useState(searchParams.get("cenaMax") ?? "");
 
@@ -156,6 +157,16 @@ export function FilterSidebar({
     ? []
     : sortedCategories.filter((c) => active.category.includes(c.slug) && !visibleSlugs.has(c.slug));
   const hiddenCategoryCount = sortedCategories.length - visibleCategories.length;
+
+  // Same preview as categories; a brand (or one of its lines) the shopper or the route picked stays visible
+  const brandIsActive = (b: (typeof brands)[number]) =>
+    b.slug === impliedBrand ||
+    active.brand.includes(b.slug) ||
+    b.subBrands.some((line) => active.brand.includes(line.slug));
+  const visibleBrands = showAllBrands
+    ? sortedBrands
+    : sortedBrands.filter((b, i) => i < CATEGORY_PREVIEW_COUNT || brandIsActive(b));
+  const hiddenBrandCount = sortedBrands.length - visibleBrands.length;
 
   // Filters push to basePath (/katalog), so the category or brand the route
   // implies has to travel in the query — otherwise picking a brand on
@@ -316,7 +327,7 @@ export function FilterSidebar({
         <div>
           <p className="mb-2 text-sm font-semibold text-foreground">Marka</p>
           <div className="space-y-1">
-            {sortedBrands.map((brand) => {
+            {visibleBrands.map((brand) => {
               const hasLines = brand.subBrands.length > 0;
               const isExpanded = expandedBrands.has(brand.id);
               return (
@@ -368,6 +379,16 @@ export function FilterSidebar({
               );
             })}
           </div>
+          {(hiddenBrandCount > 0 || showAllBrands) &&
+            sortedBrands.length > CATEGORY_PREVIEW_COUNT && (
+              <button
+                type="button"
+                onClick={() => setShowAllBrands((v) => !v)}
+                className="mt-1.5 text-sm font-medium text-primary hover:text-primary-deep"
+              >
+                {showAllBrands ? "Pokaż mniej" : `Pokaż więcej (${hiddenBrandCount})`}
+              </button>
+            )}
         </div>
       )}
 
