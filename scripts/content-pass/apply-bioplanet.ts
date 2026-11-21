@@ -158,6 +158,7 @@ async function main() {
     "olejki-eteryczne",
     "pielegnacja-twarzy",
     "pielegnacja-ciala",
+    "wlosy-i-skora-glowy",
     "batony",
     "dla-dzieci",
     "dla-sportowcow",
