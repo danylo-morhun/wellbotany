@@ -31,7 +31,13 @@ type Item = {
   countryOfOrigin: string | null;
   sourceName: string;
   sections: Record<string, string>;
+  /** Defaults: sku = ean, stock = inStock ? 10 : 0, trackStock = true */
+  sku?: string;
+  stock?: number;
+  trackStock?: boolean;
 };
+/** Variant code: own SKU for items without an EAN */
+const code = (m: Item) => m.sku ?? m.ean;
 type Out = {
   bpId: string;
   namePl: string;
@@ -146,6 +152,7 @@ async function main() {
   const catId: Record<string, string> = {};
   for (const slug of [
     "akcesoria",
+    "grzyby-funkcjonalne",
     "kawa-i-herbata",
     "kosmetyki",
     "olejki-eteryczne",
@@ -197,13 +204,13 @@ async function main() {
       }
     }
 
-    const eans = members.map((m) => m.ean);
+    const eans = members.map(code);
     if (
       await db.productVariant.findFirst({
         where: { OR: [{ ean: { in: eans } }, { sku: { in: eans } }] },
       })
     ) {
-      report.push(`skip ${id} — EAN ${eans.join(",")} exists`);
+      report.push(`skip ${id} — EAN/SKU ${eans.join(",")} exists`);
       continue;
     }
 
@@ -241,7 +248,8 @@ async function main() {
     const photos: { url: string; ean: string }[] = [];
     for (const m of members) {
       for (const [i, src] of m.images.entries()) {
-        photos.push({ url: await uploadImage(src, i === 0 ? m.ean : `${m.ean}-${i}`), ean: m.ean });
+        const c = code(m);
+        photos.push({ url: await uploadImage(src, i === 0 ? c : `${c}-${i}`), ean: c });
       }
     }
 
@@ -270,26 +278,27 @@ async function main() {
         healthWarnings: warnings(it),
         variants: {
           create: members.map((m) => ({
-            sku: m.ean,
-            ean: m.ean,
+            sku: code(m),
+            ean: m.ean || null,
             optionLabel: "Waga",
             optionValue: m.netWeightRaw,
             pricePln: m.pricePln,
             costPricePln: Math.round(m.costNet * 100),
             vatRate: m.vat,
-            stock: m.inStock ? 10 : 0,
+            stock: m.stock ?? (m.inStock ? 10 : 0),
+            trackStock: m.trackStock ?? true,
           })),
         },
       },
       include: { variants: true },
     });
-    const variantByEan = Object.fromEntries(product.variants.map((v) => [v.ean, v.id]));
+    const variantByEan = Object.fromEntries(product.variants.map((v) => [v.sku, v.id]));
     await db.productImage.createMany({
       data: photos.map((ph, i) => ({
         productId: product.id,
         variantId: members.length > 1 ? variantByEan[ph.ean] : null,
         url: ph.url,
-        altPl: `${it.brand} ${out.namePl}${members.length > 1 ? ` ${members.find((m) => m.ean === ph.ean)?.netWeightRaw}` : ""}`,
+        altPl: `${it.brand} ${out.namePl}${members.length > 1 ? ` ${members.find((m) => code(m) === ph.ean)?.netWeightRaw}` : ""}`,
         sortOrder: i,
         isMain: i === 0,
       })),
