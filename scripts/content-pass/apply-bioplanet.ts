@@ -44,12 +44,16 @@ type Out = {
   extraCategories: string[];
 };
 
-const NEW_CATEGORIES = [
+// parent: slug the new category goes under (default "zywnosc")
+const NEW_CATEGORIES: { slug: string; namePl: string; parent?: string }[] = [
   { slug: "czekolady-i-czekoladki", namePl: "Czekolady i czekoladki" },
   { slug: "ciastka-i-wafle", namePl: "Ciastka i wafle" },
   { slug: "chipsy-i-przekaski-slone", namePl: "Chipsy i przekąski słone" },
   { slug: "przekaski-owocowe", namePl: "Przekąski owocowe" },
   { slug: "slodycze", namePl: "Żelki, krówki i inne słodycze" },
+  { slug: "kawa", namePl: "Kawa", parent: "kawa-i-herbata" },
+  { slug: "herbata-i-matcha", namePl: "Herbata i matcha", parent: "kawa-i-herbata" },
+  { slug: "kawa-zbozowa-i-napoje", namePl: "Kawa zbożowa i napoje", parent: "kawa-i-herbata" },
 ];
 
 const SUPPLEMENT_WARNINGS = [
@@ -100,7 +104,9 @@ function certifications(it: Item): string[] {
   if (a.has("WEGAŃSKI")) out.push("Wegański");
   if (/BEZGLUTENOW/.test(name) || a.has("BEZ GLUTENU (deklaracja)")) out.push("Bezglutenowy");
   if (/BEZ DODATKU CUKRÓW/.test(name)) out.push("Bez dodatku cukrów");
-  if (/FAIR TRADE/.test(name)) out.push("Fair Trade");
+  if (/FAIR TRADE/.test(name) || it.attributes.includes("CERTYFIKAT: Fair Trade"))
+    out.push("Fair Trade");
+  if (/FAIR FOR LIFE/.test(name)) out.push("Fair for Life");
   return out;
 }
 
@@ -110,7 +116,7 @@ async function uploadImage(url: string, publicId: string): Promise<string> {
   const body = new FormData();
   body.set("file", url);
   body.set("upload_preset", PRESET);
-  body.set("folder", "products/bioplanet");
+  body.set("folder", process.env.CLOUDINARY_FOLDER ?? "products/bioplanet");
   body.set("public_id", publicId);
   const res = await fetch(`https://api.cloudinary.com/v1_1/${CLOUD}/image/upload`, {
     method: "POST",
@@ -133,6 +139,8 @@ async function main() {
   if (!parent) throw new Error('category "zywnosc" missing');
   const catId: Record<string, string> = {};
   for (const slug of [
+    "akcesoria",
+    "kawa-i-herbata",
     "batony",
     "dla-dzieci",
     "dla-sportowcow",
@@ -146,8 +154,10 @@ async function main() {
     if (catId[c.slug]) continue;
     report.push(`category + ${c.slug}`);
     if (!dry) {
+      const parentId = c.parent ? catId[c.parent] : parent.id;
+      if (!parentId) throw new Error(`parent category "${c.parent}" missing`);
       const row = await db.category.create({
-        data: { ...c, parentId: parent.id, group: "OTHER", sortOrder: sort++ },
+        data: { slug: c.slug, namePl: c.namePl, parentId, group: "OTHER", sortOrder: sort++ },
       });
       catId[c.slug] = row.id;
     }
