@@ -54,6 +54,9 @@ const NEW_CATEGORIES: { slug: string; namePl: string; parent?: string }[] = [
   { slug: "kawa", namePl: "Kawa", parent: "kawa-i-herbata" },
   { slug: "herbata-i-matcha", namePl: "Herbata i matcha", parent: "kawa-i-herbata" },
   { slug: "kawa-zbozowa-i-napoje", namePl: "Kawa zbożowa i napoje", parent: "kawa-i-herbata" },
+  { slug: "oleje-kosmetyczne", namePl: "Oleje kosmetyczne", parent: "kosmetyki" },
+  { slug: "hydrolaty", namePl: "Hydrolaty", parent: "kosmetyki" },
+  { slug: "swiece-zapachowe", namePl: "Świece zapachowe", parent: "olejki-eteryczne" },
 ];
 
 const SUPPLEMENT_WARNINGS = [
@@ -144,6 +147,10 @@ async function main() {
   for (const slug of [
     "akcesoria",
     "kawa-i-herbata",
+    "kosmetyki",
+    "olejki-eteryczne",
+    "pielegnacja-twarzy",
+    "pielegnacja-ciala",
     "batony",
     "dla-dzieci",
     "dla-sportowcow",
