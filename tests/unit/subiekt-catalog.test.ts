@@ -102,26 +102,33 @@ describe("planPriceUpdates", () => {
     v("v6", "F", 1500),
   ];
   const idx = variantIndex(ours);
+  const after = new Date("2026-12-02T00:00:00+01:00");
 
   it("computes the 30 % margin floor", () => {
     expect(marginFloor(1000, 23)).toBe(1758);
     expect(marginFloor(700, 0)).toBe(1000);
   });
 
+  it("changes nothing before the start date", () => {
+    const plan = planPriceUpdates([card("A")], idx, ours, new Date("2026-11-30T12:00:00+01:00"));
+    expect(plan.apply.size).toBe(0);
+    expect(plan.review).toEqual([]);
+  });
+
   it("raises only matched prices below the floor, never lowers", () => {
-    const plan = planPriceUpdates([card("A"), card("B"), card("C"), card("D")], idx, ours);
+    const plan = planPriceUpdates([card("A"), card("B"), card("C"), card("D")], idx, ours, after);
     expect(plan.apply).toEqual(new Map([["v1", 1758]]));
     expect(plan.review).toEqual([]);
     expect(plan.guard).toBeNull();
   });
 
   it("ignores Subiekt retail prices and unmatched variants", () => {
-    const plan = planPriceUpdates([{ ...card("B"), pricesGross: [999] }], idx, ours);
+    const plan = planPriceUpdates([{ ...card("B"), pricesGross: [999] }], idx, ours, after);
     expect(plan.apply.size).toBe(0);
   });
 
   it("sends a raise over 50 % to review", () => {
-    const plan = planPriceUpdates([card("E")], idx, ours);
+    const plan = planPriceUpdates([card("E")], idx, ours, after);
     expect(plan.apply.size).toBe(0);
     expect(plan.review).toEqual([
       { variantId: "v5", current: 1000, incoming: 1758, reason: "change-too-large" },
@@ -134,6 +141,7 @@ describe("planPriceUpdates", () => {
       many.map((m) => card(m.sku)),
       variantIndex(many),
       many,
+      after,
     );
     expect(plan.apply.size).toBe(0);
     expect(plan.guard).toMatch(/25 of 25 sale prices/);
@@ -145,6 +153,7 @@ describe("planPriceUpdates", () => {
       shop.slice(0, 25).map((m) => card(m.sku)),
       variantIndex(shop),
       shop,
+      after,
     );
     expect(plan.apply.size).toBe(25);
     expect(plan.guard).toBeNull();

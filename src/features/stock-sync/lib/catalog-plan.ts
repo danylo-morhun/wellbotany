@@ -87,6 +87,9 @@ export function planCostUpdates(
 export const MIN_MARGIN = 0.3;
 // Same reasoning as costs: a jump this big is likelier a typo or a pack-size mix-up
 export const PRICE_MAX_CHANGE = 0.5;
+// Black Week runs until 30.11 and its Omnibus badges use the 30-day low:
+// before this date the sync leaves every sale price alone
+export const PRICE_FLOOR_START = new Date("2026-12-01T00:00:00+01:00");
 
 /** Lowest gross sale price (grosz) that keeps MIN_MARGIN on a net cost. */
 export function marginFloor(costNet: number, vatRate: number): number {
@@ -126,7 +129,9 @@ export function planPriceUpdates(
   items: CatalogItem[],
   index: VariantIndex,
   variants: VariantPrice[],
+  now = new Date(),
 ): PricePlan {
+  if (now < PRICE_FLOOR_START) return { apply: new Map(), review: [], guard: null };
   const current = new Map(variants.map((v) => [v.id, v]));
   const matched = new Set<string>();
   for (const item of items) {
