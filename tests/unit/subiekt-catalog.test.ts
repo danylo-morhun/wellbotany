@@ -1,6 +1,7 @@
 import { describe, expect, it, vi } from "vitest";
 import {
   compareCatalog,
+  marginFloor,
   pairVariants,
   percentChange,
   planCostUpdates,
@@ -81,52 +82,56 @@ describe("planCostUpdates", () => {
 });
 
 describe("planPriceUpdates", () => {
-  const priced = (symbol: string, price: number, ean?: string): CatalogItem => ({
-    ...card(symbol, undefined, ean),
-    pricesGross: [price, 1500],
+  // cost 1000 net, VAT 23 % → floor ceil(1230 / 0.7) = 1758
+  const v = (id: string, sku: string, pricePln: number, extra = {}) => ({
+    id,
+    sku,
+    ean: null,
+    pricePln,
+    comparePricePln: null as number | null,
+    costPricePln: 1000 as number | null,
+    vatRate: 23,
+    ...extra,
   });
   const ours = [
-    { id: "v1", sku: "A", ean: "5900000000017", pricePln: 2000, comparePricePln: null },
-    { id: "v2", sku: "B", ean: null, pricePln: 1000, comparePricePln: null },
-    { id: "v3", sku: "C", ean: null, pricePln: 1000, comparePricePln: 1500 },
-    { id: "v4", sku: "D", ean: null, pricePln: 1000, comparePricePln: null },
+    v("v1", "A", 1500),
+    v("v2", "B", 2000),
+    v("v3", "C", 1500, { comparePricePln: 2000 }),
+    v("v4", "D", 1500, { costPricePln: null }),
+    v("v5", "E", 1000),
+    v("v6", "F", 1500),
   ];
   const idx = variantIndex(ours);
 
-  it("follows level 1, skips promos, zero prices and unchanged ones", () => {
-    const plan = planPriceUpdates(
-      [priced("X", 2200, "5900000000017"), priced("B", 1000), priced("C", 1100), priced("D", 0)],
-      idx,
-      ours,
-    );
-    expect(plan.apply).toEqual(new Map([["v1", 2200]]));
+  it("computes the 30 % margin floor", () => {
+    expect(marginFloor(1000, 23)).toBe(1758);
+    expect(marginFloor(700, 0)).toBe(1000);
+  });
+
+  it("raises only matched prices below the floor, never lowers", () => {
+    const plan = planPriceUpdates([card("A"), card("B"), card("C"), card("D")], idx, ours);
+    expect(plan.apply).toEqual(new Map([["v1", 1758]]));
     expect(plan.review).toEqual([]);
     expect(plan.guard).toBeNull();
   });
 
-  it("sends big jumps and conflicting cards to review", () => {
-    const plan = planPriceUpdates(
-      [priced("B", 1600), priced("A", 2100), priced("X", 2200, "5900000000017")],
-      idx,
-      ours,
-    );
+  it("ignores Subiekt retail prices and unmatched variants", () => {
+    const plan = planPriceUpdates([{ ...card("B"), pricesGross: [999] }], idx, ours);
     expect(plan.apply.size).toBe(0);
-    expect(plan.review.map((r) => [r.variantId, r.reason])).toEqual([
-      ["v2", "change-too-large"],
-      ["v1", "ambiguous"],
+  });
+
+  it("sends a raise over 50 % to review", () => {
+    const plan = planPriceUpdates([card("E")], idx, ours);
+    expect(plan.apply.size).toBe(0);
+    expect(plan.review).toEqual([
+      { variantId: "v5", current: 1000, incoming: 1758, reason: "change-too-large" },
     ]);
   });
 
   it("holds back a mass change", () => {
-    const many = Array.from({ length: 25 }, (_, i) => ({
-      id: `m${i}`,
-      sku: `M${i}`,
-      ean: null,
-      pricePln: 1000,
-      comparePricePln: null,
-    }));
+    const many = Array.from({ length: 25 }, (_, i) => v(`m${i}`, `M${i}`, 1500));
     const plan = planPriceUpdates(
-      many.map((v) => priced(v.sku, 1100)),
+      many.map((m) => card(m.sku)),
       variantIndex(many),
       many,
     );
@@ -134,16 +139,10 @@ describe("planPriceUpdates", () => {
     expect(plan.guard).toMatch(/25 of 25 sale prices/);
   });
 
-  it("lets a delta of many edits through when they are a small share of the shop", () => {
-    const shop = Array.from({ length: 100 }, (_, i) => ({
-      id: `s${i}`,
-      sku: `S${i}`,
-      ean: null,
-      pricePln: 1000,
-      comparePricePln: null,
-    }));
+  it("lets a delta of many raises through when they are a small share of the shop", () => {
+    const shop = Array.from({ length: 100 }, (_, i) => v(`s${i}`, `S${i}`, 1500));
     const plan = planPriceUpdates(
-      shop.slice(0, 25).map((v) => priced(v.sku, 1100)),
+      shop.slice(0, 25).map((m) => card(m.sku)),
       variantIndex(shop),
       shop,
     );

@@ -101,6 +101,7 @@ export async function applyCatalog(
       costPricePln: true,
       pricePln: true,
       comparePricePln: true,
+      vatRate: true,
     },
   });
   const plan = planCostUpdates(snapshot.items, variantIndex(variants), variants);
@@ -114,7 +115,13 @@ export async function applyCatalog(
   }
   if (plan.guard) console.warn(`[subiekt-catalog] ${code}: ${plan.guard} — not applied`);
 
-  const prices = planPriceUpdates(snapshot.items, variantIndex(variants), variants);
+  // The floor uses the costs just accepted, not ones held back for review
+  const priced = variants.map((v) => ({
+    ...v,
+    vatRate: Number(v.vatRate),
+    costPricePln: plan.apply.get(v.id) ?? v.costPricePln,
+  }));
+  const prices = planPriceUpdates(snapshot.items, variantIndex(variants), priced);
   for (const [price, ids] of groupByValue(prices.apply)) {
     for (const part of chunks(ids)) {
       await prisma.productVariant.updateMany({
