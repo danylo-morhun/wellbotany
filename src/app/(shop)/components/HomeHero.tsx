@@ -56,12 +56,14 @@ type HeroLink = { href: string; label: string };
 /** Text half of the band: the page's H1, the poster words, the lead and two links */
 function HeroCopy({
   poster,
+  oneLine = false,
   lead,
   note,
   primary,
   secondary,
 }: {
   poster: readonly [string, string];
+  oneLine?: boolean;
   lead: string;
   note?: string | null;
   primary: HeroLink;
@@ -72,16 +74,28 @@ function HeroCopy({
       <h1 id="home-h1" className="text-sm font-semibold text-matcha-lime md:text-base">
         Suplementy diety, zioła i zdrowa żywność
       </h1>
-      <p
-        className={cn(
-          posterFont.className,
-          "mt-3 text-[clamp(3.75rem,10vw,8.25rem)] uppercase leading-[0.88] tracking-[0.005em]",
-        )}
-      >
-        {poster[0]}
-        <br />
-        {poster[1]}
-      </p>
+      {oneLine ? (
+        // Campaign: one line, as wide as the text column allows
+        <p
+          className={cn(
+            posterFont.className,
+            "mt-3 whitespace-nowrap text-[clamp(3.5rem,17vw,5.5rem)] uppercase leading-[0.9] tracking-[0.005em] md:text-[clamp(4rem,9.6vw,8.75rem)]",
+          )}
+        >
+          {poster.join(" ")}
+        </p>
+      ) : (
+        <p
+          className={cn(
+            posterFont.className,
+            "mt-3 text-[clamp(3.75rem,10vw,8.25rem)] uppercase leading-[0.88] tracking-[0.005em]",
+          )}
+        >
+          {poster[0]}
+          <br />
+          {poster[1]}
+        </p>
+      )}
       <p className="mt-5 max-w-md text-base text-matcha-forest-foreground/85 md:text-lg">{lead}</p>
       {note && (
         <p className="mt-3 max-w-md text-sm font-semibold text-matcha-lime md:text-base">{note}</p>
@@ -140,6 +154,7 @@ export function HomeHero({ productCount, hasDeals, campaign, cartDiscount }: Pro
           >
             <HeroCopy
               poster={campaign.hero.poster}
+              oneLine
               lead={campaign.hero.lead}
               note={cartDiscount}
               primary={{ href: "/katalog?promocje=1", label: "Zobacz obniżki" }}
