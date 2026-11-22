@@ -37,6 +37,29 @@ const FUSE_OPTIONS: IFuseOptions<ScorableProduct> = {
   ],
 };
 
+/**
+ * Lowercases, strips diacritics and apostrophes ("Dr. Jacob's" → "dr jacobs"),
+ * and turns every other non-alphanumeric run into one space.
+ */
+function normalizeForSearch(text: string): string {
+  return text
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/\p{M}/gu, "")
+    .replace(/ł/g, "l")
+    .replace(/['’`]/g, "")
+    .replace(/[^\p{L}\p{N}]+/gu, " ")
+    .trim();
+}
+
+function searchHaystack(item: ScorableProduct): string {
+  return normalizeForSearch(
+    [item.namePl, item.brand?.name, item.brand?.parentBrand?.name, item.slug]
+      .filter(Boolean)
+      .join(" "),
+  );
+}
+
 /** Fuzzy-ranks items by relevance to `query`; drops items below the match threshold. */
 export function rankBySearchRelevance<T extends ScorableProduct>(items: T[], query: string): T[] {
   const trimmed = query.trim();
@@ -58,12 +81,26 @@ export function rankBySearchRelevance<T extends ScorableProduct>(items: T[], que
       (item.slug ?? "").includes(needle.replace(/\s+/g, "-")),
   );
 
+  // A query mixing brand and product words ("Dr. Jacob's Witamina") is not a
+  // substring of any single field, and fuse fails on long queries. Match when
+  // every query word (2+ chars) appears in name + brand + slug combined.
+  const tokens = normalizeForSearch(trimmed)
+    .split(" ")
+    .filter((t) => t.length >= 2);
+  const tokenMatches =
+    tokens.length > 0
+      ? items.filter((item) => {
+          const haystack = searchHaystack(item);
+          return tokens.every((t) => haystack.includes(t));
+        })
+      : [];
+
   const fuse = new Fuse(items, FUSE_OPTIONS);
   const fuzzyMatches = fuse.search(trimmed).map((r) => r.item);
 
   const seen = new Set<T>();
   const merged: T[] = [];
-  for (const item of [...brandMatches, ...nameMatches, ...fuzzyMatches]) {
+  for (const item of [...brandMatches, ...nameMatches, ...tokenMatches, ...fuzzyMatches]) {
     if (!seen.has(item)) {
       seen.add(item);
       merged.push(item);
