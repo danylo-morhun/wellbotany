@@ -354,7 +354,7 @@ export function FilterSidebar({
                         className="shrink-0 rounded-md p-1.5 text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
                       >
                         <ChevronRight
-                          className={`size-4 transition-transform duration-200 ease-out motion-reduce:transition-none ${
+                          className={`size-4 transition-transform spring-snappy motion-reduce:transition-none ${
                             isExpanded ? "rotate-90" : ""
                           }`}
                         />

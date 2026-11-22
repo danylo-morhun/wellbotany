@@ -36,7 +36,7 @@ export function AddCuratedGiftSetButton({ giftSetId, disabled = false }: Props) 
       type="button"
       disabled={disabled || isExecuting}
       onClick={() => execute({ giftSetId })}
-      className="flex w-full items-center justify-center gap-2 rounded-full bg-primary px-6 py-3.5 text-sm font-semibold text-primary-foreground transition-[transform,background-color] duration-[160ms] ease-[cubic-bezier(0.23,1,0.32,1)] hover:bg-primary-deep active:scale-[0.97] disabled:cursor-not-allowed disabled:opacity-50 motion-reduce:transition-none motion-reduce:active:scale-100"
+      className="flex w-full items-center justify-center gap-2 rounded-full bg-primary px-6 py-3.5 text-sm font-semibold text-primary-foreground transition-press hover:bg-primary-deep active:scale-[0.97] disabled:cursor-not-allowed disabled:opacity-50 motion-reduce:transition-none motion-reduce:active:scale-100"
     >
       {succeeded ? (
         <Check className="size-4" strokeWidth={2} />

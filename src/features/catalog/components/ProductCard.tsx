@@ -42,7 +42,7 @@ export function ProductCard({ product, priority = false, headingLevel = 2 }: Pro
     : null;
 
   return (
-    <article className="group relative flex flex-col overflow-hidden rounded-2xl bg-card shadow-card transition-[box-shadow,transform] duration-200 ease-out hover:-translate-y-0.5 hover:shadow-card-hover motion-reduce:transition-none motion-reduce:hover:translate-y-0">
+    <article className="group relative flex flex-col overflow-hidden rounded-2xl bg-card shadow-card transition-[box-shadow,transform] spring hover:-translate-y-0.5 hover:shadow-card-hover motion-reduce:transition-none motion-reduce:hover:translate-y-0">
       <Link href={`/produkt/${product.slug}`} className="block">
         <div className="relative aspect-square overflow-hidden bg-card">
           {mainImage ? (
@@ -57,7 +57,7 @@ export function ProductCard({ product, priority = false, headingLevel = 2 }: Pro
                 fill
                 priority={priority}
                 sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
-                className={`object-contain transition-transform duration-300 ease-out group-hover:scale-[1.05] motion-reduce:group-hover:scale-100 ${
+                className={`object-contain transition-transform spring group-hover:scale-[1.05] motion-reduce:group-hover:scale-100 ${
                   isOutOfStock ? "grayscale-[60%] opacity-50" : ""
                 }`}
               />

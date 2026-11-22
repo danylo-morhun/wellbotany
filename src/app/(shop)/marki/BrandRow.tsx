@@ -25,7 +25,7 @@ export function BrandRow({ brand }: { brand: BrandItem }) {
             {brand._count.products}{" "}
             {pluralPl(brand._count.products, "produkt", "produkty", "produktów")}
             <ArrowUpRight
-              className="size-4 -translate-x-1 opacity-0 transition-[transform,opacity] duration-200 ease-out group-hover:translate-x-0 group-hover:opacity-100 motion-reduce:transition-none"
+              className="size-4 -translate-x-1 opacity-0 transition-[transform,opacity] spring-snappy group-hover:translate-x-0 group-hover:opacity-100 motion-reduce:transition-none"
               aria-hidden="true"
             />
           </span>
@@ -39,7 +39,7 @@ export function BrandRow({ brand }: { brand: BrandItem }) {
             className="shrink-0 rounded-md p-2 text-muted-foreground transition-colors duration-200 ease-out hover:bg-muted hover:text-foreground motion-reduce:transition-none"
           >
             <ChevronDown
-              className={`size-5 transition-transform duration-200 ease-out motion-reduce:transition-none ${
+              className={`size-5 transition-transform spring-snappy motion-reduce:transition-none ${
                 expanded ? "rotate-180" : ""
               }`}
             />
