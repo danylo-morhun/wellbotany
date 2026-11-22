@@ -15,7 +15,12 @@ export type Campaign = {
   endsAt: Date;
   /** Opening band while the campaign runs: poster words and lead. Counts in the
    * lead must stay true for the whole window (round down). */
-  hero?: { poster: [string, string]; lead: string };
+  hero?: {
+    poster: [string, string];
+    /** Big figure + its two-line label, e.g. ["800+", "produktów", "taniej"] */
+    stat: [string, string, string];
+    lead: string;
+  };
 };
 
 export const CAMPAIGNS: Campaign[] = [
@@ -27,7 +32,8 @@ export const CAMPAIGNS: Campaign[] = [
     endsAt: new Date("2026-12-01T00:00:00+01:00"),
     hero: {
       poster: ["Black", "Week"],
-      lead: "Ponad 800 produktów taniej do poniedziałku 30.11, godz. 23:59. Przy każdym cena sprzed obniżki i najniższa z 30 dni.",
+      stat: ["800+", "produktów", "taniej"],
+      lead: "Do poniedziałku 30.11, godz. 23:59. Przy każdym cena sprzed obniżki i najniższa z 30 dni.",
     },
   },
   {
