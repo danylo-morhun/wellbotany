@@ -51,17 +51,29 @@ type Props = {
   /** One line about the cart discount, shown under the campaign lead */
   cartDiscount?: string | null;
 };
+const HEADING = (
+  <h1 id="home-h1" className="text-sm font-semibold text-matcha-lime md:text-base">
+    Suplementy diety, zioła i zdrowa żywność
+  </h1>
+);
+
 type HeroLink = { href: string; label: string };
 
 /** Text half of the band: the page's H1, the poster words, the lead and two links */
 function HeroCopy({
   poster,
+  heading = true,
+  stat,
   lead,
   note,
   primary,
   secondary,
 }: {
-  poster: readonly [string, string];
+  /** null: the poster is drawn elsewhere (campaign: full width above) */
+  poster: readonly [string, string] | null;
+  /** Campaign: the H1 sits above the full-width poster instead */
+  heading?: boolean;
+  stat?: readonly [string, string, string];
   lead: string;
   note?: string | null;
   primary: HeroLink;
@@ -69,19 +81,31 @@ function HeroCopy({
 }) {
   return (
     <div className="pb-2 md:pb-16">
-      <h1 id="home-h1" className="text-sm font-semibold text-matcha-lime md:text-base">
-        Suplementy diety, zioła i zdrowa żywność
-      </h1>
-      <p
-        className={cn(
-          posterFont.className,
-          "mt-3 text-[clamp(3.75rem,10vw,8.25rem)] uppercase leading-[0.88] tracking-[0.005em]",
-        )}
-      >
-        {poster[0]}
-        <br />
-        {poster[1]}
-      </p>
+      {heading && HEADING}
+      {poster && (
+        <p
+          className={cn(
+            posterFont.className,
+            "mt-3 text-[clamp(3.75rem,10vw,8.25rem)] uppercase leading-[0.88] tracking-[0.005em]",
+          )}
+        >
+          {poster[0]}
+          <br />
+          {poster[1]}
+        </p>
+      )}
+      {stat && (
+        <p className="mt-2 flex items-center gap-3 text-matcha-lime">
+          <span className={cn(posterFont.className, "text-7xl leading-none md:text-8xl")}>
+            {stat[0]}
+          </span>
+          <span className="font-bold text-lg leading-tight md:text-xl">
+            {stat[1]}
+            <br />
+            {stat[2]}
+          </span>
+        </p>
+      )}
       <p className="mt-5 max-w-md text-base text-matcha-forest-foreground/85 md:text-lg">{lead}</p>
       {note && (
         <p className="mt-3 max-w-md text-sm font-semibold text-matcha-lime md:text-base">{note}</p>
@@ -126,52 +150,72 @@ export function HomeHero({ productCount, hasDeals, campaign, cartDiscount }: Pro
     />
   );
 
+  const packshots = (className?: string) => (
+    <div className={cn("relative h-[260px] sm:h-[340px] md:h-[440px]", className)} aria-hidden>
+      <div className="absolute inset-x-[8%] bottom-[-18%] h-[70%] rounded-[50%] bg-matcha-forest-foreground/[0.07]" />
+      {PRODUCTS.map((p, i) => (
+        <Image
+          key={p.src}
+          src={p.src}
+          alt=""
+          width={p.width}
+          height={p.height}
+          // LCP: the whole group sits in the first screen, so none is lazy; the two
+          // biggest get preload + high fetch priority (`priority` no longer sets it)
+          preload={i < 2}
+          loading={i < 2 ? undefined : "eager"}
+          fetchPriority={i < 2 ? "high" : undefined}
+          sizes="(min-width: 768px) 25vw, 40vw"
+          className={cn("absolute w-auto drop-shadow-[0_28px_24px_rgba(0,0,0,0.32)]", p.className)}
+        />
+      ))}
+    </div>
+  );
+  const grid = "container mx-auto grid items-end gap-2 px-4 pt-8 md:grid-cols-2 md:gap-8 md:pt-14";
+  const everydayGrid = (
+    <div className={grid}>
+      {everyday}
+      {packshots()}
+    </div>
+  );
+
   return (
     <section
       aria-labelledby="home-h1"
       className="overflow-hidden bg-matcha-forest text-matcha-forest-foreground"
     >
-      <div className="container mx-auto grid items-end gap-2 px-4 pt-8 md:grid-cols-2 md:gap-8 md:pt-14">
-        {campaign?.hero ? (
-          <CampaignWindow
-            startsAt={campaign.startsAt.toISOString()}
-            endsAt={campaign.endsAt.toISOString()}
-            fallback={everyday}
-          >
+      {campaign?.hero ? (
+        <CampaignWindow
+          startsAt={campaign.startsAt.toISOString()}
+          endsAt={campaign.endsAt.toISOString()}
+          fallback={everydayGrid}
+        >
+          <div className={grid}>
+            <div className="md:col-span-2">{HEADING}</div>
+            {/* One line across the band; the products stand in front of its right end */}
+            <p
+              className={cn(
+                posterFont.className,
+                "whitespace-nowrap text-center text-[17.5vw] uppercase leading-[0.85] tracking-[0.005em] md:col-span-2 xl:text-[15rem]",
+              )}
+            >
+              {campaign.hero.poster.join(" ")}
+            </p>
             <HeroCopy
-              poster={campaign.hero.poster}
+              poster={null}
+              heading={false}
+              stat={campaign.hero.stat}
               lead={campaign.hero.lead}
               note={cartDiscount}
               primary={{ href: "/katalog?promocje=1", label: "Zobacz obniżki" }}
               secondary={{ href: `#${campaign.id}-h`, label: campaign.title }}
             />
-          </CampaignWindow>
-        ) : (
-          everyday
-        )}
-        <div className="relative h-[260px] sm:h-[340px] md:h-[440px]" aria-hidden>
-          <div className="absolute inset-x-[8%] bottom-[-18%] h-[70%] rounded-[50%] bg-matcha-forest-foreground/[0.07]" />
-          {PRODUCTS.map((p, i) => (
-            <Image
-              key={p.src}
-              src={p.src}
-              alt=""
-              width={p.width}
-              height={p.height}
-              // LCP: the whole group sits in the first screen, so none is lazy; the two
-              // biggest get preload + high fetch priority (`priority` no longer sets it)
-              preload={i < 2}
-              loading={i < 2 ? undefined : "eager"}
-              fetchPriority={i < 2 ? "high" : undefined}
-              sizes="(min-width: 768px) 25vw, 40vw"
-              className={cn(
-                "absolute w-auto drop-shadow-[0_28px_24px_rgba(0,0,0,0.32)]",
-                p.className,
-              )}
-            />
-          ))}
-        </div>
-      </div>
+            {packshots("z-10 md:-mt-36 md:h-[520px] lg:-mt-44 lg:h-[560px]")}
+          </div>
+        </CampaignWindow>
+      ) : (
+        everydayGrid
+      )}
     </section>
   );
 }
