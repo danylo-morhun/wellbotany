@@ -26,7 +26,8 @@ export function PromoBar({ promo, initiallyLive }: { promo: TierPromo; initially
   if (!live) return null;
   return (
     <p className="bg-accent px-4 py-1.5 text-center text-xs font-medium text-accent-foreground">
-      <strong>{promo.name}:</strong> {describeTiers(promo.tiers, formatPriceCompact)} na koszyk
+      <strong>{promo.name}:</strong> {describeTiers(promo.tiers, formatPriceCompact)} na produkty
+      bez obniżki
       {promo.endsAt && ` · do ${END_DATE.format(new Date(promo.endsAt))}`}.{" "}
       <Link href="/regulamin#rabat-od-koszyka" className="underline">
         Zasady
