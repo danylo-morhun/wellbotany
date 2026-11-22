@@ -43,6 +43,122 @@
 @source not "../features/reviews/components/RequestReviewButton.tsx";
 @source not "../features/settings/components/ShopSettingsForm.tsx";
 
+/* Springs (Emil Kowalski / Motion model), baked into CSS linear() by
+   scripts/motion/spring.py. Name = feel; duration = settle time, perceived ≈ half.
+   - spring: bounce 0, visualDuration 0.3s — surfaces: sheets, dialogs, popovers,
+     reveals, card lifts. No overshoot.
+   - spring-snappy: bounce 0.15, visualDuration 0.18s — direct feedback: press,
+     arrow nudge, chevrons.
+   - spring-bouncy: bounce 0.3, visualDuration 0.35s — rare delight: success
+     states, badge bumps. Never on surfaces.
+   Rules: springs drive transform only (opacity/colour stay ease-out); exits are
+   faster and use ease-out-strong; enter from scale(0.95)+opacity, never scale(0);
+   popovers scale from their trigger (--transform-origin). */
+:root {
+  --spring: linear(
+    0,
+    0.016 2%,
+    0.061 4.1%,
+    0.123 6.1%,
+    0.194 8.2%,
+    0.258 10.2%,
+    0.406 14.3%,
+    0.474 16.3%,
+    0.587 20.4%,
+    0.64 22.4%,
+    0.687 24.5%,
+    0.729 26.5%,
+    0.794 30.6%,
+    0.848 34.7%,
+    0.903 40.8%,
+    0.929 44.9%,
+    0.956 51%,
+    0.972 57.1%,
+    0.983 63.3%,
+    0.991 71.4%,
+    1
+  );
+  --spring-duration: 550ms;
+  --spring-snappy: linear(
+    0,
+    0.043 3.3%,
+    0.152 6.7%,
+    0.425 13.3%,
+    0.647 20%,
+    0.74 23.3%,
+    0.815 26.7%,
+    0.864 30%,
+    0.909 33.3%,
+    0.942 36.7%,
+    0.965 40%,
+    0.99 46.7%,
+    0.997 50%,
+    1.003 56.7%,
+    1.004 63.3%,
+    1
+  );
+  --spring-snappy-duration: 340ms;
+  --spring-bouncy: linear(
+    0,
+    0.012 1.9%,
+    0.049 3.8%,
+    0.16 7.7%,
+    0.235 9.6%,
+    0.394 13.5%,
+    0.462 15.4%,
+    0.538 17.3%,
+    0.611 19.2%,
+    0.678 21.2%,
+    0.787 25%,
+    0.836 26.9%,
+    0.911 30.8%,
+    0.943 32.7%,
+    0.969 34.6%,
+    1.005 38.5%,
+    1.019 40.4%,
+    1.035 44.2%,
+    1.043 48.1%,
+    1.043 51.9%,
+    1.04 55.8%,
+    1.015 71.2%,
+    1.004 80.8%,
+    0.999 92.3%,
+    1
+  );
+  --spring-bouncy-duration: 580ms;
+  --ease-out-strong: cubic-bezier(0.23, 1, 0.32, 1);
+}
+
+/* Set only the --tw-* vars so transition-* / animate-* read them and any
+   variant (e.g. data-[ending-style]:duration-150) still overrides cleanly */
+@utility spring {
+  --tw-ease: var(--spring);
+  --tw-duration: var(--spring-duration);
+}
+@utility spring-snappy {
+  --tw-ease: var(--spring-snappy);
+  --tw-duration: var(--spring-snappy-duration);
+}
+@utility spring-bouncy {
+  --tw-ease: var(--spring-bouncy);
+  --tw-duration: var(--spring-bouncy-duration);
+}
+/* Pressable controls: transform on the snappy spring, colours on a fast ease-out
+   (a spring would make hover colour lag). Replaces transition-[transform,bg,…] */
+@utility transition-press {
+  transition-property:
+    transform, translate, scale, color, background-color, border-color, box-shadow, opacity;
+  transition-duration:
+    var(--spring-snappy-duration), var(--spring-snappy-duration), var(--spring-snappy-duration),
+    150ms, 150ms, 150ms, 150ms, 150ms;
+  transition-timing-function:
+    var(--spring-snappy), var(--spring-snappy), var(--spring-snappy), var(--ease-out-strong),
+    var(--ease-out-strong), var(--ease-out-strong), var(--ease-out-strong), var(--ease-out-strong);
+}
+@utility ease-out-strong {
+  --tw-ease: var(--ease-out-strong);
+}
+
 @keyframes fade-up {
   from {
     opacity: 0;
@@ -59,15 +175,15 @@
   opacity: 0;
   transform: translateY(20px);
   transition:
-    opacity 560ms cubic-bezier(0.22, 1, 0.36, 1),
-    transform 560ms cubic-bezier(0.22, 1, 0.36, 1);
+    opacity 400ms var(--ease-out-strong),
+    transform var(--spring-duration) var(--spring);
 }
 [data-fade-in="visible"] {
   opacity: 1;
   transform: translateY(0);
   transition:
-    opacity 560ms cubic-bezier(0.22, 1, 0.36, 1),
-    transform 560ms cubic-bezier(0.22, 1, 0.36, 1);
+    opacity 400ms var(--ease-out-strong),
+    transform var(--spring-duration) var(--spring);
 }
 /* Reveal must never hide content where transitions don't run.
    Same specificity as the pending selector; later in the file, so it wins. */
@@ -76,6 +192,12 @@
   [data-fade-in="visible"] {
     opacity: 1;
     transform: none;
+  }
+  ::view-transition-old(*),
+  ::view-transition-new(*),
+  ::view-transition-group(*) {
+    animation-duration: 0s !important;
+    animation-delay: 0s !important;
   }
 }
 
@@ -89,10 +211,20 @@
   }
 }
 
+/* Badge count grew: rebound from 70 % so the spring's overshoot reads as a bump */
+@keyframes badge-bump {
+  from {
+    transform: scale(0.7);
+  }
+  to {
+    transform: scale(1);
+  }
+}
+
 @keyframes pop-in {
   from {
     opacity: 0;
-    transform: scale(0.9);
+    transform: scale(0.95);
   }
   to {
     opacity: 1;
@@ -292,6 +424,73 @@ html[data-cookie-consent] #cookie-banner:not([data-open]) {
   }
 }
 
+/* View transitions (React <ViewTransition>): pages and the product grid.
+   Header/footer live in the root snapshot, which swaps instantly so the
+   chrome stays put; only the content moves. Exit fast, enter on the spring. */
+::view-transition {
+  pointer-events: none;
+}
+::view-transition-old(root),
+::view-transition-new(root) {
+  animation: none;
+}
+/* Header is its own layer above the page content, so its menus are never
+   painted under the incoming page; it swaps instantly like the rest of the chrome */
+::view-transition-group(site-header) {
+  animation: none;
+  z-index: 100;
+}
+::view-transition-old(site-header) {
+  display: none;
+}
+::view-transition-new(site-header) {
+  animation: none;
+}
+::view-transition-old(.page-exit) {
+  animation: 120ms var(--ease-out-strong) both vt-fade-out;
+}
+::view-transition-new(.page-enter) {
+  /* No delay: the new page starts while the old one leaves, so it never feels slow */
+  animation:
+    200ms var(--ease-out-strong) both vt-fade-in,
+    var(--spring-duration) var(--spring) both vt-rise;
+}
+::view-transition-old(.grid-out) {
+  animation: 100ms var(--ease-out-strong) both vt-fade-out;
+}
+::view-transition-new(.grid-in) {
+  animation: 180ms var(--ease-out-strong) 40ms both vt-fade-in;
+}
+/* Back/forward and checkout: swap instantly (flag set by PageTransition) */
+html[data-vt-off]::view-transition-old(*),
+html[data-vt-off]::view-transition-new(*),
+html[data-vt-off]::view-transition-group(*) {
+  animation: none;
+}
+@keyframes vt-fade-out {
+  to {
+    opacity: 0;
+  }
+}
+@keyframes vt-fade-in {
+  from {
+    opacity: 0;
+  }
+}
+@keyframes vt-rise {
+  from {
+    translate: 0 6px;
+  }
+}
+
+/* Product gallery: next/previous photo slides in from its side */
+@keyframes gallery-in {
+  from {
+    opacity: 0;
+    transform: translateX(calc(var(--gallery-dir, 0) * 24px)) scale(0.98);
+  }
+}
+
 /* Safety net for reduced motion: components still add their own motion-reduce fallbacks */
 @media (prefers-reduced-motion: reduce) {
   *,
@@ -309,12 +508,12 @@ html[data-cookie-consent] #cookie-banner:not([data-open]) {
   }
 }
 
-/* Asymmetric sonner toast timing: enter 300ms, exit 150ms */
+/* Asymmetric sonner toast timing: spring enter, quick ease-out exit */
 [data-sonner-toast][data-mounted="true"] {
-  transition-duration: 300ms !important;
-  transition-timing-function: ease-out !important;
+  transition-duration: var(--spring-duration) !important;
+  transition-timing-function: var(--spring) !important;
 }
 [data-sonner-toast][data-removed="true"] {
   transition-duration: 150ms !important;
-  transition-timing-function: ease-out !important;
+  transition-timing-function: var(--ease-out-strong) !important;
 }

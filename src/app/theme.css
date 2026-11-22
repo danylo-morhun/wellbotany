@@ -2,9 +2,14 @@
 @custom-variant dark (&:is(.dark *));
 
 @theme inline {
-  --animate-fade-up: fade-up 600ms cubic-bezier(0.22, 1, 0.36, 1) both;
+  --animate-fade-up: fade-up var(--spring-duration, 600ms) var(--spring, ease-out) both;
   --animate-float-soft: float-soft 5s ease-in-out infinite;
-  --animate-pop-in: pop-in 350ms cubic-bezier(0.22, 1, 0.36, 1) both;
+  --animate-text-in: btn-text-in var(--spring-snappy-duration, 200ms) var(--spring-snappy, ease-out)
+    both;
+  --animate-badge-bump: badge-bump var(--spring-bouncy-duration, 350ms)
+    var(--spring-bouncy, ease-out) both;
+  --animate-gallery-in: gallery-in var(--spring-duration, 400ms) var(--spring, ease-out) both;
+  --animate-pop-in: pop-in var(--spring-bouncy-duration, 350ms) var(--spring-bouncy, ease-out) both;
   --shadow-card: var(--elevation-card);
   --shadow-card-hover: var(--elevation-card-hover);
   --shadow-float: var(--elevation-float);
