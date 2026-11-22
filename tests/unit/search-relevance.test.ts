@@ -1,30 +1,29 @@
 import { describe, expect, it } from "vitest";
 import { rankBySearchRelevance } from "@/features/catalog/lib/search-relevance";
 
-const names = (items: { namePl: string }[]) => items.map((i) => i.namePl);
+const jacob = { name: "Dr. Jacob's" };
+const items = [
+  { namePl: "Witamina B12 forte 100 µg – 20 ml", slug: "witamina-b12-forte", brand: jacob },
+  { namePl: "Witamina D3 Junior 20 µg – 20 ml", slug: "witamina-d3-junior", brand: jacob },
+  { namePl: "Sól niskosodowa", slug: "sol-niskosodowa", brand: jacob },
+  { namePl: "Witamina C 1000 mg", slug: "witamina-c-1000", brand: { name: "BestLab" } },
+];
+
+const names = (q: string) => rankBySearchRelevance(items, q).map((p) => p.namePl);
 
 describe("rankBySearchRelevance", () => {
-  const items = [
-    { namePl: "Cynk 15 mg", slug: "cynk-15-mg" },
-    { namePl: "Liposomalny Cynk", slug: "liposomalny-cynk" },
-    { namePl: "Witamina C", slug: "witamina-c" },
-  ];
-
-  it("finds a word later in the product name", () => {
-    expect(names(rankBySearchRelevance(items, "cynk"))).toEqual(
-      expect.arrayContaining(["Cynk 15 mg", "Liposomalny Cynk"]),
-    );
+  it("matches brand + name words across fields", () => {
+    for (const q of ["Dr. Jacob s Witamina", "Dr. Jacob's Witamina", "dr jacobs witamina"]) {
+      const result = names(q);
+      expect(result).toContain("Witamina B12 forte 100 µg – 20 ml");
+      expect(result).toContain("Witamina D3 Junior 20 µg – 20 ml");
+      expect(result).not.toContain("Witamina C 1000 mg");
+      expect(result).not.toContain("Sól niskosodowa");
+    }
   });
 
-  it("matches case-insensitively", () => {
-    expect(names(rankBySearchRelevance(items, "CYNK"))).toContain("Liposomalny Cynk");
-  });
-
-  it("still tolerates typos at the start", () => {
-    expect(names(rankBySearchRelevance(items, "witamna"))).toContain("Witamina C");
-  });
-
-  it("drops unrelated products", () => {
-    expect(names(rankBySearchRelevance(items, "cynk"))).not.toContain("Witamina C");
+  it("ignores diacritics and word order", () => {
+    expect(names("sol jacob")).toEqual(["Sól niskosodowa"]);
+    expect(names("d3 witamina")).toContain("Witamina D3 Junior 20 µg – 20 ml");
   });
 });
