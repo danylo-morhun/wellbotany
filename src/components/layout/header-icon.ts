@@ -1,6 +1,6 @@
 /** One look for every icon button in the header row: 40px circle, mint hover. */
 export const headerIconClass =
-  "relative flex size-10 shrink-0 items-center justify-center rounded-full text-muted-foreground transition-colors hover:bg-secondary hover:text-primary-ink";
+  "relative flex size-10 shrink-0 items-center justify-center rounded-full text-muted-foreground transition-press hover:bg-secondary hover:text-primary-ink active:scale-[0.95] motion-reduce:active:scale-100";
 
 /** Count bubble on a header icon; min width keeps "99+" inside. */
 export const headerBadgeClass =
