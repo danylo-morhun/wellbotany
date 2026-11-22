@@ -1,3 +1,4 @@
+import { ViewTransition } from "react";
 import { pluralizeProducts } from "@/lib/format";
 import { getProducts } from "../actions";
 import { parseCatalogFilters } from "../lib/filters";
@@ -29,7 +30,10 @@ export async function CategoryProductResults({ searchParams, extraFilters, baseP
         </p>
         <SortSelect basePath={basePath} />
       </div>
-      <ProductGrid products={items} query={filters.search} clearHref={basePath} />
+      {/* New filter/sort/page result = new key: the grid crossfades in place */}
+      <ViewTransition key={JSON.stringify(filters)} enter="grid-in" exit="grid-out" default="none">
+        <ProductGrid products={items} query={filters.search} clearHref={basePath} />
+      </ViewTransition>
       <Pagination filters={filters} total={total} basePath={basePath} />
     </>
   );
