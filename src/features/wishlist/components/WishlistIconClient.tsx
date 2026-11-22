@@ -4,6 +4,7 @@ import { Heart, X } from "lucide-react";
 import Link from "next/link";
 import { useState } from "react";
 import { headerBadgeClass, headerIconClass } from "@/components/layout/header-icon";
+import { useCountBump } from "@/components/layout/useCountBump";
 import {
   Sheet,
   SheetClose,
@@ -19,6 +20,7 @@ export function WishlistIconClient() {
   const { wishlistItems: items } = useStorefrontSession();
   const itemCount = items.length;
   const [open, setOpen] = useState(false);
+  const bump = useCountBump(itemCount);
 
   return (
     <>
@@ -32,7 +34,8 @@ export function WishlistIconClient() {
         {itemCount > 0 && (
           <span
             aria-hidden
-            className={`${headerBadgeClass} bg-destructive text-destructive-foreground`}
+            key={bump}
+            className={`${headerBadgeClass} bg-destructive text-destructive-foreground ${bump ? "animate-badge-bump motion-reduce:animate-none" : ""}`}
           >
             {itemCount > 99 ? "99+" : itemCount}
           </span>
