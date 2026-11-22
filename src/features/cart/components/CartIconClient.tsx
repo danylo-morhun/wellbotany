@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { headerBadgeClass, headerIconClass } from "@/components/layout/header-icon";
+import { useCountBump } from "@/components/layout/useCountBump";
 import {
   Sheet,
   SheetClose,
@@ -24,6 +25,7 @@ export function CartIconClient() {
   const { cartItems: items } = useStorefrontSession();
   const itemCount = items.reduce((sum, item) => sum + item.quantity, 0);
   const [open, setOpen] = useState(false);
+  const bump = useCountBump(itemCount);
 
   useEffect(() => {
     const handleOpen = () => {
@@ -50,7 +52,11 @@ export function CartIconClient() {
       >
         <ShoppingCart className="size-5" aria-hidden />
         {itemCount > 0 && (
-          <span aria-hidden className={`${headerBadgeClass} bg-primary text-primary-foreground`}>
+          <span
+            key={bump}
+            aria-hidden
+            className={`${headerBadgeClass} bg-primary text-primary-foreground ${bump ? "animate-badge-bump motion-reduce:animate-none" : ""}`}
+          >
             {itemCount > 99 ? "99+" : itemCount}
           </span>
         )}
