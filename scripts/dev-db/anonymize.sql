@@ -1,7 +1,7 @@
 -- Strip personal data from a prod dump restored into a local dev DB.
 -- Catalog, prices, stock and order totals stay real; people don't.
 -- Admin accounts keep their e-mail (team, not customers) but lose the
--- prod password hash and TOTP secret — scripts/dev-db/refresh.sh sets a dev password.
+-- prod password hash and TOTP secret (e-mail login codes go to the dev server log) — scripts/dev-db/refresh.sh sets a dev password.
 BEGIN;
 
 UPDATE "Customer" SET

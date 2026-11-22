@@ -37,7 +37,9 @@ export async function sendEmailCode(customer: { id: string; email: string }): Pr
   }
 
   const resend = resendClient();
-  if (!resend) throw new Error("RESEND_API_KEY is not set — cannot send the login code");
+  // Local dev has no Resend key: the code goes to the server log instead
+  if (!resend && process.env.NODE_ENV === "production")
+    throw new Error("RESEND_API_KEY is not set — cannot send the login code");
 
   const code = String(randomInt(0, 1_000_000)).padStart(6, "0");
   await prisma.customer.update({
@@ -51,6 +53,10 @@ export async function sendEmailCode(customer: { id: string; email: string }): Pr
   });
 
   const spaced = `${code.slice(0, 3)} ${code.slice(3)}`;
+  if (!resend) {
+    console.info(`[auth] dev login code for ${customer.email}: ${spaced}`);
+    return;
+  }
   await sendEmail(resend, {
     from: EMAIL_FROM,
     to: customer.email,
