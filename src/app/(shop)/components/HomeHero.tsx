@@ -57,6 +57,7 @@ type HeroLink = { href: string; label: string };
 function HeroCopy({
   poster,
   oneLine = false,
+  stat,
   lead,
   note,
   primary,
@@ -64,6 +65,7 @@ function HeroCopy({
 }: {
   poster: readonly [string, string];
   oneLine?: boolean;
+  stat?: readonly [string, string, string];
   lead: string;
   note?: string | null;
   primary: HeroLink;
@@ -96,7 +98,26 @@ function HeroCopy({
           {poster[1]}
         </p>
       )}
-      <p className="mt-5 max-w-md text-base text-matcha-forest-foreground/85 md:text-lg">{lead}</p>
+      {stat && (
+        <p className="mt-6 flex items-center gap-3 text-matcha-lime md:mt-8">
+          <span className={cn(posterFont.className, "text-7xl leading-none md:text-8xl")}>
+            {stat[0]}
+          </span>
+          <span className="font-bold text-xl leading-tight md:text-2xl">
+            {stat[1]}
+            <br />
+            {stat[2]}
+          </span>
+        </p>
+      )}
+      <p
+        className={cn(
+          "max-w-md text-base text-matcha-forest-foreground/85 md:text-lg",
+          stat ? "mt-3" : "mt-5",
+        )}
+      >
+        {lead}
+      </p>
       {note && (
         <p className="mt-3 max-w-md text-sm font-semibold text-matcha-lime md:text-base">{note}</p>
       )}
@@ -155,6 +176,7 @@ export function HomeHero({ productCount, hasDeals, campaign, cartDiscount }: Pro
             <HeroCopy
               poster={campaign.hero.poster}
               oneLine
+              stat={campaign.hero.stat}
               lead={campaign.hero.lead}
               note={cartDiscount}
               primary={{ href: "/katalog?promocje=1", label: "Zobacz obniżki" }}
