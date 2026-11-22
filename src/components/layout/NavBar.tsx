@@ -48,7 +48,7 @@ export async function NavBar() {
 
   return (
     <>
-      <header className="sticky top-0 z-50 bg-background/95 backdrop-blur-sm print:hidden">
+      <header className="sticky top-0 z-50 bg-background/95 backdrop-blur-sm [view-transition-name:site-header] print:hidden">
         {ordersPaused && (
           <p
             role="status"

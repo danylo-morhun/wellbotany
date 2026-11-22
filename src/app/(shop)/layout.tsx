@@ -3,6 +3,7 @@ import { CheckoutFooter } from "@/components/layout/CheckoutFooter";
 import { CheckoutHeader } from "@/components/layout/CheckoutHeader";
 import { Footer } from "@/components/layout/Footer";
 import { NavBar } from "@/components/layout/NavBar";
+import { PageTransition } from "@/components/layout/PageTransition";
 import { NewsletterPrompt } from "@/features/newsletter/components/NewsletterPrompt";
 import { StorefrontSessionProvider } from "@/features/session/components/StorefrontSessionProvider";
 
@@ -20,7 +21,7 @@ export default function ShopLayout({ children }: { children: React.ReactNode }) 
         <NavBar />
       </CheckoutChrome>
       <main id="main" tabIndex={-1} className="flex-1 outline-none">
-        {children}
+        <PageTransition>{children}</PageTransition>
       </main>
       <CheckoutChrome checkout={<CheckoutFooter />}>
         <Footer />
