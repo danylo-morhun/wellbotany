@@ -25,7 +25,7 @@ import { HeroSlider } from "@/features/home/components/HeroSlider";
 import { getHomeBanners } from "@/features/home/lib/banners";
 import { campaignToRender } from "@/features/home/lib/campaign";
 import { HideIfSubscribed } from "@/features/newsletter/components/HideIfSubscribed";
-import { describeTiers, isTierPromoLive } from "@/features/promotions/lib/tiered";
+import { isTierPromoLive } from "@/features/promotions/lib/tiered";
 import { getShopSettings } from "@/features/settings/lib/shop-settings";
 import { formatPriceCompact } from "@/lib/format";
 import { pageSeo } from "@/lib/seo";
@@ -76,7 +76,7 @@ export default async function HomePage() {
   // (the server renders up to an hour early); it only takes lines not on sale
   const cartDiscount =
     campaign && !ordersPaused && isTierPromoLive(tierPromo, maxDate(new Date(), campaign.startsAt))
-      ? `${tierPromo.name}: rabat od koszyka ${describeTiers(tierPromo.tiers, formatPriceCompact)} na produkty bez obniżki, bez kodu.`
+      ? tierPromo.tiers.map((t) => ({ percent: t.percent, from: formatPriceCompact(t.minPln) }))
       : null;
   const giftFromPln = giftSets.length > 0 ? Math.min(...giftSets.map((gs) => gs.pricePln)) : null;
 
