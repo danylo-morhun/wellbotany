@@ -102,7 +102,7 @@ export function MobileMenu({ navLinks, utilityLinks, nav, showPromos }: Props) {
                 className={`${linkClass} flex cursor-pointer list-none items-center justify-between [&::-webkit-details-marker]:hidden`}
               >
                 {menu.label}
-                <ChevronDown className="size-4 shrink-0 text-muted-foreground transition-transform group-open:rotate-180" />
+                <ChevronDown className="size-4 shrink-0 text-muted-foreground transition-transform spring-snappy group-open:rotate-180" />
               </summary>
               <div className="flex flex-col gap-0.5 pb-1">
                 <Link href={menu.href} className={subLinkClass}>
@@ -113,7 +113,7 @@ export function MobileMenu({ navLinks, utilityLinks, nav, showPromos }: Props) {
                     <details key={section.title} className="group/col">
                       <summary className="flex cursor-pointer list-none items-center justify-between rounded-xl py-2 pr-3.5 pl-5 text-sm font-medium text-foreground transition-colors hover:bg-secondary hover:text-primary-ink [&::-webkit-details-marker]:hidden">
                         {section.title}
-                        <ChevronDown className="size-3.5 shrink-0 text-muted-foreground transition-transform group-open/col:rotate-180" />
+                        <ChevronDown className="size-3.5 shrink-0 text-muted-foreground transition-transform spring-snappy group-open/col:rotate-180" />
                       </summary>
                       <div className="flex flex-col gap-0.5 pb-1">
                         {section.href && (

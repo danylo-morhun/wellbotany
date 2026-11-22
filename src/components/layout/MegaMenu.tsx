@@ -86,7 +86,7 @@ function ListBody({ sections, footer }: { sections: NavSection[]; footer: ReactN
 }
 
 /** One shell for every menu: full-width panel, same padding, "see all" link at the bottom. */
-function MenuPanel({ menu }: { menu: NavMenu }) {
+function MenuPanel({ menu, onNavigate }: { menu: NavMenu; onNavigate: () => void }) {
   const footer = (
     <Link
       href={menu.href}
@@ -94,13 +94,21 @@ function MenuPanel({ menu }: { menu: NavMenu }) {
     >
       {menu.seeAllLabel}
       <ArrowRight
-        className="size-4 transition-transform group-hover:translate-x-0.5 motion-reduce:transition-none"
+        className="size-4 transition-transform spring-snappy group-hover:translate-x-0.5 motion-reduce:transition-none"
         aria-hidden
       />
     </Link>
   );
   return (
-    <div className="absolute inset-x-0 top-full z-40 rounded-b-2xl border-t border-border bg-card shadow-float">
+    // Close on link click, before the route transition snapshots the header
+    // biome-ignore lint/a11y/useKeyWithClickEvents: delegated from the links inside, which stay keyboard-operable
+    // biome-ignore lint/a11y/noStaticElementInteractions: same delegation
+    <div
+      onClick={(e) => {
+        if ((e.target as HTMLElement).closest("a")) onNavigate();
+      }}
+      className="absolute inset-x-0 top-full z-40 origin-top rounded-b-2xl border-t border-border bg-card shadow-float animate-in fade-in-0 slide-in-from-top-1 spring motion-reduce:animate-none"
+    >
       <div className="flex flex-col px-4 py-6 sm:px-6 lg:px-8">
         {menu.layout === "groups" ? (
           <>
@@ -118,6 +126,7 @@ function MenuPanel({ menu }: { menu: NavMenu }) {
 export function MegaMenu({ nav, showPromos }: Props) {
   const [openMenu, setOpenMenu] = useState<string | null>(null);
   const pathname = usePathname();
+  const activeMenu = nav.find((menu) => menu.key === openMenu);
 
   useEffect(() => {
     if (pathname) setOpenMenu(null);
@@ -155,7 +164,7 @@ export function MegaMenu({ nav, showPromos }: Props) {
                 {menu.label}
                 <ChevronDown
                   className={cn(
-                    "size-3.5 transition-transform",
+                    "size-3.5 transition-transform spring-snappy motion-reduce:transition-none",
                     openMenu === menu.key && "rotate-180",
                   )}
                   aria-hidden="true"
@@ -196,7 +205,8 @@ export function MegaMenu({ nav, showPromos }: Props) {
           )}
         </div>
 
-        {nav.map((menu) => openMenu === menu.key && <MenuPanel key={menu.key} menu={menu} />)}
+        {/* One keyless panel: it animates in once on open; switching tabs swaps content in place */}
+        {activeMenu && <MenuPanel menu={activeMenu} onNavigate={() => setOpenMenu(null)} />}
       </div>
     </nav>
   );
