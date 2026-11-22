@@ -62,8 +62,30 @@ export default async function HomePage() {
   const campaign = campaignToRender();
   const giftFromPln = giftSets.length > 0 ? Math.min(...giftSets.map((gs) => gs.pricePln)) : null;
 
-  // Bands after the opening alternate mint/plain (DESIGN.md §5)
+  const shelf = (i: number) => {
+    const s = categoryShelves[i];
+    return (
+      s &&
+      s.products.length > 0 && (
+        <FadeInView key={s.id}>
+          <HomeCategoryShelf {...s} />
+        </FadeInView>
+      )
+    );
+  };
+
+  // Bestsellers, then the ways in (categories, ingredients), then the niche
+  // shelves, mixed with guides so product rows do not stack. Bands alternate
+  // mint/plain (DESIGN.md §5)
   const rest = [
+    <FadeInView key="tabs">
+      <BestsellerTabs tabs={tabs} />
+    </FadeInView>,
+    <HomeIntro key="intro" categories={categories} headline={false} />,
+    <FadeInView key="ingredients" className="grid gap-10 lg:grid-cols-2 lg:gap-12">
+      <IngredientTiles tiles={ingredientTiles} />
+      <BrandStrip brands={brands} />
+    </FadeInView>,
     (giftSets.length > 0 || builderActive) && (
       <FadeInView key="gifts">
         <HomeGiftSets giftSets={giftSets} builderActive={builderActive} />
@@ -74,38 +96,18 @@ export default async function HomePage() {
         <HerbalistPicks picks={picks} />
       </FadeInView>
     ),
-    <FadeInView key="food">
-      <HomeFoodShelf products={foodShelf} categories={foodCategories} />
-    </FadeInView>,
-    <FadeInView key="tabs">
-      <BestsellerTabs tabs={tabs} />
-    </FadeInView>,
-    categoryShelves[0] && categoryShelves[0].products.length > 0 && (
-      <FadeInView key={categoryShelves[0].id}>
-        <HomeCategoryShelf {...categoryShelves[0]} />
-      </FadeInView>
-    ),
-    <FadeInView key="help">
-      <HelpAndGuides categories={categories} />
-    </FadeInView>,
-    categoryShelves[1] && categoryShelves[1].products.length > 0 && (
-      <FadeInView key={categoryShelves[1].id}>
-        <HomeCategoryShelf {...categoryShelves[1]} />
-      </FadeInView>
-    ),
-    <HomeIntro key="intro" categories={categories} headline={false} />,
-    <FadeInView key="ingredients" className="grid gap-10 lg:grid-cols-2 lg:gap-12">
-      <IngredientTiles tiles={ingredientTiles} />
-      <BrandStrip brands={brands} />
-    </FadeInView>,
-    categoryShelves[2] && categoryShelves[2].products.length > 0 && (
-      <FadeInView key={categoryShelves[2].id}>
-        <HomeCategoryShelf {...categoryShelves[2]} />
-      </FadeInView>
-    ),
     <FadeInView key="new">
       <HomeNewArrivals products={newArrivals} />
     </FadeInView>,
+    <FadeInView key="food">
+      <HomeFoodShelf products={foodShelf} categories={foodCategories} />
+    </FadeInView>,
+    shelf(0),
+    <FadeInView key="help">
+      <HelpAndGuides categories={categories} />
+    </FadeInView>,
+    shelf(1),
+    shelf(2),
   ].filter(Boolean);
 
   // Hero, three doors, campaigns, then the deals (deals first on phones): the first screen sells
