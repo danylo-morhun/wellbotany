@@ -49,7 +49,7 @@ export default async function KoszykPage() {
           </div>
           <Link
             href="/katalog"
-            className="rounded-full bg-primary px-6 py-2.5 text-sm font-semibold text-primary-foreground transition-[transform,background-color] duration-[160ms] ease-[cubic-bezier(0.23,1,0.32,1)] hover:bg-primary-deep active:scale-[0.97] motion-reduce:transition-none motion-reduce:active:scale-100"
+            className="rounded-full bg-primary px-6 py-2.5 text-sm font-semibold text-primary-foreground transition-press hover:bg-primary-deep active:scale-[0.97] motion-reduce:transition-none motion-reduce:active:scale-100"
           >
             Przejdź do katalogu
           </Link>
@@ -77,7 +77,7 @@ export default async function KoszykPage() {
           href="/katalog"
           className="group flex min-h-11 items-center gap-1.5 text-sm text-muted-foreground transition-colors hover:text-primary"
         >
-          <span className="transition-transform group-hover:-translate-x-0.5">←</span>
+          <span className="transition-transform spring-snappy group-hover:-translate-x-0.5">←</span>
           Kontynuuj zakupy
         </Link>
       </div>
