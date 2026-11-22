@@ -48,11 +48,11 @@ export async function HelpAndGuides({ categories }: Props) {
         </ul>
         <Link
           href="/kontakt"
-          className="group inline-flex h-11 items-center gap-1.5 rounded-full bg-primary px-5 text-sm font-semibold text-primary-foreground transition-[background-color,transform] duration-200 hover:bg-primary-deep active:scale-[0.97] motion-reduce:transition-none motion-reduce:active:scale-100"
+          className="group inline-flex h-11 items-center gap-1.5 rounded-full bg-primary px-5 text-sm font-semibold text-primary-foreground transition-press hover:bg-primary-deep active:scale-[0.97] motion-reduce:transition-none motion-reduce:active:scale-100"
         >
           Napisz do nas
           <ArrowRight
-            className="size-4 transition-transform duration-200 group-hover:translate-x-0.5 motion-reduce:transition-none motion-reduce:group-hover:translate-x-0"
+            className="size-4 transition-transform spring-snappy group-hover:translate-x-0.5 motion-reduce:transition-none motion-reduce:group-hover:translate-x-0"
             aria-hidden
           />
         </Link>
@@ -84,7 +84,7 @@ export async function HelpAndGuides({ categories }: Props) {
                       </span>
                     </span>
                     <ArrowRight
-                      className="size-4 shrink-0 text-primary transition-transform duration-200 group-hover:translate-x-0.5 motion-reduce:transition-none motion-reduce:group-hover:translate-x-0"
+                      className="size-4 shrink-0 text-primary transition-transform spring-snappy group-hover:translate-x-0.5 motion-reduce:transition-none motion-reduce:group-hover:translate-x-0"
                       aria-hidden
                     />
                   </Link>

@@ -30,7 +30,7 @@ export function SeeAllLink({ href, label }: { href: string; label: string }) {
     >
       {label}
       <ArrowRight
-        className="size-4 transition-transform duration-200 group-hover:translate-x-0.5 motion-reduce:transition-none motion-reduce:group-hover:translate-x-0"
+        className="size-4 transition-transform spring-snappy group-hover:translate-x-0.5 motion-reduce:transition-none motion-reduce:group-hover:translate-x-0"
         aria-hidden
       />
     </Link>

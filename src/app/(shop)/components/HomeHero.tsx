@@ -156,7 +156,7 @@ function HeroCopy({
         <Link
           href={primary.href}
           className={cn(
-            "group inline-flex min-h-12 items-center gap-2 rounded-full bg-matcha-paper px-6 font-bold text-matcha-forest transition-transform duration-200 motion-reduce:transition-none",
+            "group inline-flex min-h-12 items-center gap-2 rounded-full bg-matcha-paper px-6 font-bold text-matcha-forest transition-transform spring-snappy motion-reduce:transition-none",
             // Stretched: an overlay over the band makes it all one link; no press scale,
             // which would shrink the overlay to the button mid-click
             stretch
@@ -166,7 +166,7 @@ function HeroCopy({
         >
           {primary.label}
           <ArrowRight
-            className="size-4 transition-transform duration-200 group-hover:translate-x-0.5 motion-reduce:transition-none"
+            className="size-4 transition-transform spring-snappy group-hover:translate-x-0.5 motion-reduce:transition-none"
             aria-hidden
           />
         </Link>

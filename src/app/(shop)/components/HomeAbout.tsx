@@ -20,7 +20,7 @@ export function HomeAbout() {
           <span className="group-open:hidden">Czytaj więcej</span>
           <span className="hidden group-open:inline">Zwiń</span>
           <ChevronDown
-            className="size-4 transition-transform duration-200 group-open:rotate-180 motion-reduce:transition-none"
+            className="size-4 transition-transform spring-snappy group-open:rotate-180 motion-reduce:transition-none"
             aria-hidden
           />
         </summary>

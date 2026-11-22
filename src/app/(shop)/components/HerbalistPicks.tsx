@@ -35,7 +35,7 @@ export function HerbalistPicks({ picks }: Props) {
             <li key={product.id}>
               <Link
                 href={`/produkt/${product.slug}`}
-                className="group flex h-full gap-4 rounded-[1.75rem] bg-card p-4 shadow-card transition-[box-shadow,transform] duration-200 ease-out hover:-translate-y-0.5 hover:shadow-card-hover motion-reduce:transition-none motion-reduce:hover:translate-y-0 md:p-5"
+                className="group flex h-full gap-4 rounded-[1.75rem] bg-card p-4 shadow-card transition-[box-shadow,transform] spring hover:-translate-y-0.5 hover:shadow-card-hover motion-reduce:transition-none motion-reduce:hover:translate-y-0 md:p-5"
               >
                 <span className="relative h-36 w-24 shrink-0 md:h-40 md:w-28">
                   {image && (

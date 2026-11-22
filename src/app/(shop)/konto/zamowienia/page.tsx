@@ -51,7 +51,7 @@ export default async function ZamowieniaPage() {
           <Link
             key={order.id}
             href={`/konto/zamowienia/${order.orderNumber}`}
-            className="flex flex-col gap-1 rounded-2xl bg-card p-4 shadow-card transition-[box-shadow,transform] duration-200 ease-out hover:-translate-y-0.5 hover:shadow-card-hover motion-reduce:transition-none motion-reduce:hover:translate-y-0 sm:flex-row sm:items-center sm:justify-between"
+            className="flex flex-col gap-1 rounded-2xl bg-card p-4 shadow-card transition-[box-shadow,transform] spring hover:-translate-y-0.5 hover:shadow-card-hover motion-reduce:transition-none motion-reduce:hover:translate-y-0 sm:flex-row sm:items-center sm:justify-between"
           >
             <div>
               <p className="font-medium">{order.orderNumber}</p>
