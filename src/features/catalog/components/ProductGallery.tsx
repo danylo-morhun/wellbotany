@@ -28,8 +28,18 @@ export function ProductGallery(props: Props) {
 function VariantGallery({ images, productName, variantId }: Props & { variantId: string | null }) {
   const fallback = imagesForVariant(images, variantId);
   const mainIndex = fallback.findIndex((img) => img.isMain);
-  const [active, setActive] = useState(mainIndex >= 0 ? mainIndex : 0);
+  const [active, setActiveIndex] = useState(mainIndex >= 0 ? mainIndex : 0);
+  // Slide direction of the last change: 1 = from the right, -1 = from the left,
+  // 0 = not changed yet (first paint is the LCP image — never animate it)
+  const [dir, setDir] = useState(0);
   const [touchStart, setTouchStart] = useState<number | null>(null);
+
+  const setActive = (next: number | ((i: number) => number)) =>
+    setActiveIndex((i) => {
+      const n = typeof next === "function" ? next(i) : next;
+      if (n !== i) setDir(n > i ? 1 : -1);
+      return n;
+    });
 
   const handleTouchStart = (e: TouchEvent<HTMLDivElement>) =>
     setTouchStart(e.targetTouches[0].clientX);
@@ -61,12 +71,14 @@ function VariantGallery({ images, productName, variantId }: Props & { variantId:
         onTouchEnd={handleTouchEnd}
       >
         <Image
+          key={current.id}
           src={current.url}
           alt={current.altPl ?? productName}
           fill
+          style={{ "--gallery-dir": dir } as React.CSSProperties}
           // Page gutter is 1rem per side below sm — at DPR 3 this picks 1080 w instead of 1920 w
           sizes="(max-width: 639px) calc(100vw - 2rem), (max-width: 1023px) calc(100vw - 3rem), 600px"
-          className="object-contain"
+          className={`object-contain ${dir ? "animate-gallery-in motion-reduce:animate-none" : ""}`}
           // LCP element on mobile: preload + high fetch priority (`priority` alone no longer sets it)
           preload
           fetchPriority="high"
@@ -80,7 +92,7 @@ function VariantGallery({ images, productName, variantId }: Props & { variantId:
               key={img.id}
               type="button"
               onClick={() => setActive(index)}
-              className={`relative size-16 shrink-0 overflow-hidden rounded-lg border-2 transition-colors ${
+              className={`relative size-16 shrink-0 overflow-hidden rounded-lg border-2 transition-press active:scale-[0.95] motion-reduce:active:scale-100 ${
                 index === active ? "border-primary" : "border-transparent"
               }`}
               aria-label={`Zdjęcie ${index + 1}`}
