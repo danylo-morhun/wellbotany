@@ -91,8 +91,8 @@ export function PointPicker({ service, pointName, onSelect }: Props) {
         Wybierz na mapie
       </Dialog.Trigger>
       <Dialog.Portal>
-        <Dialog.Backdrop className="fixed inset-0 z-50 bg-black/50" />
-        <Dialog.Popup className="fixed inset-0 z-50 flex flex-col bg-background outline-none sm:inset-6 sm:mx-auto sm:max-w-5xl sm:rounded-xl sm:shadow-float">
+        <Dialog.Backdrop className="fixed inset-0 z-50 bg-black/50 transition-opacity duration-300 ease-out-strong data-[ending-style]:opacity-0 data-[ending-style]:duration-150 data-[starting-style]:opacity-0 motion-reduce:transition-none" />
+        <Dialog.Popup className="fixed inset-0 z-50 flex flex-col bg-background outline-none sm:inset-6 sm:mx-auto sm:max-w-5xl sm:rounded-xl sm:shadow-float transition-[opacity,scale,translate] spring data-[ending-style]:translate-y-4 data-[ending-style]:opacity-0 data-[ending-style]:duration-150 data-[ending-style]:ease-out-strong data-[starting-style]:translate-y-4 data-[starting-style]:opacity-0 sm:data-[ending-style]:translate-y-0 sm:data-[ending-style]:scale-[0.97] sm:data-[starting-style]:translate-y-0 sm:data-[starting-style]:scale-[0.97] motion-reduce:transition-none">
           <div className="flex items-center justify-between gap-3 border-b border-border px-4 py-3">
             <Dialog.Title className="text-base font-semibold">Wybierz {pointName}</Dialog.Title>
             <Dialog.Close
