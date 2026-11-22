@@ -147,7 +147,7 @@ export function HeaderSearch({
       />
 
       {showDropdown && (
-        <div className="animate-in fade-in-0 zoom-in-95 motion-reduce:animate-none absolute z-50 mt-2 w-full origin-top overflow-hidden rounded-2xl border border-border bg-card shadow-float duration-150">
+        <div className="animate-in fade-in-0 zoom-in-95 motion-reduce:animate-none absolute z-50 mt-2 w-full origin-top overflow-hidden rounded-2xl border border-border bg-card shadow-float spring-snappy">
           <div className="max-h-80 overflow-y-auto">
             {isPending &&
               SKELETON_WIDTHS.map((width) => (

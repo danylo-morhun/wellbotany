@@ -105,7 +105,7 @@ export function GiftBuilder({ settings, pool, packagings }: Props) {
                   disabled={disabled}
                   aria-pressed={selected}
                   onClick={() => toggle(item.variantId)}
-                  className={`relative flex flex-col overflow-hidden rounded-2xl bg-card text-left shadow-card transition-[box-shadow,transform] duration-200 ease-out disabled:cursor-not-allowed disabled:opacity-40 ${
+                  className={`relative flex flex-col overflow-hidden rounded-2xl bg-card text-left shadow-card transition-[box-shadow,transform] spring disabled:cursor-not-allowed disabled:opacity-40 ${
                     selected
                       ? "ring-2 ring-primary"
                       : "hover:-translate-y-0.5 hover:shadow-card-hover motion-reduce:hover:translate-y-0"
@@ -170,7 +170,7 @@ export function GiftBuilder({ settings, pool, packagings }: Props) {
                     type="button"
                     aria-pressed={selected}
                     onClick={() => setPackagingId(p.id)}
-                    className={`flex flex-col overflow-hidden rounded-2xl bg-card text-left shadow-card transition-[box-shadow,transform] duration-200 ease-out ${
+                    className={`flex flex-col overflow-hidden rounded-2xl bg-card text-left shadow-card transition-[box-shadow,transform] spring ${
                       selected
                         ? "ring-2 ring-primary"
                         : "hover:-translate-y-0.5 hover:shadow-card-hover motion-reduce:hover:translate-y-0"
@@ -260,7 +260,7 @@ export function GiftBuilder({ settings, pool, packagings }: Props) {
                 giftMessage: giftMessage.trim() || undefined,
               })
             }
-            className="mt-4 flex w-full items-center justify-center gap-2 rounded-full bg-primary px-6 py-3.5 text-sm font-semibold text-primary-foreground transition-[transform,background-color] duration-[160ms] ease-[cubic-bezier(0.23,1,0.32,1)] hover:bg-primary-deep active:scale-[0.97] disabled:cursor-not-allowed disabled:opacity-50 motion-reduce:transition-none motion-reduce:active:scale-100"
+            className="mt-4 flex w-full items-center justify-center gap-2 rounded-full bg-primary px-6 py-3.5 text-sm font-semibold text-primary-foreground transition-press hover:bg-primary-deep active:scale-[0.97] disabled:cursor-not-allowed disabled:opacity-50 motion-reduce:transition-none motion-reduce:active:scale-100"
           >
             {isExecuting ? "Dodawanie…" : "Dodaj zestaw do koszyka"}
           </button>

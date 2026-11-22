@@ -32,7 +32,7 @@ export function GiftSetCard({ giftSet, headingLevel = 2 }: Props) {
   return (
     <Link
       href={`/zestawy-prezentowe/${giftSet.slug}`}
-      className="group flex flex-col overflow-hidden rounded-2xl bg-card shadow-card transition-[box-shadow,transform] duration-200 ease-out hover:-translate-y-0.5 hover:shadow-card-hover motion-reduce:transition-none motion-reduce:hover:translate-y-0"
+      className="group flex flex-col overflow-hidden rounded-2xl bg-card shadow-card transition-[box-shadow,transform] spring hover:-translate-y-0.5 hover:shadow-card-hover motion-reduce:transition-none motion-reduce:hover:translate-y-0"
     >
       <div className="relative aspect-square overflow-hidden bg-card">
         {pct != null && <DiscountBadge percent={pct} variant="corner" />}
@@ -42,7 +42,7 @@ export function GiftSetCard({ giftSet, headingLevel = 2 }: Props) {
             alt={giftSet.namePl}
             fill
             sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
-            className="object-contain p-5 transition-transform duration-300 ease-out group-hover:scale-[1.05] motion-reduce:group-hover:scale-100"
+            className="object-contain p-5 transition-transform spring group-hover:scale-[1.05] motion-reduce:group-hover:scale-100"
           />
         ) : giftSet.itemImages?.length ? (
           <div className="flex h-full items-center justify-center bg-secondary/60 px-4">
@@ -61,7 +61,7 @@ export function GiftSetCard({ giftSet, headingLevel = 2 }: Props) {
                   alt=""
                   fill
                   sizes="(max-width: 640px) 20vw, 12vw"
-                  className="object-contain p-1.5 transition-transform duration-300 ease-out group-hover:scale-[1.04] motion-reduce:group-hover:scale-100"
+                  className="object-contain p-1.5 transition-transform spring group-hover:scale-[1.04] motion-reduce:group-hover:scale-100"
                 />
               </div>
             ))}

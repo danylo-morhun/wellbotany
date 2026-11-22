@@ -82,11 +82,11 @@ export function StickyAddToCart({
           type="button"
           onClick={() => execute({ variantId: selectedVariantId, quantity: 1 })}
           disabled={isExecuting || stock <= 0}
-          className="min-h-11 rounded-full bg-primary px-6 py-2 text-sm font-semibold text-primary-foreground transition-[transform,background-color,color,border-color] duration-[160ms] ease-[cubic-bezier(0.23,1,0.32,1)] hover:bg-primary-deep active:scale-[0.97] disabled:opacity-50 motion-reduce:transition-none motion-reduce:active:scale-100"
+          className="min-h-11 rounded-full bg-primary px-6 py-2 text-sm font-semibold text-primary-foreground transition-press hover:bg-primary-deep active:scale-[0.97] disabled:opacity-50 motion-reduce:transition-none motion-reduce:active:scale-100"
         >
           <span
             key={stock <= 0 ? "brak" : isExecuting ? "loading" : succeeded ? "success" : "idle"}
-            className="inline-flex items-center gap-1.5 animate-[btn-text-in_200ms_ease-out_both] motion-reduce:animate-none"
+            className="inline-flex items-center gap-1.5 animate-text-in motion-reduce:animate-none"
           >
             {stock <= 0 ? (
               "Brak"
