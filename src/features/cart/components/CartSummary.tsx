@@ -97,7 +97,7 @@ export function CartSummary({
       <div className="px-6 pb-5">
         <Link
           href="/zamowienie"
-          className="block w-full rounded-full bg-primary px-4 py-3.5 text-center text-sm font-semibold text-primary-foreground transition-[transform,background-color] duration-[160ms] ease-[cubic-bezier(0.23,1,0.32,1)] hover:bg-primary-deep active:scale-[0.98] motion-reduce:transition-none motion-reduce:active:scale-100"
+          className="block w-full rounded-full bg-primary px-4 py-3.5 text-center text-sm font-semibold text-primary-foreground transition-press hover:bg-primary-deep active:scale-[0.98] motion-reduce:transition-none motion-reduce:active:scale-100"
         >
           Przejdź do kasy
         </Link>

@@ -107,7 +107,7 @@ export function AddToCartSection({ variants, ordersPaused = false, productName }
                 onClick={() => setSelectedId(v.id)}
                 disabled={v.stock <= 0}
                 aria-pressed={v.id === selectedId}
-                className={`inline-flex items-center gap-1 rounded-md border px-3 py-1.5 text-sm transition-[transform,background-color,color,border-color] duration-[160ms] ease-[cubic-bezier(0.23,1,0.32,1)] active:scale-[0.97] disabled:opacity-40 motion-reduce:transition-none motion-reduce:active:scale-100 ${
+                className={`inline-flex items-center gap-1 rounded-md border px-3 py-1.5 text-sm transition-press active:scale-[0.97] disabled:opacity-40 motion-reduce:transition-none motion-reduce:active:scale-100 ${
                   v.id === selectedId
                     ? "border-primary bg-primary font-semibold text-primary-foreground"
                     : "border-input hover:border-primary hover:bg-muted"
@@ -161,7 +161,7 @@ export function AddToCartSection({ variants, ordersPaused = false, productName }
               onClick={() => setQuantity((q) => Math.max(1, q - 1))}
               disabled={quantity <= 1}
               aria-label="Zmniejsz ilość"
-              className="flex size-9 items-center justify-center transition-[transform,background-color] duration-[160ms] ease-[cubic-bezier(0.23,1,0.32,1)] hover:bg-muted active:scale-[0.97] disabled:opacity-40 motion-reduce:active:scale-100"
+              className="flex size-9 items-center justify-center transition-press hover:bg-muted active:scale-[0.97] disabled:opacity-40 motion-reduce:active:scale-100"
             >
               <Minus className="size-4" />
             </button>
@@ -171,7 +171,7 @@ export function AddToCartSection({ variants, ordersPaused = false, productName }
               onClick={() => setQuantity((q) => Math.min(selected.stock, q + 1))}
               disabled={quantity >= selected.stock}
               aria-label="Zwiększ ilość"
-              className="flex size-9 items-center justify-center transition-[transform,background-color] duration-[160ms] ease-[cubic-bezier(0.23,1,0.32,1)] hover:bg-muted active:scale-[0.97] disabled:opacity-40 motion-reduce:active:scale-100"
+              className="flex size-9 items-center justify-center transition-press hover:bg-muted active:scale-[0.97] disabled:opacity-40 motion-reduce:active:scale-100"
             >
               <Plus className="size-4" />
             </button>
@@ -183,7 +183,7 @@ export function AddToCartSection({ variants, ordersPaused = false, productName }
         type="button"
         disabled={isExecuting || !available}
         onClick={() => execute({ variantId: selected.id, quantity })}
-        className="flex w-full items-center justify-center gap-2 rounded-lg bg-primary px-4 py-3 text-sm font-medium text-primary-foreground transition-[transform,background-color,color,border-color] duration-[160ms] ease-[cubic-bezier(0.23,1,0.32,1)] hover:bg-primary-deep active:scale-[0.97] disabled:cursor-not-allowed disabled:opacity-50 motion-reduce:transition-none motion-reduce:active:scale-100"
+        className="flex w-full items-center justify-center gap-2 rounded-lg bg-primary px-4 py-3 text-sm font-medium text-primary-foreground transition-press hover:bg-primary-deep active:scale-[0.97] disabled:cursor-not-allowed disabled:opacity-50 motion-reduce:transition-none motion-reduce:active:scale-100"
       >
         {succeeded && !isExecuting ? (
           <Check className="size-4" aria-hidden />
@@ -192,7 +192,7 @@ export function AddToCartSection({ variants, ordersPaused = false, productName }
         ) : null}
         <span
           key={isExecuting ? "loading" : succeeded ? "success" : "idle"}
-          className="animate-[btn-text-in_200ms_ease-out_both] motion-reduce:animate-none"
+          className="animate-text-in motion-reduce:animate-none"
         >
           {ordersPaused
             ? "Chwilowo niedostępny"
