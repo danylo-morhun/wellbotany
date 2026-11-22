@@ -129,11 +129,11 @@ export function ContactForm() {
       <button
         type="submit"
         disabled={isExecuting}
-        className="rounded-full bg-primary px-6 py-2.5 text-sm font-semibold text-primary-foreground transition-[transform,background-color] duration-200 hover:bg-primary-deep active:scale-[0.97] disabled:opacity-60 motion-reduce:transition-none motion-reduce:active:scale-100"
+        className="rounded-full bg-primary px-6 py-2.5 text-sm font-semibold text-primary-foreground transition-press hover:bg-primary-deep active:scale-[0.97] disabled:opacity-60 motion-reduce:transition-none motion-reduce:active:scale-100"
       >
         <span
           key={isExecuting ? "loading" : "idle"}
-          className="inline-block animate-[btn-text-in_200ms_ease-out_both] motion-reduce:animate-none"
+          className="inline-block animate-text-in motion-reduce:animate-none"
         >
           {isExecuting ? "Wysyłanie…" : "Wyślij wiadomość"}
         </span>

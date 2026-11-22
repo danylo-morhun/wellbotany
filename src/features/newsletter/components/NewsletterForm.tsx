@@ -82,7 +82,7 @@ export function NewsletterForm({ variant = "band", onSubscribed }: Props) {
         type="submit"
         disabled={isExecuting}
         className={cn(
-          "rounded-full px-6 py-3 text-sm font-semibold transition-[transform,background-color] duration-200 active:scale-[0.97] disabled:opacity-60 motion-reduce:transition-none motion-reduce:active:scale-100",
+          "rounded-full px-6 py-3 text-sm font-semibold transition-press active:scale-[0.97] disabled:opacity-60 motion-reduce:transition-none motion-reduce:active:scale-100",
           band
             ? "bg-band-foreground text-band hover:bg-secondary"
             : "bg-primary text-primary-foreground hover:bg-primary-deep",
@@ -90,7 +90,7 @@ export function NewsletterForm({ variant = "band", onSubscribed }: Props) {
       >
         <span
           key={isExecuting ? "loading" : "idle"}
-          className="animate-[btn-text-in_200ms_ease-out_both] motion-reduce:animate-none"
+          className="animate-text-in motion-reduce:animate-none"
         >
           {isExecuting ? "Zapisywanie…" : `Odbierz -${WELCOME_DISCOUNT_PERCENT}%`}
         </span>

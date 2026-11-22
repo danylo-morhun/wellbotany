@@ -165,7 +165,7 @@ export function NewsletterPrompt() {
       {showTeaser && (
         <div
           className={cn(
-            "fixed bottom-3 left-3 z-40 flex items-center rounded-full bg-primary text-primary-foreground shadow-float animate-in fade-in slide-in-from-bottom-2 duration-300 motion-reduce:animate-none sm:bottom-6 sm:left-6 print:hidden",
+            "fixed bottom-3 left-3 z-40 flex items-center rounded-full bg-primary text-primary-foreground shadow-float animate-in fade-in slide-in-from-bottom-2 spring motion-reduce:animate-none sm:bottom-6 sm:left-6 print:hidden",
             hasLeftSidebar(pathname) && "lg:left-auto lg:right-6",
           )}
         >
@@ -192,12 +192,12 @@ export function NewsletterPrompt() {
 
       <Dialog.Root open={open && !hiddenOn(pathname)} onOpenChange={(next) => !next && close()}>
         <Dialog.Portal>
-          <Dialog.Backdrop className="fixed inset-0 z-50 bg-black/50 transition-opacity duration-300 data-[ending-style]:opacity-0 data-[starting-style]:opacity-0 motion-reduce:transition-none" />
+          <Dialog.Backdrop className="fixed inset-0 z-50 bg-black/50 transition-opacity duration-300 ease-out-strong data-[ending-style]:opacity-0 data-[ending-style]:duration-150 data-[starting-style]:opacity-0 motion-reduce:transition-none" />
           <Dialog.Popup
             ref={popupRef}
             // Focus the dialog itself: no ring on the close button, no keyboard pop-up on phones
             initialFocus={popupRef}
-            className="fixed left-1/2 top-1/2 z-50 grid max-h-[calc(100dvh-2rem)] w-[calc(100%-2rem)] max-w-3xl -translate-x-1/2 -translate-y-1/2 overflow-y-auto rounded-3xl bg-card text-card-foreground shadow-float outline-none transition-[opacity,scale] duration-300 ease-[cubic-bezier(0.23,1,0.32,1)] data-[ending-style]:scale-95 data-[ending-style]:opacity-0 data-[starting-style]:scale-95 data-[starting-style]:opacity-0 motion-reduce:transition-none md:grid-cols-[5fr_6fr] print:hidden"
+            className="fixed left-1/2 top-1/2 z-50 grid max-h-[calc(100dvh-2rem)] w-[calc(100%-2rem)] max-w-3xl -translate-x-1/2 -translate-y-1/2 overflow-y-auto rounded-3xl bg-card text-card-foreground shadow-float outline-none transition-[opacity,scale] spring data-[ending-style]:duration-150 data-[ending-style]:ease-out-strong data-[ending-style]:scale-95 data-[ending-style]:opacity-0 data-[starting-style]:scale-95 data-[starting-style]:opacity-0 motion-reduce:transition-none md:grid-cols-[5fr_6fr] print:hidden"
           >
             <div className="relative overflow-hidden bg-band px-6 py-7 text-band-foreground md:flex md:flex-col md:justify-center md:p-10">
               <div
