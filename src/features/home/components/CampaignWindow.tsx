@@ -3,7 +3,7 @@
 import { type ReactNode, useEffect, useState } from "react";
 import { isCampaignLive } from "../lib/campaign";
 
-type Props = { startsAt: string; endsAt: string; children: ReactNode };
+type Props = { startsAt: string; endsAt: string; children: ReactNode; fallback?: ReactNode };
 
 // setTimeout overflows above ~24.8 days
 const MAX_TIMEOUT_MS = 2 ** 31 - 1;
@@ -11,7 +11,7 @@ const MAX_TIMEOUT_MS = 2 ** 31 - 1;
 /** Shows its children only inside the campaign window, by the visitor's clock.
  * The cached page can be up to an hour (or one stale visit) old, so the server
  * alone would open the section late and close it late. */
-export function CampaignWindow({ startsAt, endsAt, children }: Props) {
+export function CampaignWindow({ startsAt, endsAt, children, fallback = null }: Props) {
   const [live, setLive] = useState(true);
 
   useEffect(() => {
@@ -28,5 +28,5 @@ export function CampaignWindow({ startsAt, endsAt, children }: Props) {
     return () => window.clearTimeout(timer);
   }, [startsAt, endsAt]);
 
-  return live ? children : null;
+  return live ? children : fallback;
 }
