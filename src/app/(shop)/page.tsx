@@ -113,7 +113,11 @@ export default async function HomePage() {
   // Hero, three doors, campaigns, then the deals (deals first on phones): the first screen sells
   return (
     <>
-      <HomeHero productCount={productCount} hasDeals={!campaign && deals.length > 0} />
+      <HomeHero
+        productCount={productCount}
+        hasDeals={!campaign && deals.length > 0}
+        campaign={campaign}
+      />
       <HomeBand className="pt-5 md:pt-8">
         <HomeEntryTiles
           supplementsCount={productCount - foodCount}
