@@ -28,7 +28,7 @@ export function IngredientTiles({ tiles }: Props) {
               href={`/kategoria/${category.slug}`}
               className="group flex flex-col items-center gap-2 text-center"
             >
-              <span className="relative block aspect-square w-full rounded-2xl bg-card shadow-card transition-[box-shadow,transform] duration-200 ease-out group-hover:-translate-y-0.5 group-hover:shadow-card-hover motion-reduce:transition-none motion-reduce:group-hover:translate-y-0">
+              <span className="relative block aspect-square w-full rounded-2xl bg-card shadow-card transition-[box-shadow,transform] spring group-hover:-translate-y-0.5 group-hover:shadow-card-hover motion-reduce:transition-none motion-reduce:group-hover:translate-y-0">
                 {/* Inset rounded frame, same as ProductCard */}
                 <span className="absolute inset-2 overflow-hidden rounded-xl md:inset-2.5">
                   <Image

@@ -52,7 +52,7 @@ export function HomeEntryTiles({ supplementsCount, foodCount, giftFromPln }: Pro
           key={t.href}
           href={t.href}
           className={cn(
-            "group relative flex min-h-36 flex-col justify-between overflow-hidden rounded-[1.75rem] p-5 text-matcha-ink transition-transform duration-200 ease-out hover:-translate-y-0.5 motion-reduce:transition-none motion-reduce:hover:translate-y-0 md:min-h-56 md:p-7",
+            "group relative flex min-h-36 flex-col justify-between overflow-hidden rounded-[1.75rem] p-5 text-matcha-ink transition-transform spring hover:-translate-y-0.5 motion-reduce:transition-none motion-reduce:hover:translate-y-0 md:min-h-56 md:p-7",
             t.tone,
           )}
         >
@@ -65,7 +65,7 @@ export function HomeEntryTiles({ supplementsCount, foodCount, giftFromPln }: Pro
           <span className="relative z-10 mt-4 inline-flex items-center gap-1.5 text-sm font-bold">
             Przeglądaj
             <ArrowRight
-              className="size-4 transition-transform duration-200 group-hover:translate-x-0.5 motion-reduce:transition-none"
+              className="size-4 transition-transform spring-snappy group-hover:translate-x-0.5 motion-reduce:transition-none"
               aria-hidden
             />
           </span>
@@ -75,7 +75,7 @@ export function HomeEntryTiles({ supplementsCount, foodCount, giftFromPln }: Pro
             width={t.img.width}
             height={t.img.height}
             sizes="(min-width: 640px) 12vw, 30vw"
-            className="absolute -bottom-3 right-4 h-[78%] w-auto rotate-[4deg] drop-shadow-[0_18px_16px_rgba(0,0,0,0.18)] transition-transform duration-300 group-hover:rotate-0 motion-reduce:transition-none md:right-6"
+            className="absolute -bottom-3 right-4 h-[78%] w-auto rotate-[4deg] drop-shadow-[0_18px_16px_rgba(0,0,0,0.18)] transition-transform spring group-hover:rotate-0 motion-reduce:transition-none md:right-6"
           />
         </Link>
       ))}

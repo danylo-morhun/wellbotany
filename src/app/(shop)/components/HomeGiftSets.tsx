@@ -59,7 +59,7 @@ export function HomeGiftSets({ giftSets, builderActive }: Props) {
           {builderActive && (
             <Link
               href={BUILDER_HREF}
-              className="group inline-flex min-h-12 items-center gap-2 rounded-full bg-matcha-paper px-6 font-bold text-matcha-forest transition-transform duration-200 active:scale-[0.97] motion-reduce:transition-none"
+              className="group inline-flex min-h-12 items-center gap-2 rounded-full bg-matcha-paper px-6 font-bold text-matcha-forest transition-transform spring-snappy active:scale-[0.97] motion-reduce:transition-none"
             >
               <Gift className="size-4" aria-hidden />
               Złóż własny zestaw
@@ -71,7 +71,7 @@ export function HomeGiftSets({ giftSets, builderActive }: Props) {
           >
             Wszystkie zestawy
             <ArrowRight
-              className="size-4 transition-transform duration-200 group-hover:translate-x-0.5 motion-reduce:transition-none"
+              className="size-4 transition-transform spring-snappy group-hover:translate-x-0.5 motion-reduce:transition-none"
               aria-hidden
             />
           </Link>
@@ -109,11 +109,11 @@ function BuilderBand() {
       <div className="flex flex-wrap items-center gap-x-5 gap-y-2">
         <Link
           href={BUILDER_HREF}
-          className="group inline-flex h-11 items-center gap-2 rounded-full bg-primary-foreground px-5 text-sm font-semibold text-primary transition-transform duration-200 active:scale-[0.97] motion-reduce:transition-none motion-reduce:active:scale-100"
+          className="group inline-flex h-11 items-center gap-2 rounded-full bg-primary-foreground px-5 text-sm font-semibold text-primary transition-transform spring-snappy active:scale-[0.97] motion-reduce:transition-none motion-reduce:active:scale-100"
         >
           Złóż własny zestaw
           <ArrowRight
-            className="size-4 transition-transform duration-200 group-hover:translate-x-0.5 motion-reduce:transition-none motion-reduce:group-hover:translate-x-0"
+            className="size-4 transition-transform spring-snappy group-hover:translate-x-0.5 motion-reduce:transition-none motion-reduce:group-hover:translate-x-0"
             aria-hidden
           />
         </Link>

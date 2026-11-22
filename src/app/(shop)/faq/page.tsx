@@ -245,7 +245,7 @@ export default async function FaqPage() {
                 >
                   <summary className="flex cursor-pointer items-center justify-between gap-4 px-5 py-4 text-sm font-semibold marker:content-none">
                     {faq.q}
-                    <span className="shrink-0 text-muted-foreground transition-transform group-open:rotate-180">
+                    <span className="shrink-0 text-muted-foreground transition-transform spring-snappy group-open:rotate-180">
                       ▾
                     </span>
                   </summary>

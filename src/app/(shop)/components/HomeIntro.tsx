@@ -76,7 +76,7 @@ function CategoryTiles({ items }: { items: CategoryItem[] }) {
           <li key={c.id}>
             <Link
               href={`/kategoria/${c.slug}`}
-              className="group flex h-full min-h-14 items-center gap-2.5 rounded-xl bg-card px-3 py-2 sm:gap-3 sm:py-2.5 shadow-card transition-[box-shadow,transform] duration-200 ease-out hover:-translate-y-0.5 hover:shadow-card-hover motion-reduce:transition-none motion-reduce:hover:translate-y-0"
+              className="group flex h-full min-h-14 items-center gap-2.5 rounded-xl bg-card px-3 py-2 sm:gap-3 sm:py-2.5 shadow-card transition-[box-shadow,transform] spring hover:-translate-y-0.5 hover:shadow-card-hover motion-reduce:transition-none motion-reduce:hover:translate-y-0"
             >
               <span className="flex size-8 shrink-0 items-center justify-center rounded-full bg-secondary text-primary sm:size-9">
                 <Icon className="size-[18px]" aria-hidden="true" />

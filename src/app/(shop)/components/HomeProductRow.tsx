@@ -23,7 +23,7 @@ export function HomeProductRow({ product }: Props) {
   return (
     <Link
       href={`/produkt/${product.slug}`}
-      className="group flex h-full items-center gap-3 rounded-2xl bg-card p-2.5 pr-4 shadow-card transition-[box-shadow,transform] duration-200 ease-out hover:-translate-y-0.5 hover:shadow-card-hover motion-reduce:transition-none motion-reduce:hover:translate-y-0"
+      className="group flex h-full items-center gap-3 rounded-2xl bg-card p-2.5 pr-4 shadow-card transition-[box-shadow,transform] spring hover:-translate-y-0.5 hover:shadow-card-hover motion-reduce:transition-none motion-reduce:hover:translate-y-0"
     >
       <span className="relative size-20 shrink-0 overflow-hidden rounded-xl bg-card">
         {image && (
