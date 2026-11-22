@@ -2,12 +2,17 @@
 // [{ slug, headingPl?, descriptionPl, metaTitlePl, metaDescPl, contentPl, faqPl }])
 // to the DB. Checks every text against the banned-claim list first; links
 // inside contentPl must point at existing categories. Dry run by default.
-//   DATABASE_URL=… npx tsx scripts/content-pass/apply-category-content.ts [--apply] [--prod]
+//   DATABASE_URL=… npx tsx scripts/content-pass/apply-category-content.ts [--dir <path>] [--apply] [--prod]
+// --dir applies only that folder (later passes); the default folder holds the first pass.
 import fs from "node:fs";
 import path from "node:path";
 import { connect } from "./db";
 
-const DIR = path.join(__dirname, "../../data/content-pass/categories/content");
+const dirIdx = process.argv.indexOf("--dir");
+const DIR =
+  dirIdx >= 0
+    ? path.resolve(process.argv[dirIdx + 1])
+    : path.join(__dirname, "../../data/content-pass/categories/content");
 const apply = process.argv.includes("--apply");
 
 type Entry = {
