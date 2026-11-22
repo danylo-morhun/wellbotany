@@ -44,18 +44,26 @@ const PRODUCTS = [
   },
 ];
 
-type Props = { productCount: number; hasDeals: boolean; campaign?: Campaign | null };
+type Props = {
+  productCount: number;
+  hasDeals: boolean;
+  campaign?: Campaign | null;
+  /** One line about the cart discount, shown under the campaign lead */
+  cartDiscount?: string | null;
+};
 type HeroLink = { href: string; label: string };
 
 /** Text half of the band: the page's H1, the poster words, the lead and two links */
 function HeroCopy({
   poster,
   lead,
+  note,
   primary,
   secondary,
 }: {
   poster: readonly [string, string];
   lead: string;
+  note?: string | null;
   primary: HeroLink;
   secondary: HeroLink;
 }) {
@@ -75,6 +83,9 @@ function HeroCopy({
         {poster[1]}
       </p>
       <p className="mt-5 max-w-md text-base text-matcha-forest-foreground/85 md:text-lg">{lead}</p>
+      {note && (
+        <p className="mt-3 max-w-md text-sm font-semibold text-matcha-lime md:text-base">{note}</p>
+      )}
       <div className="mt-7 flex flex-wrap gap-3">
         <Link
           href={primary.href}
@@ -99,7 +110,7 @@ function HeroCopy({
 
 /** Opening band in the posts' Matcha look: the page's H1 as a small line, the season
  * as a poster word, two ways in, and a staged group of products. */
-export function HomeHero({ productCount, hasDeals, campaign }: Props) {
+export function HomeHero({ productCount, hasDeals, campaign, cartDiscount }: Props) {
   // Rounded down, so "ponad" stays true between cache refreshes
   const shown = Math.floor(productCount / 100) * 100;
   const everyday = (
@@ -130,6 +141,7 @@ export function HomeHero({ productCount, hasDeals, campaign }: Props) {
             <HeroCopy
               poster={campaign.hero.poster}
               lead={campaign.hero.lead}
+              note={cartDiscount}
               primary={{ href: "/katalog?promocje=1", label: "Zobacz obniżki" }}
               secondary={{ href: `#${campaign.id}-h`, label: campaign.title }}
             />

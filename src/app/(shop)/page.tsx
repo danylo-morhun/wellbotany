@@ -25,6 +25,9 @@ import { HeroSlider } from "@/features/home/components/HeroSlider";
 import { getHomeBanners } from "@/features/home/lib/banners";
 import { campaignToRender } from "@/features/home/lib/campaign";
 import { HideIfSubscribed } from "@/features/newsletter/components/HideIfSubscribed";
+import { describeTiers, isTierPromoLive } from "@/features/promotions/lib/tiered";
+import { getShopSettings } from "@/features/settings/lib/shop-settings";
+import { formatPriceCompact } from "@/lib/format";
 import { pageSeo } from "@/lib/seo";
 
 const HOME_TITLE = "Suplementy diety, zioła i zdrowa żywność – sklep Well Botany";
@@ -36,6 +39,8 @@ export const metadata: Metadata = {
 
 // Banners open/close on their dates without an admin edit
 export const revalidate = 3600;
+
+const maxDate = (a: Date, b: Date) => (a > b ? a : b);
 
 export default async function HomePage() {
   const [
@@ -56,10 +61,23 @@ export default async function HomePage() {
     banners,
     brands,
     { giftSets, builderActive },
-  ] = await Promise.all([getHomepageData(), getHomeBanners(), getBrands(), getHomeGiftSets()]);
+    { tierPromo, ordersPaused },
+  ] = await Promise.all([
+    getHomepageData(),
+    getHomeBanners(),
+    getBrands(),
+    getHomeGiftSets(),
+    getShopSettings(),
+  ]);
 
   // While a campaign runs it shows the biggest reductions; "Teraz taniej" would repeat them
   const campaign = campaignToRender();
+  // Cart discount said in the campaign hero when it runs over the campaign's start
+  // (the server renders up to an hour early); it only takes lines not on sale
+  const cartDiscount =
+    campaign && !ordersPaused && isTierPromoLive(tierPromo, maxDate(new Date(), campaign.startsAt))
+      ? `${tierPromo.name}: rabat od koszyka ${describeTiers(tierPromo.tiers, formatPriceCompact)} na produkty bez obniżki, bez kodu.`
+      : null;
   const giftFromPln = giftSets.length > 0 ? Math.min(...giftSets.map((gs) => gs.pricePln)) : null;
 
   // Bands after the opening alternate mint/plain (DESIGN.md §5)
@@ -115,6 +133,7 @@ export default async function HomePage() {
         productCount={productCount}
         hasDeals={!campaign && deals.length > 0}
         campaign={campaign}
+        cartDiscount={cartDiscount}
       />
       <HomeBand className="pt-5 md:pt-8">
         <HomeEntryTiles
