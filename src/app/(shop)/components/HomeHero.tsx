@@ -49,9 +49,38 @@ type Props = {
   hasDeals: boolean;
   campaign?: Campaign | null;
   /** One line about the cart discount, shown under the campaign lead */
-  cartDiscount?: string | null;
+  cartDiscount?: CartTier[] | null;
 };
+type CartTier = { percent: number; from: string };
+
 type HeroLink = { href: string; label: string };
+
+/** Cart-discount tiers as dashed coupons; the restriction stays next to them */
+function CartCoupons({ tiers, className }: { tiers: CartTier[]; className?: string }) {
+  return (
+    <div className={className}>
+      <p className="font-semibold text-matcha-lime text-sm md:text-base">
+        Rabat od koszyka, bez kodu
+      </p>
+      <ul className="mt-2 flex flex-wrap gap-2.5">
+        {tiers.map((t) => (
+          <li
+            key={t.percent}
+            className="flex items-baseline gap-2 rounded-xl border-2 border-matcha-lime border-dashed bg-matcha-forest px-3.5 py-1.5 shadow-[0_10px_20px_rgba(0,0,0,0.25)] odd:rotate-1 even:-rotate-1"
+          >
+            <span className={cn(posterFont.className, "text-3xl text-matcha-lime leading-none")}>
+              −{t.percent}%
+            </span>
+            <span className="font-semibold text-sm">od {t.from}</span>
+          </li>
+        ))}
+      </ul>
+      <p className="mt-2 text-matcha-forest-foreground/70 text-xs md:text-sm">
+        na produkty bez obniżki
+      </p>
+    </div>
+  );
+}
 
 /** Text half of the band: the page's H1, the poster words, the lead and two links */
 function HeroCopy({
@@ -60,6 +89,7 @@ function HeroCopy({
   stat,
   lead,
   note,
+  stretch = false,
   primary,
   secondary,
 }: {
@@ -67,7 +97,10 @@ function HeroCopy({
   oneLine?: boolean;
   stat?: readonly [string, string, string];
   lead: string;
-  note?: string | null;
+  /** Cart-discount tiers, drawn as coupons */
+  note?: CartTier[] | null;
+  /** The primary link covers the whole band (campaign) */
+  stretch?: boolean;
   primary: HeroLink;
   secondary: HeroLink;
 }) {
@@ -118,13 +151,18 @@ function HeroCopy({
       >
         {lead}
       </p>
-      {note && (
-        <p className="mt-3 max-w-md text-sm font-semibold text-matcha-lime md:text-base">{note}</p>
-      )}
+      {note && note.length > 0 && <CartCoupons tiers={note} className="mt-5 md:hidden" />}
       <div className="mt-7 flex flex-wrap gap-3">
         <Link
           href={primary.href}
-          className="group inline-flex min-h-12 items-center gap-2 rounded-full bg-matcha-paper px-6 font-bold text-matcha-forest transition-transform duration-200 active:scale-[0.97] motion-reduce:transition-none"
+          className={cn(
+            "group inline-flex min-h-12 items-center gap-2 rounded-full bg-matcha-paper px-6 font-bold text-matcha-forest transition-transform duration-200 motion-reduce:transition-none",
+            // Stretched: an overlay over the band makes it all one link; no press scale,
+            // which would shrink the overlay to the button mid-click
+            stretch
+              ? "after:absolute after:inset-0 after:z-10 after:content-['']"
+              : "active:scale-[0.97]",
+          )}
         >
           {primary.label}
           <ArrowRight
@@ -134,7 +172,7 @@ function HeroCopy({
         </Link>
         <Link
           href={secondary.href}
-          className="inline-flex min-h-12 items-center rounded-full border-2 border-matcha-lime px-6 font-bold text-matcha-forest-foreground transition-colors hover:bg-matcha-lime hover:text-matcha-forest"
+          className="relative z-20 inline-flex min-h-12 items-center rounded-full border-2 border-matcha-lime px-6 font-bold text-matcha-forest-foreground transition-colors hover:bg-matcha-lime hover:text-matcha-forest"
         >
           {secondary.label}
         </Link>
@@ -164,7 +202,7 @@ export function HomeHero({ productCount, hasDeals, campaign, cartDiscount }: Pro
   return (
     <section
       aria-labelledby="home-h1"
-      className="overflow-hidden bg-matcha-forest text-matcha-forest-foreground"
+      className="relative overflow-hidden bg-matcha-forest text-matcha-forest-foreground"
     >
       <div className="container mx-auto grid items-end gap-2 px-4 pt-8 md:grid-cols-2 md:gap-8 md:pt-14">
         {campaign?.hero ? (
@@ -179,6 +217,7 @@ export function HomeHero({ productCount, hasDeals, campaign, cartDiscount }: Pro
               stat={campaign.hero.stat}
               lead={campaign.hero.lead}
               note={cartDiscount}
+              stretch
               primary={{ href: "/katalog?promocje=1", label: "Zobacz obniżki" }}
               secondary={{ href: `#${campaign.id}-h`, label: campaign.title }}
             />
@@ -186,8 +225,23 @@ export function HomeHero({ productCount, hasDeals, campaign, cartDiscount }: Pro
         ) : (
           everyday
         )}
-        <div className="relative h-[260px] sm:h-[340px] md:h-[440px]" aria-hidden>
-          <div className="absolute inset-x-[8%] bottom-[-18%] h-[70%] rounded-[50%] bg-matcha-forest-foreground/[0.07]" />
+        <div className="pointer-events-none relative h-[260px] sm:h-[340px] md:h-[440px]">
+          {campaign?.hero && cartDiscount && cartDiscount.length > 0 && (
+            // Desktop: top-right corner above the products (phones: under the copy)
+            <CampaignWindow
+              startsAt={campaign.startsAt.toISOString()}
+              endsAt={campaign.endsAt.toISOString()}
+            >
+              <CartCoupons
+                tiers={cartDiscount}
+                className="absolute top-0 right-0 z-30 hidden text-right md:block [&_ul]:justify-end"
+              />
+            </CampaignWindow>
+          )}
+          <div
+            className="absolute inset-x-[8%] bottom-[-18%] h-[70%] rounded-[50%] bg-matcha-forest-foreground/[0.07]"
+            aria-hidden
+          />
           {PRODUCTS.map((p, i) => (
             <Image
               key={p.src}
