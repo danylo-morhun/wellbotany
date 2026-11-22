@@ -86,7 +86,9 @@ export default function RootLayout({
   return (
     <html
       lang="pl"
-      className={`${jakarta.variable} ${geistMono.variable} ${onest.variable} h-full antialiased`}
+      className={`${jakarta.variable} ${geistMono.variable} ${onest.variable} h-full scroll-smooth antialiased`}
+      // Smooth only for in-page anchors (product section nav); Next turns it off for route changes
+      data-scroll-behavior="smooth"
       suppressHydrationWarning
     >
       <body className="min-h-full flex flex-col">
