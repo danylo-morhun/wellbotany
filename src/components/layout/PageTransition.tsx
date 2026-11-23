@@ -8,6 +8,18 @@ const CHECKOUT = "/zamowienie";
 const TRANSITION_MS = 600;
 
 /**
+ * Firefox squashes snapshots taller than its 4k texture limit (whole pages,
+ * the product grid), so they show vertically compressed for the length of
+ * the transition (bugzilla 1964101, 1918142). Without startViewTransition,
+ * React commits the update directly: Firefox gets an instant swap instead.
+ */
+export function disableViewTransitionsInFirefox(doc: Document = document) {
+  if (!/\bFirefox\//.test(doc.defaultView?.navigator.userAgent ?? "")) return;
+  if (typeof doc.startViewTransition !== "function") return;
+  Object.defineProperty(doc, "startViewTransition", { value: undefined, configurable: true });
+}
+
+/**
  * Route change = view transition: the old page fades out fast while the new
  * one rises in on the spring. Keyed on pathname only, so filter/sort/page
  * query changes stay in place (the product grid crossfades on its own).
@@ -21,6 +33,7 @@ export function PageTransition({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
 
   useEffect(() => {
+    disableViewTransitionsInFirefox();
     const root = document.documentElement;
     const skip = () => {
       root.dataset.vtOff = "";
